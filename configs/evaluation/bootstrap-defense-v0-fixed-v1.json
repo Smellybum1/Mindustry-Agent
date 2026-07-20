@@ -1,0 +1,9 @@
+{
+  "seed_set_id": "bootstrap-defense-v0-fixed-v1",
+  "seed_set_version": 1,
+  "scenario_id": "bootstrap-defense-v0",
+  "scenario_version": 1,
+  "split": "fixed",
+  "seeds": [12345, 23456, 34567, 45678, 987666666],
+  "policy": "Permanent fixed-scenario regression set for all M7.6 ladder policies."
+}

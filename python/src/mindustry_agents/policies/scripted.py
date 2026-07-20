@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Iterable
+
+
+_MASK_64 = (1 << 64) - 1
 
 
 def _continue_or_none(action_mask: dict[str, Any]) -> dict[str, Any] | None:
@@ -37,6 +39,115 @@ def _highest_utility(
         return None
     # Highest utility first; lowest stable candidate index breaks exact ties.
     return max(candidates, key=lambda entry: (float(entry[1]["utility"]), -entry[0]))[0]
+
+
+def _blocked_abandon(
+    agent_id: int,
+    observation: dict[str, Any],
+    action_mask: dict[str, Any],
+) -> dict[str, Any] | None:
+    skill = observation.get("skill", {})
+    if action_mask.get("abandon", False) and skill.get("status") == "BLOCKED":
+        reason = str(skill.get("reason", "unknown")).lower()
+        return {
+            "agent_id": agent_id,
+            "task_action": {"type": "ABANDON", "reason": f"baseline_blocked:{reason}"},
+        }
+    return None
+
+
+class PureGreedyUtilityPolicy:
+    """Permanent non-adaptive baseline: highest utility, with blocked-task release."""
+
+    def observe_action_results(self, results: list[dict[str, Any]]) -> None:
+        del results
+
+    def actions(
+        self,
+        observations: list[dict[str, Any]],
+        action_masks: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        return [
+            self.action(agent_id, observation, action_masks[agent_id])
+            for agent_id, observation in enumerate(observations)
+        ]
+
+    def action(
+        self,
+        agent_id: int,
+        observation: dict[str, Any],
+        action_mask: dict[str, Any],
+    ) -> dict[str, Any]:
+        blocked = _blocked_abandon(agent_id, observation, action_mask)
+        if blocked is not None:
+            return blocked
+        task_action = _continue_or_none(action_mask)
+        if task_action is None:
+            selected = _highest_utility(_valid_candidates(observation, action_mask))
+            task_action = (
+                {"type": "SELECT_CANDIDATE_TASK", "candidate_index": selected}
+                if selected is not None
+                else {"type": "WAIT"}
+            )
+        return {"agent_id": agent_id, "task_action": task_action}
+
+
+class RandomValidPolicy:
+    """Root-seeded random-valid baseline with a version-stable integer mixer."""
+
+    def __init__(self, seed: int):
+        self.seed = int(seed) & _MASK_64
+        self._decisions: dict[int, int] = {}
+
+    def observe_action_results(self, results: list[dict[str, Any]]) -> None:
+        del results
+
+    def actions(
+        self,
+        observations: list[dict[str, Any]],
+        action_masks: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        return [
+            self.action(agent_id, observation, action_masks[agent_id])
+            for agent_id, observation in enumerate(observations)
+        ]
+
+    def _draw(self, agent_id: int, bound: int) -> int:
+        decision = self._decisions.get(agent_id, 0)
+        self._decisions[agent_id] = decision + 1
+        value = (
+            self.seed
+            + 0x9E3779B97F4A7C15 * (decision + 1)
+            + 0xD1B54A32D192ED03 * (agent_id + 1)
+        ) & _MASK_64
+        value = ((value ^ (value >> 30)) * 0xBF58476D1CE4E5B9) & _MASK_64
+        value = ((value ^ (value >> 27)) * 0x94D049BB133111EB) & _MASK_64
+        value ^= value >> 31
+        return value % bound
+
+    def action(
+        self,
+        agent_id: int,
+        observation: dict[str, Any],
+        action_mask: dict[str, Any],
+    ) -> dict[str, Any]:
+        blocked = _blocked_abandon(agent_id, observation, action_mask)
+        if blocked is not None:
+            return blocked
+        task_action = _continue_or_none(action_mask)
+        if task_action is None:
+            candidates = _valid_candidates(observation, action_mask)
+            selected = (
+                candidates[self._draw(agent_id, len(candidates))][0]
+                if candidates
+                else None
+            )
+            task_action = (
+                {"type": "SELECT_CANDIDATE_TASK", "candidate_index": selected}
+                if selected is not None
+                else {"type": "WAIT"}
+            )
+        return {"agent_id": agent_id, "task_action": task_action}
 
 
 class GreedyUtilityPolicy:
@@ -221,12 +332,28 @@ class RoleAssignmentPolicy:
     def role_for(self, agent_id: int) -> str:
         return self.roles[agent_id % len(self.roles)]
 
+    def observe_action_results(self, results: list[dict[str, Any]]) -> None:
+        del results
+
+    def actions(
+        self,
+        observations: list[dict[str, Any]],
+        action_masks: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        return [
+            self.action(agent_id, observation, action_masks[agent_id])
+            for agent_id, observation in enumerate(observations)
+        ]
+
     def action(
         self,
         agent_id: int,
         observation: dict[str, Any],
         action_mask: dict[str, Any],
     ) -> dict[str, Any]:
+        blocked = _blocked_abandon(agent_id, observation, action_mask)
+        if blocked is not None:
+            return blocked
         task_action = _continue_or_none(action_mask)
         if task_action is None:
             role = self.role_for(agent_id)

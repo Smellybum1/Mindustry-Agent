@@ -3,6 +3,8 @@ import unittest
 from mindustry_agents.policies import (
     GreedyUtilityPolicy,
     HelperCoordinator,
+    PureGreedyUtilityPolicy,
+    RandomValidPolicy,
     RoleAssignmentPolicy,
 )
 
@@ -122,6 +124,30 @@ class TestScriptedPolicies(unittest.TestCase):
         builder = policy.action(1, observation(), mask)
         self.assertEqual(miner["task_action"]["candidate_index"], 0)
         self.assertEqual(builder["task_action"]["candidate_index"], 1)
+
+    def test_pure_greedy_has_no_team_rebalance_and_releases_blocks(self):
+        policy = PureGreedyUtilityPolicy()
+        blocked = policy.action(
+            0,
+            observation(skill={"status": "BLOCKED", "reason": "STUCK"}),
+            {"continue_current_task": True, "abandon": True},
+        )
+        self.assertEqual(
+            blocked["task_action"],
+            {"type": "ABANDON", "reason": "baseline_blocked:stuck"},
+        )
+
+    def test_random_valid_is_seeded_and_version_stable(self):
+        mask = {"candidate_task": [True, True, True]}
+        first = RandomValidPolicy(42)
+        second = RandomValidPolicy(42)
+        trace_a = [first.action(0, observation(), mask) for _ in range(8)]
+        trace_b = [second.action(0, observation(), mask) for _ in range(8)]
+        self.assertEqual(trace_a, trace_b)
+        self.assertEqual(
+            [action["task_action"]["candidate_index"] for action in trace_a],
+            [2, 1, 0, 2, 0, 1, 0, 2],
+        )
 
     def test_helper_flow_chooses_nearest_idle_and_builds_typed_actions(self):
         observations = [observation(0), observation(10), observation(2)]

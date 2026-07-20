@@ -33,6 +33,12 @@ class ExpertEpisode:
         self.observations = reset.initial_observations
         self.step_response = None
         self.announcements: list[str] = []
+        self.task_events: list[dict[str, Any]] = []
+        self.game_events: list[dict[str, Any]] = []
+        self.agent_loss_ticks: dict[int, int] = {}
+        self._previous_dead = [
+            bool(observation["unit"]["dead"]) for observation in self.observations
+        ]
         self.line_complete_tick = -1
         self.schematic_complete_tick = -1
         self.wave_clear_ticks: list[int] = []
@@ -66,6 +72,13 @@ class ExpertEpisode:
         self.tick = response.tick
         self.observations = response.observations
         self.step_response = response
+        self.task_events.extend(response.task_events)
+        self.game_events.extend(response.game_events)
+        for agent_id, observation in enumerate(response.observations):
+            dead = bool(observation["unit"]["dead"])
+            if dead and not self._previous_dead[agent_id]:
+                self.agent_loss_ticks[agent_id] = response.tick
+            self._previous_dead[agent_id] = dead
         self.trace_records.append(
             {
                 "kind": "step",
@@ -428,6 +441,9 @@ class ExpertEpisode:
             copper_boundary_out=self.copper_boundary_out,
             units_lost=sum(bool(observation["unit"]["dead"]) for observation in self.observations),
             win_tick=self.layout.win_tick,
+            task_events=self.task_events,
+            game_events=self.game_events,
+            agent_loss_ticks=self.agent_loss_ticks,
         )
 
 

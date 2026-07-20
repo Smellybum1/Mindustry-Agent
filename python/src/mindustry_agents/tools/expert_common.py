@@ -105,3 +105,6 @@ class EpisodeResult:
     copper_boundary_out: int = 0
     units_lost: int = 0
     win_tick: int = 0
+    task_events: list[dict[str, Any]] = field(default_factory=list)
+    game_events: list[dict[str, Any]] = field(default_factory=list)
+    agent_loss_ticks: dict[int, int] = field(default_factory=dict)

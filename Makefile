@@ -14,7 +14,7 @@ SCRIPTS := scripts
 .PHONY: help codex-status bootstrap build test test-java test-python smoke \
         determinism stress-reset benchmark scripted-demo evaluate-scripted \
         candidate-policy-check coordination-parity adaptive-planning-check \
-        scenario-variation-check demo-server
+        scenario-variation-check evaluate-ladder demo-server
 
 help: ## List available targets
 	@echo "mindustry-coop-agents — make targets:"
@@ -34,6 +34,7 @@ help: ## List available targets
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
 	@echo "  adaptive-planning-check adaptive-vs-frozen variant probe (M7.4)"
 	@echo "  scenario-variation-check bounded scenario-v2 dev acceptance (M7.5)"
+	@echo "  evaluate-ladder permanent baselines + teammate scorecard (M7.6)"
 	@echo "  demo-server   human-joinable real-time server (M6/M10)"
 
 codex-status: ## Print compact read-only takeover status
@@ -83,6 +84,9 @@ adaptive-planning-check: ## Adaptive-vs-frozen fixed/probe acceptance (M7.4)
 
 scenario-variation-check: ## Scenario-v2 variation and frozen-dev acceptance (M7.5)
 	@bash $(SCRIPTS)/scenario-variation-check.sh
+
+evaluate-ladder: ## Permanent policy ladder and teammate scorecard (M7.6)
+	@bash $(SCRIPTS)/evaluate-ladder.sh
 
 demo-server: ## Human-joinable real-time server (M6/M10)
 	@bash $(SCRIPTS)/demo-server.sh

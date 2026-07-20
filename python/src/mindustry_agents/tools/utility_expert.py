@@ -22,6 +22,8 @@ class UtilityExpertEpisode:
         scenario_id: str = "bootstrap-defense-v0",
         scenario_version: int = 0,
         require_win: bool = True,
+        policy: Any | None = None,
+        policy_name: str = "adaptive-v1",
     ):
         self.env = env
         self.seed = seed
@@ -38,8 +40,15 @@ class UtilityExpertEpisode:
         self.tick = reset.tick
         self.observations = reset.initial_observations
         self.action_masks = reset.action_masks
-        self.policy = GreedyUtilityPolicy()
+        self.policy = policy or GreedyUtilityPolicy()
+        self.policy_name = policy_name
         self.announcements: list[str] = []
+        self.task_events: list[dict[str, Any]] = []
+        self.game_events: list[dict[str, Any]] = []
+        self.agent_loss_ticks: dict[int, int] = {}
+        self._previous_dead = [
+            bool(observation["unit"]["dead"]) for observation in self.observations
+        ]
         self.line_complete_tick = -1
         self.schematic_complete_tick = -1
         self.first_drill_tick = -1
@@ -70,6 +79,8 @@ class UtilityExpertEpisode:
         self.action_masks = response.action_masks
         self.response = response
         self.policy.observe_action_results(response.action_results)
+        self.task_events.extend(response.task_events)
+        self.game_events.extend(response.game_events)
         self._record_events(response.task_events)
         self._record_boundary(response)
         boundary = response.decision_boundary
@@ -103,6 +114,12 @@ class UtilityExpertEpisode:
                 self.first_drill_tick = int(event["tick"])
 
     def _record_boundary(self, response) -> None:
+        for agent_id, observation in enumerate(response.observations):
+            dead = bool(observation["unit"]["dead"])
+            if dead and not self._previous_dead[agent_id]:
+                self.agent_loss_ticks[agent_id] = response.tick
+            self._previous_dead[agent_id] = dead
+
         team = response.observations[0]["team"]
         copper = int(team["copper"])
         delta = copper - self.last_copper
@@ -269,7 +286,7 @@ class UtilityExpertEpisode:
         response = self.response
         team = response.observations[0]["team"]
         metrics = dict(response.coordination_metrics)
-        metrics["policy_name"] = "greedy-utility-expert-v1"
+        metrics["policy_name"] = self.policy_name
         metrics["decision_wakeups"] = self.decision_wakeups
         metrics["decision_wakeup_reasons"] = dict(sorted(self.decision_reasons.items()))
         replans = int(metrics.get("resource_replans", 0))
@@ -305,6 +322,9 @@ class UtilityExpertEpisode:
                 for observation in self.observations
             ),
             win_tick=self.layout.win_tick,
+            task_events=self.task_events,
+            game_events=self.game_events,
+            agent_loss_ticks=self.agent_loss_ticks,
         )
 
 
@@ -316,6 +336,8 @@ def run_utility_episode(
     scenario_id: str = "bootstrap-defense-v0",
     scenario_version: int = 0,
     require_win: bool = True,
+    policy: Any | None = None,
+    policy_name: str = "adaptive-v1",
 ) -> EpisodeResult:
     return UtilityExpertEpisode(
         env,
@@ -324,4 +346,6 @@ def run_utility_episode(
         scenario_id=scenario_id,
         scenario_version=scenario_version,
         require_win=require_win,
+        policy=policy,
+        policy_name=policy_name,
     ).run()
