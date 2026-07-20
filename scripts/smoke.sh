@@ -19,4 +19,8 @@ if [[ ! -f "$JAR" ]]; then
 fi
 
 echo "== rl-server smoke (port=$PORT seed=$SEED) =="
-exec "$PY" -m mindustry_agents.tools.smoke --port "$PORT" --seed "$SEED"
+"$PY" -m mindustry_agents.tools.smoke --port "$PORT" --seed "$SEED"
+
+echo
+echo "== rl-server scenario check (port=$PORT seed=$SEED) =="
+exec "$PY" -m mindustry_agents.tools.scenario_check --port "$PORT" --seed "$SEED"

@@ -88,6 +88,8 @@ class ResetResponse:
     initial_observations: list[dict[str, Any]] = field(default_factory=list)
     action_masks: list[dict[str, Any]] = field(default_factory=list)
     state_hash: str = ""
+    # Scenario episode outcome: "running" at reset; "win"/"loss"/"truncated" once terminal.
+    outcome: str = "running"
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -117,6 +119,8 @@ class StepResponse:
     reward_breakdowns: list[dict[str, Any]] = field(default_factory=list)
     terminations: list[bool] = field(default_factory=list)
     truncations: list[bool] = field(default_factory=list)
+    # Scenario episode outcome: "running", or terminal "win"/"loss"/"truncated".
+    outcome: str = "running"
     task_events: list[dict[str, Any]] = field(default_factory=list)
     game_events: list[dict[str, Any]] = field(default_factory=list)
     state_hash: str = ""

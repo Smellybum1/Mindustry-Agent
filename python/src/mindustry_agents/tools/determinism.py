@@ -28,10 +28,17 @@ CHUNK = 60
 CHUNKS = 10
 SEED = 12345
 
+# Scenario phase: step past wave 1 (spawn tick 2700) so enemy daggers spawn and
+# march the lane under the deterministic synchronous flow-field. Hashes across this
+# window are the critical new determinism evidence (moving enemies), and are what
+# makes two *different* seeds diverge (wave spawn spread is seeded from root_seed).
+POSTWAVE_TARGET = 2880
+
 
 def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
-    """Reset with ``seed``, step the plain chunks, then replay the scripted skill
-    trace; return labelled hashes at every boundary."""
+    """Reset with ``seed``, step the plain chunks, replay the scripted skill trace,
+    then idle past wave 1 while enemies spawn/move; return labelled hashes at every
+    boundary."""
     hashes: list[tuple[str, str]] = []
     rr = env.reset(root_seed=seed, agent_count=2)
     if rr.tick != 0:
@@ -54,6 +61,15 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
             raise AssertionError(f"tick {sr.tick} != {tick + ticks} (non-exact advance)")
         tick = sr.tick
         hashes.append((f"{label}@{tick}", sr.state_hash))
+
+    # Scenario phase: idle (undefended) past wave 1 so daggers spawn and move.
+    while tick < POSTWAVE_TARGET:
+        step = min(CHUNK, POSTWAVE_TARGET - tick)
+        sr = env.step(rr.episode_id, expected_tick=tick, ticks_to_advance=step)
+        if sr.tick != tick + step:
+            raise AssertionError(f"tick {sr.tick} != {tick + step} (non-exact advance)")
+        tick = sr.tick
+        hashes.append((f"wave@{tick}", sr.state_hash))
     return hashes
 
 
@@ -120,7 +136,24 @@ def main(argv=None) -> int:
             file=sys.stderr,
         )
 
-    ok = cross_ok and purity_ok and reset_consistent
+    # --- Check 4: seed sensitivity (now that enemy waves are live) --------
+    # Same seed -> identical (covered by check 1); a *different* seed must now
+    # diverge, because the wave spawn spread is seeded from root_seed.
+    print("\n[4] seed sensitivity (different seed => different post-wave hash)")
+    other_seed = args.seed + 987654321
+    run_c = _fresh_run(args.port, args.java, other_seed)
+    same_pre_wave = run_a[0][1] == run_c[0][1]  # reset hash: seed-independent (no RNG yet)
+    seed_sensitive = run_a[-1][1] != run_c[-1][1]
+    print(f"    seed {args.seed}: final={run_a[-1][1][:24]}")
+    print(f"    seed {other_seed}: final={run_c[-1][1][:24]}")
+    if seed_sensitive:
+        print("    PASS: different seeds diverge once enemies spawn (spawn spread is seeded)")
+    else:
+        print("    FAIL: different seeds produced identical post-wave hashes", file=sys.stderr)
+    if same_pre_wave:
+        print("    (note: reset hashes match -- nothing consumes root_seed before wave 1)")
+
+    ok = cross_ok and purity_ok and reset_consistent and seed_sensitive
     print("\nDETERMINISM", "OK" if ok else "FAILED")
     return 0 if ok else 1
 
