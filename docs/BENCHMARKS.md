@@ -274,3 +274,35 @@ coordination hashes intentionally differ from the prior checked-in trace. The
 frozen macro remains two wins over 16,200 ticks and 672 checkpoints; the
 separately regenerated golden replays exactly in a fresh JVM and the deliberate
 one-line MINE mutation still diverges.
+
+## M7.6 evaluation ladder and teammate scorecard (2026-07-21)
+
+Command: `make evaluate-ladder` (equivalently
+`bash scripts/evaluate-ladder.sh`). The certified Windows run starts a fresh
+JVM for every policy/seed-set cell and runs one JVM at a time, below the shared
+host's four-JVM ceiling. This avoids cross-policy reset history and host-load
+effects. Every scored episode follows an unscored same-seed idle-through-wave-1
+trace, matching M7.5's reset/action-trace precondition. The complete 65-episode
+run took 39.6 seconds. A second certified run
+produced byte-identical episode JSONL.
+
+All intervals below are deterministic 95% percentile bootstrap intervals over
+10,000 episode-level resamples. `help` is `n/a` in every cell because no ladder
+policy requested help; the JSONL retains `null` plus request/fulfilment counts.
+Recovery is also nullable when no qualifying agent-loss reassignment occurred.
+
+| seed set | policy | wins | win rate 95% CI | core HP mean | idle | duplicates | announcements / transition | abandonment | recovery ticks |
+|:---|:---|---:|:---|---:|---:|---:|---:|---:|---:|
+| fixed | random-valid | 4/5 | 0.80 [0.40, 1.00] | 860.2 | 0.036 | 2.0 | 0.119 | 0.005 | 147.6 |
+| fixed | greedy-utility | 5/5 | 1.00 [1.00, 1.00] | 763.4 | 0.049 | 6.2 | 0.126 | 0.000 | 193.9 |
+| fixed | role-assignment | 4/5 | 0.80 [0.40, 1.00] | 836.8 | 0.073 | 19.2 | 0.095 | 0.016 | 224.6 |
+| fixed | frozen-expert | 5/5 | 1.00 [1.00, 1.00] | 826.4 | 0.934 | 0.0 | 0.500 | 0.333 | n/a |
+| fixed | adaptive-v1 | 5/5 | 1.00 [1.00, 1.00] | 572.6 | 0.063 | 9.6 | 0.141 | 0.111 | 91.0 |
+| dev v1 | random-valid | 4/10 | 0.40 [0.10, 0.70] | 350.9 | 0.033 | 2.5 | 0.131 | 0.004 | 308.1 |
+| dev v1 | greedy-utility | 9/10 | 0.90 [0.70, 1.00] | 715.5 | 0.037 | 5.4 | 0.135 | 0.000 | 160.6 |
+| dev v1 | role-assignment | 7/10 | 0.70 [0.40, 1.00] | 568.4 | 0.039 | 15.6 | 0.079 | 0.009 | 152.1 |
+| dev v1 | adaptive-v1 | 8/10 | 0.80 [0.50, 1.00] | 683.8 | 0.071 | 9.2 | 0.143 | 0.089 | 140.7 |
+
+These fixed/dev results are descriptive. ADR-0012 requires strict held-out
+win-rate CI separation from `greedy-utility` for promotion. No held-out episode
+was run, so the aggregate correctly reports `promotion: not evaluated`.

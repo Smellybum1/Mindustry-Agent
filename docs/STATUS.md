@@ -13,11 +13,11 @@ and what is unverified.
   `ENGINE_VERSION`, `Makefile`, `.gitignore` additions.
 - **Docs**: `ARCHITECTURE.md`, `ROADMAP.md`, `STATUS.md`, `HANDOFF.md`,
   `UPSTREAM_PATCHES.md`, `PROTOCOL.md`, `REWARD_AUDIT.md`, `SCENARIOS.md`,
-  `BENCHMARKS.md`, and ADR-0001..0010 under `docs/decisions/`.
+  `BENCHMARKS.md`, ADR-0001..0010, and ADR-0012 under `docs/decisions/`.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **41 Python
+  client, parallel-env facade, vector collector) is stdlib-only too. **53 Python
   tests pass** via `python -m pytest python/tests -q` (verified 2026-07-21 with
   pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
@@ -32,6 +32,8 @@ and what is unverified.
   `determinism` and the real-server `demo-server` probe remain available.
   Human join mode remains deliberately opt-in (`DEMO_JOIN=1`) so no game port is
   grabbed silently.
+  `evaluate-ladder` supplies the permanent M7.6 baseline/scorecard gate;
+  held-out execution is explicit and remains unused.
 
 ## Milestone 1 — external-step spike (DONE, verified 2026-07-20)
 
@@ -680,8 +682,28 @@ repository-evidence mapping used for the M6 audit is:
   a disjoint deterministic entity-ID range before spawning. The same post-wave
   trace now hashes identically regardless of the preceding episode.
 - No held-out episode was run. No reward, dependency, engine pin, upstream file,
-  previously accepted ADR, or `docs/ENGINE_NOTES.md` changed. Next: M7.6 evaluation ladder
-  and teammate scorecard v0.
+  previously accepted ADR, or `docs/ENGINE_NOTES.md` changed.
+
+## Milestone 7.6 â€” evaluation ladder + teammate scorecard (DONE, verified 2026-07-21)
+
+- `make evaluate-ladder` evaluates versioned random-valid, pure greedy,
+  three-seat role, frozen M6 (fixed only), and adaptive-v1 baselines over the
+  frozen fixed/dev contracts. Each policy/seed-set cell starts a fresh JVM and
+  keeps seed order fixed; every score follows the same same-seed idle trace used
+  by M7.5.
+- The certified Windows path uses one JVM at a time (within the four-JVM cap).
+  Simultaneous JVM trials changed live policy traces under host contention, so
+  the tool rejects that non-reproducible mode. Two certified executions emitted
+  byte-identical 65-line episode JSONL; the full run took 39.6 seconds.
+- Every episode contains the six scorecard metrics plus coverage counts. Help
+  and recovery values are nullable when the relevant event was not observed;
+  no value is imputed. Aggregates use 10,000 deterministic bootstrap resamples.
+- Fixed/dev results are descriptive: adaptive-v1 is 5/5 fixed and 8/10 dev;
+  pure greedy is 5/5 fixed and 9/10 dev. No intervals or dev outcomes authorize
+  promotion. ADR-0012 now requires strict held-out win-rate CI separation.
+- No held-out episode was run. No reward, dependency, engine pin, upstream
+  file, or `docs/ENGINE_NOTES.md` changed. Next: M8.1 design and reward exploit
+  audit before any learned-policy code.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -698,8 +720,9 @@ repository-evidence mapping used for the M6 audit is:
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,
   shared_policy_check}.py` plus the reservation/chaos/announcement checks).
-  `training`,
-  `evaluation`, and `telemetry` remain documented skeletons.
+  `evaluation` now contains the real dependency-free M6 summaries and M7.6
+  ladder/bootstrap machinery; `training` and `telemetry` remain documented
+  skeletons.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and
   reference schematic), plus the delayed-loadout adaptive probe. M5.1 turns
@@ -708,8 +731,9 @@ repository-evidence mapping used for the M6 audit is:
   task-level policy baselines. The winning primary expert is now the M7.3
   greedy candidate policy; the M6 macro remains a frozen baseline. Scenario v2
   adds bounded seed-resolved variation and the M7.4 probe remains explicit.
-- **`configs/`**: the M7.5 train/dev/held-out seed sets are active governance
-  artifacts; unrelated example training YAML remains unused.
+- **`configs/`**: the M7.5 train/dev/held-out seed sets and M7.6 fixed seed set
+  are active governance artifacts; unrelated example training YAML remains
+  unused.
 
 ## What is unverified
 

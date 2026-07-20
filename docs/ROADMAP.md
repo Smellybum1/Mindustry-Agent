@@ -654,6 +654,18 @@ dependencies.
   fortification-coverage gap in `docs/CANDIDATE_GAPS.md`.
 
 ### 7.6 Evaluation ladder + teammate scorecard v0
+- **DONE (verified 2026-07-21):** `make evaluate-ladder` runs the permanent
+  random-valid, pure greedy-utility, fixed role-assignment, frozen M6 macro
+  (fixed only), and adaptive-v1 cells. Each cell starts in a fresh JVM and
+  preserves frozen seed order; every scored episode follows the same unscored
+  same-seed idle-through-wave-1 trace used by M7.5. The certified Windows path uses one JVM at a
+  time, below the four-JVM project cap, because simultaneous live JVMs changed
+  policy traces under host contention. Two certified runs produced identical
+  65-line JSONL. Episode records include pinned engine/scenario/seed-set/policy
+  manifests and the six-field teammate scorecard; unobserved help/recovery is
+  `null` with coverage counts, never imputed. Aggregates use 10,000 stable
+  bootstrap resamples. Fixed/dev are descriptive and the held-out set remains
+  sealed behind an explicit one-way flag; no promotion claim was made.
 - Objective: the permanent judgment machinery: baselines = random-valid,
   greedy-utility, role-assignment, frozen ExpertEpisode (fixed scenario only),
   adaptive-v1. Evaluation harness runs N episodes × policy × seed set with
@@ -673,7 +685,7 @@ Exit criteria:
 - [x] One coordination brain; decision-level parity probe green
 - [x] Utility-driven policy wins fixed 5/5 + ≥80% dev variants; macro retired
 - [x] Seed-varied behaviour demonstrably adaptive (variant probe + metrics)
-- [ ] Ladder + scorecard v0 reproducible; held-out governance in force
+- [x] Ladder + scorecard v0 reproducible; held-out governance in force
 
 ## Milestone 8: Learned task selector (single seat)
 

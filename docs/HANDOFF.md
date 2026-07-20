@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M6 and M7.1–M7.5 complete, verified
+- **What currently works** (M0–M6 and M7.1–M7.6 complete, verified
   2026-07-21): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
@@ -135,13 +135,21 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   episode allocation history cannot leak through native spawning. Adaptive-v1 wins
   8/10 on the frozen dev set; seeds 2005/2007 expose the retained fixed-anchor
   upper-lane fortification gap. No held-out episode has been run.
+  M7.6 adds the permanent five-policy evaluation ladder, a versioned fixed seed
+  contract, deterministic 10,000-resample bootstrap intervals, and a per-episode
+  teammate scorecard derived from structured events and existing metrics. The
+  certified one-JVM Windows path writes byte-repeatable 65-episode JSONL plus
+  aggregates in 39.6 seconds after the same per-seed idle trace used by M7.5.
+  Adaptive-v1 is 5/5 fixed and 8/10 dev; pure
+  greedy is 5/5 fixed and 9/10 dev. These are descriptive only: ADR-0012 now
+  requires strict held-out win-rate CI separation, and held-out remains sealed.
 - **What is stubbed**: training rewards remain empty pending the M8 reward-audit
   gate; learned training code and the
   M10 human goal/override/study surface remain future work.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
-- **Next roadmap item**: M7.6, reproducible evaluation ladder + teammate
-  scorecard v0.
+- **Next roadmap item**: M8.1, write `docs/M8_DESIGN.md` and complete the reward
+  exploit audit before any training code.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -159,7 +167,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (47 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (53 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (108 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-21. |
 | `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-21. |
@@ -168,6 +176,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make coordination-parity` | Compares two complete recorded decision sequences, runs the fixed-step shared expert, then boots the no-port plugin and requires identical live-opening digest/count. Current result: 356 recorded decisions; live digest `1571…a6c2`, 43 selections. Verified 2026-07-21. |
 | `make adaptive-planning-check` | Runs adaptive-v1 and frozen M6 on fixed+delayed-loadout scenarios. Requires adaptive 2/2 wins, fixed frozen win, probe frozen loss, all four decision-event reasons, lower mean idle fraction (0.125 < 0.878), and lower defense-ready tick (817 < 5251). Verified 2026-07-21. |
 | `make scenario-variation-check` | Validates all scenario-v2 axes, disjoint seed governance, same-seed repeated/fresh-JVM reset and idle-through-wave hashes, frozen-dev adaptive survival, and an undefended v2 pathing/loss run. Current result: 8/10 wins (80%); held-out sets are refused. Verified 2026-07-21. |
+| `make evaluate-ladder` | Runs 65 fixed/dev episodes across five versioned baselines, writes episode JSONL plus deterministic bootstrap aggregates, and leaves held-out sealed. Certified one-JVM result is byte-repeatable; adaptive-v1 is 5/5 fixed and 8/10 dev. Verified 2026-07-21. |
 | `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; latest M7.1 run: zero hash mismatches, median 1.31 ms, p95 2.60 ms, peak 298.3 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | Runs adaptive-v1 and the legal post-reservation resource-pressure fixture; both end at tick 8100, and the fixture records a real `resources_short_replan`. Verified 2026-07-21. |
@@ -245,7 +254,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 47 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.5
+- **Passing**: 53 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.6
   action/board/event roundtrips, `test_supervisor.py`, `test_env.py`; fake-server
   subprocess, no JVM, fast) and 108 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
@@ -256,6 +265,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `candidate-policy-check`; M7.4 adds real predicate, event-boundary,
   generalized blocked-replan, and adaptive-vs-frozen probe coverage. M7.5 adds
   cross-JVM variant-reset, sealed-set refusal, and frozen-dev survival coverage.
+  M7.6 adds deterministic policy/scorecard/bootstrap unit coverage and the live
+  65-episode ladder.
 - **Skipped**: none.
 - **Flaky**: the stress-reset *leak* check was flaky under the original
   growth-trend methodology (passed for the author, failed on re-verification);
@@ -291,17 +302,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M7 item 7.6.
+**Authoritative work queue: `docs/ROADMAP.md` M8 item 8.1.
 Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M7.6: evaluation ladder + teammate scorecard.** Compare scripted
-   baselines under frozen seed governance.
-2. **M8.1: M8_DESIGN + reward exploit audit.** Begin only after M7 closes.
-3. **M8.2: ADR-0011 RL dependency boundary.** Keep env/protocol dependency-free.
-4. **M8.3: throughput bring-up.** Prove the WSL2 training gate before training.
-5. **M8.4: one learned selector seat.** Use the same public task-action seam.
+1. **M8.1: M8_DESIGN + reward exploit audit.** Specify the selector boundary,
+   features, masks, rewards, anti-exploit checks, and promotion protocol first.
+2. **M8.2: ADR-0011 RL dependency boundary.** Keep env/protocol dependency-free.
+3. **M8.3: throughput bring-up.** Prove the WSL2 training gate before training.
+4. **M8.4: one learned selector seat.** Use the same public task-action seam.
+5. **M8.5: ablations + held-out promotion gate.** Run held-out only once the
+   policy and code are frozen.
 
 ## Decisions
 

@@ -43,6 +43,16 @@ single reproducible contract before the evaluation ladder expands.
   version, scenario id/version, root seed, seed-set id/version, policy id, and
   agent count. A reset may request a nonzero scenario version; the server rejects
   a mismatch.
+- Fixed and dev ladder results are descriptive only and cannot promote a
+  policy. Held-out execution is a one-way final action behind the explicit
+  `--allow-held-out-final` gate. For each policy, the ladder uses 10,000
+  deterministic episode-level bootstrap resamples of win rate. A candidate is
+  "better" than the permanent `greedy-utility` baseline only when its 95%
+  interval lower bound is strictly greater than the baseline interval upper
+  bound on the same held-out seed set. Overlap means no promotion claim;
+  scorecard metrics remain diagnostic rather than a substitute promotion
+  target. The exact held-out episode manifests and aggregate decision must be
+  retained if that gate is ever used.
 - Any change to a loaded variation axis, bound, derivation, base geometry,
   loadout, wave schedule/composition, allowed content, or termination rule bumps
   `scenario_version`. Documentation-only changes do not.

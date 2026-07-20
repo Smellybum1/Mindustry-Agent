@@ -108,3 +108,20 @@ or weaken the bounded variation.
 - Candidate generation does not yet produce alternative fortification anchors
   from the resolved spawn/lane geometry. The v2 policy can defend the wider
   region, but it cannot choose a lane-specific build plan.
+
+## M7.6 ladder findings
+
+- The permanent pure greedy baseline wins 9/10 dev variants while adaptive-v1
+  wins 8/10. Their bootstrap win-rate intervals overlap, and dev is not a
+  promotion set in any case. Adaptive-v1's wave preemption/readiness switching
+  raises mean task abandonment from 0.000 to 0.089 without a dev win benefit;
+  this is an M8 feature/reward-design input, not permission to tune on dev.
+- None of the five ladder policies issues the explicit request/offer/accept
+  helper protocol during ordinary defense episodes. `time_to_help_ticks` is
+  therefore `null` with zero fulfilments throughout the ladder. Learning or a
+  future scripted capability must deliberately exercise that seam before the
+  metric can judge teammate help quality.
+- The step-scoped `unit_destroy` event now gives the non-imputed recovery metric
+  an exact loss tick: when a seat dies while holding a task type, the scorecard
+  measures until a surviving seat next starts that type. Cells with no observed
+  qualifying loss or restart remain `null` and report their coverage count.
