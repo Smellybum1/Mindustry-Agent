@@ -1,0 +1,14 @@
+# Example environment config — UNUSED PLACEHOLDER (no loader reads this yet).
+# Illustrates intended shape only; fields will change. See docs/SCENARIOS.md.
+scenario_id: bootstrap-defense-v0
+scenario_version: 1
+agent_count: 2
+deterministic: true
+root_seed: 12345
+difficulty: normal
+ticks_per_decision: 30      # decision cadence (brief §15.2), placeholder
+max_episode_ticks: 5400     # ~90 s at 60 tps, placeholder
+transport:
+  kind: tcp
+  host: 127.0.0.1           # loopback only (protocol invariant §7)
+  port: 0                   # 0 = OS-assigned, placeholder

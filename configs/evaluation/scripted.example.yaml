@@ -1,0 +1,13 @@
+# Example evaluation config — UNUSED PLACEHOLDER (no evaluator reads this yet).
+# Shape only; lands with roadmap M6+. See brief §22.
+policy: scripted
+scenario_id: bootstrap-defense-v0
+seeds: [12345, 23456, 34567, 45678, 56789]
+episodes_per_seed: 1
+metrics:
+  - survived_waves
+  - core_health_final
+  - copper_delivered
+  - task_duplication_rate
+  - idle_time_fraction
+record_replay: true
