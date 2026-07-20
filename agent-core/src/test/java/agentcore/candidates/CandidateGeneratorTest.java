@@ -42,7 +42,7 @@ class CandidateGeneratorTest{
             "T4:supply:7:wave-1:at-50",
             "T4:supply:19:wave-1:at-50",
             "T6:rebuild:defense_block:wave-1:at-50",
-            "T5:defend:east_lane:wave-1:agent-0",
+            "T5:defend:east_lane:wave-1:agent-0:at-50",
             "runtime:wait"
         ), taskIds);
     }
@@ -86,7 +86,7 @@ class CandidateGeneratorTest{
         assertEquals("runtime:wait", candidates.candidates().get(7).task().taskId());
         assertTrue(ids.contains("T4:supply:20:wave-1:at-50"),
             "late high-utility task must survive truncation");
-        assertTrue(ids.contains("T5:defend:east_lane:wave-1:agent-0"),
+        assertTrue(ids.contains("T5:defend:east_lane:wave-1:agent-0:at-50"),
             "DEFEND always retains an overflow slot");
         assertFalse(ids.contains("T1:harvest:copper:at-50"),
             "lower utility task should be truncated");
@@ -95,13 +95,13 @@ class CandidateGeneratorTest{
     @Test void satisfiedAndSafeWorldProducesOnlyWait(){
         CandidateWorldSnapshot world = new CandidateWorldSnapshot(
             50, 8, "T1", "T2", "T3", "T4", "T6", "T5", 400, 300,
-            true, 31, true, 120,
+            true, economy(true), 31, true, 120,
             84f, 84f, 224f, 224f, "copper_line_v1",
             260f, 196f, "east_duo_v1",
             3, List.of(),
             List.of(new TurretSnapshot(7, 30, 24, 10)), 10,
             0, 260f, 196f, "defense_block",
-            0, 1200f, 600, 300f, 196f, "east_lane"
+            0, 1200f, defense(1.0, 0.0), 300f, 196f, "east_lane"
         );
 
         CandidateSet candidates = new CandidateGenerator().generate(AGENT, world, UTILITY);
@@ -113,11 +113,11 @@ class CandidateGeneratorTest{
     @Test void completedBuildLineIsRemovedWhileOtherWorkRemains(){
         CandidateWorldSnapshot world = new CandidateWorldSnapshot(
             50, 8, "T1", "T2", "T3", "T4", "T6", "T5", 200, 300,
-            true, 31, false, 120,
+            true, economy(true), 31, false, 120,
             84f, 84f, 224f, 224f, "copper_line_v1",
             260f, 196f, "east_duo_v1", 2, List.of(), List.of(), 10,
             0, 260f, 196f, "defense_block",
-            0, 1200f, 600, 300f, 196f, "east_lane"
+            0, 1200f, defense(0.0, 0.0), 300f, 196f, "east_lane"
         );
 
         List<TaskType> types = new CandidateGenerator().generate(AGENT, world, UTILITY)
@@ -149,16 +149,45 @@ class CandidateGeneratorTest{
             planned.get(1).dependencyTaskIds());
     }
 
+    @Test void economyRequiresConnectivityRateAndFullSampleWindow(){
+        assertFalse(new EconomySnapshot(true, true, 0.7, 0.6, 599, 600).operational());
+        assertFalse(new EconomySnapshot(true, false, 0.7, 0.6, 600, 600).operational());
+        assertFalse(new EconomySnapshot(true, true, 0.5, 0.6, 600, 600).operational());
+        assertTrue(new EconomySnapshot(true, true, 0.7, 0.6, 600, 600).operational());
+    }
+
+    @Test void prioritiesAndSupplyBatchAreDerivedFromLiveDeficits(){
+        CandidateWorldSnapshot world = copyWithCore(activeWorld(List.of(
+            new TurretSnapshot(7, 30, 24, 0)
+        )), 2);
+        List<TaskSpec> tasks = new CandidateGenerator(16).generate(AGENT, world, UTILITY)
+            .candidates().stream().map(TaskCandidate::task).toList();
+
+        TaskSpec harvest = tasks.stream().filter(task -> task.type() == TaskType.HARVEST_RESOURCE)
+            .findFirst().orElseThrow();
+        TaskSpec line = tasks.stream().filter(task -> task.type() == TaskType.BUILD_LINE)
+            .findFirst().orElseThrow();
+        TaskSpec supply = tasks.stream().filter(task -> task.type() == TaskType.SUPPLY_TURRET)
+            .findFirst().orElseThrow();
+        TaskSpec defend = tasks.stream().filter(task -> task.type() == TaskType.DEFEND_REGION)
+            .findFirst().orElseThrow();
+
+        assertEquals(298.0 / 300.0, harvest.priority(), 1e-12);
+        assertEquals(1.0, line.priority(), 1e-12);
+        assertEquals(2, supply.estimatedCost().amount("copper"));
+        assertEquals(0.5, defend.priority(), 1e-12);
+    }
+
     private static CandidateWorldSnapshot activeWorld(List<TurretSnapshot> turrets){
         return new CandidateWorldSnapshot(
             50, 8, "T1", "T2", "T3", "T4", "T6", "T5", 200, 300,
-            false, 31, false, 120,
+            false, economy(false), 31, false, 120,
             84f, 84f, 224f, 224f, "copper_line_v1",
             260f, 196f, "east_duo_v1",
             1, List.of(),
             turrets, 10,
             3, 260f, 196f, "defense_block",
-            0, 400f, 600, 300f, 196f, "east_lane"
+            0, 400f, defense(0.0, 0.5), 300f, 196f, "east_lane"
         );
     }
 
@@ -171,14 +200,45 @@ class CandidateGeneratorTest{
             world.tick(), world.tileSize(), world.harvestTaskId(), world.buildLineTaskId(),
             world.schematicTaskId(), world.supplyTaskId(), world.rebuildTaskId(),
             world.defendTaskId(), world.coreCopper(), world.harvestCopperThreshold(),
-            world.buildLineComplete(), world.buildLineCopperCost(), world.schematicComplete(),
+            world.buildLineComplete(), world.economy(), world.buildLineCopperCost(),
+            world.schematicComplete(),
             world.schematicCopperCost(), world.harvestWorldX(), world.harvestWorldY(),
             world.buildLineWorldX(), world.buildLineWorldY(), world.buildLineId(),
             world.schematicWorldX(), world.schematicWorldY(), world.schematicId(),
             waveNumber, plan, world.turrets(), world.turretTargetAmmo(),
             world.brokenBlockCount(), world.rebuildWorldX(), world.rebuildWorldY(),
             world.rebuildRegionId(), 0, world.timeToNextWave(),
-            world.defendLeadTicks(), world.defendWorldX(), world.defendWorldY(),
+            world.defenseReadiness(), world.defendWorldX(), world.defendWorldY(),
             world.defendRegionId());
+    }
+
+    private static CandidateWorldSnapshot copyWithCore(
+        CandidateWorldSnapshot world,
+        int coreCopper
+    ){
+        return new CandidateWorldSnapshot(
+            world.tick(), world.tileSize(), world.harvestTaskId(), world.buildLineTaskId(),
+            world.schematicTaskId(), world.supplyTaskId(), world.rebuildTaskId(),
+            world.defendTaskId(), coreCopper, world.harvestCopperThreshold(),
+            world.buildLineComplete(), world.economy(), world.buildLineCopperCost(),
+            world.schematicComplete(), world.schematicCopperCost(), world.harvestWorldX(),
+            world.harvestWorldY(), world.buildLineWorldX(), world.buildLineWorldY(),
+            world.buildLineId(), world.schematicWorldX(), world.schematicWorldY(),
+            world.schematicId(), world.waveNumber(), world.plannedSchematics(), world.turrets(),
+            world.turretTargetAmmo(), world.brokenBlockCount(), world.rebuildWorldX(),
+            world.rebuildWorldY(), world.rebuildRegionId(), world.enemyCount(),
+            world.timeToNextWave(), world.defenseReadiness(), world.defendWorldX(),
+            world.defendWorldY(), world.defendRegionId());
+    }
+
+    private static EconomySnapshot economy(boolean operational){
+        return new EconomySnapshot(operational, operational, operational ? 0.7 : 0.0,
+            0.6, operational ? 600 : 0, 600);
+    }
+
+    private static DefenseReadinessSnapshot defense(double readiness, double imminence){
+        return new DefenseReadinessSnapshot(1, 3, 450.0, 124.5, 51, 10,
+            readiness >= 1.0 ? 2 : 0, 2, readiness >= 1.0 ? 51 : 0,
+            readiness, readiness, readiness, readiness, 600, imminence);
     }
 }

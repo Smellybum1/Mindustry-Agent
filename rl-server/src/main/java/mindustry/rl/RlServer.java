@@ -24,6 +24,7 @@ import mindustry.world.blocks.defense.turrets.Turret.*;
 import java.io.*;
 import java.net.*;
 import java.lang.reflect.*;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
@@ -53,6 +54,7 @@ public final class RlServer{
     private final int port;
     //constructed in boot() after content.init() — the loader resolves Mindustry content ids.
     private Scenario scenario;
+    private AdaptiveWorldFacts adaptiveFacts;
     private EngineCandidates engineCandidates;
     private CoordinationAdapter coordination;
     private final FixedStepApplication app;
@@ -70,6 +72,7 @@ public final class RlServer{
     private long resetCounter;
     private int agentCount = 1;
     private long uptimeTicks;
+    private int nextScenarioEvent;
     private final AtomicBoolean stop = new AtomicBoolean(false);
     private Jval stepGameEvents = Jval.newArray();
     private CandidateSet[] boundaryCandidates = new CandidateSet[0];
@@ -128,9 +131,7 @@ public final class RlServer{
         bases.load();
 
         //content is now loaded: parse the scenario spec (resolves block/unit/item ids)
-        scenario = new Scenario();
-        engineCandidates = new EngineCandidates(scenario, registry);
-        coordination = new CoordinationAdapter(scenario, registry);
+        selectScenario("bootstrap-defense-v0");
 
         //Captured only while the simulation thread advances an external step.
         Events.on(UnitDamageEvent.class, this::recordUnitDamage);
@@ -287,6 +288,11 @@ public final class RlServer{
         long requestId = req.getLong("request_id", 0);
         rootSeed = req.getLong("root_seed", 0);
         agentCount = Math.max(1, req.getInt("agent_count", 1));
+        String requestedScenario = req.getString("scenario_id", "bootstrap-defense-v0");
+        if(!Scenario.supports(requestedScenario)){
+            throw new ProtocolReject("unknown_scenario", "unknown scenario_id: " + requestedScenario);
+        }
+        if(!scenario.id.equals(requestedScenario)) selectScenario(requestedScenario);
         Jval options = req.get("options");
         engineCandidates.setOverlapProbe(options != null && options.isObject()
             && options.getBool("reservation_overlap_probe", false));
@@ -314,7 +320,8 @@ public final class RlServer{
         r.put("tick", (long)state.tick);
         r.add("initial_observations", agentObservations());
         r.add("action_masks", candidateMasks());
-        r.put("state_hash", StateHasher.hash(registry, coordination.board()));
+        r.put("state_hash", StateHasher.hash(registry, coordination.board(),
+            adaptiveState()));
         r.put("outcome", "running");
         r.add("metadata", scenario.metadata());
         return r;
@@ -325,6 +332,7 @@ public final class RlServer{
         String reqEpisode = req.getString("episode_id", "");
         int expectedTick = req.getInt("expected_tick", -1);
         int ticks = req.getInt("ticks_to_advance", 0);
+        boolean stopOnDecisionEvent = req.getBool("stop_on_decision_event", false);
 
         if(episodeId == null || !episodeId.equals(reqEpisode)){
             throw new ProtocolReject("unknown_episode", "no such active episode: " + reqEpisode);
@@ -344,23 +352,44 @@ public final class RlServer{
         //advancing; invalid actions are rejected into action_results, never crash.
         coordination.tick((long)state.tick);
         Jval actionResults = applyActions(req);
+        long decisionRevision = coordination.decisionRevision();
+        int previousEnemies = waveEnemyCount();
+        float previousCoreHealth = coreHealth();
+        LinkedHashSet<String> decisionReasons = new LinkedHashSet<>();
 
         long t0 = System.nanoTime();
         app.graphics.setDeltaSeconds(1f / 60f);
+        int advancedTicks = 0;
         for(int i = 0; i < ticks; i++){
             app.stepOnce();
             //deterministic enemy flowfield: converge on the sim thread each tick with the
             //background Pathfinder thread stopped (upstream syncUpdate patch, docs/UPSTREAM_PATCHES.md).
             pathfinder.syncUpdate();
+            int scenarioGrant = applyScenarioEvents((int)state.tick);
+            adaptiveFacts.recordTick(scenarioGrant);
             coordination.recordMetricsTick();
             coordination.tick((long)state.tick);
+            advancedTicks++;
+
+            if(coordination.decisionRevision() != decisionRevision){
+                decisionReasons.add(coordination.lastDecisionReason());
+                decisionRevision = coordination.decisionRevision();
+            }
+            int enemies = waveEnemyCount();
+            if(previousEnemies == 0 && enemies > 0) decisionReasons.add("wave_spawn");
+            if(previousEnemies > 0 && enemies == 0) decisionReasons.add("wave_clear");
+            previousEnemies = enemies;
+            float coreHealth = coreHealth();
+            if(coreHealth + 1e-4f < previousCoreHealth) decisionReasons.add("core_damage");
+            previousCoreHealth = coreHealth;
+            if(stopOnDecisionEvent && !decisionReasons.isEmpty()) break;
         }
         long t1 = System.nanoTime();
-        uptimeTicks += ticks;
+        uptimeTicks += advancedTicks;
 
         long o0 = System.nanoTime();
         Jval obs = agentObservations();
-        String hash = StateHasher.hash(registry, coordination.board());
+        String hash = StateHasher.hash(registry, coordination.board(), adaptiveState());
         long o1 = System.nanoTime();
 
         //termination: win = core alive at winTick; loss = core destroyed; truncate at tick cap.
@@ -405,6 +434,14 @@ public final class RlServer{
         r.add("task_board", coordination.boardSnapshot());
         r.add("coordination_metrics", coordination.metrics());
         r.add("game_events", stepGameEvents);
+        Jval boundary = Jval.newObject();
+        boundary.put("requested_ticks", ticks);
+        boundary.put("advanced_ticks", advancedTicks);
+        boundary.put("triggered", !decisionReasons.isEmpty());
+        Jval reasons = Jval.newArray();
+        for(String reason : decisionReasons) reasons.add(reason);
+        boundary.add("reasons", reasons);
+        r.add("decision_boundary", boundary);
         r.put("state_hash", hash);
         r.add("timing", timing);
         return r;
@@ -480,6 +517,8 @@ public final class RlServer{
         //agent_count alpha units at deterministic offsets and installs SkillControllers
         registry.rebuild(agentCount);
         coordination.reset(rootSeed, agentCount);
+        adaptiveFacts.reset();
+        nextScenarioEvent = 0;
 
         //converge the preloaded enemy flow field once so the first observation is settled
         pathfinder.syncUpdate();
@@ -605,6 +644,8 @@ public final class RlServer{
 
     private Jval worldObs(){
         Building core = scenario.coreTeam.core();
+        EconomySnapshot economy = adaptiveFacts.economy();
+        DefenseReadinessSnapshot defense = adaptiveFacts.defense();
         Jval o = Jval.newObject();
         o.put("tick", (long)state.tick);
         o.put("wave", state.wave);
@@ -619,6 +660,20 @@ public final class RlServer{
         o.put("enemy_count", state.enemies);
         o.put("enemy_total_health", enemyTotalHealth());
         o.put("enemy_nearest_core_dist", enemyNearestCoreDist(core));
+        o.put("line_blocks_complete", economy.blocksComplete());
+        o.put("line_conveyor_connected", economy.conveyorConnected());
+        o.put("core_copper_inflow_per_s", economy.coreInflowPerSecond());
+        o.put("core_copper_inflow_target_per_s", economy.requiredInflowPerSecond());
+        o.put("line_operational", economy.operational());
+        o.put("next_wave_expected_enemies", defense.expectedEnemies());
+        o.put("next_wave_required_ammo", defense.requiredAmmo());
+        o.put("target_ammo_per_turret", defense.targetAmmoPerTurret());
+        o.put("defense_ammo_coverage", defense.ammoCoverage());
+        o.put("defense_health_coverage", defense.healthCoverage());
+        o.put("defense_turret_coverage", defense.turretCoverage());
+        o.put("defense_readiness", defense.readiness());
+        o.put("defend_lead_ticks", defense.defendLeadTicks());
+        o.put("wave_imminence", defense.waveImminence());
         o.add("turrets", turretSummary());
         o.put("done", state.gameOver);
         return o;
@@ -711,6 +766,67 @@ public final class RlServer{
         t.put("copper", StateHasher.coreItem(Items.copper));
         t.put("lead", StateHasher.coreItem(Items.lead));
         return t;
+    }
+
+    private void selectScenario(String id){
+        scenario = new Scenario(id);
+        adaptiveFacts = new AdaptiveWorldFacts(scenario, registry);
+        engineCandidates = new EngineCandidates(scenario, registry, adaptiveFacts);
+        coordination = new CoordinationAdapter(scenario, registry, adaptiveFacts);
+        engineCandidates.setCoordination(coordination);
+    }
+
+    private int applyScenarioEvents(int tick){
+        int grantedCopper = 0;
+        while(nextScenarioEvent < scenario.scheduledEvents.size()
+            && scenario.scheduledEvents.get(nextScenarioEvent).tick() <= tick){
+            Scenario.ScheduledEvent event = scenario.scheduledEvents.get(nextScenarioEvent++);
+            Building core = scenario.coreTeam.core();
+            if(core != null){
+                core.items.add(event.item(), event.amount());
+                if(event.item() == Items.copper) grantedCopper += event.amount();
+            }
+            Jval out = Jval.newObject();
+            out.put("type", "scenario_event");
+            out.put("event_type", event.type());
+            out.put("tick", tick);
+            out.put("item", event.item().name);
+            out.put("amount", event.amount());
+            out.put("reason", event.reason());
+            stepGameEvents.add(out);
+        }
+        return grantedCopper;
+    }
+
+    private int waveEnemyCount(){
+        int count = 0;
+        for(Unit unit : Groups.unit){
+            if(unit.team == scenario.waveTeam && !unit.dead()) count++;
+        }
+        return count;
+    }
+
+    private float coreHealth(){
+        Building core = scenario.coreTeam.core();
+        return core == null ? 0f : core.health;
+    }
+
+    private byte[] adaptiveState(){
+        try{
+            byte[] facts = adaptiveFacts.canonicalState();
+            byte[] coordinationState = coordination.canonicalAdaptiveState();
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(bytes);
+            out.writeInt(facts.length);
+            out.write(facts);
+            out.writeInt(coordinationState.length);
+            out.write(coordinationState);
+            out.writeInt(nextScenarioEvent);
+            out.flush();
+            return bytes.toByteArray();
+        }catch(IOException impossible){
+            throw new AssertionError(impossible);
+        }
     }
 
     // ------------------------------------------------------------- utilities

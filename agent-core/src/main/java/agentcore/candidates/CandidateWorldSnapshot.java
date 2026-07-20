@@ -18,6 +18,7 @@ public record CandidateWorldSnapshot(
     int coreCopper,
     int harvestCopperThreshold,
     boolean buildLineComplete,
+    EconomySnapshot economy,
     int buildLineCopperCost,
     boolean schematicComplete,
     int schematicCopperCost,
@@ -39,7 +40,7 @@ public record CandidateWorldSnapshot(
     String rebuildRegionId,
     int enemyCount,
     float timeToNextWave,
-    int defendLeadTicks,
+    DefenseReadinessSnapshot defenseReadiness,
     float defendWorldX,
     float defendWorldY,
     String defendRegionId
@@ -47,8 +48,7 @@ public record CandidateWorldSnapshot(
     public CandidateWorldSnapshot{
         if(tileSize <= 0 || coreCopper < 0 || harvestCopperThreshold < 0
             || buildLineCopperCost < 0 || schematicCopperCost < 0
-            || waveNumber < 1 || turretTargetAmmo < 0 || brokenBlockCount < 0 || enemyCount < 0
-            || defendLeadTicks < 0){
+            || waveNumber < 1 || turretTargetAmmo < 0 || brokenBlockCount < 0 || enemyCount < 0){
             throw new IllegalArgumentException("candidate counts/costs must be non-negative");
         }
         schematicId = requireName(schematicId, "schematicId");
@@ -58,6 +58,10 @@ public record CandidateWorldSnapshot(
         supplyTaskId = requireName(supplyTaskId, "supplyTaskId");
         rebuildTaskId = requireName(rebuildTaskId, "rebuildTaskId");
         defendTaskId = requireName(defendTaskId, "defendTaskId");
+        if(economy == null) throw new IllegalArgumentException("economy is required");
+        if(defenseReadiness == null){
+            throw new IllegalArgumentException("defenseReadiness is required");
+        }
         buildLineId = requireName(buildLineId, "buildLineId");
         rebuildRegionId = requireName(rebuildRegionId, "rebuildRegionId");
         defendRegionId = requireName(defendRegionId, "defendRegionId");

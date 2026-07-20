@@ -51,6 +51,10 @@ public final class StateHasher{
     }
 
     public static String hash(RlAgentRegistry registry, TaskBoard board){
+        return hash(registry, board, new byte[0]);
+    }
+
+    public static String hash(RlAgentRegistry registry, TaskBoard board, byte[] adaptiveState){
         try{
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             DataOutputStream out = new DataOutputStream(new DigestOutputStream(md));
@@ -254,6 +258,12 @@ public final class StateHasher{
                     out.writeBoolean(reservation.human());
                 }
                 out.writeLong(board.events().peekNextMessageId());
+            }
+
+            if(adaptiveState != null && adaptiveState.length > 0){
+                out.writeInt(0x4d374150); //"M7AP"
+                out.writeInt(adaptiveState.length);
+                out.write(adaptiveState);
             }
 
             out.flush();

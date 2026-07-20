@@ -3,9 +3,9 @@
 Home for the schema that validates scenario definitions under
 `scenarios/<id>/scenario.json`. The first concrete scenario,
 `bootstrap-defense-v0`, ships a machine-readable `scenario.json`; this file
-documents its schema **inline** (a formal `scenario.schema.json` JSON-Schema file
-lands with the loader in roadmap M6 — until then this doc is the contract, and
-`docs/SCENARIOS.md` is the human-readable source of truth).
+documents its schema **inline**. The Java loader is implemented and rejects
+unsupported ids/content, but a formal `scenario.schema.json` has not yet been
+checked in; this document and `docs/SCENARIOS.md` remain the contract.
 
 Compatibility: `scenario_version` (in each `scenario.json`) pins the observable
 scenario contract and maps to the protocol `scenario_schema_version` field
@@ -39,6 +39,7 @@ scenario contract and maps to the protocol `scenario_schema_version` field
 | `world` | object | `width`, `height`, `floor`, `generator`, `weather`, `fog` |
 | `core` | object | `block`, `team`, `center [x,y]`, `footprint_rect`, `health`, `item_capacity` |
 | `loadout` | `{item: amount}` | items seeded into the core at play start |
+| `scheduled_events` | array? | deterministic absolute-tick events; currently `core_item_grant` |
 | `ore_patches` | array | each `{id, ore, rect, role, required_to_win?}` |
 | `enemy_spawns` | array | each `{id, team, tile [x,y]}` |
 | `regions` | object | named `{rect}` regions used as objective targets |
@@ -91,7 +92,9 @@ Predicates are structured so completion is computable from the canonical state
   the core from `source` (e.g. `ore`) ≥ `amount` (anti-exploit: net, not raw mined).
 - `block_count_ge` `{block, on_ore?, count}` — ≥ `count` completed `block`s (optionally on ore).
 - `conveyor_path_connects` `{from_block, to}` — a conveyor chain links `from_block` to `to`.
-- `core_item_inflow_ge` `{item, rate_per_s}` — measured core inflow ≥ rate.
+- `core_item_inflow_ge` `{item, rate_per_s, sample_ticks}` — automated core
+  inflow over the complete rolling window; scenario grants and unit deliveries
+  are excluded.
 - `all_footprint_blocks_ready` `{schematic}` — every block of the schematic is built.
 - `all_turrets_ammo_ge` `{tiles, total_ammo, sustained_each_wave?}` — each turret's `totalAmmo` ≥ threshold.
 - `region_enemy_count_zero_after_each_wave` `{region}` — enemy units in region return to 0 post-wave.

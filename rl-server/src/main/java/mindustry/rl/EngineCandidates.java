@@ -19,13 +19,12 @@ import static mindustry.Vars.*;
 
 /** Simulation-thread adapter from live Mindustry state to the engine-free M5 catalog. */
 public final class EngineCandidates{
-    private static final int DEFEND_LEAD_TICKS = 600;
-    private static final int EXPERT_TURRET_TARGET_AMMO = 30;
     private static final Set<String> ALPHA_CAPABILITIES =
         Set.of("build", "carry", "combat", "mine", "wait");
 
     private final Scenario scenario;
     private final RlAgentRegistry registry;
+    private final AdaptiveWorldFacts facts;
     private final ExpertCoordinationPlan expertPlan;
     private final CandidateGenerator generator = new CandidateGenerator();
     private final Scenario.ObjectiveSpec harvest;
@@ -38,10 +37,20 @@ public final class EngineCandidates{
     private final Scenario.RegionSpec rebuildRegion;
     private final Scenario.RegionSpec defendRegion;
     private boolean overlapProbe;
+    private CoordinationAdapter coordination;
 
     public EngineCandidates(Scenario scenario, RlAgentRegistry registry){
+        this(scenario, registry, new AdaptiveWorldFacts(scenario, registry));
+    }
+
+    public EngineCandidates(
+        Scenario scenario,
+        RlAgentRegistry registry,
+        AdaptiveWorldFacts facts
+    ){
         this.scenario = scenario;
         this.registry = registry;
+        this.facts = facts;
         this.expertPlan = ExpertCoordinationPlans.fromScenario(scenario);
         harvest = requireObjective(TaskType.HARVEST_RESOURCE);
         buildLine = requireObjective(TaskType.BUILD_LINE);
@@ -80,11 +89,13 @@ public final class EngineCandidates{
             }
         }
 
+        EconomySnapshot economy = facts.economy();
+        DefenseReadinessSnapshot defense = facts.defense();
         return new CandidateWorldSnapshot(
             (long)state.tick, tilesize,
             harvest.id(), buildLine.id(), schematic.id(), supply.id(), rebuild.id(), defend.id(),
             StateHasher.coreItem(Items.copper), harvest.threshold(),
-            schematicComplete(lineSpec, scenario.buildLineAnchorX, scenario.buildLineAnchorY),
+            economy.operational(), economy,
             lineSpec.copperCost(),
             schematicComplete(schematicSpec), schematicSpec.copperCost(),
             center(harvestPatch.x, harvestPatch.w), center(harvestPatch.y, harvestPatch.h),
@@ -92,32 +103,34 @@ public final class EngineCandidates{
             scenario.buildLineId,
             scenario.referenceAnchorX * tilesize, scenario.referenceAnchorY * tilesize,
             scenario.referenceSchematicId,
-            Math.max(1, state.wave), plannedSchematics(),
-            turrets, Math.max(supply.threshold(), EXPERT_TURRET_TARGET_AMMO),
+            Math.max(1, state.wave), plannedSchematics(defense),
+            turrets, defense.targetAmmoPerTurret(),
             brokenBlocksIn(rebuildRegion),
             center(rebuildRegion.x(), rebuildRegion.w()), center(rebuildRegion.y(), rebuildRegion.h()),
             rebuildRegion.id(),
-            state.enemies, state.wavetime, DEFEND_LEAD_TICKS,
+            state.enemies, state.wavetime, defense,
             center(defendRegion.x(), defendRegion.w()), center(defendRegion.y(), defendRegion.h()),
             defendRegion.id()
         );
     }
 
-    private List<PlannedSchematicSnapshot> plannedSchematics(){
+    private List<PlannedSchematicSnapshot> plannedSchematics(
+        DefenseReadinessSnapshot defense
+    ){
         ArrayList<PlannedSchematicSnapshot> result = new ArrayList<>();
         ExpertCoordinationPlan.Schematic fortification = expertPlan.fortification();
         if(!schematicComplete(fortification)){
             if(schematicComplete(scenario.schematic(scenario.buildLineId),
                 scenario.buildLineAnchorX, scenario.buildLineAnchorY)
                 && schematicComplete(scenario.schematic(scenario.referenceSchematicId))){
-                result.add(planned(fortification, 1, 0.92));
+                result.add(planned(fortification, 1, 1.0 - defense.readiness()));
             }
             return List.copyOf(result);
         }
         for(int i = 0; i < expertPlan.expansions().size(); i++){
             ExpertCoordinationPlan.Schematic expansion = expertPlan.expansions().get(i);
             if(schematicComplete(expansion)) continue;
-            result.add(planned(expansion, i + 2, 0.95));
+            result.add(planned(expansion, i + 2, 1.0 - defense.readiness()));
             break;
         }
         return List.copyOf(result);
@@ -135,12 +148,11 @@ public final class EngineCandidates{
     }
 
     public CandidateSet generate(RlAgentRegistry.Agent agent, CandidateWorldSnapshot world){
-        float assignmentRange = (float)Math.hypot(scenario.width * tilesize,
-            scenario.height * tilesize);
+        float assignmentRange = facts.assignmentRange();
         AgentSnapshot snapshot = new AgentSnapshot(AgentId.of(agent.index), agent.unit.x,
             agent.unit.y, assignmentRange, ALPHA_CAPABILITIES);
         HandTunedUtility utility = new HandTunedUtility(
-            new EngineFeatureSource(scenario, registry, world));
+            new EngineFeatureSource(scenario, registry, world, assignmentRange, coordination));
         CandidateSet generated = generator.generate(snapshot, world, utility);
         return overlapProbe ? withOverlapProbe(generated) : generated;
     }
@@ -148,6 +160,10 @@ public final class EngineCandidates{
     /** Validation-only scenario option: expose a second task over the same footprint. */
     public void setOverlapProbe(boolean enabled){
         overlapProbe = enabled;
+    }
+
+    public void setCoordination(CoordinationAdapter coordination){
+        this.coordination = coordination;
     }
 
     public Jval observation(CandidateSet set){

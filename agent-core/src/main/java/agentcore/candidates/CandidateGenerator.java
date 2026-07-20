@@ -46,29 +46,32 @@ public final class CandidateGenerator{
         ArrayList<Pending> pending = new ArrayList<>();
         if(world.coreCopper() < world.harvestCopperThreshold()){
             int deficit = world.harvestCopperThreshold() - world.coreCopper();
+            double priority = ratio(deficit, world.harvestCopperThreshold());
             pending.add(new Pending(TaskSpec.builder(world.harvestTaskId() + ":harvest:copper:at-"
                 + world.tick(), TaskType.HARVEST_RESOURCE)
                 .target(new ResourceTarget("copper", deficit))
-                .priority(0.70).estimatedTicks(300).requiredCapabilities(MINE_CAPS)
+                .priority(priority).estimatedTicks(300).requiredCapabilities(MINE_CAPS)
                 .build(), world.harvestWorldX(), world.harvestWorldY()));
         }
 
         if(!world.buildLineComplete()){
+            double priority = 1.0 - world.economy().readiness();
             pending.add(new Pending(TaskSpec.builder(world.buildLineTaskId()
                 + ":build:" + world.buildLineId() + ":at-" + world.tick(),
                 TaskType.BUILD_LINE)
                 .target(new RegionTarget(world.buildLineId()))
-                .priority(0.88).estimatedTicks(600)
+                .priority(priority).estimatedTicks(600)
                 .estimatedCost(ResourceCost.of("copper", world.buildLineCopperCost()))
                 .requiredCapabilities(BUILD_CAPS).build(),
                 world.buildLineWorldX(), world.buildLineWorldY()));
         }
 
         if(!world.schematicComplete()){
+            double priority = 1.0 - world.defenseReadiness().readiness();
             pending.add(new Pending(TaskSpec.builder(world.schematicTaskId() + ":build:"
                 + world.schematicId() + ":at-" + world.tick(), TaskType.BUILD_SCHEMATIC)
                 .target(new RegionTarget(world.schematicId()))
-                .priority(0.90).estimatedTicks(600)
+                .priority(priority).estimatedTicks(600)
                 .estimatedCost(ResourceCost.of("copper", world.schematicCopperCost()))
                 .requiredCapabilities(BUILD_CAPS).helpersRequested(1).build(),
                 world.schematicWorldX(), world.schematicWorldY()));
@@ -92,12 +95,14 @@ public final class CandidateGenerator{
         for(TurretSnapshot turret : turrets){
             if(turret.totalAmmo() >= world.turretTargetAmmo()) continue;
             int ammoDeficit = world.turretTargetAmmo() - turret.totalAmmo();
-            int copper = (ammoDeficit + 1) / 2;
+            int copper = Math.min((ammoDeficit + 1) / 2,
+                Math.max(1, world.coreCopper()));
+            double priority = ratio(ammoDeficit, world.turretTargetAmmo());
             pending.add(new Pending(TaskSpec.builder(world.supplyTaskId() + ":supply:"
                 + turret.entityId() + ":wave-" + world.waveNumber() + ":at-" + world.tick(),
                 TaskType.SUPPLY_TURRET)
                 .target(new EntityTarget(turret.entityId()))
-                .priority(0.85).estimatedTicks(180)
+                .priority(priority).estimatedTicks(180)
                 .estimatedCost(ResourceCost.of("copper", copper))
                 .requiredCapabilities(SUPPLY_CAPS).build(),
                 tileWorld(turret.tileX(), world.tileSize()),
@@ -105,25 +110,30 @@ public final class CandidateGenerator{
         }
 
         if(world.brokenBlockCount() > 0){
+            double priority = Math.max(1.0 - world.defenseReadiness().healthCoverage(),
+                ratio(world.brokenBlockCount(), 5));
             pending.add(new Pending(TaskSpec.builder(world.rebuildTaskId() + ":rebuild:"
                 + world.rebuildRegionId() + ":wave-" + world.waveNumber() + ":at-"
                 + world.tick(), TaskType.REPAIR_REGION)
                 .target(new RegionTarget(world.rebuildRegionId()))
-                .priority(0.80).estimatedTicks(300).requiredCapabilities(BUILD_CAPS).build(),
+                .priority(priority).estimatedTicks(300).requiredCapabilities(BUILD_CAPS).build(),
                 world.rebuildWorldX(), world.rebuildWorldY()));
         }
 
-        if(world.enemyCount() > 0 || world.timeToNextWave() <= world.defendLeadTicks()){
+        DefenseReadinessSnapshot defense = world.defenseReadiness();
+        if(world.enemyCount() > 0 || world.timeToNextWave() <= defense.defendLeadTicks()){
             pending.add(new Pending(TaskSpec.builder(world.defendTaskId() + ":defend:"
                 + world.defendRegionId() + ":wave-" + world.waveNumber() + ":agent-"
-                + agent.id().index(), TaskType.DEFEND_REGION)
+                + agent.id().index() + ":at-" + world.tick(), TaskType.DEFEND_REGION)
                 .target(new RegionTarget(world.defendRegionId()))
-                .priority(1.0).estimatedTicks(900).requiredCapabilities(DEFEND_CAPS)
+                .priority(world.enemyCount() > 0 ? 1.0 : defense.waveImminence())
+                .estimatedTicks(Math.max(1, defense.defendLeadTicks()))
+                .requiredCapabilities(DEFEND_CAPS)
                 .exclusive(false).build(), world.defendWorldX(), world.defendWorldY()));
         }
 
         Pending wait = new Pending(TaskSpec.builder("runtime:wait", TaskType.WAIT)
-            .priority(0.05).estimatedTicks(60).requiredCapabilities(WAIT_CAPS)
+            .priority(0.0).estimatedTicks(60).requiredCapabilities(WAIT_CAPS)
             .exclusive(false).build(), agent.worldX(), agent.worldY());
 
         ArrayList<ScoredPending> scored = new ArrayList<>(pending.size());
@@ -174,6 +184,11 @@ public final class CandidateGenerator{
 
     private static float tileWorld(int tile, int tileSize){
         return tile * (float)tileSize;
+    }
+
+    private static double ratio(int numerator, int denominator){
+        if(denominator <= 0) return numerator > 0 ? 1.0 : 0.0;
+        return Math.max(0.0, Math.min(1.0, numerator / (double)denominator));
     }
 
     private record Pending(TaskSpec task, float worldX, float worldY){}

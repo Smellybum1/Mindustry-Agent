@@ -13,6 +13,8 @@ import arc.util.serialization.*;
 import mindustry.content.*;
 import mindustry.gen.*;
 
+import java.io.*;
+import java.nio.charset.*;
 import java.util.*;
 
 import static mindustry.Vars.*;
@@ -24,6 +26,7 @@ public final class CoordinationAdapter{
 
     private final Scenario scenario;
     private final RlAgentRegistry registry;
+    private final AdaptiveWorldFacts adaptiveFacts;
     private final ExpertCoordinationPlan expertPlan;
     private final TaskBoard board = new TaskBoard();
     private final AnnouncementRenderer announcementRenderer = new AnnouncementRenderer();
@@ -42,12 +45,26 @@ public final class CoordinationAdapter{
     private int tasksCompleted;
     private int tasksAbandoned;
     private int resourceReplans;
+    private int adaptiveReplans;
+    private int policySwitches;
     private int structuredMessages;
     private int announcedMessages;
+    private TaskSpec[] previousTasks = new TaskSpec[0];
+    private long[] previousTaskTicks = new long[0];
+    private TaskSpec[] blockedTasks = new TaskSpec[0];
+    private long[] blockedTaskTicks = new long[0];
+    private long decisionRevision;
+    private String lastDecisionReason = "";
+    private int copperReservationCapacity;
 
-    public CoordinationAdapter(Scenario scenario, RlAgentRegistry registry){
+    public CoordinationAdapter(
+        Scenario scenario,
+        RlAgentRegistry registry,
+        AdaptiveWorldFacts adaptiveFacts
+    ){
         this.scenario = scenario;
         this.registry = registry;
+        this.adaptiveFacts = adaptiveFacts;
         this.expertPlan = ExpertCoordinationPlans.fromScenario(scenario);
     }
 
@@ -65,7 +82,8 @@ public final class CoordinationAdapter{
 
     public void reset(long episodeId, int agentCount){
         board.reset(episodeId);
-        board.reservations().setCapacity("copper", initialCopperBudget());
+        copperReservationCapacity = initialCopperBudget();
+        board.reservations().setCapacity("copper", copperReservationCapacity);
         assignments = new Assignment[agentCount];
         helperDeliveryTasks = new String[agentCount];
         helperDeliveryCargo = new int[agentCount];
@@ -78,8 +96,18 @@ public final class CoordinationAdapter{
         tasksCompleted = 0;
         tasksAbandoned = 0;
         resourceReplans = 0;
+        adaptiveReplans = 0;
+        policySwitches = 0;
         structuredMessages = 0;
         announcedMessages = 0;
+        previousTasks = new TaskSpec[agentCount];
+        previousTaskTicks = new long[agentCount];
+        blockedTasks = new TaskSpec[agentCount];
+        blockedTaskTicks = new long[agentCount];
+        Arrays.fill(previousTaskTicks, Long.MIN_VALUE);
+        Arrays.fill(blockedTaskTicks, Long.MIN_VALUE);
+        decisionRevision = 0L;
+        lastDecisionReason = "";
         if(sharedExpertEnabled){
             sharedExpert = new ExpertCoordinationDriver(
                 ExpertCoordinationPlans.fromScenario(scenario), new SharedExpertPort(),
@@ -222,6 +250,15 @@ public final class CoordinationAdapter{
             sharedExpert.update(tick, enemies, core == null ? 0 : Math.round(core.health));
             return;
         }
+        // Preserve the episode's highest demonstrated copper budget. Spending
+        // after a reservation must not retroactively invalidate that soft claim,
+        // while renewable inflow and deterministic scenario grants can expand it.
+        // Existing full estimates are added so incremental build spending is not
+        // counted twice.
+        int reservedCopper = board.reservations().reservedAmount("copper");
+        copperReservationCapacity = Math.max(copperReservationCapacity,
+            StateHasher.coreItem(Items.copper) + reservedCopper);
+        board.reservations().setCapacity("copper", copperReservationCapacity);
         for(int i = 0; i < assignments.length; i++){
             RlAgentRegistry.Agent agent = registry.get(i);
             syncHelperDelivery(i, agent, tick);
@@ -244,10 +281,27 @@ public final class CoordinationAdapter{
                 if(assignment.sawEnemy && enemies == 0){
                     OpResult completed = board.complete(assignment.taskId,
                         AgentId.of(agent.index), tick);
-                    if(completed.ok()) tasksCompleted++;
+                    if(completed.ok()){
+                        tasksCompleted++;
+                        rememberTransition(i, assignment.spec, tick, false);
+                        markDecision("task_terminal");
+                    }
                     clearAssignment(i, agent);
                     continue;
                 }
+            }
+
+            if(assignment.spec.type() == TaskType.BUILD_LINE
+                && adaptiveFacts.economy().operational()){
+                OpResult completed = board.complete(assignment.taskId,
+                    AgentId.of(agent.index), tick);
+                if(completed.ok()){
+                    tasksCompleted++;
+                    rememberTransition(i, assignment.spec, tick, false);
+                    markDecision("economy_operational");
+                }
+                clearAssignment(i, agent);
+                continue;
             }
 
             SkillResult skill = agent.controller.lastResult();
@@ -270,9 +324,11 @@ public final class CoordinationAdapter{
         if(!expired.isEmpty()){
             for(int i = 0; i < assignments.length; i++){
                 if(assignments[i] != null && expired.contains(assignments[i].taskId)){
+                    rememberTransition(i, assignments[i].spec, tick, true);
                     clearAssignment(i, registry.get(i));
                 }
             }
+            markDecision("task_expired");
         }
     }
 
@@ -394,6 +450,9 @@ public final class CoordinationAdapter{
         out.put("tasks_completed", tasksCompleted);
         out.put("tasks_abandoned", tasksAbandoned);
         out.put("resource_replans", resourceReplans);
+        out.put("adaptive_replans", adaptiveReplans);
+        out.put("policy_switches", policySwitches);
+        out.put("decision_events", decisionRevision);
         out.put("agent_ticks", agentTicks);
         out.put("idle_agent_ticks", idleAgentTicks);
         out.put("idle_fraction", agentTicks == 0L ? 0.0
@@ -483,7 +542,8 @@ public final class CoordinationAdapter{
             case "CONTINUE_CURRENT_TASK" -> {
                 if(assignment == null) yield result(agent.index, false, "no_current_task", type);
                 OpResult op = board.heartbeat(assignment.taskId, id, tick);
-                if(op.ok() && board.task(assignment.taskId).status() == TaskStatus.BLOCKED){
+                if(op.ok() && board.task(assignment.taskId).status() == TaskStatus.BLOCKED
+                    && agent.controller.lastResult().status() != SkillStatus.BLOCKED){
                     board.reportProgress(assignment.taskId, id,
                         board.task(assignment.taskId).progress(), tick);
                     assignment.blockedReason = "";
@@ -497,6 +557,13 @@ public final class CoordinationAdapter{
                 if(op.ok()){
                     tasksAbandoned++;
                     if(reason.equals("resources_short_replan")) resourceReplans++;
+                    if(reason.equals("resources_short_replan")
+                        || reason.startsWith("blocked_replan:")) adaptiveReplans++;
+                    if(reason.equals("wave_preempt")
+                        || reason.equals("readiness_rebalance")) policySwitches++;
+                    rememberTransition(agent.index, assignment.spec, tick,
+                        reason.equals("resources_short_replan")
+                            || reason.startsWith("blocked_replan:"));
                     clearAssignment(agent.index, agent);
                 }
                 yield result(agent.index, op.ok(), op.reason(), type, assignment.taskId);
@@ -708,6 +775,9 @@ public final class CoordinationAdapter{
         if(!reason.equals(assignment.blockedReason)){
             board.reportBlocked(assignment.taskId, AgentId.of(agent.index), reason, tick);
             assignment.blockedReason = reason;
+            blockedTasks[agent.index] = assignment.spec;
+            blockedTaskTicks[agent.index] = tick;
+            markDecision("task_blocked");
         }
         if(tick - assignment.lastHeartbeatTick >= HEARTBEAT_INTERVAL){
             board.heartbeat(assignment.taskId, AgentId.of(agent.index), tick);
@@ -740,12 +810,26 @@ public final class CoordinationAdapter{
             }
         }
 
+        if(assignment.spec.type() == TaskType.BUILD_LINE
+            && !adaptiveFacts.economy().operational()){
+            assignment.stage = "verify_line";
+            agent.controller.setSkill(new Wait(60));
+            board.reportProgress(assignment.taskId, AgentId.of(agent.index),
+                adaptiveFacts.economy().readiness(), tick);
+            assignment.lastHeartbeatTick = tick;
+            return;
+        }
+
         if(assignment.spec.type() == TaskType.WAIT){
             board.release(assignment.taskId, AgentId.of(agent.index), tick);
         }else{
             OpResult completed = board.complete(assignment.taskId,
                 AgentId.of(agent.index), tick);
-            if(completed.ok()) tasksCompleted++;
+            if(completed.ok()){
+                tasksCompleted++;
+                rememberTransition(agent.index, assignment.spec, tick, false);
+                markDecision("task_terminal");
+            }
         }
         clearAssignment(agent.index, agent);
     }
@@ -758,7 +842,11 @@ public final class CoordinationAdapter{
     ){
         OpResult abandoned = board.abandon(assignment.taskId,
             AgentId.of(agent.index), reason, tick);
-        if(abandoned.ok()) tasksAbandoned++;
+        if(abandoned.ok()){
+            tasksAbandoned++;
+            rememberTransition(agent.index, assignment.spec, tick, true);
+            markDecision("task_terminal");
+        }
         clearAssignment(agent.index, agent);
     }
 
@@ -829,6 +917,10 @@ public final class CoordinationAdapter{
     }
 
     private double taskProgress(Assignment assignment, float skillProgress){
+        if(assignment.spec.type() == TaskType.BUILD_LINE
+            && assignment.stage.equals("verify_line")){
+            return Math.min(0.99, adaptiveFacts.economy().readiness());
+        }
         if(assignment.spec.type() != TaskType.HARVEST_RESOURCE) return skillProgress;
         int denominator = Math.max(1, assignment.targetCoreCopper - assignment.startCoreCopper);
         double delivered = Math.max(0, StateHasher.coreItem(Items.copper) - assignment.startCoreCopper);
@@ -847,7 +939,8 @@ public final class CoordinationAdapter{
         if(!dependenciesComplete(task)) return false;
         if(task.exclusive()){
             for(TaskState existing : board.tasks()){
-                if(existing.terminal() || existing.spec().type() != task.type()) continue;
+                if(existing.terminal() || existing.status() == TaskStatus.OPEN
+                    || existing.spec().type() != task.type()) continue;
                 if(Objects.equals(existing.spec().target(), task.target())) return false;
             }
         }
@@ -893,6 +986,84 @@ public final class CoordinationAdapter{
 
     private static String stageFor(TaskSpec task){
         return task.type() == TaskType.HARVEST_RESOURCE ? "mine" : "single";
+    }
+
+    public long decisionRevision(){ return decisionRevision; }
+
+    public String lastDecisionReason(){ return lastDecisionReason; }
+
+    public byte[] canonicalAdaptiveState(){
+        try{
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(bytes);
+            out.writeLong(decisionRevision);
+            writeString(out, lastDecisionReason);
+            out.writeInt(adaptiveReplans);
+            out.writeInt(policySwitches);
+            out.writeInt(copperReservationCapacity);
+            out.writeInt(previousTasks.length);
+            for(int i = 0; i < previousTasks.length; i++){
+                writeTask(out, previousTasks[i]);
+                out.writeLong(previousTaskTicks[i]);
+                writeTask(out, blockedTasks[i]);
+                out.writeLong(blockedTaskTicks[i]);
+            }
+            out.flush();
+            return bytes.toByteArray();
+        }catch(IOException impossible){
+            throw new AssertionError(impossible);
+        }
+    }
+
+    public double switchingCost(int agentIndex, TaskSpec task, long tick){
+        if(agentIndex < 0 || agentIndex >= previousTasks.length) return 0.0;
+        TaskSpec blocked = blockedTasks[agentIndex];
+        long sinceBlocked = tick - blockedTaskTicks[agentIndex];
+        if(blocked != null && sinceBlocked >= 0 && sinceBlocked < 300
+            && sameWork(blocked, task)){
+            return 1.0 - sinceBlocked / 300.0;
+        }
+        TaskSpec previous = previousTasks[agentIndex];
+        long elapsed = tick - previousTaskTicks[agentIndex];
+        if(previous != null && elapsed >= 0 && elapsed < 120 && !sameWork(previous, task)){
+            return 0.5 * (1.0 - elapsed / 120.0);
+        }
+        return 0.0;
+    }
+
+    private void rememberTransition(int agentIndex, TaskSpec task, long tick, boolean failed){
+        if(agentIndex < 0 || agentIndex >= previousTasks.length) return;
+        previousTasks[agentIndex] = task;
+        previousTaskTicks[agentIndex] = tick;
+        if(failed){
+            blockedTasks[agentIndex] = task;
+            blockedTaskTicks[agentIndex] = tick;
+        }
+    }
+
+    private void markDecision(String reason){
+        decisionRevision++;
+        lastDecisionReason = reason;
+    }
+
+    private static boolean sameWork(TaskSpec left, TaskSpec right){
+        return left.type() == right.type() && Objects.equals(left.target(), right.target());
+    }
+
+    private static void writeTask(DataOutputStream out, TaskSpec task) throws IOException{
+        if(task == null){
+            out.writeBoolean(false);
+            return;
+        }
+        out.writeBoolean(true);
+        out.writeInt(task.type().ordinal());
+        writeString(out, task.target() == null ? "" : task.target().describe());
+    }
+
+    private static void writeString(DataOutputStream out, String value) throws IOException{
+        byte[] encoded = value.getBytes(StandardCharsets.UTF_8);
+        out.writeInt(encoded.length);
+        out.write(encoded);
     }
 
     private static float center(int start, int size){

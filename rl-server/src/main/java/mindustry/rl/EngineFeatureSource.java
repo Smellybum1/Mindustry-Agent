@@ -10,25 +10,28 @@ public final class EngineFeatureSource implements FeatureSource{
     private final Scenario scenario;
     private final RlAgentRegistry registry;
     private final CandidateWorldSnapshot world;
-    private final float mapDiagonal;
+    private final float assignmentRange;
+    private final CoordinationAdapter coordination;
 
     public EngineFeatureSource(
         Scenario scenario,
         RlAgentRegistry registry,
-        CandidateWorldSnapshot world
+        CandidateWorldSnapshot world,
+        float assignmentRange,
+        CoordinationAdapter coordination
     ){
         this.scenario = scenario;
         this.registry = registry;
         this.world = world;
-        this.mapDiagonal = (float)Math.hypot(scenario.width * world.tileSize(),
-            scenario.height * world.tileSize());
+        this.assignmentRange = Math.max(1f, assignmentRange);
+        this.coordination = coordination;
     }
 
     @Override public UtilityFeatures featuresFor(AgentId agentId, TaskSpec task, long tick){
         RlAgentRegistry.Agent agent = registry.get(agentId.index());
         float[] target = targetPosition(task, agent);
         double travel = agent == null ? 1.0 : clamp(Math.hypot(
-            target[0] - agent.unit.x, target[1] - agent.unit.y) / mapDiagonal);
+            target[0] - agent.unit.x, target[1] - agent.unit.y) / assignmentRange);
 
         return UtilityFeatures.builder()
             .teamValue(task.priority())
@@ -40,6 +43,8 @@ public final class EngineFeatureSource implements FeatureSource{
             .travelCost(travel)
             .resourceCost(clamp(task.estimatedCost().amount("copper")
                 / (double)Math.max(1, world.coreCopper())))
+            .switchingCost(coordination == null ? 0.0
+                : coordination.switchingCost(agentId.index(), task, tick))
             .danger(task.type() == TaskType.DEFEND_REGION ? 0.0
                 : clamp(world.enemyCount() / 5.0))
             .build();
@@ -49,12 +54,12 @@ public final class EngineFeatureSource implements FeatureSource{
         return switch(task.type()){
             case HARVEST_RESOURCE -> clamp((world.harvestCopperThreshold() - world.coreCopper())
                 / (double)Math.max(1, world.harvestCopperThreshold()));
-            case BUILD_LINE -> world.buildLineComplete() ? 0.0 : 1.0;
+            case BUILD_LINE -> 1.0 - world.economy().readiness();
             case BUILD_SCHEMATIC -> schematicUrgency(task);
             case SUPPLY_TURRET -> turretUrgency(task);
             case REPAIR_REGION -> clamp(world.brokenBlockCount() / 5.0);
-            case DEFEND_REGION -> world.enemyCount() > 0 ? 1.0 : clamp(1.0
-                - world.timeToNextWave() / Math.max(1.0, world.defendLeadTicks()));
+            case DEFEND_REGION -> world.enemyCount() > 0 ? 1.0
+                : world.defenseReadiness().waveImminence();
             default -> 0.0;
         };
     }
@@ -75,7 +80,7 @@ public final class EngineFeatureSource implements FeatureSource{
             && region.regionId().equals(world.schematicId())){
             return world.schematicComplete() ? 0.0 : 1.0;
         }
-        return 1.0;
+        return 1.0 - world.defenseReadiness().readiness();
     }
 
     private float[] targetPosition(TaskSpec task, RlAgentRegistry.Agent agent){

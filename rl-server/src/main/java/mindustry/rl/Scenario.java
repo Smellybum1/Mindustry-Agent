@@ -17,8 +17,8 @@ import java.util.*;
 import static mindustry.Vars.*;
 
 /**
- * The full {@code bootstrap-defense-v0} scenario, driven entirely by the checked-in
- * machine-readable spec {@code scenarios/bootstrap-defense-v0/scenario.json}
+ * A supported bootstrap-defense scenario, driven entirely by its checked-in
+ * machine-readable spec under {@code scenarios/}
  * (schema: {@code scenarios/schemas/README.md}; prose: {@code docs/SCENARIOS.md}).
  *
  * <p><b>Single source of truth.</b> The JSON is copied verbatim onto the rl-server
@@ -36,8 +36,11 @@ import static mindustry.Vars.*;
  * wall-clock dependency (docs/UPSTREAM_PATCHES.md, docs/STATUS.md).
  */
 public final class Scenario{
-    /** Classpath location the JSON is copied to by {@code processResources}. */
-    private static final String RESOURCE = "/scenarios/bootstrap-defense-v0/scenario.json";
+    private static final Map<String, String> RESOURCES = Map.of(
+        "bootstrap-defense-v0", "/scenarios/bootstrap-defense-v0/scenario.json",
+        "bootstrap-defense-adaptive-probe",
+        "/scenarios/bootstrap-defense-adaptive-probe/scenario.json"
+    );
 
     public final String id;
     public final int version;
@@ -85,13 +88,25 @@ public final class Scenario{
     public final int referenceAnchorX, referenceAnchorY;
     public final String buildLineId;
     public final int buildLineAnchorX, buildLineAnchorY;
+    public final double buildLineInflowRate;
+    public final int buildLineInflowSampleTicks;
+    public final List<WaveSpec> waves;
+    public final List<ScheduledEvent> scheduledEvents;
 
     private final Jval raw;
 
     public Scenario(){
-        this.raw = readSpec();
+        this("bootstrap-defense-v0");
+    }
+
+    public Scenario(String requestedId){
+        this.raw = readSpec(requestedId);
 
         this.id = raw.getString("scenario_id", "bootstrap-defense-v0");
+        if(!id.equals(requestedId)){
+            throw new IllegalStateException("scenario resource id " + id
+                + " does not match requested id " + requestedId);
+        }
         this.version = raw.getInt("scenario_version", 1);
 
         Jval world = raw.get("world");
@@ -178,6 +193,8 @@ public final class Scenario{
             buildLineAnchorX = buildLineAnchorY = 0;
         }
 
+        double parsedInflowRate = 0.0;
+        int parsedInflowSampleTicks = 600;
         for(Jval objective : raw.get("objectives").asArray()){
             TaskType type = TaskType.valueOf(objective.getString("task_type", ""));
             Jval target = objective.get("target");
@@ -193,7 +210,20 @@ public final class Scenario{
             if(objectives.put(type, spec) != null){
                 throw new IllegalStateException("duplicate scenario objective type: " + type);
             }
+            if(type == TaskType.BUILD_LINE){
+                Jval inflow = findPredicate(predicate, "core_item_inflow_ge");
+                if(inflow == null){
+                    throw new IllegalStateException("BUILD_LINE requires core_item_inflow_ge");
+                }
+                parsedInflowRate = inflow.getDouble("rate_per_s", 0.0);
+                parsedInflowSampleTicks = inflow.getInt("sample_ticks", 600);
+            }
         }
+        if(parsedInflowRate <= 0.0 || parsedInflowSampleTicks <= 0){
+            throw new IllegalStateException("invalid BUILD_LINE inflow predicate");
+        }
+        buildLineInflowRate = parsedInflowRate;
+        buildLineInflowSampleTicks = parsedInflowSampleTicks;
 
         //--- wave schedule -> native wave timer + per-wave SpawnGroups -----------------
         Jval schedule = raw.get("wave_schedule");
@@ -217,22 +247,44 @@ public final class Scenario{
 
         //one SpawnGroup per (wave, unit) — begin==end pins it to a single wave, so any
         //per-wave composition from the JSON is reproduced exactly (no arithmetic scaling).
+        ArrayList<WaveSpec> parsedWaves = new ArrayList<>();
         for(int i = 0; i < waveCount; i++){
             Jval w = waves.get(i);
             waveTicks.add(w.getInt("tick", 0));
             int waveIndex = i; //engine wave index consumed by getSpawned(state.wave - 1)
+            ArrayList<WaveSpawn> parsedSpawns = new ArrayList<>();
             for(Jval s : w.get("spawns").asArray()){
                 UnitType type = content.unit(s.getString("unit", "dagger"));
+                int count = s.getInt("count", 1);
                 SpawnGroup group = new SpawnGroup(type);
                 group.begin = waveIndex;
                 group.end = waveIndex;
-                group.unitAmount = s.getInt("count", 1);
+                group.unitAmount = count;
                 group.spacing = 1;
                 group.spawn = -1; //all ground spawns (v0 has one)
                 group.team = waveTeam;
                 spawnGroups.add(group);
+                parsedSpawns.add(new WaveSpawn(type, count));
+            }
+            parsedWaves.add(new WaveSpec(i + 1, w.getInt("tick", 0), parsedSpawns));
+        }
+        this.waves = List.copyOf(parsedWaves);
+
+        ArrayList<ScheduledEvent> parsedEvents = new ArrayList<>();
+        Jval eventData = raw.get("scheduled_events");
+        if(eventData != null){
+            for(Jval event : eventData.asArray()){
+                String type = event.getString("type", "");
+                if(!type.equals("core_item_grant")){
+                    throw new IllegalStateException("unsupported scheduled event " + type);
+                }
+                parsedEvents.add(new ScheduledEvent(type, event.getInt("tick", -1),
+                    item(event.getString("item", "copper")), event.getInt("amount", 0),
+                    event.getString("reason", "scenario_event")));
             }
         }
+        parsedEvents.sort(Comparator.comparingInt(ScheduledEvent::tick));
+        this.scheduledEvents = List.copyOf(parsedEvents);
 
         Jval term = raw.get("termination");
         this.winTick = term.get("win").getInt("tick", 8100);
@@ -346,6 +398,10 @@ public final class Scenario{
             referenceAnchorX, referenceAnchorY));
         m.add("build_line", schematicMetadata(buildLineId, buildLineAnchorX,
             buildLineAnchorY));
+        Jval economy = Jval.newObject();
+        economy.put("core_inflow_rate_per_s", buildLineInflowRate);
+        economy.put("sample_ticks", buildLineInflowSampleTicks);
+        m.add("build_line_predicate", economy);
         return m;
     }
 
@@ -404,8 +460,27 @@ public final class Scenario{
         schematics.put(name, new SchematicSpec(name, List.copyOf(blocks), copperCost));
     }
 
-    private static Jval readSpec(){
-        return readResource(RESOURCE);
+    public static boolean supports(String id){
+        return RESOURCES.containsKey(id);
+    }
+
+    private static Jval readSpec(String id){
+        String resource = RESOURCES.get(id);
+        if(resource == null) throw new IllegalArgumentException("unknown scenario_id: " + id);
+        return readResource(resource);
+    }
+
+    private static Jval findPredicate(Jval predicate, String type){
+        if(predicate == null) return null;
+        if(type.equals(predicate.getString("type", ""))) return predicate;
+        Jval children = predicate.get("of");
+        if(children != null){
+            for(Jval child : children.asArray()){
+                Jval found = findPredicate(child, type);
+                if(found != null) return found;
+            }
+        }
+        return null;
     }
 
     private Jval schematicMetadata(String id, int anchorX, int anchorY){
@@ -502,4 +577,20 @@ public final class Scenario{
     public record SchematicSpec(String name, List<BuildSpec> blocks, int copperCost){}
     public record RegionSpec(String id, int x, int y, int w, int h){}
     public record ObjectiveSpec(String id, TaskType taskType, String targetRef, int threshold){}
+    public record WaveSpawn(UnitType type, int count){
+        public WaveSpawn{
+            Objects.requireNonNull(type, "type");
+            if(count <= 0) throw new IllegalArgumentException("wave spawn count must be positive");
+        }
+    }
+    public record WaveSpec(int number, int tick, List<WaveSpawn> spawns){
+        public WaveSpec{ spawns = List.copyOf(spawns); }
+    }
+    public record ScheduledEvent(String type, int tick, Item item, int amount, String reason){
+        public ScheduledEvent{
+            if(tick < 0 || amount <= 0) throw new IllegalArgumentException("invalid scheduled event");
+            Objects.requireNonNull(item, "item");
+            reason = reason == null ? "" : reason;
+        }
+    }
 }
