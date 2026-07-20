@@ -20,6 +20,27 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
   Android/Arc/localRhino conditionals, or Java version checks.
 - **Introduced by**: repository scaffold (this branch).
 
+## M1 decision: pathfinder threads — reflection, not an upstream patch
+
+The brief sanctioned a minimal upstream edit to force the two free-running
+pathfinder threads (`Pathfinder`, `ControlPathfinder`) synchronous *if* they
+could not be cleanly avoided. **No upstream edit was needed for M1.** The M1
+scenario has no waves, no enemies, and no commanded units, so no flowfields are
+ever created and nothing consumes pathfinding. `rl-server` stops both threads
+immediately after world load by invoking their private `stop()` via reflection
+(`RlServer.stopPathfinders()`), so they never run during an episode. This keeps
+the checkout free of upstream modifications. When units/enemies arrive (M3+) and
+pathfinding is actually consumed, a synchronous `syncUpdate()` — reflection or a
+catalogued upstream patch — will be revisited then (see `docs/ENGINE_NOTES.md`
+§5.5, §11.6).
+
+Other engine gaps handled without upstream edits, via reflection into public
+engine classes on the classpath (no `--add-opens` needed):
+
+- `EntityGroup.lastId` (private static) reset to 0 per episode.
+- `Time.globalTimeRaw` / `Time.globalTime` zeroed per episode (`setInternalTime`
+  covers `timeRaw`/`time`; `globalTimeRaw` has no public setter).
+
 ## Not counted as upstream patches
 
 - New files under `rl-server/`, `agent-core/`, `agent-plugin/`, `python/`,

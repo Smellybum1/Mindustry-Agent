@@ -14,8 +14,8 @@ milestone headings.
 Deliverables:
 - [x] Fork initialized with `upstream` remote (branch `coop-agent/v159.7`)
 - [x] Exact engine tag/commit pinned in `ENGINE_VERSION`
-- [ ] JDK 17+ build verified (background `server:dist` build in progress; not yet
-      confirmed green by this track)
+- [x] JDK 17+ build verified (JDK 21, `--release 17`; `./gradlew rl-server:classes`
+      and `:dist` green through the full `:core` kapt pipeline, 2026-07-20)
 - [ ] Server build command verified
 - [x] Python project created (`python/pyproject.toml`, zero-dep core)
 - [ ] Python lockfile created
@@ -32,22 +32,26 @@ Exit criteria:
 ## Milestone 1: External-step technical spike
 
 Deliverables:
-- [ ] `rl-server` launcher (placeholder `RlServerMain` only)
-- [ ] Fixed delta
-- [ ] Health/handshake
-- [ ] Reset
-- [ ] Step N ticks
-- [ ] Minimal observation
-- [ ] State hash
-- [ ] Tiny scenario load
+- [x] `rl-server` launcher (real headless launcher; `mindustry.rl`)
+- [x] Fixed delta (`FixedStepGraphics` pins `1/60 s`; `state.tick` +1.0/update)
+- [x] Health/handshake
+- [x] Reset (in-code 48×48 scenario, repeated resets without JVM restart)
+- [x] Step N ticks (exact advance)
+- [x] Minimal observation (tick/wave/copper/lead/units/buildings/core-health/done)
+- [x] State hash (canonical SHA-256, sorted-by-id, 1e-3 float quantization)
+- [x] Tiny scenario load
 
 Exit criteria:
-- [ ] `make smoke` starts one JVM, resets, steps 600 ticks, exits successfully
-- [ ] Tick count is exact
-- [ ] Same seed/action trace produces matching hash
-- [ ] Timing report is emitted
+- [x] `make smoke` starts one JVM, resets, steps 600 ticks, exits successfully
+      (`bash scripts/smoke.sh` → exit 0)
+- [x] Tick count is exact (verified 0→600 in 10×60 chunks)
+- [x] Same seed/action trace produces matching hash (two fresh JVMs + two
+      in-JVM resets identical; `bash scripts/determinism.sh` → exit 0). NB: the
+      M1 scenario has no RNG/time-driven state, so the *seed* lever is not yet
+      exercised (see `docs/STATUS.md`); the stepping/clock/reset determinism is.
+- [x] Timing report is emitted (`{engine_ms, observation_ms, ...}` per step)
 
-**First major go/no-go gate.**
+**First major go/no-go gate — PASSED (2026-07-20).**
 
 ## Milestone 2: Persistent reset and process pool
 

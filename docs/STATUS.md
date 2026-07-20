@@ -21,34 +21,74 @@ and what is unverified.
   Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
   machine (JDK 21 Temurin, Python 3.12.5, Git 2.46). Verified working in Git Bash.
-- **Not-implemented scripts** (`smoke`, `determinism`, `stress-reset`,
-  `benchmark`, `scripted-demo`, `demo-server`, `test-java`): exit 1 with a
-  pointer to `docs/ROADMAP.md`, by design.
+- **`smoke` / `determinism` scripts**: implemented (M1) and passing — see the
+  Milestone 1 section above.
+- **Still not-implemented scripts** (`stress-reset`, `benchmark`,
+  `scripted-demo`, `demo-server`, `test-java`): exit 1 with a pointer to
+  `docs/ROADMAP.md`, by design.
+
+## Milestone 1 — external-step spike (DONE, verified 2026-07-20)
+
+The highest-risk vertical slice is implemented and passing end to end on this
+machine (AMD Ryzen 7 9800X3D, JDK 21.0.11, Windows 11).
+
+- **`rl-server`** (`mindustry.rl`): a real headless launcher.
+  - `FixedStepApplication implements arc.Application` + `FixedStepGraphics extends
+    MockGraphics` drive the stock `Logic` at a fixed `1/60 s` delta with no
+    background loop thread and no wall-clock read (`state.tick` advances exactly
+    `+1.0` per update).
+  - Boots content once, mirroring `ServerLauncher.init()` minus `ServerControl`
+    (no stdin thread, no timers, no `net.host()`); depends on `:core` only.
+  - Length-prefixed JSON control server on `127.0.0.1:<port>` (default 47810):
+    handshake / reset / step / health / close / error, byte-compatible with
+    `python/src/mindustry_agents/protocol.py`. A socket reader thread only parses
+    and enqueues; all game-state access is on the simulation thread (AGENTS.md §3).
+  - Reset loads a tiny in-code 48×48 scenario (flat stone, copper patch, one
+    Sharded core, no waves/enemies), reseeds `Mathf.rand`, resets
+    `EntityGroup.lastId` (reflection), zeros `Time`, and stops both pathfinder
+    threads (reflection) — repeated resets work with no JVM restart.
+  - Step advances exactly N ticks, captures the M1 observation (tick, wave,
+    copper/lead, unit/building counts, core health, done) and a canonical
+    SHA-256 state hash, with `{engine_ms, observation_ms, ...}` timing.
+- **Python harness**: `process/launcher.py` (context-managed JVM supervisor,
+  tracks the spawned PID, graceful `CloseRequest` + terminate — never kill by
+  name), `tools/smoke.py`, `tools/determinism.py`. `scripts/smoke.sh` and
+  `scripts/determinism.sh` build the jar if missing and run them.
+- **Verified**: `./gradlew rl-server:dist` green; `bash scripts/smoke.sh` →
+  exit 0, tick advances exactly 600; `bash scripts/determinism.sh` → exit 0
+  (two fresh JVMs identical hash-for-hash; two resets identical initial hash);
+  5× repeated in-JVM resets identical; reset latency ~3.8 ms median (Gate 2
+  target <250 ms); ~32,700 engine-only ticks/sec (~545× real-time). See
+  `docs/BENCHMARKS.md`.
+- **Honest caveat**: the M1 scenario has **no RNG-driven or time-driven state**
+  (no enemies, no weather, static core), so identical seeds trivially match
+  *and different seeds also produce the same hash*. The `Mathf.rand` reseed is
+  wired and correct; the seed lever simply has nothing stochastic to influence
+  until enemies/weather exist (M3+). Determinism of the stepping/clock/reset
+  machinery is genuinely proven; seed-sensitivity of state is deferred.
+- **No upstream engine files were modified.** Pathfinder synchronization was
+  achieved by stopping the threads via reflection (they idle with no flowfields
+  in M1), avoiding the sanctioned-but-optional upstream patch.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
-- **`rl-server`**: `mindustry.rl.RlServerMain` prints the engine pin and exits 0.
-  No engine stepping, no protocol server, no scenario loading yet.
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
   `CoordinationAct` (13), `SkillStatus` (6), `AgentId` record — plus a JUnit
   test. No task board, skills, observations, or reward logic yet.
 - **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
   loadable Mindustry plugin. See `agent-plugin/README.md`.
-- **Python subpackages** `env`, `process`, `policies`, `training`, `evaluation`,
-  `telemetry`, `tools`: documented skeletons, no implementation.
+- **Python subpackages** `process` and `tools` now carry real M1 code
+  (`process/launcher.py`, `tools/smoke.py`, `tools/determinism.py`). `env`,
+  `policies`, `training`, `evaluation`, `telemetry`: still documented skeletons.
 - **`scenarios/bootstrap-defense-v0/`**: spec stub only.
 - **`configs/`**: example YAML stubs marked unused-yet.
 
 ## What is unverified
 
-- **Java build of the new modules.** A background `./gradlew server:dist` build
-  was running during scaffolding, so this track did **not** run Gradle (to avoid
-  daemon/cache contention, AGENTS.md §1). The three new module `build.gradle`
-  files were syntax-checked by eye against `server/build.gradle` and
-  `core/build.gradle` idioms but have **not** been compiled. First real build is
-  an M0 exit-criterion item.
-- **Java unit tests** (`agent-core` `AgentCoreTypesTest`): written, not run
-  (same reason).
+- **`rl-server` Java build/run is now verified** (`./gradlew rl-server:classes`
+  and `:dist` green; jar boots headlessly and passes smoke + determinism).
+  `agent-core` and `agent-plugin` builds are still unverified by this track.
+- **Java unit tests** (`agent-core` `AgentCoreTypesTest`): written, not run.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
 

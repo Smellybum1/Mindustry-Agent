@@ -1,8 +1,31 @@
 # Benchmarks
 
-**Status: no measurements yet.** Templates below; fill as milestones produce
-runnable harnesses. Do not optimize from intuition — keep benchmark scripts and
-results here (brief §24). Numbers are project *targets*, not current claims.
+Templates below; fill as milestones produce runnable harnesses. Do not optimize
+from intuition — keep benchmark scripts and results here (brief §24). Target
+rows are project *targets*, not current claims; the M1 section records actual
+observed numbers.
+
+## M1 spike — observed (2026-07-20)
+
+| Field | Value |
+|---|---|
+| Machine | AMD Ryzen 7 9800X3D (8C/16T), 61.6 GB RAM, Windows 11 |
+| JDK | Temurin/OpenJDK 21.0.11 (compiled `--release 17`) |
+| Engine / Arc | v159.7 / c9686eb5… / 208a754044 |
+| Scenario | in-code 48×48 flat + copper patch + 1 Sharded core, no waves |
+
+| Metric | Observed | Conditions |
+|---|---|---|
+| Engine-only stepping | **~32,700 ticks/sec** (~545× real-time @60 tps) | single 3,000-tick step, warm JVM; `engine_ms` only |
+| 600-tick smoke (10×60) | ~20 ms engine total, ~30,500 ticks/sec | first chunk ~4.7 ms (JIT warmup), then ~1.2–2.3 ms/chunk |
+| Observation capture | ~0.1 ms/step | M1 observation + SHA-256 hash |
+| Reset latency | **~3.8 ms median** (min 3.2, max 5.8) | client-observed incl. socket RTT; warm JVM; Gate 2 target <250 ms |
+| Cold boot (content init → READY) | ~11–13 s | one-time per JVM |
+
+Measured via `scripts/smoke.sh` / `scripts/determinism.sh` and the launcher.
+These are rough single-run numbers on an otherwise-loaded workstation, not a
+controlled benchmark; treat them as order-of-magnitude. Determinism verified:
+two fresh JVMs and two in-JVM resets produce byte-identical state hashes.
 
 ## Environment (record for every run)
 
