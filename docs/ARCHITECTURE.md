@@ -105,11 +105,18 @@ their command callbacks through Mindustry's existing command path.
   authoritative decision event) → build observations → compute stable
   `state_hash` → response. The response always reports actual advanced ticks.
 - **Reset path**: reset the world in-process without a JVM restart (ADR-0003);
-  clear all entities, tasks, rewards, and policy-visible state; re-seed from
-  `root_seed`; return initial observations + `state_hash`. JVM restart is a
-  crash-recovery mechanism, not the normal reset path.
+  resolve an immutable scenario descriptor from id/version/`root_seed`; validate
+  its bounded geometry/timing; clear all entities, tasks, rewards, and
+  policy-visible state; re-seed and load on the simulation thread; return
+  initial observations + `state_hash`. JVM restart is a crash-recovery
+  mechanism, not the normal reset path.
+- Reset drops callbacks posted by the outgoing episode before resetting the
+  engine entity counter. Scenario v2 additionally reserves a disjoint
+  deterministic entity-ID range immediately before each native wave, preventing
+  lazy transient allocations from making wave identity depend on episode history.
 - Adaptive rolling inflow evidence, scenario-event cursor, and recent
-  coordination switching history are canonical hash inputs; they are updated
+  coordination switching history are canonical hash inputs. Scenario version 2
+  also hashes its fully resolved variation contract. These inputs are updated
   and read only on the simulation thread.
 - Same seed + same action trace ⇒ identical `state_hash` (target: 10,000 ticks;
   brief §24 Gate 1).

@@ -654,6 +654,35 @@ repository-evidence mapping used for the M6 audit is:
 - All REVIEW_M6 findings are resolved. No reward component, engine pin, accepted
   ADR, upstream file, or `docs/ENGINE_NOTES.md` changed. Next: M7.5 and ADR-0012.
 
+## Milestone 7.5 — scenario variation v1 + seed governance (DONE, verified 2026-07-21)
+
+- `bootstrap-defense-v1` is scenario version 2. Stable named derivations from
+  `root_seed` independently resolve bounded copper/lead patch jitter, a
+  220–280 copper loadout, uniform wave timing jitter, per-wave Dagger count
+  deltas, and an optional upper-east lane on wave 2 or 3.
+- The loader rebuilds the immutable scenario on every reset, pins native wave
+  groups to named spawn tiles, validates resolved geometry/timing/counts, emits
+  the resolved contract in metadata, and includes it in `state_hash`. Nonzero
+  requested scenario-version mismatches are rejected.
+- ADR-0012 freezes pairwise-disjoint train/dev/held-out v1 seed sets. The dev
+  harness refuses held-out input and records engine/Arc/protocol/scenario/
+  seed-set/policy provenance.
+- `make scenario-variation-check` exercises every axis, proves same-seed reset
+  metadata plus idle-through-wave hashes across repeated resets and fresh JVMs,
+  and runs the normal
+  undefended scenario/pathing/loss check on v2. Adaptive-v1 wins **8/10 (80%)**
+  on the frozen dev set; winning core health is 191–1100 (mean 854.8).
+- Seeds 2005 and 2007 lose on the larger upper-lane wave 3. The fixed lower-east
+  build anchor cannot express lane-specific fortification; this remains visible
+  in `docs/CANDIDATE_GAPS.md` for M7.6 instead of rotating seeds.
+- The stronger trace caught stale engine entity-allocation history: callbacks
+  posted by the prior episode are cleared at reset, and each v2 native wave gets
+  a disjoint deterministic entity-ID range before spawning. The same post-wave
+  trace now hashes identically regardless of the preceding episode.
+- No held-out episode was run. No reward, dependency, engine pin, upstream file,
+  previously accepted ADR, or `docs/ENGINE_NOTES.md` changed. Next: M7.6 evaluation ladder
+  and teammate scorecard v0.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -677,8 +706,10 @@ repository-evidence mapping used for the M6 audit is:
   those objectives plus live world state into
   scored candidates; M5.2 claims and executes them; M5.3 supplies deterministic
   task-level policy baselines. The winning primary expert is now the M7.3
-  greedy candidate policy; the M6 macro remains a frozen baseline.
-- **`configs/`**: example YAML stubs marked unused-yet.
+  greedy candidate policy; the M6 macro remains a frozen baseline. Scenario v2
+  adds bounded seed-resolved variation and the M7.4 probe remains explicit.
+- **`configs/`**: the M7.5 train/dev/held-out seed sets are active governance
+  artifacts; unrelated example training YAML remains unused.
 
 ## What is unverified
 

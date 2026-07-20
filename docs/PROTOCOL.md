@@ -65,8 +65,8 @@ Fail fast on incompatible **major** versions.
 | field | type | notes |
 |---|---|---|
 | `request_id` | int | monotonically unique per connection |
-| `scenario_id` | str | e.g. `bootstrap-defense-v0` |
-| `scenario_version` | int | |
+| `scenario_id` | str | e.g. `bootstrap-defense-v0` or `bootstrap-defense-v1` |
+| `scenario_version` | int | expected contract version; `0` means unspecified, any nonzero mismatch is rejected |
 | `root_seed` | int | seeds all stochastic systems |
 | `agent_count` | int | 2–4 for the first scenario |
 | `difficulty` | str | |
@@ -77,6 +77,13 @@ The validation-only reset option `reservation_overlap_probe=true` adds a second
 build candidate over the reference schematic footprint. It exists for the M5.4
 live property check and is disabled by default; training manifests must leave it
 unset.
+
+For `bootstrap-defense-v1` (scenario version 2), reset metadata includes the
+requested `root_seed` and a resolved `variation` object (ore offsets, copper
+loadout, wave timing/count deltas, and optional lane selection). Those values
+are canonical hash inputs. A nonzero `scenario_version` that does not match the
+loaded scenario returns `error_response(code="scenario_version_mismatch")`
+without replacing the active scenario.
 
 M5.5 adds two more validation-only options:
 `lease_failure_agent_id=<index>` and `lease_failure_tick=<tick>`. At that fixed

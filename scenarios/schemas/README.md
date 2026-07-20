@@ -50,14 +50,17 @@ scenario contract and maps to the protocol `scenario_schema_version` field
 | `reference_schematic` | object | `{id, path, anchor}` reference to the `east_duo_v1` build data |
 | `objectives` | array | scored task instances (see below) |
 | `seed_policy` | object | what varies with `root_seed` now vs planned |
+| `variation` | object? | scenario-v2 named bounded ranges resolved independently from `root_seed` |
 | `balance_check` | object | engine-verified numbers + derived survivability results |
 
 ## `wave_schedule[]`
 
 Each entry: `{ "wave": int, "tick": int, "spawn": <enemy_spawn id>, "spawns":
 [ { "unit": <id>, "count": int } ] }`. Ticks are absolute simulation ticks from
-play start (tick 0). Waves are Dagger-only in v0. The stepper spawns `count`
-units of `unit` at the referenced spawn tile when `state.tick == tick`. Because
+play start (tick 0). Waves are Dagger-only in v0/v1. Each native `SpawnGroup`
+is pinned to the named spawn tile; scenario v2 may resolve one later wave to its
+optional second lane. The stepper spawns `count` units of `unit` when the native
+wave timer reaches the resolved tick. Because
 `rules.waves = true`, ground-unit pathfinding/targeting RNG seed deterministically
 from `state.wave` (`docs/ENGINE_NOTES.md` §6).
 
@@ -121,3 +124,6 @@ bump `scenario_version` unless they change what an existing scenario requires.
   tick_cap`.
 - Assert the reference schematic's block tiles lie inside the map and outside the
   core footprint.
+- For scenario v2, resolve each named variation axis independently from
+  `root_seed`, then repeat all geometry/timing/reference validation. Return the
+  resolved values in reset metadata and include them in `state_hash`.

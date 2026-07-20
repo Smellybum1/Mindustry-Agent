@@ -85,7 +85,16 @@ M7.6 ladder and golden replay.
   from blindly consuming every combat seat. DEFEND recurrence includes boundary
   identity so that seat can legally return after resupply.
 
-## Remaining gaps assigned to M7.5+
+## M7.5 variant evidence and remaining gaps
+
+`make scenario-variation-check` evaluates the frozen ten-seed dev set without
+touching the held-out set. Adaptive-v1 wins **8/10**, exactly meeting the 80%
+gate. Seeds 2005 and 2007 both lose during/after wave 3. Both resolve the
+optional upper-east lane on wave 3 and add one Dagger to that wave; the current
+plan still constructs a fixed lower-east fortification, so readiness can report
+full aggregate ammo/health without proving lane-specific firing coverage. This
+is a real planning gap for M7.6's scorecard/ladder, not a reason to rotate seeds
+or weaken the bounded variation.
 
 - Supply targets still use live engine entity IDs in task identity. Ordering is
   deterministic within a boundary, but a future learned feature table should
@@ -96,5 +105,6 @@ M7.6 ladder and golden replay.
   remaining stage-local candidate construction in the demo driver.
 - WAIT retains one shared task ID, so simultaneous idle seats can produce
   harmless rejected bids. This is visible in duplicate/rejection telemetry.
-- Scenario variation and held-out seed governance are intentionally deferred
-  to M7.5; this audit covers fixed scenario version 1 only.
+- Candidate generation does not yet produce alternative fortification anchors
+  from the resolved spawn/lane geometry. The v2 policy can defend the wider
+  region, but it cannot choose a lane-specific build plan.

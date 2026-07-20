@@ -641,6 +641,17 @@ dependencies.
 - Acceptance: determinism per seed unchanged (same seed → same world+hashes);
   scenario_check validates variants; the 7.3 utility policy wins ≥80% on the
   dev variant set (record honestly; gaps feed 7.4 iteration).
+- **Verified 2026-07-21:** `bootstrap-defense-v1` / scenario version 2 resolves
+  all five bounded axes independently from `root_seed`, validates the resolved
+  geometry/waves, publishes it in metadata, and hashes the resolved contract.
+  Same-seed initial state and idle-through-wave action traces match across
+  repeated resets and fresh JVMs. Named train/dev/held-out v1 sets are checked
+  in, pairwise disjoint, and
+  the dev tool refuses to execute a held-out set (ADR-0012).
+- `make scenario-variation-check` exercises every axis, runs the ordinary
+  undefended `scenario_check`, and records adaptive-v1 at **8/10 wins (80%)** on
+  the frozen dev set. Seeds 2005/2007 expose an honest upper-lane wave-3
+  fortification-coverage gap in `docs/CANDIDATE_GAPS.md`.
 
 ### 7.6 Evaluation ladder + teammate scorecard v0
 - Objective: the permanent judgment machinery: baselines = random-valid,
@@ -660,7 +671,7 @@ dependencies.
 Exit criteria:
 - [x] All REVIEW_M6 findings resolved or explicitly waived with rationale
 - [x] One coordination brain; decision-level parity probe green
-- [ ] Utility-driven policy wins fixed 5/5 + ≥80% dev variants; macro retired
+- [x] Utility-driven policy wins fixed 5/5 + ≥80% dev variants; macro retired
 - [x] Seed-varied behaviour demonstrably adaptive (variant probe + metrics)
 - [ ] Ladder + scorecard v0 reproducible; held-out governance in force
 

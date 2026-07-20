@@ -263,7 +263,8 @@ the native spawn-spread variation is represented without changing terrain.
   identical, different seed → different (asserted by `tools/determinism.py`
   check 4). This does **not** bump `scenario_version` (the observable *map/schedule*
   contract is unchanged; spawn spread is not in the version-pinned list).
-- **Planned variation axes (v1+, each bumps `scenario_version`; brief §13 Stage G):**
+- **Variation axes (v1 realizes the bounded subset below; later changes bump
+  `scenario_version`; brief §13 Stage G):**
   1. Ore patch positions jitter (patch A/B/C origin offset within bounded boxes,
      seeded from `root_seed`).
   2. Approach lane / spawn side (east vs a second north or south approach).
@@ -359,6 +360,47 @@ payload; it does not maintain a second set of scenario coordinates.
 
 ---
 
+# bootstrap-defense-v1 (scenario version 2)
+
+M7.5 keeps the v0 objective catalog, core, allowed content, reference defense,
+and build-line schematic, but resolves five bounded axes independently from
+`root_seed`:
+
+| Axis | Declared bound |
+|---|---|
+| Main copper patch origin | x/y offset `[-1,+1]` |
+| Support copper patch origin | x/y offset `[-2,+2]` |
+| Optional lead patch origin | x `[-3,+3]`, y `[-2,+2]` |
+| Starting copper | `[220,280]` |
+| First wave / uniform spacing | `[-90,+90]` / `[-45,+45]` ticks |
+| Dagger composition | independently `+0` or `+1` per wave |
+| Second approach lane | 50%: wave 2 or 3 uses upper-east spawn `(46,30)` |
+
+The v2 defense/repair regions widen north to include the optional lane. Named
+seed derivations isolate the axes: adding a draw for one axis does not move the
+others. After resolution the loader rejects out-of-bounds/overlapping ore,
+core overlap, unknown spawn references, non-positive timing/counts, and invalid
+wave/win/cap ordering. Reset metadata contains `root_seed` and the full resolved
+`variation` object; the same contract is included in `state_hash`.
+Before each v2 native wave, the stepper seeds a disjoint deterministic entity-ID
+range. This keeps unit identity and target tie-breaking independent of transient
+entities allocated earlier in the JVM; it does not change v0's golden path.
+
+The frozen seed sets are:
+
+- `bootstrap-defense-v1-train-v1` (16 seeds): development/future training;
+- `bootstrap-defense-v1-dev-v1` (10 seeds): frozen M7.5 diagnostics and gate;
+- `bootstrap-defense-v1-held-out-v1` (10 seeds): sealed until final evaluation.
+
+They live under `configs/evaluation/`, are pairwise disjoint, and are governed
+by ADR-0012. Existing membership never changes in place; a revision creates a
+new `seed_set_version`. The development harness refuses a held-out set. On the
+v1 dev set, adaptive-v1 wins 8/10. Seeds 2005 and 2007 honestly expose the same
+gap: a larger wave 3 arrives through the upper lane while the build catalog
+still offers only the lower-east fortification anchor.
+
+---
+
 # bootstrap-defense-adaptive-probe
 
 M7.4 adds one explicit acceptance variant, not a seed-randomized scenario. It
@@ -376,4 +418,4 @@ blocked, and cannot complete the opening by tick 2401; the undefended run loses.
 Adaptive-v1 regenerates candidates after the delayed loadout, completes its
 defense at tick 1382 and the verified working line at tick 1794, then wins all
 three waves at tick 8100. This is the M7.4 discriminator. Bounded root-seed
-variation and train/dev/held-out governance remain M7.5/ADR-0012 work.
+variation and train/dev/held-out governance are implemented by M7.5/ADR-0012.
