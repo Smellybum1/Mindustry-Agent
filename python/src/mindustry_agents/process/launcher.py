@@ -359,7 +359,13 @@ class RlServerProcess:
         )
 
     def step(
-        self, episode_id: str, expected_tick: int, ticks_to_advance: int, agent_actions=None
+        self,
+        episode_id: str,
+        expected_tick: int,
+        ticks_to_advance: int,
+        agent_actions=None,
+        *,
+        stop_on_decision_event: bool = False,
     ) -> P.StepResponse:
         assert self.conn is not None
         return self.conn.call(
@@ -369,6 +375,7 @@ class RlServerProcess:
                 expected_tick=expected_tick,
                 ticks_to_advance=ticks_to_advance,
                 agent_actions=agent_actions or [],
+                stop_on_decision_event=stop_on_decision_event,
             )
         )
 

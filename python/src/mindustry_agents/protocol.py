@@ -124,6 +124,7 @@ class StepRequest:
     expected_tick: int = 0
     ticks_to_advance: int = 1
     agent_actions: list[dict[str, Any]] = field(default_factory=list)
+    stop_on_decision_event: bool = False
 
 
 @dataclass
@@ -148,6 +149,7 @@ class StepResponse:
     task_board: list[dict[str, Any]] = field(default_factory=list)
     coordination_metrics: dict[str, Any] = field(default_factory=dict)
     game_events: list[dict[str, Any]] = field(default_factory=list)
+    decision_boundary: dict[str, Any] = field(default_factory=dict)
     state_hash: str = ""
     timing: dict[str, Any] = field(default_factory=lambda: asdict(Timing()))
 

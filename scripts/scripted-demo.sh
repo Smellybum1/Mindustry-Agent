@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripted-demo.sh — M7.3 public greedy expert and constrained replan variant.
+# scripted-demo.sh — adaptive public greedy expert and constrained replan variant.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -16,10 +16,10 @@ if [[ ! -f "$JAR" ]]; then
   else bash ./gradlew rl-server:dist --console=plain; fi
 fi
 
-echo "== M7.3 greedy candidate expert (port=$PORT seed=$SEED) =="
+echo "== M7.4 adaptive greedy candidate expert (port=$PORT seed=$SEED) =="
 "$PY" -m mindustry_agents.tools.scripted_demo --port "$PORT" --seed "$SEED"
 
 echo
-echo "== M7.3 insufficient-copper replan (port=$PORT seed=$SEED) =="
+echo "== M7.4 insufficient-copper replan (port=$PORT seed=$SEED) =="
 exec "$PY" -m mindustry_agents.tools.scripted_demo \
   --port "$PORT" --seed "$SEED" --blocked-variant

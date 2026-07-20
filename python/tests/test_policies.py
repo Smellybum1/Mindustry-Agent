@@ -7,10 +7,11 @@ from mindustry_agents.policies import (
 )
 
 
-def observation(x=0.0, candidates=None, skill=None):
+def observation(x=0.0, candidates=None, skill=None, team=None):
     return {
         "unit": {"x": x, "y": 0.0},
         "skill": skill or {},
+        "team": team or {},
         "task_candidates": candidates
         or [
             {"index": 0, "task_type": "HARVEST_RESOURCE", "utility": 2.0},
@@ -47,6 +48,72 @@ class TestScriptedPolicies(unittest.TestCase):
             action["task_action"],
             {"type": "ABANDON", "reason": "resources_short_replan"},
         )
+
+    def test_greedy_generalizes_blocked_replan_and_bounds_switches(self):
+        policy = GreedyUtilityPolicy()
+        mask = {"continue_current_task": True, "abandon": True}
+        for tick in (10, 20, 30):
+            action = policy.action(
+                1,
+                observation(
+                    skill={"status": "BLOCKED", "reason": "INVALID_TARGET"},
+                    team={"tick": tick},
+                ),
+                mask,
+            )
+            self.assertEqual(
+                action["task_action"]["reason"], "blocked_replan:invalid_target"
+            )
+        bounded = policy.action(
+            1,
+            observation(
+                skill={"status": "BLOCKED", "reason": "INVALID_TARGET"},
+                team={"tick": 40},
+            ),
+            mask,
+        )
+        self.assertEqual(bounded["task_action"], {"type": "CONTINUE_CURRENT_TASK"})
+
+    def test_team_bundle_rebalances_one_defender_to_supply(self):
+        policy = GreedyUtilityPolicy()
+        candidates = [
+            {"index": 0, "task_type": "SUPPLY_TURRET", "utility": 2.0},
+            {"index": 1, "task_type": "DEFEND_REGION", "utility": 3.0},
+        ]
+        team = {"tick": 100, "enemy_count": 3, "defense_ammo_coverage": 0.5}
+        observations = [
+            observation(candidates=candidates, skill={"type": "DEFEND"}, team=team)
+            for _ in range(3)
+        ]
+        masks = [
+            {"continue_current_task": True, "abandon": True, "candidate_task": [False, False]}
+            for _ in range(3)
+        ]
+        actions = policy.actions(observations, masks)
+        self.assertEqual(
+            actions[2]["task_action"],
+            {"type": "ABANDON", "reason": "readiness_rebalance"},
+        )
+        self.assertEqual(actions[0]["task_action"]["type"], "CONTINUE_CURRENT_TASK")
+        self.assertEqual(actions[1]["task_action"]["type"], "CONTINUE_CURRENT_TASK")
+
+        selected = policy.action(
+            2,
+            observation(candidates=candidates, team=team),
+            {"candidate_task": [True, True]},
+        )
+        self.assertEqual(selected["task_action"]["candidate_index"], 0)
+
+    def test_active_supplier_is_not_preempted_by_wave(self):
+        action = GreedyUtilityPolicy().action(
+            2,
+            observation(
+                skill={"type": "SUPPLY", "status": "RUNNING"},
+                team={"tick": 100, "enemy_count": 3},
+            ),
+            {"continue_current_task": True, "abandon": True},
+        )
+        self.assertEqual(action["task_action"], {"type": "CONTINUE_CURRENT_TASK"})
 
     def test_roles_choose_distinct_preferred_work(self):
         policy = RoleAssignmentPolicy(("miner", "builder"))

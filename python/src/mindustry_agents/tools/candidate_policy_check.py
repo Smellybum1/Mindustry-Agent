@@ -12,7 +12,7 @@ from mindustry_agents.tools.expert_common import ScenarioLayout
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Check the M7.3 public candidate policy")
+    parser = argparse.ArgumentParser(description="Check the adaptive public candidate policy")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--java", default="java")
     parser.add_argument("--seeds", nargs="*", type=int, default=list(EVALUATION_SEEDS))
@@ -36,10 +36,10 @@ def main(argv=None) -> int:
                 rejected = 0
                 response = None
                 while tick < layout.tick_cap:
-                    actions = [
-                        policy.action(agent_id, observations[agent_id], masks[agent_id])
-                        for agent_id in range(len(observations))
-                    ]
+                    boundary = (
+                        layout.win_tick if tick < layout.win_tick else layout.tick_cap
+                    )
+                    actions = policy.actions(observations, masks)
                     selections += sum(
                         action["task_action"]["type"] == "SELECT_CANDIDATE_TASK"
                         for action in actions
@@ -47,9 +47,11 @@ def main(argv=None) -> int:
                     response = env.step(
                         episode,
                         expected_tick=tick,
-                        ticks_to_advance=min(30, layout.tick_cap - tick),
+                        ticks_to_advance=min(30, boundary - tick),
                         agent_actions=actions,
+                        stop_on_decision_event=True,
                     )
+                    policy.observe_action_results(response.action_results)
                     rejected += sum(
                         not result.get("accepted", False)
                         for result in response.action_results

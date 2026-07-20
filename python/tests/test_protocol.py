@@ -57,6 +57,18 @@ class TestFraming(unittest.TestCase):
         msg = p.from_dict(payload)
         self.assertEqual(msg.action_results, [])
 
+    def test_event_driven_step_fields_roundtrip(self):
+        request = p.decode(p.encode(p.StepRequest(stop_on_decision_event=True)))
+        self.assertTrue(request.stop_on_decision_event)
+        boundary = {
+            "requested_ticks": 30,
+            "advanced_ticks": 7,
+            "triggered": True,
+            "reasons": ["task_terminal"],
+        }
+        response = p.decode(p.encode(p.StepResponse(decision_boundary=boundary)))
+        self.assertEqual(response.decision_boundary, boundary)
+
     def test_step_request_agent_actions_command(self):
         # An agent action carries a nested command object; it roundtrips intact.
         actions = [{"agent_id": 0, "command": {"type": "NAVIGATE", "x": 1.5, "y": 2.5}}]

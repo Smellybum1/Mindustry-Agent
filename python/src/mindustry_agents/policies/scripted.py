@@ -39,9 +39,90 @@ def _highest_utility(
     return max(candidates, key=lambda entry: (float(entry[1]["utility"]), -entry[0]))[0]
 
 
-@dataclass(frozen=True)
 class GreedyUtilityPolicy:
     """Continue active work; otherwise select the valid highest-utility candidate."""
+
+    REPLANABLE_BLOCKS = frozenset(
+        {
+            "RESOURCES_SHORT",
+            "CORE_SHORT",
+            "INVALID_TARGET",
+            "NO_CORE",
+            "CORE_FULL",
+            "STUCK",
+            "OCCUPIED",
+            "OUT_OF_RANGE",
+            "PLAN_REMOVED",
+            "CARGO_MISMATCH",
+        }
+    )
+    REPLAN_WINDOW_TICKS = 180
+    MAX_REPLANS_PER_WINDOW = 3
+
+    def __init__(self) -> None:
+        self._replan_ticks: dict[int, list[int]] = {}
+        self._last_tick: dict[int, int] = {}
+        self._preferred_types: dict[int, str] = {}
+        self._pending_preferred: dict[int, str] = {}
+        self._return_to_defense: set[int] = set()
+
+    def observe_action_results(self, results: list[dict[str, Any]]) -> None:
+        """Advance preference state only after the server accepts a selection."""
+
+        for result in results:
+            agent_id = int(result.get("agent_id", -1))
+            preferred = self._pending_preferred.pop(agent_id, None)
+            if preferred is None or not result.get("accepted", False):
+                continue
+            self._preferred_types.pop(agent_id, None)
+            if preferred == "SUPPLY_TURRET":
+                self._return_to_defense.add(agent_id)
+
+    def actions(
+        self,
+        observations: list[dict[str, Any]],
+        action_masks: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        """Select one atomic team bundle and retain one logistics seat in combat."""
+
+        actions = [
+            self.action(agent_id, observation, action_masks[agent_id])
+            for agent_id, observation in enumerate(observations)
+        ]
+        if not observations:
+            return actions
+
+        team = observations[0].get("team", {})
+        if int(team.get("enemy_count", 0)) <= 0 or float(
+            team.get("defense_ammo_coverage", 1.0)
+        ) >= 1.0:
+            return actions
+
+        suppliers = [
+            agent_id
+            for agent_id, observation in enumerate(observations)
+            if observation.get("skill", {}).get("type") == "SUPPLY"
+        ]
+        defenders = [
+            agent_id
+            for agent_id, observation in enumerate(observations)
+            if observation.get("skill", {}).get("type") == "DEFEND"
+            and action_masks[agent_id].get("abandon", False)
+        ]
+        # Keep two combat seats occupied, but move the stable highest-index seat
+        # to the public supply candidate as soon as the derived magazine target
+        # stops being met.
+        if not suppliers and len(defenders) > 2:
+            agent_id = max(defenders)
+            self._preferred_types[agent_id] = "SUPPLY_TURRET"
+            actions[agent_id] = {
+                "agent_id": agent_id,
+                "task_action": {
+                    "type": "ABANDON",
+                    "reason": "readiness_rebalance",
+                },
+            }
+        return actions
 
     def action(
         self,
@@ -50,26 +131,70 @@ class GreedyUtilityPolicy:
         action_mask: dict[str, Any],
     ) -> dict[str, Any]:
         skill = observation.get("skill", {})
+        team = observation.get("team", {})
+        tick = int(team.get("tick", 0))
+        if tick < self._last_tick.get(agent_id, tick):
+            self._replan_ticks.pop(agent_id, None)
+            self._preferred_types.pop(agent_id, None)
+            self._pending_preferred.pop(agent_id, None)
+            self._return_to_defense.discard(agent_id)
+        self._last_tick[agent_id] = tick
+
+        preferred_type = self._preferred_types.get(agent_id)
+        if skill.get("type") == "DEFEND":
+            self._return_to_defense.discard(agent_id)
+
         if (
             action_mask.get("abandon", False)
-            and skill.get("status") == "BLOCKED"
-            and skill.get("reason") in {"RESOURCES_SHORT", "CORE_SHORT"}
+            and int(team.get("enemy_count", 0)) > 0
+            and skill.get("type") not in {"", "DEFEND", "SUPPLY"}
         ):
             return {
                 "agent_id": agent_id,
-                "task_action": {
-                    "type": "ABANDON",
-                    "reason": "resources_short_replan",
-                },
+                "task_action": {"type": "ABANDON", "reason": "wave_preempt"},
             }
+
+        reason = str(skill.get("reason", ""))
+        if (
+            action_mask.get("abandon", False)
+            and skill.get("status") == "BLOCKED"
+            and reason in self.REPLANABLE_BLOCKS
+        ):
+            history = self._replan_ticks.setdefault(agent_id, [])
+            cutoff = tick - self.REPLAN_WINDOW_TICKS
+            history[:] = [recorded for recorded in history if recorded > cutoff]
+            if len(history) < self.MAX_REPLANS_PER_WINDOW:
+                history.append(tick)
+                replan_reason = (
+                    "resources_short_replan"
+                    if reason in {"RESOURCES_SHORT", "CORE_SHORT"}
+                    else f"blocked_replan:{reason.lower()}"
+                )
+                return {
+                    "agent_id": agent_id,
+                    "task_action": {"type": "ABANDON", "reason": replan_reason},
+                }
         task_action = _continue_or_none(action_mask)
         if task_action is None:
-            selected = _highest_utility(_valid_candidates(observation, action_mask))
+            if agent_id in self._return_to_defense:
+                preferred_type = "DEFEND_REGION"
+            preferred = (
+                _valid_candidates(observation, action_mask, (preferred_type,))
+                if preferred_type is not None
+                else []
+            )
+            selected = _highest_utility(preferred)
+            if selected is None:
+                if preferred_type is not None:
+                    self._preferred_types.pop(agent_id, None)
+                selected = _highest_utility(_valid_candidates(observation, action_mask))
             task_action = (
                 {"type": "SELECT_CANDIDATE_TASK", "candidate_index": selected}
                 if selected is not None
                 else {"type": "WAIT"}
             )
+            if selected is not None and preferred_type is not None:
+                self._pending_preferred[agent_id] = preferred_type
         return {"agent_id": agent_id, "task_action": task_action}
 
 

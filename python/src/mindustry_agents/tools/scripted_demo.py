@@ -15,11 +15,18 @@ TERMINAL_SKILLS = {"SUCCEEDED", "BLOCKED", "FAILED"}
 
 
 class ExpertEpisode:
-    def __init__(self, env, seed: int, *, blocked_variant: bool = False):
+    def __init__(
+        self,
+        env,
+        seed: int,
+        *,
+        blocked_variant: bool = False,
+        scenario_id: str = "bootstrap-defense-v0",
+    ):
         self.env = env
         self.seed = seed
         self.blocked_variant = blocked_variant
-        reset = env.reset(root_seed=seed, agent_count=3)
+        reset = env.reset(root_seed=seed, scenario_id=scenario_id, agent_count=3)
         self.layout = ScenarioLayout(reset.metadata)
         self.episode = reset.episode_id
         self.tick = reset.tick
@@ -412,6 +419,7 @@ class ExpertEpisode:
             resources_short_replans=self.resources_short_replans,
             first_drill_tick=self.first_drill_tick,
             turrets_supplied_tick=self.turrets_supplied_tick,
+            defense_ready_tick=self.turrets_supplied_tick,
             copper_start=self.copper_start,
             copper_final=int(team["copper"]),
             copper_peak=self.copper_peak,
@@ -428,13 +436,13 @@ def run_frozen_episode(env, seed: int, *, blocked_variant: bool = False) -> Epis
 
 
 def run_episode(env, seed: int, *, blocked_variant: bool = False) -> EpisodeResult:
-    """Run the primary M7.3 utility expert; retained name is the stable facade."""
+    """Run the adaptive utility expert; retained name is the stable facade."""
 
     return run_utility_episode(env, seed, blocked_variant=blocked_variant)
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="M7.3 utility expert demonstration")
+    parser = argparse.ArgumentParser(description="Adaptive utility expert demonstration")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--seed", type=int, default=12345)
     parser.add_argument("--java", default="java")

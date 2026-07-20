@@ -1,4 +1,4 @@
-"""Primary M7.3 expert over the public candidate/mask/task-action seam."""
+"""Adaptive expert over the public candidate/mask/task-action seam."""
 
 from __future__ import annotations
 
@@ -8,17 +8,23 @@ from mindustry_agents.policies import GreedyUtilityPolicy
 from mindustry_agents.tools.expert_common import EpisodeResult, ScenarioLayout
 
 TERMINAL_SKILLS = {"SUCCEEDED", "FAILED", "BLOCKED", "CANCELLED"}
-EXPERT_TURRET_TARGET_AMMO = 30
 
 
 class UtilityExpertEpisode:
     """Run the pure greedy selector over server-generated candidate utilities."""
 
-    def __init__(self, env, seed: int, *, blocked_variant: bool = False):
+    def __init__(
+        self,
+        env,
+        seed: int,
+        *,
+        blocked_variant: bool = False,
+        scenario_id: str = "bootstrap-defense-v0",
+    ):
         self.env = env
         self.seed = seed
         self.blocked_variant = blocked_variant
-        reset = env.reset(root_seed=seed, agent_count=3)
+        reset = env.reset(root_seed=seed, scenario_id=scenario_id, agent_count=3)
         self.layout = ScenarioLayout(reset.metadata)
         self.episode = reset.episode_id
         self.tick = reset.tick
@@ -30,6 +36,9 @@ class UtilityExpertEpisode:
         self.schematic_complete_tick = -1
         self.first_drill_tick = -1
         self.turrets_supplied_tick = -1
+        self.defense_ready_tick = -1
+        self.decision_wakeups = 0
+        self.decision_reasons: dict[str, int] = {}
         self.wave_clear_ticks: list[int] = []
         self.previous_enemies = 0
         self.copper_start = int(self.observations[0]["team"]["copper"])
@@ -40,19 +49,27 @@ class UtilityExpertEpisode:
         self.copper_boundary_out = 0
         self.response = None
 
-    def step(self, ticks: int = 30, actions=None):
+    def step(self, ticks: int = 30, actions=None, *, event_driven: bool = False):
         response = self.env.step(
             self.episode,
             expected_tick=self.tick,
             ticks_to_advance=ticks,
             agent_actions=actions or [],
+            stop_on_decision_event=event_driven,
         )
         self.tick = response.tick
         self.observations = response.observations
         self.action_masks = response.action_masks
         self.response = response
+        self.policy.observe_action_results(response.action_results)
         self._record_events(response.task_events)
         self._record_boundary(response)
+        boundary = response.decision_boundary
+        if boundary.get("triggered", False):
+            self.decision_wakeups += 1
+            for reason in boundary.get("reasons", []):
+                key = str(reason)
+                self.decision_reasons[key] = self.decision_reasons.get(key, 0) + 1
         return response
 
     def _record_events(self, events: list[dict[str, Any]]) -> None:
@@ -95,16 +112,15 @@ class UtilityExpertEpisode:
         self.previous_enemies = enemies
 
         turrets = team["turrets"]
-        objective_ammo = int(
-            self.layout.metadata["objectives"]["SUPPLY_TURRET"]["threshold"]
-        )
-        target_ammo = max(objective_ammo, EXPERT_TURRET_TARGET_AMMO)
+        target_ammo = int(team.get("target_ammo_per_turret", 0))
         if (
             self.turrets_supplied_tick < 0
-            and len(turrets) >= 4
+            and float(team.get("defense_turret_coverage", 0.0)) >= 1.0
             and all(int(turret["total_ammo"]) >= target_ammo for turret in turrets)
         ):
             self.turrets_supplied_tick = response.tick
+        if self.defense_ready_tick < 0 and float(team.get("defense_readiness", 0.0)) >= 1.0:
+            self.defense_ready_tick = response.tick
 
     def _drive_commands(self, commands: dict[int, dict[str, Any]], limit: int = 600) -> None:
         response = self.step(
@@ -136,15 +152,23 @@ class UtilityExpertEpisode:
 
     def _spend_for_blocked_variant(self) -> None:
         core_x, core_y = self.layout.core_tile
+        wall_tiles = (
+            [(core_x - 2, y) for y in range(core_y - 2, core_y + 3)]
+            + [(core_x + 2, y) for y in range(core_y - 2, core_y + 1)]
+            + [(x, core_y - 2) for x in range(core_x - 1, core_x + 2)]
+            + [(x, core_y + 2) for x in range(core_x - 1, core_x + 1)]
+            + [(core_x + 3, y) for y in range(core_y - 3, core_y + 2)]
+            + [(core_x + 4, core_y)]
+        )
         walls = [
             {
                 "type": "BUILD",
                 "block": "copper-wall",
-                "tile_x": max(1, core_x - 22),
-                "tile_y": core_y - 20 + offset,
+                "tile_x": tile_x,
+                "tile_y": tile_y,
                 "rotation": 0,
             }
-            for offset in range(18)
+            for tile_x, tile_y in wall_tiles
         ]
         for start in range(0, len(walls), 3):
             self._drive_commands(
@@ -154,15 +178,66 @@ class UtilityExpertEpisode:
                 }
             )
 
-    def _policy_actions(self) -> list[dict[str, Any]]:
-        return [
-            self.policy.action(
-                agent_id,
-                self.observations[agent_id],
-                self.action_masks[agent_id],
+        self._drive_commands(
+            {
+                agent_id: {
+                    "type": "NAVIGATE",
+                    "x": core_x * self.layout.tile_size + self.layout.tile_size / 2,
+                    "y": core_y * self.layout.tile_size + self.layout.tile_size / 2,
+                    "tolerance": self.layout.tile_size,
+                }
+                for agent_id in range(3)
+            }
+        )
+
+        def candidate(agent_id: int, task_type: str) -> int:
+            for item in self.observations[agent_id]["task_candidates"]:
+                if item["task_type"] == task_type:
+                    return int(item["index"])
+            raise AssertionError(f"blocked fixture missing {task_type} candidate")
+
+        started = self.step(
+            1,
+            [
+                {
+                    "agent_id": 0,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": candidate(0, "BUILD_LINE"),
+                    },
+                },
+                {
+                    "agent_id": 1,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": candidate(1, "BUILD_SCHEMATIC"),
+                    },
+                },
+            ],
+        )
+        if not all(result.get("accepted", False) for result in started.action_results):
+            raise AssertionError(
+                f"blocked fixture could not reserve both plans: {started.action_results}"
             )
-            for agent_id in range(len(self.observations))
-        ]
+        # The two accepted plans reserve exactly 131 copper against the remaining
+        # 136. These legal walls are built after reservation and consume 18,
+        # outpacing the new line's startup trickle and forcing one plan through
+        # the real RESOURCES_SHORT -> reselection path.
+        for offset in range(-2, 1):
+            self._drive_commands(
+                {
+                    2: {
+                        "type": "BUILD",
+                        "block": "copper-wall",
+                        "tile_x": core_x - 3,
+                        "tile_y": core_y + offset,
+                        "rotation": 0,
+                    }
+                }
+            )
+
+    def _policy_actions(self) -> list[dict[str, Any]]:
+        return self.policy.actions(self.observations, self.action_masks)
 
     def run(self) -> EpisodeResult:
         if self.blocked_variant:
@@ -174,7 +249,9 @@ class UtilityExpertEpisode:
                 else self.layout.tick_cap
             )
             response = self.step(
-                min(30, boundary - self.tick), self._policy_actions()
+                min(30, boundary - self.tick),
+                self._policy_actions(),
+                event_driven=True,
             )
             if response.outcome != "running":
                 break
@@ -185,6 +262,8 @@ class UtilityExpertEpisode:
         team = response.observations[0]["team"]
         metrics = dict(response.coordination_metrics)
         metrics["policy_name"] = "greedy-utility-expert-v1"
+        metrics["decision_wakeups"] = self.decision_wakeups
+        metrics["decision_wakeup_reasons"] = dict(sorted(self.decision_reasons.items()))
         replans = int(metrics.get("resource_replans", 0))
         if self.blocked_variant and replans <= 0:
             raise AssertionError("blocked variant performed no legal resource replan")
@@ -206,6 +285,7 @@ class UtilityExpertEpisode:
             resources_short_replans=replans,
             first_drill_tick=self.first_drill_tick,
             turrets_supplied_tick=self.turrets_supplied_tick,
+            defense_ready_tick=self.defense_ready_tick,
             copper_start=self.copper_start,
             copper_final=int(team["copper"]),
             copper_peak=self.copper_peak,
@@ -220,5 +300,16 @@ class UtilityExpertEpisode:
         )
 
 
-def run_utility_episode(env, seed: int, *, blocked_variant: bool = False) -> EpisodeResult:
-    return UtilityExpertEpisode(env, seed, blocked_variant=blocked_variant).run()
+def run_utility_episode(
+    env,
+    seed: int,
+    *,
+    blocked_variant: bool = False,
+    scenario_id: str = "bootstrap-defense-v0",
+) -> EpisodeResult:
+    return UtilityExpertEpisode(
+        env,
+        seed,
+        blocked_variant=blocked_variant,
+        scenario_id=scenario_id,
+    ).run()

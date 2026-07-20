@@ -96,6 +96,7 @@ class EpisodeResult:
     resources_short_replans: int = 0
     first_drill_tick: int = -1
     turrets_supplied_tick: int = -1
+    defense_ready_tick: int = -1
     copper_start: int = 250
     copper_final: int = 0
     copper_peak: int = 250
