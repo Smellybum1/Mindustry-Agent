@@ -1,12 +1,15 @@
-"""M1 determinism harness: same seed + same schedule => identical state hashes.
+"""M1/M3 determinism harness: same seed + same schedule => identical state hashes.
 
 Three checks (all must pass for exit 0):
 
 1. **Cross-process**: two *fresh* JVM instances, run sequentially with the same
    seed and step schedule, must produce identical hashes at every boundary
-   (reset + each chunk). This is the core determinism guarantee (AGENTS.md §3.6).
+   (reset + each plain chunk + each scripted skill step). This is the core
+   determinism guarantee (AGENTS.md §3.6). Since M3 the schedule includes the
+   scripted mine/deliver trace, so this now covers the skill state machines and
+   their engine effects (mining accrual, deferred transfers, core handoff).
 2. **Reset purity**: inside a single JVM, ``reset(seed)`` twice must yield the
-   same initial hash (no cross-episode state leakage).
+   same initial hash (no cross-episode state leakage — agent units are respawned).
 3. **Tick exactness**: every chunk advances the tick by exactly the requested
    amount.
 
@@ -19,6 +22,7 @@ import argparse
 import sys
 
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
+from mindustry_agents.tools import skill_trace
 
 CHUNK = 60
 CHUNKS = 10
@@ -26,7 +30,8 @@ SEED = 12345
 
 
 def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
-    """Reset with ``seed`` then step ``CHUNKS`` chunks; return labelled hashes."""
+    """Reset with ``seed``, step the plain chunks, then replay the scripted skill
+    trace; return labelled hashes at every boundary."""
     hashes: list[tuple[str, str]] = []
     rr = env.reset(root_seed=seed, agent_count=2)
     if rr.tick != 0:
@@ -39,6 +44,16 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
             raise AssertionError(f"tick {sr.tick} != {tick + CHUNK} (non-exact advance)")
         tick = sr.tick
         hashes.append((f"tick@{tick}", sr.state_hash))
+
+    # M3: the scripted mine/deliver trace — exercises the skill FSMs deterministically.
+    for label, actions, ticks in skill_trace.scripted_steps():
+        sr = env.step(
+            rr.episode_id, expected_tick=tick, ticks_to_advance=ticks, agent_actions=actions
+        )
+        if sr.tick != tick + ticks:
+            raise AssertionError(f"tick {sr.tick} != {tick + ticks} (non-exact advance)")
+        tick = sr.tick
+        hashes.append((f"{label}@{tick}", sr.state_hash))
     return hashes
 
 

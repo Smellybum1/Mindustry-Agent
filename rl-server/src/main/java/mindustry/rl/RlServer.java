@@ -1,5 +1,6 @@
 package mindustry.rl;
 
+import agentcore.skill.*;
 import arc.*;
 import arc.math.*;
 import arc.util.*;
@@ -49,6 +50,7 @@ public final class RlServer{
     private final int port;
     private final Scenario scenario = new Scenario(48);
     private final FixedStepApplication app;
+    private final RlAgentRegistry registry = new RlAgentRegistry();
 
     private final BlockingQueue<Jval> requests = new LinkedBlockingQueue<>();
     private ServerSocket serverSocket;
@@ -270,15 +272,14 @@ public final class RlServer{
         episodeId = "ep-" + rootSeed + "-" + System.nanoTime();
         uptimeTicks = 0;
 
-        Jval obs = observation();
         Jval r = Jval.newObject();
         r.put("type", "reset_response");
         r.put("request_id", requestId);
         r.put("episode_id", episodeId);
         r.put("tick", (long)state.tick);
-        r.add("initial_observations", replicate(obs, agentCount));
+        r.add("initial_observations", agentObservations());
         r.add("action_masks", replicate(Jval.newObject(), agentCount));
-        r.put("state_hash", StateHasher.hash());
+        r.put("state_hash", StateHasher.hash(registry));
         r.add("metadata", scenario.metadata());
         return r;
     }
@@ -302,7 +303,10 @@ public final class RlServer{
 
         int previousTick = current;
 
-        //action application for M1 is a no-op (validated but not yet applied)
+        //M3 (D5): decode + apply the per-agent action bundle on the sim thread BEFORE
+        //advancing; invalid actions are rejected into action_results, never crash.
+        Jval actionResults = applyActions(req);
+
         long t0 = System.nanoTime();
         app.graphics.setDeltaSeconds(1f / 60f);
         for(int i = 0; i < ticks; i++){
@@ -312,8 +316,8 @@ public final class RlServer{
         uptimeTicks += ticks;
 
         long o0 = System.nanoTime();
-        Jval obs = observation();
-        String hash = StateHasher.hash();
+        Jval obs = agentObservations();
+        String hash = StateHasher.hash(registry);
         long o1 = System.nanoTime();
 
         Jval timing = Jval.newObject();
@@ -328,8 +332,9 @@ public final class RlServer{
         r.put("episode_id", episodeId);
         r.put("previous_tick", previousTick);
         r.put("tick", (long)state.tick);
-        r.add("observations", replicate(obs, agentCount));
+        r.add("observations", obs);
         r.add("action_masks", replicate(Jval.newObject(), agentCount));
+        r.add("action_results", actionResults);
         r.add("team_state", teamState());
         r.add("reward_breakdowns", replicate(Jval.newObject(), agentCount));
         r.add("terminations", boolArray(agentCount, false));
@@ -401,7 +406,11 @@ public final class RlServer{
         scenario.load();   //fires WorldLoad* -> starts pathfinder threads
         logic.play();      //State.playing, loadout, PlayEvent (zeroes state.tick)
 
-        stopPathfinders(); //deterministic mode: no units need pathing in M1 (§5.5, §11.6)
+        stopPathfinders(); //deterministic mode: agents steer straight, no pathing (§5.5, §11.6, D2)
+
+        //M3 (D1): rebuild the agent registry after play() so the core exists; spawns
+        //agent_count alpha units at deterministic offsets and installs SkillControllers
+        registry.rebuild(agentCount);
     }
 
     /** Stop the two free-running pathfinder threads via their private stop() (no upstream edit). */
@@ -414,9 +423,74 @@ public final class RlServer{
         }
     }
 
+    // ------------------------------------------------------------ actions
+
+    /** Decode + apply the {@code agent_actions} bundle, returning {@code action_results[]}. */
+    private Jval applyActions(Jval req){
+        Jval results = Jval.newArray();
+        Jval actions = req.get("agent_actions");
+        if(actions != null && actions.isArray()){
+            for(Jval action : actions.asArray()){
+                results.add(ActionDecoder.apply(registry, action));
+            }
+        }
+        return results;
+    }
+
     // ------------------------------------------------------------ observation
 
-    private Jval observation(){
+    /** Per-agent observations in dense index order (docs/M3_DESIGN.md D6). */
+    private Jval agentObservations(){
+        Jval arr = Jval.newArray();
+        Jval world = worldObs();
+        for(RlAgentRegistry.Agent agent : registry.agents()){
+            Jval o = Jval.newObject();
+            o.put("agent_id", agent.index);
+            o.add("unit", unitObs(agent));
+            o.add("skill", skillObs(agent));
+            o.add("team", Jval.read(world.toString(Jval.Jformat.plain)));
+            arr.add(o);
+        }
+        //fallback: if there are no agents (agent_count 0), still emit the world view
+        if(arr.asArray().isEmpty()){
+            for(int i = 0; i < agentCount; i++){
+                arr.add(Jval.read(world.toString(Jval.Jformat.plain)));
+            }
+        }
+        return arr;
+    }
+
+    private Jval unitObs(RlAgentRegistry.Agent agent){
+        Unit u = agent.unit;
+        Itemsc it = (Itemsc)u;
+        Minerc mn = (Minerc)u;
+        Jval o = Jval.newObject();
+        o.put("x", u.x);
+        o.put("y", u.y);
+        o.put("vx", u.vel().x);
+        o.put("vy", u.vel().y);
+        o.put("health", u.health);
+        o.put("item", it.item() == null ? "" : it.item().name);
+        o.put("item_amount", it.stack().amount);
+        o.put("mining", mn.mining());
+        o.put("flag", u.flag);
+        o.put("dead", u.dead());
+        return o;
+    }
+
+    private Jval skillObs(RlAgentRegistry.Agent agent){
+        SkillController sc = agent.controller;
+        SkillResult r = sc.lastResult();
+        Jval o = Jval.newObject();
+        o.put("type", sc.activeType());
+        o.put("status", r.status().name());
+        o.put("reason", r.reason().name());
+        o.put("progress", r.progress());
+        o.put("next_retry_tick", r.nextRetryTick());
+        return o;
+    }
+
+    private Jval worldObs(){
         Building core = Team.sharded.core();
         Jval o = Jval.newObject();
         o.put("tick", (long)state.tick);

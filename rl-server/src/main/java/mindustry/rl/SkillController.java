@@ -1,0 +1,131 @@
+package mindustry.rl;
+
+import agentcore.skill.*;
+import arc.math.geom.*;
+import mindustry.entities.units.*;
+import mindustry.gen.*;
+import mindustry.world.*;
+
+import static mindustry.Vars.*;
+
+/**
+ * The per-agent unit controller (docs/M3_DESIGN.md D2). Extends the engine's
+ * {@link AIController} so it is driven each tick by {@code Groups.unit.update()}
+ * ({@code UnitComp.update():840}), and implements {@link AgentBody} so the engine-free
+ * {@link Skill} state machines can steer the live unit.
+ *
+ * <p>{@link #updateUnit()} runs only the active skill — it deliberately does not call
+ * {@code super.updateUnit()} (no vanilla targeting/weapons/pathfinding). Movement is
+ * straight-line via {@link AIController#moveTo}; the async {@code ControlPathfinder} is
+ * never consulted (its threads are stopped in deterministic mode), so a flying unit on the
+ * flat bootstrap map moves deterministically (docs/ENGINE_NOTES.md §5.3).
+ *
+ * <p>All state reads/writes happen on the simulation thread. No teleports and no free
+ * items: mining accrues through the engine's {@code MinerComp} and delivery routes through
+ * {@code Call.transferItemTo} (docs/M3_DESIGN.md D4, resolved open question 3).
+ */
+public final class SkillController extends AIController implements AgentBody{
+    private static final Vec2 steer = new Vec2();
+
+    private final int agentIndex;
+    private Skill active;
+    private SkillResult last = SkillResult.ready();
+
+    public SkillController(int agentIndex){
+        this.agentIndex = agentIndex;
+    }
+
+    /** Suppress the superclass RNG-seeded target timers (we never target). Keeps the
+     * global {@code Mathf.rand} stream untouched by controller construction. */
+    @Override protected void resetTimers(){ }
+
+    public int agentIndex(){ return agentIndex; }
+
+    public void setSkill(Skill skill){
+        this.active = skill;
+        this.last = SkillResult.running(SkillReason.NONE, 0f);
+    }
+
+    public void clearSkill(){
+        this.active = null;
+        this.last = SkillResult.ready();
+    }
+
+    public Skill activeSkill(){ return active; }
+
+    public String activeType(){ return active == null ? "" : active.type(); }
+
+    public SkillResult lastResult(){ return last; }
+
+    @Override
+    public void updateUnit(){
+        if(unit == null || unit.dead()) return;
+        if(active != null){
+            last = active.tick(this, (long)state.tick);
+        }
+    }
+
+    // ------------------------------------------------------------ AgentBody
+
+    @Override public float x(){ return unit.x; }
+    @Override public float y(){ return unit.y; }
+    @Override public float speed(){ return prefSpeed(); }
+    @Override public float dst(float wx, float wy){ return unit.dst(wx, wy); }
+
+    @Override public void steerToward(float wx, float wy){
+        //engine arrival steering (decelerates near target); no pathfinder consulted
+        moveTo(steer.set(wx, wy), 0f, 30f, false, null, true);
+    }
+
+    @Override public void halt(){
+        //issue no movement command; the unit coasts to rest via drag (deterministic)
+    }
+
+    @Override public float mineRange(){ return unit.type.mineRange; }
+
+    @Override public boolean mineableAt(int tileX, int tileY){
+        Tile t = world.tile(tileX, tileY);
+        return t != null && ((Minerc)unit).validMine(t, false);
+    }
+
+    @Override public float tileCenterX(int tileX){ return tileX * tilesize + tilesize / 2f; }
+    @Override public float tileCenterY(int tileY){ return tileY * tilesize + tilesize / 2f; }
+
+    @Override public void setMineTile(int tileX, int tileY){
+        ((Minerc)unit).mineTile(world.tile(tileX, tileY));
+    }
+
+    @Override public void clearMineTile(){ ((Minerc)unit).mineTile(null); }
+
+    @Override public boolean isMining(){ return ((Minerc)unit).mining(); }
+
+    @Override public int cargoAmount(){ return ((Itemsc)unit).stack().amount; }
+
+    @Override public int cargoCapacity(){ return unit.type.itemCapacity; }
+
+    @Override public boolean hasCore(){ return core() != null; }
+
+    @Override public float coreX(){ Building c = core(); return c == null ? unit.x : c.x; }
+    @Override public float coreY(){ Building c = core(); return c == null ? unit.y : c.y; }
+
+    @Override public float coreTransferRange(){ return mineTransferRange; }
+
+    @Override
+    public int transferCargoToCore(){
+        Building c = core();
+        Itemsc it = (Itemsc)unit;
+        mindustry.type.Item item = it.item();
+        int amount = it.stack().amount;
+        if(c == null || item == null || amount <= 0) return 0;
+        int accepted = c.acceptStack(item, amount, unit);
+        if(accepted > 0){
+            //exact engine transfer path used by MinerComp: removes from unit, adds to core
+            Call.transferItemTo(unit, item, accepted, unit.x, unit.y, c);
+        }
+        return accepted;
+    }
+
+    private Building core(){
+        return unit.team().core();
+    }
+}

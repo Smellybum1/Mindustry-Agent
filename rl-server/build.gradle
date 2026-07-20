@@ -23,6 +23,9 @@ project.ext.assetsDir = new File("../core/assets")
 
 dependencies{
     implementation project(":core")
+    //M3: the shared skill FSM layer (agentcore.skill); the engine-facing SkillController
+    //and RlAgentRegistry live here and wrap live units through agentcore.skill.AgentBody.
+    implementation project(":agent-core")
 }
 
 // Self-contained fat jar. Runnable via `java -jar` (with cwd = ../core/assets).

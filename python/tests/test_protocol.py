@@ -40,6 +40,29 @@ class TestFraming(unittest.TestCase):
         d = p.to_dict(p.StepRequest())
         self.assertEqual(d["type"], "step_request")
 
+    def test_step_action_results_roundtrip(self):
+        # M3 additive field: per-action accept/reject results survive a roundtrip.
+        results = [
+            {"agent_id": 0, "accepted": True, "reason": "accepted", "command_type": "MINE"},
+            {"agent_id": 1, "accepted": False, "reason": "out_of_bounds", "command_type": "MINE"},
+        ]
+        msg = p.StepResponse(request_id=7, episode_id="ep", tick=10, action_results=results)
+        back = p.decode(p.encode(msg))
+        self.assertEqual(back.action_results, results)
+
+    def test_step_action_results_default_empty(self):
+        # A pre-M3 StepResponse without action_results decodes to an empty list.
+        payload = {"type": "step_response", "request_id": 1, "episode_id": "e", "tick": 1}
+        msg = p.from_dict(payload)
+        self.assertEqual(msg.action_results, [])
+
+    def test_step_request_agent_actions_command(self):
+        # An agent action carries a nested command object; it roundtrips intact.
+        actions = [{"agent_id": 0, "command": {"type": "NAVIGATE", "x": 1.5, "y": 2.5}}]
+        msg = p.StepRequest(request_id=1, episode_id="e", agent_actions=actions)
+        back = p.decode(p.encode(msg))
+        self.assertEqual(back.agent_actions, actions)
+
     def test_unknown_type_rejected(self):
         with self.assertRaises(p.ProtocolError):
             p.from_dict({"type": "does_not_exist"})

@@ -8,21 +8,26 @@ duck-typed on purpose: the core package must import with zero third-party deps
 extra is installed is trivial — subclass ``ParallelEnv`` and delegate each method
 to an instance of this class (see the module docstring example below).
 
-HONESTY REQUIREMENT (M1 engine state)
--------------------------------------
-The M1 engine emits a single **world-level** observation and has **no per-agent
-entities** yet (that is milestone M3). So:
+ENGINE STATE (M3)
+-----------------
+Since M3 the engine spawns one controllable ``alpha`` unit per agent and emits a
+**real per-agent observation** — ``{agent_id, unit:{x,y,vx,vy,health,item,
+item_amount,mining,flag}, skill:{type,status,progress,reason}, team:<world view>}``
+(docs/M3_DESIGN.md D6). So:
 
-* ``possible_agents == ["agent_0", "agent_1"]`` and every agent currently
-  receives the *same* world observation (a shared reference-equal dict copy).
-* Actions are accepted as a per-agent dict but are **no-op bundles** — the engine
-  ignores their contents in M1. Nothing here fakes per-agent state.
+* ``possible_agents == ["agent_0", "agent_1"]`` and each agent receives its **own**
+  observation (its unit + active skill), with the shared world/team snapshot nested
+  under ``team``. They are no longer identical copies.
+* High-level actions (``NAVIGATE``/``MINE``/``DELIVER_CORE``/``WAIT``/``CONTINUE``)
+  are decoded and executed by the engine, and each is echoed back in
+  ``StepResponse.action_results`` with an accept/reject reason.
 
-The *plumbing* is nonetheless per-agent end to end: ``reset``/``step`` take and
-return dicts keyed by agent name, and the per-agent action dict is bundled into
-the single :class:`StepRequest` the protocol already carries. When M3 lands, only
-the *payload contents* (real per-agent observations/rewards) change — not the
-shape of this API.
+Honest caveat: this facade's :meth:`_bundle_actions` still emits the M1 passthrough
+shape (``{"agent": name, **action}``); it does **not** yet translate to the M3
+``{agent_id, command}`` action schema — that adaptation belongs to the training
+layer and is deferred. Rewards remain empty until M7. The concrete
+``observation_space``/``action_space`` return descriptor stubs, not gymnasium
+Spaces (arrives with the ``[rl]`` extra).
 
 Example pettingzoo adapter (needs the ``[rl]`` extra)::
 
@@ -71,28 +76,19 @@ class MindustryParallelEnv:
 
     def observation_space(self, agent: str) -> dict[str, Any]:
         """Descriptor stub. Framework-neutral; a real gymnasium.Space arrives
-        with the ``[rl]`` extra and the M3 per-agent observation schema."""
+        with the ``[rl]`` extra. Since M3 the observation is per-agent."""
         return {
-            "type": "world_observation",
-            "note": "M1: shared world-level dict; per-agent schema is M3",
-            "keys": [
-                "tick",
-                "wave",
-                "copper",
-                "lead",
-                "unit_count",
-                "building_count",
-                "core_health",
-                "done",
-            ],
+            "type": "agent_observation",
+            "note": "M3: per-agent {agent_id, unit, skill, team}",
+            "keys": ["agent_id", "unit", "skill", "team"],
         }
 
     def action_space(self, agent: str) -> dict[str, Any]:
-        """Descriptor stub. M1 actions are accepted-but-no-op bundles."""
+        """Descriptor stub. Since M3 the engine executes high-level skill commands."""
         return {
-            "type": "noop_bundle",
-            "note": "M1: actions accepted but ignored by the engine; real "
-            "high-level action vocabulary is M3+",
+            "type": "skill_command",
+            "note": "M3: {type in NAVIGATE|MINE|DELIVER_CORE|WAIT|CONTINUE, params...}; "
+            "this facade still emits the M1 passthrough shape (see module docstring)",
         }
 
     # -- PettingZoo ParallelEnv surface ------------------------------------
@@ -105,7 +101,7 @@ class MindustryParallelEnv:
         """Reset the world. Returns ``(observations, infos)`` keyed by agent.
 
         A ``seed`` of ``None`` defaults to ``0`` (the protocol requires an int
-        root seed). All live agents receive the same world observation in M1.
+        root seed). Since M3 each live agent receives its own observation.
         """
         if seed is None:
             seed = 0
@@ -184,9 +180,9 @@ class MindustryParallelEnv:
     ) -> dict[str, dict[str, Any]]:
         """Map the per-slot observation list to a per-agent dict.
 
-        M1: the engine returns one observation per agent slot (all identical
-        world snapshots). If the engine ever returns a single shared obs, it is
-        broadcast to every agent.
+        Since M3 the engine returns one distinct observation per agent slot (its
+        unit + skill + shared team view). If the engine ever returns a single
+        shared obs, it is broadcast to every agent.
         """
         result: dict[str, dict[str, Any]] = {}
         for i, agent in enumerate(self.agents):

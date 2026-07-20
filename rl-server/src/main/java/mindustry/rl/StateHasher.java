@@ -34,6 +34,10 @@ public final class StateHasher{
     private StateHasher(){}
 
     public static String hash(){
+        return hash(null);
+    }
+
+    public static String hash(RlAgentRegistry registry){
         try{
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             DataOutputStream out = new DataOutputStream(new DigestOutputStream(md));
@@ -84,7 +88,38 @@ public final class StateHasher{
                 out.writeInt(u.team().id);
                 out.writeLong(quant(u.x));
                 out.writeLong(quant(u.y));
+                out.writeLong(quant(u.vel().x));
+                out.writeLong(quant(u.vel().y));
                 out.writeLong(quant(u.health));
+                //cargo: agent units carry mined ore — part of the canonical fingerprint (D7)
+                Item carried = u.item();
+                if(carried != null){
+                    out.writeInt(carried.id);
+                    out.writeInt(u.stack().amount);
+                }else{
+                    out.writeInt(-1);
+                    out.writeInt(0);
+                }
+            }
+
+            //agent registry + active skill state (D7): golden replays break if a skill
+            //state machine changes behaviour. Iterated in dense index order (deterministic).
+            if(registry != null){
+                out.writeInt(registry.size());
+                for(RlAgentRegistry.Agent agent : registry.agents()){
+                    out.writeInt(agent.index);
+                    out.writeInt(agent.unit.id());
+                    byte[] typeBytes = agent.controller.activeType()
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                    out.writeInt(typeBytes.length);
+                    out.write(typeBytes);
+                    var result = agent.controller.lastResult();
+                    out.writeInt(result.status().ordinal());
+                    out.writeInt(result.reason().ordinal());
+                    out.writeLong(quant(result.progress()));
+                }
+            }else{
+                out.writeInt(0);
             }
 
             out.flush();

@@ -110,6 +110,9 @@ class StepResponse:
     tick: int = 0
     observations: list[dict[str, Any]] = field(default_factory=list)
     action_masks: list[dict[str, Any]] = field(default_factory=list)
+    # M3 (additive): per-action accept/reject with a machine-readable reason
+    # (docs/PROTOCOL.md §2.3, docs/M3_DESIGN.md D5). One entry per submitted action.
+    action_results: list[dict[str, Any]] = field(default_factory=list)
     team_state: dict[str, Any] = field(default_factory=dict)
     reward_breakdowns: list[dict[str, Any]] = field(default_factory=list)
     terminations: list[bool] = field(default_factory=list)
