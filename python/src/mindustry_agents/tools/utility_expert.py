@@ -20,11 +20,19 @@ class UtilityExpertEpisode:
         *,
         blocked_variant: bool = False,
         scenario_id: str = "bootstrap-defense-v0",
+        scenario_version: int = 0,
+        require_win: bool = True,
     ):
         self.env = env
         self.seed = seed
         self.blocked_variant = blocked_variant
-        reset = env.reset(root_seed=seed, scenario_id=scenario_id, agent_count=3)
+        self.require_win = require_win
+        reset = env.reset(
+            root_seed=seed,
+            scenario_id=scenario_id,
+            scenario_version=scenario_version,
+            agent_count=3,
+        )
         self.layout = ScenarioLayout(reset.metadata)
         self.episode = reset.episode_id
         self.tick = reset.tick
@@ -267,7 +275,7 @@ class UtilityExpertEpisode:
         replans = int(metrics.get("resource_replans", 0))
         if self.blocked_variant and replans <= 0:
             raise AssertionError("blocked variant performed no legal resource replan")
-        if response.outcome != "win":
+        if self.require_win and response.outcome != "win":
             raise AssertionError(
                 f"utility expert failed seed {self.seed}: {response.outcome} at {response.tick}"
             )
@@ -306,10 +314,14 @@ def run_utility_episode(
     *,
     blocked_variant: bool = False,
     scenario_id: str = "bootstrap-defense-v0",
+    scenario_version: int = 0,
+    require_win: bool = True,
 ) -> EpisodeResult:
     return UtilityExpertEpisode(
         env,
         seed,
         blocked_variant=blocked_variant,
         scenario_id=scenario_id,
+        scenario_version=scenario_version,
+        require_win=require_win,
     ).run()

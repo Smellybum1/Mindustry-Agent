@@ -94,7 +94,7 @@ class ResetRequest:
     TYPE: ClassVar[str] = "reset_request"
     request_id: int = 0
     scenario_id: str = ""
-    scenario_version: int = 1
+    scenario_version: int = 0
     root_seed: int = 0
     agent_count: int = 0
     difficulty: str = "normal"

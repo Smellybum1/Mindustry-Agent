@@ -110,17 +110,24 @@ class EnvClient:
         deterministic = bool(options.get("deterministic", True))
         agent_count = int(options.get("agent_count", self.agent_count))
         scenario_id = str(options.get("scenario_id", self.scenario_id))
+        scenario_version = int(options.get("scenario_version", 0))
         resp = self._call(
             P.ResetRequest(
                 request_id=self._conn.next_request_id(),
                 scenario_id=scenario_id,
+                scenario_version=scenario_version,
                 root_seed=int(seed),
                 agent_count=agent_count,
                 deterministic=deterministic,
                 options={
                     k: v
                     for k, v in options.items()
-                    if k not in ("deterministic", "agent_count", "scenario_id")
+                    if k not in (
+                        "deterministic",
+                        "agent_count",
+                        "scenario_id",
+                        "scenario_version",
+                    )
                 },
             )
         )

@@ -342,6 +342,7 @@ class RlServerProcess:
         root_seed: int,
         *,
         scenario_id: str = "bootstrap-defense-v0",
+        scenario_version: int = 0,
         agent_count: int = 2,
         deterministic: bool = True,
         options: Optional[dict] = None,
@@ -351,6 +352,7 @@ class RlServerProcess:
             P.ResetRequest(
                 request_id=self.conn.next_request_id(),
                 scenario_id=scenario_id,
+                scenario_version=scenario_version,
                 root_seed=root_seed,
                 agent_count=agent_count,
                 deterministic=deterministic,

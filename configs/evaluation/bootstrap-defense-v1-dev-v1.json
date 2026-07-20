@@ -1,0 +1,9 @@
+{
+  "seed_set_id": "bootstrap-defense-v1-dev-v1",
+  "seed_set_version": 1,
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "split": "dev",
+  "seeds": [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010],
+  "policy": "Frozen development acceptance set; changes require a new seed_set_version."
+}

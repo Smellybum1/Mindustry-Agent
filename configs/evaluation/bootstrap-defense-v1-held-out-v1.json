@@ -1,0 +1,9 @@
+{
+  "seed_set_id": "bootstrap-defense-v1-held-out-v1",
+  "seed_set_version": 1,
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "split": "held-out",
+  "seeds": [900001, 900002, 900003, 900004, 900005, 900006, 900007, 900008, 900009, 900010],
+  "policy": "Sealed for final evaluation only. Never run, inspect outcomes, tune, or select behavior against these seeds during development."
+}
