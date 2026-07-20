@@ -135,6 +135,7 @@ public final class RlServer{
 
         //Captured only while the simulation thread advances an external step.
         Events.on(UnitDamageEvent.class, this::recordUnitDamage);
+        Events.on(UnitDestroyEvent.class, this::recordUnitDestroy);
 
         //listener order mirrors ServerLauncher.java:74-78, minus ServerControl
         Core.app.addListener(new ApplicationListener(){ public void update(){ asyncCore.begin(); } });
@@ -794,6 +795,24 @@ public final class RlServer{
         }
         out.put("source_unit_id", sourceUnitId);
         out.put("agent_id", sourceAgentId);
+        stepGameEvents.add(out);
+    }
+
+    private void recordUnitDestroy(UnitDestroyEvent event){
+        if(event.unit == null) return;
+        Jval out = Jval.newObject();
+        out.put("type", "unit_destroy");
+        out.put("tick", (long)state.tick);
+        out.put("unit_id", event.unit.id);
+        out.put("team", event.unit.team.name);
+        int agentId = -1;
+        for(RlAgentRegistry.Agent agent : registry.agents()){
+            if(agent.unit == event.unit){
+                agentId = agent.index;
+                break;
+            }
+        }
+        out.put("agent_id", agentId);
         stepGameEvents.add(out);
     }
 

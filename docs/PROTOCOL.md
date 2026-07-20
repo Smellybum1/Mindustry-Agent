@@ -210,7 +210,7 @@ the winner starts a skill, so input bundle order cannot choose the owner.
 | `task_events` | [obj] | coordination/task-board events this step |
 | `task_board` | [obj] | M5.2 bounded board snapshot (maximum 32, insertion order) |
 | `coordination_metrics` | obj | cumulative episode task/message/idle counters (M5.6) |
-| `game_events` | [obj] | step-scoped events; M4.6 emits `unit_damage`; M7.4 scheduled grants emit `scenario_event {event_type, tick, item, amount, reason}` |
+| `game_events` | [obj] | step-scoped events; M4.6 emits `unit_damage`; M7.4 scheduled grants emit `scenario_event {event_type, tick, item, amount, reason}`; M7.6 emits `unit_destroy {tick, unit_id, team, agent_id}` for exact loss/recovery timing |
 | `decision_boundary` | obj | M7.4 `{requested_ticks, advanced_ticks, triggered, reasons[]}` for opt-in event-driven stepping |
 | `state_hash` | str | stable hash after advancing |
 | `timing` | obj | `{engine_ms, observation_ms, serialization_ms, io_ms}` |

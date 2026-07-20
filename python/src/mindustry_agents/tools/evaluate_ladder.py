@@ -76,11 +76,24 @@ def _run_partition(
             "agent_count": 3,
             "python": platform.python_version(),
             "jvm_workers": 1,
+            "episode_precondition": "same-seed-idle-through-wave-1-plus-120-v1",
         }
         for job in jobs:
             seed_set = job["seed_set"]
             seed = int(job["seed"])
             policy_name = str(job["policy"])
+            precondition = env.reset(
+                root_seed=seed,
+                scenario_id=seed_set["scenario_id"],
+                scenario_version=int(seed_set["scenario_version"]),
+                agent_count=3,
+            )
+            trace_tick = int(precondition.metadata["wave_ticks"][0]) + 120
+            env.step(
+                precondition.episode_id,
+                expected_tick=0,
+                ticks_to_advance=trace_tick,
+            )
             if policy_name == "frozen-expert":
                 result = run_frozen_episode(env, seed)
             else:
@@ -104,6 +117,7 @@ def _run_partition(
                 "policy_version": POLICY_VERSIONS[policy_name],
                 "python_dependency_contract": "stdlib-only; no lockfile required",
                 "training_config": "not-applicable-evaluation",
+                "precondition_trace_tick": trace_tick,
             }
             records.append(
                 (

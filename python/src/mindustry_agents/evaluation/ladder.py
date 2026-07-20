@@ -126,6 +126,13 @@ def ladder_episode_record(
     """Build one stable JSONL episode record."""
 
     record = episode_summary(result, manifest)
+    # Boundary-level copper deltas and routine structured-message totals are
+    # useful diagnostics but are not ladder judgment fields. They can differ by
+    # one when autonomous engine work completes within the same external chunk,
+    # so the reproducible ladder contract retains their scorecard derivatives
+    # rather than serializing those incidental counters.
+    record.pop("resources", None)
+    record.pop("messages", None)
     record.update(
         {
             "record_type": "episode",

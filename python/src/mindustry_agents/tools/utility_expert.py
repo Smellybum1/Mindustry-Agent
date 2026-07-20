@@ -114,9 +114,18 @@ class UtilityExpertEpisode:
                 self.first_drill_tick = int(event["tick"])
 
     def _record_boundary(self, response) -> None:
+        for event in response.game_events:
+            if event.get("type") == "unit_destroy" and int(
+                event.get("agent_id", -1)
+            ) >= 0:
+                self.agent_loss_ticks[int(event["agent_id"])] = int(event["tick"])
         for agent_id, observation in enumerate(response.observations):
             dead = bool(observation["unit"]["dead"])
-            if dead and not self._previous_dead[agent_id]:
+            if (
+                dead
+                and not self._previous_dead[agent_id]
+                and agent_id not in self.agent_loss_ticks
+            ):
                 self.agent_loss_ticks[agent_id] = response.tick
             self._previous_dead[agent_id] = dead
 
