@@ -1,6 +1,6 @@
 # M4 Design — Build, Supply, Rebuild, Defend Skills
 
-Status: approved design; implementation in progress (M4.1 completed 2026-07-20).
+Status: approved design; implementation in progress (M4.1–4.2 completed 2026-07-20).
 Author: Fable bootstrap pass, 2026-07-20.
 Prereqs: M3 verified (skill layer + agent units); bootstrap-defense-v0 scenario
 loader with waves (in progress) — Defend/Rebuild need live enemies to be testable.
@@ -115,10 +115,24 @@ board wiring (M5), rewards (M7), multi-unit squads.
 
 ## Open questions for the implementer (resolve against source, record here)
 
-1. Core resource consumption path for unit build plans headlessly (file:line).
+**Questions 1 and 5 resolved during M4.2 implementation (2026-07-20); 2–4 remain
+for their owning roadmap items. Answers cite this checkout (v159.7).**
+
+1. **Core resource consumption for unit build plans. RESOLVED.**
+   `BuilderComp.updateBuildLogic()` begins a legal placement through
+   `Call.beginPlace(...)` (`core/src/mindustry/entities/comp/BuilderComp.java:173`),
+   then advances the live `ConstructBuild` through `entity.construct(...)` (`:217`).
+   `ConstructBuild.construct` bounds progress twice through `checkRequired`
+   (`core/src/mindustry/world/blocks/ConstructBlock.java:278,296,304`); its removal
+   pass subtracts the accumulated recipe from the team core inventory (`:401,429`).
+   `BuilderComp` copies engine progress to `BuildPlan.progress` and marks unchanged
+   progress stuck (`BuilderComp.java:220-221`). Thus shortage stalls a real plan;
+   `BuildBlock` detects that stall without placing blocks or editing inventory.
 2. Legal core-withdrawal call for S3 and its constraints (amount caps, range).
 3. Exact field for the broken-block/rebuild queue and its determinism
    (iteration order) for S4.
 4. Turret ammo accounting for hash inclusion (ItemTurret ammo representation).
-5. Duo build cost cited from Blocks.java at the pin (STRATEGY_NOTES says 35
-   copper — confirm).
+5. **Duo cost. RESOLVED:** `Blocks.duo` is created at
+   `core/src/mindustry/content/Blocks.java:3258` with
+   `requirements(Category.turret, with(Items.copper, 35))` at `:3259`. Live smoke
+   confirms the core ledger decreases by exactly 35 for one completed Duo.

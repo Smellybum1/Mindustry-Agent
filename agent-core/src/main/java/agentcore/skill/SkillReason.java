@@ -38,5 +38,17 @@ public enum SkillReason{
     /** The wait budget elapsed. */
     WAIT_ELAPSED,
     /** Skill was cancelled by a higher-level decision. */
-    CANCELLED
+    CANCELLED,
+    /** Unit is executing an engine-owned build plan. */
+    BUILDING,
+    /** Requested block exists and construction is complete. */
+    BUILT,
+    /** Build progress stalled because the core lacks the recipe. */
+    RESOURCES_SHORT,
+    /** A conflicting building or invalid footprint occupies the target. */
+    OCCUPIED,
+    /** The unit could not enter engine build range. */
+    OUT_OF_RANGE,
+    /** An enqueued build plan disappeared before completion. */
+    PLAN_REMOVED
 }

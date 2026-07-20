@@ -103,10 +103,15 @@ Fail fast on incompatible **major** versions.
 {"agent_id": 0, "command": {"type": "MINE", "tile_x": 32, "tile_y": 32, "amount": 20}}
 ```
 
-`command.type` is one of `NAVIGATE` / `MINE` / `DELIVER_CORE` / `WAIT` / `CONTINUE`.
+`command.type` is one of `NAVIGATE` / `MINE` / `DELIVER_CORE` / `WAIT` / `BUILD` /
+`CONTINUE`.
 An absent `command` (or `CONTINUE`) keeps the agent's current skill running.
 Params by type: `NAVIGATE {x, y, tolerance?}` (world coords), `MINE {tile_x, tile_y,
-amount?}` (tile coords), `DELIVER_CORE {}`, `WAIT {ticks?}`. Actions are applied on
+amount?}` (tile coords), `DELIVER_CORE {}`, `WAIT {ticks?}`,
+`BUILD {block, tile_x, tile_y, rotation}` (scenario-whitelisted block id and tile
+coords; rotation 0..3). `BUILD` enqueues the unit's real engine `BuildPlan`; the
+engine consumes core resources incrementally and construction is never placed
+directly. Actions are applied on
 the sim thread **before** advancing; each is validated and echoed in
 `action_results[]` — an invalid action is rejected there, never crashes the step.
 
@@ -147,7 +152,8 @@ the sim thread **before** advancing; each is validated and echoed in
 
 `skill.status` is one of `READY`/`RUNNING`/`SUCCEEDED`/`BLOCKED`/`FAILED`/`CANCELLED`;
 `skill.reason` is a machine-readable code (e.g. `ARRIVED`, `INVALID_TARGET`, `STUCK`,
-`DELIVERED`). Raw floats are reported here; the state hash quantizes positions/velocity
+`DELIVERED`, `BUILT`, `RESOURCES_SHORT`, `OCCUPIED`, `OUT_OF_RANGE`,
+`PLAN_REMOVED`). Raw floats are reported here; the state hash quantizes positions/velocity
 to 1e-3 (docs/M3_DESIGN.md D6/D7).
 
 ### 2.4 Health and control

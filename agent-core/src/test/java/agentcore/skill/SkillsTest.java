@@ -177,4 +177,55 @@ class SkillsTest{
         assertEquals(carried, body.coreItems - coreBefore, "core delta equals carried amount");
         assertEquals(0, body.cargoAmount());
     }
+
+    // -- BuildBlock -------------------------------------------------------
+
+    @Test void buildNavigatesEnqueuesAndCompletes(){
+        FakeBody body = new FakeBody(0f, 0f);
+        BuildBlock build = new BuildBlock("duo", 20, 0, 1);
+        SkillResult r = run(build, body, 1000);
+        assertEquals(SkillStatus.SUCCEEDED, r.status());
+        assertEquals(SkillReason.BUILT, r.reason());
+        assertEquals(BuildTargetState.COMPLETE, body.buildState);
+        assertEquals("duo", body.buildBlock);
+    }
+
+    @Test void buildBlocksOnOccupiedFootprint(){
+        FakeBody body = new FakeBody(0f, 0f);
+        body.buildState = BuildTargetState.OCCUPIED;
+        SkillResult r = new BuildBlock("duo", 2, 2, 0).tick(body, 10L);
+        assertEquals(SkillStatus.BLOCKED, r.status());
+        assertEquals(SkillReason.OCCUPIED, r.reason());
+        assertFalse(body.buildPlan);
+    }
+
+    @Test void buildBlocksWhenCoreResourcesStayShort(){
+        FakeBody body = new FakeBody(4f, 4f);
+        body.buildResources = false;
+        BuildBlock build = new BuildBlock("duo", 0, 0, 0, 10, 5, 30L);
+        SkillResult r = run(build, body, 20);
+        assertEquals(SkillStatus.BLOCKED, r.status());
+        assertEquals(SkillReason.RESOURCES_SHORT, r.reason());
+        assertTrue(r.nextRetryTick() >= 30L);
+    }
+
+    @Test void buildBlocksWhenTargetCannotBeReached(){
+        FakeBody body = new FakeBody(0f, 0f);
+        body.speed = 0f;
+        body.buildRange = 10f;
+        BuildBlock build = new BuildBlock("duo", 20, 0, 0, 5, 10, 30L);
+        SkillResult r = run(build, body, 20);
+        assertEquals(SkillStatus.BLOCKED, r.status());
+        assertEquals(SkillReason.OUT_OF_RANGE, r.reason());
+    }
+
+    @Test void buildFailsIfPlanIsRemovedExternally(){
+        FakeBody body = new FakeBody(4f, 4f);
+        BuildBlock build = new BuildBlock("duo", 0, 0, 0);
+        assertEquals(SkillStatus.RUNNING, build.tick(body, 0L).status());
+        body.buildPlan = false;
+        SkillResult r = build.tick(body, 1L);
+        assertEquals(SkillStatus.FAILED, r.status());
+        assertEquals(SkillReason.PLAN_REMOVED, r.reason());
+    }
 }

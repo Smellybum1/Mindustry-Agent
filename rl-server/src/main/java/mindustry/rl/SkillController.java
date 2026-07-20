@@ -4,7 +4,9 @@ import agentcore.skill.*;
 import arc.math.geom.*;
 import mindustry.entities.units.*;
 import mindustry.gen.*;
+import mindustry.type.*;
 import mindustry.world.*;
+import mindustry.world.blocks.ConstructBlock.*;
 
 import static mindustry.Vars.*;
 
@@ -123,6 +125,88 @@ public final class SkillController extends AIController implements AgentBody{
             Call.transferItemTo(unit, item, accepted, unit.x, unit.y, c);
         }
         return accepted;
+    }
+
+    @Override public float buildRange(){ return unit.type.buildRange; }
+
+    @Override public float buildTargetX(String block, int tileX){
+        Block b = block(block);
+        return tileX * tilesize + (b == null ? tilesize / 2f : b.offset);
+    }
+
+    @Override public float buildTargetY(String block, int tileY){
+        Block b = block(block);
+        return tileY * tilesize + (b == null ? tilesize / 2f : b.offset);
+    }
+
+    @Override
+    public BuildTargetState buildTargetState(String block, int tileX, int tileY, int rotation){
+        Block requested = block(block);
+        Tile tile = world.tile(tileX, tileY);
+        if(requested == null || tile == null) return BuildTargetState.OCCUPIED;
+
+        if(tile.build instanceof ConstructBuild construct){
+            return construct.team == unit.team && construct.current == requested
+                ? BuildTargetState.CONSTRUCTING : BuildTargetState.OCCUPIED;
+        }
+        if(tile.block() == requested && tile.team() == unit.team){
+            return BuildTargetState.COMPLETE;
+        }
+        return Build.validPlaceIgnoreUnits(
+            requested, unit.team, tileX, tileY, rotation, true, true)
+            ? BuildTargetState.PLACEABLE : BuildTargetState.OCCUPIED;
+    }
+
+    @Override
+    public void enqueueBuild(String block, int tileX, int tileY, int rotation){
+        Block requested = block(block);
+        if(requested != null){
+            unit.addBuild(new BuildPlan(tileX, tileY, rotation, requested));
+        }
+    }
+
+    @Override
+    public boolean hasBuildPlan(String block, int tileX, int tileY, int rotation){
+        Block requested = block(block);
+        if(requested == null) return false;
+        for(BuildPlan plan : unit.plans()){
+            if(!plan.breaking && plan.block == requested && plan.x == tileX && plan.y == tileY
+                && plan.rotation == requested.planRotation(rotation)) return true;
+        }
+        return false;
+    }
+
+    @Override
+    public float buildProgress(String block, int tileX, int tileY, int rotation){
+        Block requested = block(block);
+        if(requested == null) return 0f;
+        for(BuildPlan plan : unit.plans()){
+            if(!plan.breaking && plan.block == requested && plan.x == tileX && plan.y == tileY){
+                return plan.progress;
+            }
+        }
+        Tile tile = world.tile(tileX, tileY);
+        if(tile != null && tile.build instanceof ConstructBuild construct
+            && construct.current == requested && construct.team == unit.team){
+            return construct.progress;
+        }
+        return 0f;
+    }
+
+    @Override
+    public boolean hasBuildResources(String block){
+        Block requested = block(block);
+        Building c = core();
+        if(requested == null || c == null || c.items == null) return false;
+        for(ItemStack requirement : requested.requirements){
+            int amount = Math.round(requirement.amount * state.rules.buildCostMultiplier);
+            if(c.items.get(requirement.item) < amount) return false;
+        }
+        return true;
+    }
+
+    private Block block(String name){
+        return content.block(name);
     }
 
     private Building core(){

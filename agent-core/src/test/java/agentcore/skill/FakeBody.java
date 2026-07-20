@@ -37,6 +37,16 @@ final class FakeBody implements AgentBody{
     int ticksPerItem = 10;
     int mineAccumulator = 0;
 
+    float buildRange = 80f;
+    BuildTargetState buildState = BuildTargetState.PLACEABLE;
+    boolean buildPlan;
+    boolean buildResources = true;
+    boolean advanceBuild = true;
+    float buildProgress;
+    float buildRate = 0.02f;
+    String buildBlock;
+    int buildX, buildY, buildRotation;
+
     FakeBody(float x, float y){ this.px = x; this.py = y; }
 
     static long key(int x, int y){ return (((long)x) << 32) ^ (y & 0xffffffffL); }
@@ -61,6 +71,14 @@ final class FakeBody implements AgentBody{
             if(mineAccumulator >= ticksPerItem){
                 mineAccumulator = 0;
                 cargo++;
+            }
+        }
+        if(buildPlan && advanceBuild && buildResources){
+            buildState = BuildTargetState.CONSTRUCTING;
+            buildProgress = Math.min(1f, buildProgress + buildRate);
+            if(buildProgress >= 1f){
+                buildPlan = false;
+                buildState = BuildTargetState.COMPLETE;
             }
         }
         steering = false;
@@ -116,4 +134,26 @@ final class FakeBody implements AgentBody{
         coreItems += accepted;
         return accepted;
     }
+
+    @Override public float buildRange(){ return buildRange; }
+    @Override public float buildTargetX(String block, int tileX){ return tileCenterX(tileX); }
+    @Override public float buildTargetY(String block, int tileY){ return tileCenterY(tileY); }
+    @Override public BuildTargetState buildTargetState(String block, int tileX, int tileY, int rotation){
+        return buildState;
+    }
+    @Override public void enqueueBuild(String block, int tileX, int tileY, int rotation){
+        buildPlan = true;
+        buildBlock = block;
+        buildX = tileX;
+        buildY = tileY;
+        buildRotation = rotation;
+    }
+    @Override public boolean hasBuildPlan(String block, int tileX, int tileY, int rotation){
+        return buildPlan && block.equals(buildBlock) && tileX == buildX && tileY == buildY
+            && rotation == buildRotation;
+    }
+    @Override public float buildProgress(String block, int tileX, int tileY, int rotation){
+        return buildProgress;
+    }
+    @Override public boolean hasBuildResources(String block){ return buildResources; }
 }

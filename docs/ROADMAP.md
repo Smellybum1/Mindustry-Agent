@@ -134,6 +134,12 @@ below; implement in order — 4.1/4.2 unblock everything else.
 - Excludes: ControlPathfinder (still unused by our units).
 
 ### 4.2 AgentBody port + BuildBlock skill (S1)
+- **DONE (verified 2026-07-20):** engine-free `BuildBlock` + `AgentBody` build
+  primitives, live `BuilderComp` adapter, whitelisted `BUILD` action, typed
+  `RESOURCES_SHORT`/`OCCUPIED`/`OUT_OF_RANGE`/`PLAN_REMOVED` outcomes, five new
+  FSM tests (82 JUnit total), and a live smoke ledger. A Duo consumes exactly 35
+  core copper; an underfunded Duo consumes only the available 34 then blocks at
+  zero. The temporary M4.1 placement hook has been removed.
 - Objective: `BuildBlock(block,x,y,rotation)` per M4_DESIGN S1 — enqueue
   BuildPlan, engine consumes core resources and constructs; typed BLOCKED
   reasons (RESOURCES_SHORT via progress-stall detection, OCCUPIED, OUT_OF_RANGE).

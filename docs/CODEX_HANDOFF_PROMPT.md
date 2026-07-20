@@ -20,7 +20,7 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 2. `docs/HANDOFF.md` — verified project state, exact commands with expected
    outputs, architecture map, performance, known risks.
 3. `docs/ROADMAP.md` — Milestones M4–M6 are broken into issue-sized items with
-   acceptance criteria. **Your work queue is M4 items 4.2 → 4.8, in order.**
+   acceptance criteria. **Your work queue is M4 items 4.3 → 4.8, in order.**
 4. `docs/M4_DESIGN.md` — the approved design you are implementing (it has open
    questions to resolve against engine source and record in place — follow the
    precedent in `docs/M3_DESIGN.md`, which shows the expected resolution style).
@@ -31,9 +31,9 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Verified state you can rely on (all re-verified 2026-07-20)
 
-- M0–M3 and M4.1 complete + the bootstrap-defense-v0 scenario loader with deterministic
+- M0–M3 and M4.1–4.2 complete + the bootstrap-defense-v0 scenario loader with deterministic
   enemy waves. `bash scripts/{bootstrap,build,test-java,test-python,smoke,
-  determinism,stress-reset,benchmark}.sh` all exit 0. 77 JUnit + 29 pytest.
+  determinism,stress-reset,benchmark}.sh` all exit 0. 82 JUnit + 29 pytest.
 - The fixed-step headless env: ~76k engine ticks/sec, ~1 ms resets, determinism
   proven across processes at 73 hash boundaries including a post-wave wall
   placement and moving/re-pathing enemies;
@@ -69,10 +69,11 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Your first task
 
-`docs/ROADMAP.md` → **Milestone 4, item 4.2 (AgentBody + BuildBlock)**,
-then proceed through 4.3–4.8 in order. Item 4.1 is verified complete: the
+`docs/ROADMAP.md` → **Milestone 4, item 4.3 (ExecuteSchematic)**,
+then proceed through 4.4–4.8 in order. Items 4.1–4.2 are verified complete: the
 thread-less pathfinder refresh is wall-clock-free and the 73-boundary determinism
-trace includes a post-wave wall placement. Each item lists objective, files,
+trace legally builds a post-wave wall; `BuildBlock` uses real engine plans and
+balances core resources. Each item lists objective, files,
 acceptance, and dependencies. Before starting, run
 `bash scripts/smoke.sh && bash scripts/determinism.sh` to confirm the baseline
 is green on your session; if it is not, diagnose that first — do not build on a

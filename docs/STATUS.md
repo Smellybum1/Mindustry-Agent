@@ -194,7 +194,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   loss. Observed: core destroyed at tick **~3420–3450** (~12 s after wave 1),
   matching `docs/SCENARIOS.md` arithmetic (c) (travel + ~8.9 s contact kill), well
   under the cap.
-- **Verified 2026-07-20**: `./gradlew rl-server:dist agent-core:test` green (77
+- **Verified 2026-07-20**: `./gradlew rl-server:dist agent-core:test` green (82
   JUnit); `pytest python/tests -q` → 29 pass; `bash scripts/smoke.sh` → exit 0
   (mine/deliver ledger **and** scenario check); `bash scripts/determinism.sh` → exit
   0 (moving enemies + seed sensitivity); `bash scripts/stress-reset.sh` → exit 0
@@ -208,9 +208,15 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   `./gradlew agent-core:test rl-server:dist` green; 29 pytest green; smoke and
   scenario loss path green; determinism green at all 73 boundaries across two
   fresh JVMs, including a wall placed after wave 1 and live enemy re-pathing.
-- **4.2–4.8 remain unimplemented.** The temporary wall-placement acceptance hook
-  is gated by `-Dmindustry.rl.testHooks=true`, is absent from normal launches, and
-  will be removed when 4.2's legal `BUILD` action replaces it.
+- **4.2 BuildBlock is done (verified 2026-07-20).** The engine-free FSM extends
+  `AgentBody`; `SkillController` bridges to the unit's real ordered `BuildPlan`
+  queue and `ConstructBuild` progress/resource path. `BUILD` accepts only
+  scenario-whitelisted blocks. Five new FSM tests bring the Java total to 82.
+  Live smoke proves a Duo costs exactly 35 core copper; after legal builds leave
+  34 copper, a final Duo consumes only that stock and reports
+  `BLOCKED(RESOURCES_SHORT)` at zero. The M4.1 direct-placement test hook is gone;
+  determinism now builds its wall legally for six copper.
+- **4.3–4.8 remain unimplemented.**
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -234,8 +240,8 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 77 tests
-  green, including the 13 M3 skill tests). `agent-plugin` build still unverified.
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 82 tests
+  green, including 18 M3/M4 skill tests). `agent-plugin` build still unverified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
 

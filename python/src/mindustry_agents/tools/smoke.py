@@ -1,4 +1,4 @@
-"""M1/M3 smoke test: reset/step/close against a live rl-server JVM.
+"""M1/M3/M4 smoke test: reset/step/close against a live rl-server JVM.
 
 Launches one JVM, handshakes, resets with a fixed seed, steps 600 ticks in
 10 chunks of 60 (the plain M1 phase), then runs the M3 scripted skill phase:
@@ -6,7 +6,7 @@ Launches one JVM, handshakes, resets with a fixed seed, steps 600 ticks in
 non-ore tile. It prints the acceptance transcript and — the core honesty check —
 asserts the core copper increases by **exactly** the amount delivered, sourced
 from real engine observations, with the full ledger printed. Exits 0 iff both the
-600-tick advance and the mine/deliver ledger balance.
+600-tick advance, mine/deliver ledger, and legal build ledger balance.
 
 Run: ``python -m mindustry_agents.tools.smoke [--port N] [--seed S]``
 """
@@ -136,6 +136,100 @@ def run_skill_phase(env, episode_id: str, start_tick: int) -> int:
     return 0 if ok else 1
 
 
+def _build_action(block: str, x: int, y: int, rotation: int = 0) -> list[dict]:
+    return [
+        {
+            "agent_id": 0,
+            "command": {
+                "type": "BUILD",
+                "block": block,
+                "tile_x": x,
+                "tile_y": y,
+                "rotation": rotation,
+            },
+        }
+    ]
+
+
+def _run_build(env, episode_id: str, tick: int, block: str, x: int, y: int, rotation=0):
+    """Drive one BUILD to a terminal/blocked skill result and return (step, tick)."""
+    actions = _build_action(block, x, y, rotation)
+    for _ in range(20):
+        sr = env.step(
+            episode_id,
+            expected_tick=tick,
+            ticks_to_advance=30,
+            agent_actions=actions,
+        )
+        actions = []
+        tick = sr.tick
+        if _skill(sr, 0)["status"] in {"SUCCEEDED", "BLOCKED", "FAILED"}:
+            return sr, tick
+    raise AssertionError(f"BUILD {block}@({x},{y}) did not finish within 600 ticks")
+
+
+def run_build_phase(env, seed: int) -> int:
+    """Build a real Duo, verify cost, then spend stock and reach RESOURCES_SHORT."""
+    print("\n== M4 BuildBlock phase ==")
+    rr = env.reset(root_seed=seed, agent_count=2)
+    episode = rr.episode_id
+    tick = rr.tick
+    core_start = int(rr.initial_observations[0]["team"]["copper"])
+
+    # Six Duos and one wall cost 216 copper, leaving 34 from the 250 loadout.
+    # The first Duo is the acceptance ledger; the final attempted Duo must stall.
+    builds = [
+        ("duo", 32, 23, 1),
+        ("duo", 30, 16, 1),
+        ("duo", 31, 16, 1),
+        ("duo", 32, 16, 1),
+        ("duo", 33, 16, 1),
+        ("duo", 34, 16, 1),
+        ("copper-wall", 35, 16, 0),
+    ]
+
+    first_after = None
+    for block, x, y, rotation in builds:
+        sr, tick = _run_build(env, episode, tick, block, x, y, rotation)
+        skill = _skill(sr, 0)
+        if skill["status"] != "SUCCEEDED" or skill["reason"] != "BUILT":
+            print(f"FAIL: {block}@({x},{y}) did not build: {skill}", file=sys.stderr)
+            return 1
+        if first_after is None:
+            first_after = _core_copper(sr)
+
+    core_before_short = _core_copper(sr)
+    blocked, tick = _run_build(env, episode, tick, "duo", 36, 16, 1)
+    blocked_skill = _skill(blocked, 0)
+    core_after_short = _core_copper(blocked)
+
+    print("\n-- build ledger (real BuilderComp / ConstructBuild path) --")
+    print(f"  core copper before first Duo      : {core_start}")
+    print(f"  core copper after first Duo       : {first_after}")
+    print(f"  first Duo cost                    : {core_start - first_after}")
+    print(f"  core before insufficient Duo      : {core_before_short}")
+    print(f"  core after stalled partial build  : {core_after_short}")
+    print(f"  insufficient Duo result           : {blocked_skill['status']}({blocked_skill['reason']})")
+
+    ok = True
+    if core_start - first_after != 35:
+        print("FAIL: first Duo did not consume exactly 35 copper", file=sys.stderr)
+        ok = False
+    if core_before_short != 34:
+        print(f"FAIL: expected 34 copper before short build, got {core_before_short}", file=sys.stderr)
+        ok = False
+    if blocked_skill["status"] != "BLOCKED" or blocked_skill["reason"] != "RESOURCES_SHORT":
+        print(f"FAIL: insufficient build did not BLOCK(RESOURCES_SHORT): {blocked_skill}", file=sys.stderr)
+        ok = False
+    if core_after_short != 0:
+        print(f"FAIL: stalled build should consume available 34 copper, got {core_after_short} left", file=sys.stderr)
+        ok = False
+
+    if ok:
+        print("  BUILD BALANCE OK: Duo cost is 35 and exhausted core stock blocks honestly")
+    return 0 if ok else 1
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="rl-server M1 smoke test")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
@@ -211,10 +305,15 @@ def main(argv=None) -> int:
             print("SKILL PHASE FAILED", file=sys.stderr)
             return skill_rc
 
+        build_rc = run_build_phase(env, args.seed)
+        if build_rc != 0:
+            print("BUILD PHASE FAILED", file=sys.stderr)
+            return build_rc
+
         h = env.health()
         print(f"health: ok={h.ok} uptime_ticks={h.uptime_ticks} episode={h.episode_id}")
 
-    print("\nSMOKE OK: 600-tick advance + mine/deliver ledger balanced")
+    print("\nSMOKE OK: exact stepping + mine/deliver/build ledgers balanced")
     return 0
 
 

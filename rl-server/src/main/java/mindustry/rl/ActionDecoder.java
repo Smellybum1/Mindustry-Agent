@@ -2,8 +2,7 @@ package mindustry.rl;
 
 import agentcore.skill.*;
 import arc.util.serialization.*;
-import mindustry.content.*;
-import mindustry.game.*;
+import mindustry.world.*;
 
 import static mindustry.Vars.*;
 
@@ -13,8 +12,8 @@ import static mindustry.Vars.*;
  *
  * <p>Every action is validated; an invalid one yields {@code accepted=false} with a reason
  * code in the {@code action_results[]} entry and <b>never</b> throws. Command types:
- * {@code NAVIGATE}, {@code MINE}, {@code DELIVER_CORE}, {@code WAIT}, and {@code CONTINUE}
- * (or an absent command) which keeps the current skill running.
+ * {@code NAVIGATE}, {@code MINE}, {@code DELIVER_CORE}, {@code WAIT}, {@code BUILD},
+ * and {@code CONTINUE} (or an absent command) which keeps the current skill running.
  *
  * <p>Well-formedness (finite numbers, in-bounds tiles) is checked here; semantic
  * conditions such as a tile not actually being ore surface as a {@code BLOCKED} skill
@@ -84,18 +83,22 @@ final class ActionDecoder{
                 return result(agentId, true, "accepted", type);
             }
 
-            //M4.1 acceptance-only hook. It is unavailable in every normal launch and is
-            //removed once the legal BUILD skill supplies this trace in M4.2.
-            case "TEST_PLACE_WALL":{
-                if(!Boolean.getBoolean("mindustry.rl.testHooks")){
-                    return result(agentId, false, "test_hooks_disabled", type);
-                }
+            case "BUILD":{
+                String blockName = command.getString("block", "");
                 int tx = command.getInt("tile_x", Integer.MIN_VALUE);
                 int ty = command.getInt("tile_y", Integer.MIN_VALUE);
+                int rotation = command.getInt("rotation", 0);
                 if(!inBounds(tx, ty)){
                     return result(agentId, false, "out_of_bounds", type);
                 }
-                world.tile(tx, ty).setBlock(Blocks.copperWall, Team.sharded, 0);
+                if(rotation < 0 || rotation > 3){
+                    return result(agentId, false, "malformed", type);
+                }
+                Block block = content.block(blockName);
+                if(block == null || !state.rules.researched.contains(block)){
+                    return result(agentId, false, "block_not_allowed", type);
+                }
+                agent.controller.setSkill(new BuildBlock(block.name, tx, ty, rotation));
                 return result(agentId, true, "accepted", type);
             }
 

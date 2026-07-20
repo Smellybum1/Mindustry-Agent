@@ -78,4 +78,30 @@ public interface AgentBody{
      * core is full or nothing is carried). No items are created or destroyed.
      */
     int transferCargoToCore();
+
+    // -- building ---------------------------------------------------------
+
+    /** Builder reach in world units. */
+    float buildRange();
+
+    /** World-space center of a requested block plan. */
+    float buildTargetX(String block, int tileX);
+
+    /** World-space center of a requested block plan. */
+    float buildTargetY(String block, int tileY);
+
+    /** Classify the live footprint without changing it. */
+    BuildTargetState buildTargetState(String block, int tileX, int tileY, int rotation);
+
+    /** Enqueue one engine-owned build plan. Never places a block directly. */
+    void enqueueBuild(String block, int tileX, int tileY, int rotation);
+
+    /** Whether the matching plan still exists in the unit's ordered queue. */
+    boolean hasBuildPlan(String block, int tileX, int tileY, int rotation);
+
+    /** Current engine plan/construct progress in {@code [0,1]}. */
+    float buildProgress(String block, int tileX, int tileY, int rotation);
+
+    /** Whether the team core currently holds the full recipe for this block. */
+    boolean hasBuildResources(String block);
 }

@@ -31,17 +31,18 @@ SEED = 12345
 # Scenario phase: step past wave 1 (spawn tick 2700), then place a wall in the
 # approach lane at tick 2880. The remaining window proves the tile-change refresh
 # and enemy re-path are deterministic, not merely static-map flow-field movement.
-WALL_TICK = 2880
+WALL_TICK = 2760
 POSTWAVE_TARGET = 3300
 WALL_TILE = (33, 24)
 
 
-def _test_wall_action() -> list[dict]:
+def _wall_build_action() -> list[dict]:
     return [
         {
             "agent_id": 0,
             "command": {
-                "type": "TEST_PLACE_WALL",
+                "type": "BUILD",
+                "block": "copper-wall",
                 "tile_x": WALL_TILE[0],
                 "tile_y": WALL_TILE[1],
             },
@@ -86,14 +87,15 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
         hashes.append((f"wave@{tick}", sr.state_hash))
 
     before_dist = float(sr.observations[0]["team"]["enemy_nearest_core_dist"])
+    before_copper = int(sr.observations[0]["team"]["copper"])
 
-    # M4.1: place a pathfinding-relevant wall after wave 1 has spawned. This test
-    # hook is JVM-property gated and replaced by the legal BUILD skill in M4.2.
+    # M4.1/M4.2: enqueue a legal engine build plan after wave 1 has spawned. The
+    # engine constructs the wall and consumes its six-copper recipe from the core.
     sr = env.step(
         rr.episode_id,
         expected_tick=tick,
         ticks_to_advance=1,
-        agent_actions=_test_wall_action(),
+        agent_actions=_wall_build_action(),
     )
     if not sr.action_results or not sr.action_results[0].get("accepted"):
         raise AssertionError(f"test wall placement rejected: {sr.action_results}")
@@ -109,6 +111,14 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
             raise AssertionError(f"tick {sr.tick} != {tick + step} (non-exact advance)")
         tick = sr.tick
         hashes.append((f"repath@{tick}", sr.state_hash))
+    skill = sr.observations[0]["skill"]
+    if skill["status"] != "SUCCEEDED" or skill["reason"] != "BUILT":
+        raise AssertionError(f"wall build did not complete: {skill}")
+    after_copper = int(sr.observations[0]["team"]["copper"])
+    if before_copper - after_copper != 6:
+        raise AssertionError(
+            f"wall ledger did not consume exactly 6 copper: {before_copper} -> {after_copper}"
+        )
     after_dist = float(sr.observations[0]["team"]["enemy_nearest_core_dist"])
     if not 0 <= after_dist < before_dist:
         raise AssertionError(
@@ -118,12 +128,7 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
 
 
 def _fresh_run(port: int, java: str, seed: int) -> list[tuple[str, str]]:
-    config = LaunchConfig(
-        port=port,
-        java=java,
-        jvm_args=("-Dmindustry.rl.testHooks=true",),
-    )
-    with RlServerProcess(config) as env:
+    with RlServerProcess(LaunchConfig(port=port, java=java)) as env:
         env.handshake()
         return run_schedule(env, seed)
 
