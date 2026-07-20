@@ -37,6 +37,12 @@ CASES = (
     "unsafe-help",
     "build-rebuild-loop",
     "chunk-manipulation",
+    "item-cycling",
+    "repair-farming",
+    "damage-farming",
+    "task-spam",
+    "production-stockpile",
+    "reckless-wave-progress",
 )
 
 
@@ -202,15 +208,36 @@ def run_case(case: str) -> dict[str, Any]:
         )
         assert result.components["reward.penalty.invalid_action"] == 0.0
         reason = "mask-valid atomic claim loss received no reward or invalid penalty"
-    elif case in {"message-spam", "unsafe-help"}:
-        act = "MESSAGE" if case == "message-spam" else "OFFER_HELP"
+    elif case in {
+        "message-spam",
+        "unsafe-help",
+        "item-cycling",
+        "repair-farming",
+        "damage-farming",
+        "task-spam",
+        "production-stockpile",
+        "reckless-wave-progress",
+    }:
+        events = {
+            "message-spam": [{"act": "MESSAGE", "agent_id": 0}],
+            "unsafe-help": [{"act": "OFFER_HELP", "agent_id": 0}],
+            "item-cycling": [
+                {"act": "MINE", "agent_id": 0, "amount": 100},
+                {"act": "DELIVER", "agent_id": 0, "amount": 100},
+            ],
+            "repair-farming": [{"act": "REPAIR", "agent_id": 0, "amount": 1000}],
+            "damage-farming": [{"act": "DAMAGE", "agent_id": 0, "amount": 5000}],
+            "task-spam": [{"act": "PROPOSE", "agent_id": 0, "count": 100}],
+            "production-stockpile": [{"act": "PRODUCE", "agent_id": 0, "amount": 4000}],
+            "reckless-wave-progress": [{"act": "WAVE_TRIGGER", "agent_id": 0}],
+        }[case]
         plain = SelectorReward().observe(_team(0), _team(10), advanced_ticks=10, tick_cap=9000)
         result = apply(
             _team(0), _team(10), advanced_ticks=10,
-            task_events=[{"act": act, "agent_id": 0}],
+            task_events=events,
         )
         assert result.components == plain.components
-        reason = f"{act.lower()} telemetry did not enter any reward component"
+        reason = f"{case} telemetry did not enter any reward component"
     else:
         raise AssertionError(f"unhandled reward adversary: {case}")
     return _report(case, transitions, totals, reason)
