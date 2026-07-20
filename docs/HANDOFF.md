@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M5 and M6.1–6.3 complete, verified 2026-07-20): the
+- **What currently works** (M0–M6 complete, verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
@@ -69,18 +69,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   5/5 wins, minimum/mean core health 848/927.2, with full figures in BENCHMARKS.
   M6.3 checks in a complete two-episode/16,200-tick action+coordination golden;
   fresh-JVM replay matches 678 checkpoints and the negative mutation test flips one.
-  M6.4 now builds a loadable stock-server plugin. Its isolated real-server probe
+  M6.4 builds a loadable stock-server plugin. Its isolated real-server probe
   legally completes the shared copper-line/east-Duo opening, expands it to 20
   fortifications/four supplied Duos, matches both build orders, enters reserve
   mining, and verifies pause/resume/emergency-stop without opening a port. The
-  separate no-port survival probe clears three waves and reaches tick 8100 with
-  956 core health while switching mining → defense → maintenance.
+  separate no-port survival probe adds two Duos/seven walls after waves 1–2,
+  supplies all six/eight turrets, clears three waves, and reaches tick 8100 with
+  1091 core health. A stock v159.7 client observed the full run and confirmed
+  `/agents stop` halted all three active tasks.
 - **What is stubbed**: rewards are empty until M7; learned training code and the
   M10 human goal/override/study surface remain future work.
-- **What remains for M6**: stock-v159.7 local join/visual/chat acceptance passed,
-  but the user shut the server down before typing `/agents stop`. Observe that
-  one in-client command, then record the M6.5 checklist and tag. The full
-  non-networked closure matrix is green; see `docs/STATUS.md`.
+- **What remains for M6**: nothing. The closure matrix and 15-item audit are
+  recorded, and the closure commit is tagged `milestone-6`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -216,19 +216,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M6 item 6.4, then M6 closure.
+**Authoritative work queue: `docs/ROADMAP.md` M7 item 7.1.
 Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M6.4 final manual command.** Stock-v159.7 join and visual/chat acceptance
-   passed. Reopen the explicit private server and prove `/agents stop` halts all
-   three agents; this is the only remaining M6.4 check.
-2. **M6.5: milestone closure.** Run the full acceptance matrix, update truthful
-   docs/benchmarks, and close M6 only when every exit criterion passes.
-3. **M7.1: learned selector baseline contract.** Begin only after M6 closure.
-4. **M7.2: PPO selector implementation.** Remains unauthorized until M7 begins.
-5. **M7.3: checkpoint/evaluation pipeline.** Remains unauthorized until M7.
+1. **M7.1: learned selector baseline contract.** Define the random-valid and
+   heuristic evaluation contract against the completed M6 scenario.
+2. **M7.2: PPO selector implementation.** Remains unauthorized until M7 begins.
+3. **M7.3: checkpoint/evaluation pipeline.** Remains unauthorized until M7.
+4. **M7.4: reward audit and exploit review.** Remains future work.
+5. **M8.1: IPPO baseline contract.** Begin only after M7 closes.
 
 ## Decisions
 
@@ -239,5 +237,6 @@ See `docs/decisions/ADR-0001..0010` (do not relitigate).
 - `protocol/` is **not** a Gradle module. Per ADR-0004 the bootstrap transport is
   JSON; the schema lives in `docs/PROTOCOL.md` and `protocol.py`. Protobuf +
   generated bindings are deferred to Stage D. This avoids dead scaffolding.
-- `tests/{determinism,integration,golden}/` from the brief tree are not created
-  yet; golden trace files are next-issue 2.
+- The brief's separate `tests/{determinism,integration}/` directory split is not
+  used; real-JVM checks live behind `scripts/*.sh`. `tests/golden/` now contains
+  the checked-in complete M6 replay trace.

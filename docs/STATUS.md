@@ -448,7 +448,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   mismatch. It passed; no mutated trace is written. Parser/mutation unit tests
   bring pytest to **38 passed**. Format and commands are in `docs/REPLAY.md`.
 
-## Milestone 6.4 — real-time dedicated-server plugin (IMPLEMENTED; manual stop pending)
+## Milestone 6.4 — real-time dedicated-server plugin (DONE, verified 2026-07-20)
 
 - `agent-plugin:dist` builds `mindustry-coop-agents-plugin.jar` with a real
   `plugin.json`/`Plugin` entry point, shared `agentcore` classes, exact scenario
@@ -456,10 +456,12 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 - The stock `server:dist` path creates Bootstrap Defense v0, spawns three
   controlled Alphas, and runs the scripted opening through the same `TaskBoard`,
   skill FSMs, live engine mapping, and `AnnouncementRenderer` used by training
-  mode. It then constructs the full 20-piece/four-Duo expert defense. Available
-  agents continuously mine and deliver between waves, switch to defense on
-  contact, repair/resupply after waves 1–2, and resume mining. If an Alpha is
-  lost, its stable agent slot is visibly rebound to a replacement at the core.
+  mode. It then constructs the initial 20-piece/four-Duo expert defense.
+  Available agents continuously mine and deliver between waves, switch to
+  defense on contact, then repair and add two Duos/seven walls after each of
+  waves 1–2. All six/eight active turrets are supplied before mining resumes.
+  If an Alpha is lost, its stable agent slot is visibly rebound to a replacement
+  at the core.
   A demo-specific controller subclass adds immediate pause and emergency-stop
   semantics.
 - Server and client commands cover `agents status|pause|resume|stop`; stop clears
@@ -471,17 +473,17 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 - `make demo-server` is a non-networked isolated acceptance probe. Verified:
   plugin load, three spawns, both shared plans, 20 fortifications, four supplied
   Duos, exact per-plan block-order parity, reserve mining, and pause/resume/stop
-  by approximately tick 1060. `DEMO_SURVIVAL=1 make demo-server` cleared all
-  three waves and reached tick 8100 with **956/1100** core health while logging
-  each mine/defend/maintenance transition. Both automated paths open no port.
+  by approximately tick 1060. `DEMO_SURVIVAL=1 make demo-server` verified both
+  nine-block expansions, six then eight supplied turrets, all three wave clears,
+  and tick 8100 with **1091/1100** core health. Both automated paths open no
+  port.
 - A human joined locally with a stock v159.7 client as `Smellybum`, used
-  `/agents resume`, saw mining/building/supplying and concise chat, and supplied
-  the feedback that produced continuous reserve mining. **Still unverified:**
-  the human requested the server be shut down before typing the in-client
-  `/agents stop`; automated emergency-stop acceptance is green, but M6.4 and M6
-  closure remain open until that last manual command is observed.
+  `/agents resume`, saw mining/building/supplying and concise chat through all
+  three waves, then typed `/agents stop`. The server log recorded all three
+  active harvest tasks abandoned immediately. Human feedback produced both the
+  continuous reserve-mining loop and the between-wave defensive expansions.
 
-## Milestone 6.5 — closure validation (one manual check and tag pending)
+## Milestone 6.5 — closure validation (DONE, verified 2026-07-20)
 
 The 2026-07-20 non-networked closure matrix is green: **102 JUnit**, **38
 pytest**, full smoke, 79-boundary cross-process determinism, 678-checkpoint /
@@ -492,6 +494,7 @@ the isolated plugin probe, and the three-wave real-time survival probe. The
 27,341 engine-only and 20,456 wrapper ticks/sec; 1/2/4-JVM aggregate throughput
 was 13,613/21,076/21,671 ticks/sec. These are validation measurements, not a
 replacement for the less-contended historical M2 baseline in `BENCHMARKS.md`.
+The closure commit is tagged `milestone-6`.
 
 The original brief §32 text is not checked into this repository; only the
 roadmap's requirement to record items 1–15 is available. The honest
@@ -505,8 +508,8 @@ repository-evidence mapping used for the M6 audit is:
 4. **PASS — mining/delivery:** legal cargo and core ledgers are exercised.
 5. **PASS — construction:** the copper line and defensive schematics use real
    build plans and exact resource costs.
-6. **PASS — supply/maintenance:** four Duos are supplied and damaged defenses
-   are rebuilt between waves.
+6. **PASS — supply/maintenance:** the initial four Duos expand to six/eight
+   supplied turrets and damaged defenses are rebuilt between waves.
 7. **PASS — combat:** agents switch from reserve mining to defense on contact
    and the core survives wave 3.
 8. **PASS — blocked replan:** the insufficient-copper variant reports
@@ -521,10 +524,10 @@ repository-evidence mapping used for the M6 audit is:
     results and the negative mutation changes a hash.
 13. **PASS — real server:** the stock dedicated server loads the plugin; a stock
     v159.7 client joined privately and observed/resumed the agents.
-14. **PENDING — manual emergency stop:** automated stop is green, but the human
-    has not yet typed `/agents stop` in the stock client.
-15. **PENDING — closure record/tag:** docs are prepared, but M6 must not be
-    checked off or tagged `milestone-6` until item 14 passes.
+14. **PASS — manual emergency stop:** the human typed `/agents stop` after wave
+    3; all three active harvest tasks were abandoned immediately.
+15. **PASS — closure record/tag:** status, benchmarks, roadmap, handoff, and the
+    takeover prompt are refreshed; the closure commit is tagged `milestone-6`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -558,8 +561,8 @@ repository-evidence mapping used for the M6 audit is:
   real-server acceptance probe are verified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
-- **Human demo acceptance:** stock v159.7 join and visual/chat observation pass;
-  the in-client `/agents stop` observation remains pending as described above.
+- **Human demo acceptance:** stock v159.7 join, visual/chat observation, all
+  three waves, and in-client emergency stop are verified.
 
 ## Known deviations from the brief
 

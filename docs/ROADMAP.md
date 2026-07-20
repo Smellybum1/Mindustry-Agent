@@ -400,8 +400,8 @@ Exit criteria (brief, unchanged):
 Loader status: **done and verified 2026-07-20** — full 48×48 world, ore
 patches, east spawn, 250-copper loadout, deterministic 3-wave dagger schedule
 (2700/4500/6300) from `scenario.json`, moving enemies (sync pathfinder patch),
-win/loss/truncate termination, seed sensitivity. Remaining M6 = the team
-actually winning it, and humans watching it happen.
+win/loss/truncate termination, and seed sensitivity. M6 is complete: the
+scripted team wins, deterministic replay matches, and the human demo is verified.
 
 ### 6.1 Scripted expert team
 - **DONE (verified 2026-07-20):** `BUILD_LINE` is now a live, reserved board
@@ -455,19 +455,19 @@ actually winning it, and humans watching it happen.
   reverted).
 
 ### 6.4 agent-plugin demo server (human-joinable)
-- **IMPLEMENTED; automated and human visual acceptance verified 2026-07-20,
-  in-client stop check pending:** `agent-plugin:dist` now produces an
+- **DONE (verified 2026-07-20):** `agent-plugin:dist` produces an
   official-layout loadable plugin
   for `server:dist`. The isolated `make demo-server` probe loads the plugin in
   the real server, spawns three Alphas, legally builds both shared JSON plans and
-  the full four-Duo expert defense, verifies the per-plan build order, renders
+  an initial four-Duo defense, verifies the per-plan build order, renders
   rate-limited board announcements, mines whenever no enemy is present, and
-  proves pause/resume/stop. `DEMO_SURVIVAL=1` clears all three waves without a
-  socket. A stock v159.7 client joined, resumed, and visually observed the
-  mining/building/supplying/chat path; user feedback produced the continuous
-  reserve-mining loop. The safe default opens no socket; `DEMO_JOIN=1` is the
-  explicit private port-6567 path. Do not mark this item DONE until the human
-  also types `/agents stop` and observes all agents halt.
+  expands to six/eight supplied Duos with seven new walls after each of waves
+  1–2.
+  `DEMO_SURVIVAL=1` verifies both expansions and clears all three waves without
+  a socket. A stock v159.7 client joined, resumed, observed the complete
+  mining/building/supplying/chat path, survived all three waves, then used
+  `/agents stop`; all three agents halted immediately. The safe default opens
+  no socket; `DEMO_JOIN=1` is the explicit private port-6567 path.
 - Objective: `agent-plugin` loads into the REAL dedicated server
   (`server:dist` jar + plugin per official plugin layout; ENGINE_NOTES §boot):
   spawns the same agent units driven by the SAME `agentcore` skills/board (its
@@ -486,15 +486,19 @@ actually winning it, and humans watching it happen.
   already be true headlessly.
 
 ### 6.5 M6 closure
+- **DONE (verified 2026-07-20):** the full closure matrix and brief §32
+  repository-evidence audit are recorded in `docs/STATUS.md`; evaluation and
+  real-server numbers are current, handoff docs are refreshed, and the closure
+  commit is tagged `milestone-6`.
 - Objective: docs/STATUS.md, docs/BENCHMARKS.md (evaluation numbers),
   docs/HANDOFF.md refreshed; tag `milestone-6` commit; brief §32 checklist
   audit (items 1–15) recorded in STATUS.md with honest per-item state.
 
 Exit criteria (brief, unchanged):
-- [ ] Scripted agents complete the scenario across a defined seed set
-- [ ] Human can join a private real-time server and observe/use the agents
-- [ ] Training and demo mode share the same skills and task board
-- [ ] Deterministic replay matches training results
+- [x] Scripted agents complete the scenario across a defined seed set
+- [x] Human can join a private real-time server and observe/use the agents
+- [x] Training and demo mode share the same skills and task board
+- [x] Deterministic replay matches training results
 
 ## Milestone 7: Learned single-agent selector
 
