@@ -34,6 +34,9 @@ SEED = 12345
 WALL_TICK = 2760
 POSTWAVE_TARGET = 3300
 WALL_TILE = (33, 24)
+WAVE1_TICK = 2700
+DEFEND_X = 308
+DEFEND_Y = 196
 
 
 def _wall_build_action() -> list[dict]:
@@ -50,7 +53,9 @@ def _wall_build_action() -> list[dict]:
     ]
 
 
-def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
+def run_schedule(
+    env: RlServerProcess, seed: int, *, require_combat_event: bool = True
+) -> list[tuple[str, str]]:
     """Reset with ``seed``, step the plain chunks, replay the scripted skill trace,
     then idle past wave 1 while enemies spawn/move; return labelled hashes at every
     boundary."""
@@ -155,7 +160,16 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
         {
             "agent_id": 0,
             "command": {"type": "NAVIGATE", "x": 244, "y": 164, "tolerance": 4},
-        }
+        },
+        {
+            "agent_id": 1,
+            "command": {
+                "type": "NAVIGATE",
+                "x": DEFEND_X,
+                "y": DEFEND_Y,
+                "tolerance": 4,
+            },
+        },
     ]
     for _ in range(5):
         sr = env.step(
@@ -167,13 +181,38 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
         reposition = []
         tick = sr.tick
         hashes.append((f"builder-ready@{tick}", sr.state_hash))
-    if sr.observations[0]["skill"]["status"] != "SUCCEEDED":
-        raise AssertionError(f"builder did not return to lane: {sr.observations[0]['skill']}")
+    for i, obs in enumerate(sr.observations):
+        if obs["skill"]["status"] != "SUCCEEDED":
+            raise AssertionError(f"agent {i} did not reach its lane anchor: {obs['skill']}")
 
     # Scenario phase 1: idle until the daggers are moving toward the lane wall.
+    combat_events = 0
     while tick < WALL_TICK:
         step = min(CHUNK, WALL_TICK - tick)
-        sr = env.step(rr.episode_id, expected_tick=tick, ticks_to_advance=step)
+        actions = []
+        if tick < WAVE1_TICK <= tick + step:
+            actions = [
+                {
+                    "agent_id": 1,
+                    "command": {
+                        "type": "DEFEND",
+                        "x": DEFEND_X,
+                        "y": DEFEND_Y,
+                        "radius": 160,
+                        "ticks": 600,
+                    },
+                }
+            ]
+        sr = env.step(
+            rr.episode_id,
+            expected_tick=tick,
+            ticks_to_advance=step,
+            agent_actions=actions,
+        )
+        combat_events += sum(
+            event.get("type") == "unit_damage" and event.get("agent_id") == 1
+            for event in sr.game_events
+        )
         if sr.tick != tick + step:
             raise AssertionError(f"tick {sr.tick} != {tick + step} (non-exact advance)")
         tick = sr.tick
@@ -200,6 +239,10 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
     while tick < POSTWAVE_TARGET:
         step = min(CHUNK, POSTWAVE_TARGET - tick)
         sr = env.step(rr.episode_id, expected_tick=tick, ticks_to_advance=step)
+        combat_events += sum(
+            event.get("type") == "unit_damage" and event.get("agent_id") == 1
+            for event in sr.game_events
+        )
         if sr.tick != tick + step:
             raise AssertionError(f"tick {sr.tick} != {tick + step} (non-exact advance)")
         tick = sr.tick
@@ -217,13 +260,17 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
         raise AssertionError(
             f"daggers did not continue around wall: nearest-core distance {before_dist} -> {after_dist}"
         )
+    if require_combat_event and combat_events <= 0:
+        raise AssertionError("DEFEND produced no agent-attributed damage events in replay")
     return hashes
 
 
-def _fresh_run(port: int, java: str, seed: int) -> list[tuple[str, str]]:
+def _fresh_run(
+    port: int, java: str, seed: int, *, require_combat_event: bool = True
+) -> list[tuple[str, str]]:
     with RlServerProcess(LaunchConfig(port=port, java=java)) as env:
         env.handshake()
-        return run_schedule(env, seed)
+        return run_schedule(env, seed, require_combat_event=require_combat_event)
 
 
 def _diff(a: list[tuple[str, str]], b: list[tuple[str, str]]) -> list[str]:
@@ -288,7 +335,7 @@ def main(argv=None) -> int:
     # diverge, because the wave spawn spread is seeded from root_seed.
     print("\n[4] seed sensitivity (different seed => different post-wave hash)")
     other_seed = args.seed + 987654321
-    run_c = _fresh_run(args.port, args.java, other_seed)
+    run_c = _fresh_run(args.port, args.java, other_seed, require_combat_event=False)
     same_pre_wave = run_a[0][1] == run_c[0][1]  # reset hash: seed-independent (no RNG yet)
     seed_sensitive = run_a[-1][1] != run_c[-1][1]
     print(f"    seed {args.seed}: final={run_a[-1][1][:24]}")

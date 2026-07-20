@@ -235,7 +235,17 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   proves wave 1 destroys a six-copper spawn-tile wall at tick 2700 and rebuilding
   it clears the queue while charging exactly six copper again. `broken_block_count`
   is now visible; true healing of standing damage remains unavailable to alpha.
-- **4.6–4.8 remain unimplemented.**
+- **M4.6 — DefendRegion + EmergencyRetreat is complete.** Target selection is
+  stable nearest-distance/lowest-unit-id ordering, while the engine retains all
+  aim, range, and weapon-fire legality. RETREAT clears `unit.clearBuilding()`,
+  clears weapon targets, preserves cargo, and returns to the core. Step-scoped
+  `unit_damage` events attribute source agent/unit and report post-hit HP/shield;
+  observations add `enemy_total_health`, `build_queue_depth`, and DEFEND target/
+  duration telemetry. Live acceptance observed dagger aggregate HP 450 -> 443.
+  Four new FSM tests bring the Java total to 95; the combat-bearing 79-boundary
+  replay matches across fresh JVMs.
+- **4.7–4.8 remain unimplemented.** M4.6 added build-queue depth early, but plan
+  progress, turret summaries, and canonical-hash closure remain owned by 4.7.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -260,8 +270,8 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 91 tests
-  green, including 27 M3/M4 skill tests). `agent-plugin` build still unverified.
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 95 tests
+  green, including 31 M3/M4 skill tests). `agent-plugin` build still unverified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
 

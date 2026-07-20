@@ -144,4 +144,19 @@ public interface AgentBody{
 
     /** Enqueue the matching engine broken-block plan, preserving its saved config. */
     void enqueueRebuild(String block, int tileX, int tileY, int rotation);
+
+    // -- combat / emergency control -------------------------------------
+
+    /**
+     * Select the nearest targetable enemy in the inclusive world-space radius, breaking
+     * equal-distance ties by the lowest engine unit id, then aim/fire through the
+     * engine weapon path. Returns the selected unit id, or {@code -1} when none exists.
+     */
+    int engageNearestEnemy(float anchorX, float anchorY, float radius);
+
+    /** Clear weapon targets and request no fire this tick. */
+    void ceaseFire();
+
+    /** Cancel all engine-owned build plans for this unit. */
+    void cancelBuildPlans();
 }

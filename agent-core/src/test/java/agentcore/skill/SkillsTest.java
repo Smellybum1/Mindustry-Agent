@@ -350,4 +350,61 @@ class SkillsTest{
         assertEquals(0, rebuild.completed());
         assertEquals(1, body.broken.size());
     }
+
+    @Test void defendBreaksEqualDistanceTieByLowestUnitId(){
+        FakeBody body = new FakeBody(0f, 0f);
+        body.enemies.add(new FakeBody.FakeEnemy(9, 10f, 0f));
+        body.enemies.add(new FakeBody.FakeEnemy(3, -10f, 0f));
+        DefendRegion defend = new DefendRegion(0f, 0f, 20f, 10L);
+        SkillResult result = defend.tick(body, 0L);
+        assertEquals(SkillStatus.RUNNING, result.status());
+        assertEquals(SkillReason.DEFENDING, result.reason());
+        assertEquals(3, defend.targetId());
+        assertEquals(3, body.targetId);
+        assertTrue(body.firing);
+    }
+
+    @Test void defendWaitsForRegionToClearAfterDuration(){
+        FakeBody body = new FakeBody(0f, 0f);
+        body.enemies.add(new FakeBody.FakeEnemy(4, 10f, 0f));
+        DefendRegion defend = new DefendRegion(0f, 0f, 20f, 5L);
+        assertEquals(SkillStatus.RUNNING, defend.tick(body, 5L).status());
+        assertEquals(SkillStatus.RUNNING, defend.tick(body, 10L).status());
+        body.enemies.clear();
+        SkillResult result = defend.tick(body, 11L);
+        assertEquals(SkillStatus.SUCCEEDED, result.status());
+        assertEquals(SkillReason.DEFENDED, result.reason());
+        assertFalse(body.firing);
+        body.enemies.add(new FakeBody.FakeEnemy(1, 1f, 0f));
+        assertEquals(SkillStatus.SUCCEEDED, defend.tick(body, 12L).status());
+        assertFalse(body.firing, "a terminal defense must not reacquire later targets");
+    }
+
+    @Test void retreatCancelsBuildReturnsCoreAndPreservesCargo(){
+        FakeBody body = new FakeBody(100f, 0f);
+        body.coreX = 0f;
+        body.coreY = 0f;
+        body.cargo = 17;
+        body.buildPlan = true;
+        body.firing = true;
+        SkillResult result = run(new EmergencyRetreat(), body, 100);
+        assertEquals(SkillStatus.SUCCEEDED, result.status());
+        assertEquals(SkillReason.RETREATED, result.reason());
+        assertTrue(body.buildPlansCancelled);
+        assertFalse(body.buildPlan);
+        assertFalse(body.firing);
+        assertEquals(17, body.cargo);
+        assertTrue(body.dst(body.coreX, body.coreY) <= 8f);
+    }
+
+    @Test void retreatBlocksWithoutCoreAfterCancellingPlans(){
+        FakeBody body = new FakeBody(100f, 0f);
+        body.hasCore = false;
+        body.buildPlan = true;
+        SkillResult result = new EmergencyRetreat().tick(body, 7L);
+        assertEquals(SkillStatus.BLOCKED, result.status());
+        assertEquals(SkillReason.NO_CORE, result.reason());
+        assertEquals(67L, result.nextRetryTick());
+        assertTrue(body.buildPlansCancelled);
+    }
 }

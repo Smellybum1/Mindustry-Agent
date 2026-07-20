@@ -118,7 +118,8 @@ board wiring (M5), rewards (M7), multi-unit squads.
 ## Open questions for the implementer (resolve against source, record here)
 
 **Questions 1 and 5 resolved during M4.2 implementation, 2 and 4 during M4.4,
-and 3 during M4.5 (2026-07-20). Answers cite this checkout (v159.7).**
+3 during M4.5, and the combat RNG audit during M4.6 (2026-07-20). Answers cite
+this checkout (v159.7).**
 
 1. **Core resource consumption for unit build plans. RESOLVED.**
    `BuilderComp.updateBuildLogic()` begins a legal placement through
@@ -163,3 +164,11 @@ and 3 during M4.5 (2026-07-20). Answers cite this checkout (v159.7).**
    `core/src/mindustry/content/Blocks.java:3258` with
    `requirements(Category.turret, with(Items.copper, 35))` at `:3259`. Live smoke
    confirms the core ledger decreases by exactly 35 for one completed Duo.
+6. **Weapon RNG audit. RESOLVED for S5.** `Weapon.bullet` draws positional spread,
+   inaccuracy, velocity variation, and sound pitch only through `Mathf.range` /
+   `Mathf.random` (`core/src/mindustry/type/Weapon.java:492-510`), all backed by
+   global `Mathf.rand`. Episode reset explicitly calls `Mathf.rand.setSeed(seed)`
+   before scenario play (`rl-server/src/main/java/mindustry/rl/RlServer.java:417`).
+   `SkillController.resetTimers()` is overridden empty, avoiding AIController's
+   random timer initialization, and target choice contains no RNG. Cross-process
+   replay with live alpha projectiles matches all 79 boundaries.

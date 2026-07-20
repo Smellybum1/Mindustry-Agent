@@ -46,6 +46,9 @@ public final class SkillController extends AIController implements AgentBody{
      * global {@code Mathf.rand} stream untouched by controller construction. */
     @Override protected void resetTimers(){ }
 
+    /** Combat skills supply their target explicitly; never run timer-based target search. */
+    @Override public boolean retarget(){ return false; }
+
     public int agentIndex(){ return agentIndex; }
 
     public void setSkill(Skill skill){
@@ -329,6 +332,44 @@ public final class SkillController extends AIController implements AgentBody{
             }
         }
     }
+
+    @Override
+    public int engageNearestEnemy(float anchorX, float anchorY, float radius){
+        Unit best = null;
+        float bestDst2 = Float.MAX_VALUE;
+        float radius2 = radius * radius;
+        for(Unit candidate : Groups.unit){
+            if(candidate == unit || candidate.team == unit.team || candidate.dead()
+                || !candidate.isValid() || !candidate.targetable(unit.team)
+                || !candidate.checkTarget(unit.type.targetAir, unit.type.targetGround)){
+                continue;
+            }
+            float dx = candidate.x - anchorX, dy = candidate.y - anchorY;
+            float dst2 = dx * dx + dy * dy;
+            if(dst2 > radius2) continue;
+            if(best == null || Float.compare(dst2, bestDst2) < 0
+                || (Float.compare(dst2, bestDst2) == 0 && candidate.id < best.id)){
+                best = candidate;
+                bestDst2 = dst2;
+            }
+        }
+        target = best;
+        updateWeapons();
+        return best == null ? -1 : best.id;
+    }
+
+    @Override
+    public void ceaseFire(){
+        target = null;
+        unit.isShooting = false;
+        for(var mount : unit.mounts){
+            mount.target = null;
+            mount.shoot = false;
+            mount.rotate = false;
+        }
+    }
+
+    @Override public void cancelBuildPlans(){ unit.clearBuilding(); }
 
     private Block block(String name){
         return content.block(name);

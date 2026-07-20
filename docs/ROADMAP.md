@@ -200,6 +200,15 @@ below; implement in order — 4.1/4.2 unblock everything else.
 - Depends: 4.2; waves (done).
 
 ### 4.6 DefendRegion (S5) + EmergencyRetreat (S6)
+- **DONE (verified 2026-07-20):** `DefendRegion` holds a world anchor, selects
+  the nearest targetable enemy by squared distance then lowest engine unit id,
+  and delegates range/prediction/aim/fire gates to `AIController.updateWeapons()`.
+  `EmergencyRetreat` clears the native build queue, ceases fire, preserves cargo,
+  and returns to the core. Four FSM tests bring the Java total to 95. Live smoke
+  proves a queued plan is cancelled and an alpha-attributed bullet event precedes
+  a dagger health drop (450 -> 443). The 79-boundary replay includes combat and
+  matches across fresh JVMs. Weapon spread/pitch RNG uses the globally seeded
+  `Mathf.rand` stream; the source audit is recorded in `M4_DESIGN.md`.
 - Objective: per M4_DESIGN — anchor + radius, deterministic target selection
   (nearest, tie-break lowest unit id), engine handles aim/fire legality;
   RETREAT cancels plans and returns to core.

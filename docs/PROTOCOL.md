@@ -104,7 +104,7 @@ Fail fast on incompatible **major** versions.
 ```
 
 `command.type` is one of `NAVIGATE` / `MINE` / `DELIVER_CORE` / `WAIT` / `BUILD` /
-`SCHEMATIC` / `SUPPLY` / `REBUILD` / `CONTINUE`.
+`SCHEMATIC` / `SUPPLY` / `REBUILD` / `DEFEND` / `RETREAT` / `CONTINUE`.
 An absent `command` (or `CONTINUE`) keeps the agent's current skill running.
 Params by type: `NAVIGATE {x, y, tolerance?}` (world coords), `MINE {tile_x, tile_y,
 amount?}` (tile coords), `DELIVER_CORE {}`, `WAIT {ticks?}`,
@@ -120,6 +120,11 @@ what the target accepts. Its skill observation adds `requested`, `delivered`,
 `REBUILD {x1, y1, x2, y2}` executes queued destroyed-block plans inside the
 inclusive tile rectangle in engine queue order. Its skill observation adds
 `initial_broken` and `completed`; team observation adds `broken_block_count`.
+`DEFEND {x, y, radius, ticks}` uses world coordinates, holds the anchor, and
+selects the nearest targetable enemy (lowest unit id breaks exact distance ties)
+while the engine owns aim/range/fire legality. Its skill observation adds
+`target_id`, `duration_ticks`, and `elapsed_ticks`. `RETREAT {}` cancels the
+unit's engine build queue, ceases fire, preserves cargo, and returns to its core.
 Actions are applied on
 the sim thread **before** advancing; each is validated and echoed in
 `action_results[]` — an invalid action is rejected there, never crashes the step.
@@ -140,7 +145,7 @@ the sim thread **before** advancing; each is validated and echoed in
 | `terminations` | [bool] | per agent |
 | `truncations` | [bool] | per agent |
 | `task_events` | [obj] | coordination/task-board events this step |
-| `game_events` | [obj] | engine events (waves, deaths, builds) |
+| `game_events` | [obj] | step-scoped events; M4.6 emits `unit_damage` with tick, target unit/team/health/shield, nominal damage, source unit, and source agent (`-1` when not an agent) |
 | `state_hash` | str | stable hash after advancing |
 | `timing` | obj | `{engine_ms, observation_ms, serialization_ms, io_ms}` |
 
@@ -151,11 +156,13 @@ the sim thread **before** advancing; each is validated and echoed in
 {
   "agent_id": 0,
   "unit":  {"x": 216.0, "y": 192.0, "vx": 0.0, "vy": 0.0, "health": 150.0,
-            "item": "copper", "item_amount": 21, "mining": false, "flag": 0.0, "dead": false},
+            "item": "copper", "item_amount": 21, "mining": false, "flag": 0.0,
+            "dead": false, "build_queue_depth": 0},
   "skill": {"type": "MINE", "status": "SUCCEEDED", "reason": "TARGET_REACHED",
             "progress": 1.0, "next_retry_tick": -1},
   "team":  {"tick": 860, "wave": 1, "copper": 100, "lead": 0, "unit_count": 2,
-            "building_count": 1, "core_health": 1100.0, "done": false}
+            "building_count": 1, "broken_block_count": 0, "core_health": 1100.0,
+            "enemy_count": 0, "enemy_total_health": 0.0, "done": false}
 }
 ```
 

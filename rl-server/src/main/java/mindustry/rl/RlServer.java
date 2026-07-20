@@ -65,6 +65,7 @@ public final class RlServer{
     private int agentCount = 1;
     private long uptimeTicks;
     private final AtomicBoolean stop = new AtomicBoolean(false);
+    private Jval stepGameEvents = Jval.newArray();
 
     private Method pathfinderStop;
     private Method controlPathStop;
@@ -121,6 +122,9 @@ public final class RlServer{
 
         //content is now loaded: parse the scenario spec (resolves block/unit/item ids)
         scenario = new Scenario();
+
+        //Captured only while the simulation thread advances an external step.
+        Events.on(UnitDamageEvent.class, this::recordUnitDamage);
 
         //listener order mirrors ServerLauncher.java:74-78, minus ServerControl
         Core.app.addListener(new ApplicationListener(){ public void update(){ asyncCore.begin(); } });
@@ -272,6 +276,7 @@ public final class RlServer{
         agentCount = Math.max(1, req.getInt("agent_count", 1));
 
         doReset(rootSeed);
+        stepGameEvents = Jval.newArray();
 
         episodeId = "ep-" + rootSeed + "-" + System.nanoTime();
         uptimeTicks = 0;
@@ -307,6 +312,7 @@ public final class RlServer{
         }
 
         int previousTick = current;
+        stepGameEvents = Jval.newArray();
 
         //M3 (D5): decode + apply the per-agent action bundle on the sim thread BEFORE
         //advancing; invalid actions are rejected into action_results, never crash.
@@ -366,7 +372,7 @@ public final class RlServer{
         r.add("truncations", boolArray(agentCount, truncated));
         r.put("outcome", outcome);
         r.add("task_events", Jval.newArray());
-        r.add("game_events", Jval.newArray());
+        r.add("game_events", stepGameEvents);
         r.put("state_hash", hash);
         r.add("timing", timing);
         return r;
@@ -508,6 +514,7 @@ public final class RlServer{
         o.put("mining", mn.mining());
         o.put("flag", u.flag);
         o.put("dead", u.dead());
+        o.put("build_queue_depth", u.plans().size);
         return o;
     }
 
@@ -530,6 +537,11 @@ public final class RlServer{
             o.put("initial_broken", rebuild.initialCount());
             o.put("completed", rebuild.completed());
         }
+        if(sc.activeSkill() instanceof DefendRegion defend){
+            o.put("target_id", defend.targetId());
+            o.put("duration_ticks", defend.durationTicks());
+            o.put("elapsed_ticks", defend.elapsed((long)state.tick));
+        }
         return o;
     }
 
@@ -547,6 +559,7 @@ public final class RlServer{
         //wave/enemy telemetry (scenario phase): time to the next spawn and live enemy summary.
         o.put("time_to_next_wave", state.wavetime);
         o.put("enemy_count", state.enemies);
+        o.put("enemy_total_health", enemyTotalHealth());
         o.put("enemy_nearest_core_dist", enemyNearestCoreDist(core));
         o.put("done", state.gameOver);
         return o;
@@ -572,6 +585,41 @@ public final class RlServer{
             }
         }
         return best == Float.MAX_VALUE ? -1.0 : best;
+    }
+
+    private double enemyTotalHealth(){
+        double total = 0.0;
+        for(Unit u : Groups.unit){
+            if(u.team() == scenario.waveTeam && !u.dead()) total += u.health;
+        }
+        return total;
+    }
+
+    private void recordUnitDamage(UnitDamageEvent event){
+        if(event.unit == null || event.bullet == null) return;
+        Jval out = Jval.newObject();
+        out.put("type", "unit_damage");
+        out.put("tick", (long)state.tick);
+        out.put("target_unit_id", event.unit.id);
+        out.put("target_health", event.unit.health);
+        out.put("target_shield", event.unit.shield);
+        out.put("target_team", event.unit.team.name);
+        out.put("nominal_damage", event.bullet.damage);
+
+        int sourceUnitId = -1;
+        int sourceAgentId = -1;
+        if(event.bullet.owner instanceof Unit source){
+            sourceUnitId = source.id;
+            for(RlAgentRegistry.Agent agent : registry.agents()){
+                if(agent.unit == source){
+                    sourceAgentId = agent.index;
+                    break;
+                }
+            }
+        }
+        out.put("source_unit_id", sourceUnitId);
+        out.put("agent_id", sourceAgentId);
+        stepGameEvents.add(out);
     }
 
     private Jval teamState(){

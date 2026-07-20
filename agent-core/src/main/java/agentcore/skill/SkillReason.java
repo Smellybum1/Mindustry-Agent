@@ -64,5 +64,13 @@ public enum SkillReason{
     /** Reconstructing an engine-recorded destroyed team block. */
     REBUILDING,
     /** No destroyed blocks remain in the requested region. */
-    REBUILT
+    REBUILT,
+    /** Holding a region and engaging its deterministic nearest target. */
+    DEFENDING,
+    /** The defense duration elapsed with no targetable enemies in the region. */
+    DEFENDED,
+    /** Cancelling work and returning to the team core. */
+    RETREATING,
+    /** The unit reached the team core after cancelling work. */
+    RETREATED
 }

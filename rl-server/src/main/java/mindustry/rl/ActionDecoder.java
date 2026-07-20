@@ -149,6 +149,26 @@ final class ActionDecoder{
                 return result(agentId, true, "accepted", type);
             }
 
+            case "DEFEND":{
+                float x = (float)command.getDouble("x", Double.NaN);
+                float y = (float)command.getDouble("y", Double.NaN);
+                float radius = (float)command.getDouble("radius", Double.NaN);
+                long ticks = command.getLong("ticks", -1L);
+                if(!finite(x) || !finite(y) || !finite(radius) || radius < 0f || ticks < 0L){
+                    return result(agentId, false, "malformed", type);
+                }
+                if(x < 0f || y < 0f || x >= world.width() * tilesize
+                    || y >= world.height() * tilesize){
+                    return result(agentId, false, "out_of_bounds", type);
+                }
+                agent.controller.setSkill(new DefendRegion(x, y, radius, ticks));
+                return result(agentId, true, "accepted", type);
+            }
+
+            case "RETREAT":
+                agent.controller.setSkill(new EmergencyRetreat());
+                return result(agentId, true, "accepted", type);
+
             default:
                 return result(agentId, false, "unknown_command", type);
         }

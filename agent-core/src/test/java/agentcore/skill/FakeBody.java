@@ -55,6 +55,10 @@ final class FakeBody implements AgentBody{
     int buildX, buildY, buildRotation;
     boolean rebuildPlan;
     final List<RebuildSpec> broken = new ArrayList<>();
+    final List<FakeEnemy> enemies = new ArrayList<>();
+    int targetId = -1;
+    boolean firing;
+    boolean buildPlansCancelled;
 
     FakeBody(float x, float y){ this.px = x; this.py = y; }
 
@@ -234,5 +238,39 @@ final class FakeBody implements AgentBody{
                 return;
             }
         }
+    }
+
+    @Override public int engageNearestEnemy(float anchorX, float anchorY, float radius){
+        FakeEnemy best = null;
+        float bestDst2 = Float.MAX_VALUE;
+        float radius2 = radius * radius;
+        for(FakeEnemy enemy : enemies){
+            float dx = enemy.x - anchorX, dy = enemy.y - anchorY;
+            float dst2 = dx * dx + dy * dy;
+            if(dst2 > radius2) continue;
+            if(best == null || Float.compare(dst2, bestDst2) < 0
+                || (Float.compare(dst2, bestDst2) == 0 && enemy.id < best.id)){
+                best = enemy;
+                bestDst2 = dst2;
+            }
+        }
+        targetId = best == null ? -1 : best.id;
+        firing = best != null;
+        return targetId;
+    }
+
+    @Override public void ceaseFire(){ targetId = -1; firing = false; }
+
+    @Override public void cancelBuildPlans(){
+        buildPlan = false;
+        rebuildPlan = false;
+        buildPlansCancelled = true;
+    }
+
+    static final class FakeEnemy{
+        final int id;
+        final float x, y;
+
+        FakeEnemy(int id, float x, float y){ this.id = id; this.x = x; this.y = y; }
     }
 }
