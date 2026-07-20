@@ -171,3 +171,39 @@ core/assets/logicids.dat
 
 # project files for the sectors
 core/assets-raw/sprites/ui/sectors/*.json
+
+## ---- mindustry-coop-agents additions ----
+
+# RL run artifacts: manifests/metrics only are committed as tiny examples.
+# Ignore the contents but keep the directory (and any examples) tracked.
+/runs/*
+!/runs/.gitkeep
+!/runs/examples/
+
+# Python: virtualenvs, caches, build artifacts, coverage
+python/.venv/
+python/venv/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+python/build/
+python/dist/
+python/uv.lock.tmp
+
+# Custom Java module build dirs
+/rl-server/build/
+/rl-server/bin/
+/agent-core/build/
+/agent-core/bin/
+/agent-plugin/build/
+/agent-plugin/bin/
+
+# Local scratch / benchmark outputs
+/scratch/
+*.log
+!scripts/*.log
