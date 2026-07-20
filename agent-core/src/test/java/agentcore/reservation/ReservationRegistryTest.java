@@ -62,6 +62,19 @@ class ReservationRegistryTest{
         assertEquals(1, r.size());
     }
 
+    @Test void humanRegionReservationRemovesOnlyTheYieldedRegion(){
+        ReservationRegistry r = new ReservationRegistry();
+        r.acquireRegion("agentTask", A, "east", false, 0);
+        r.acquireTile("tileTask", B, Rect.ofTile(1, 1), false, 0);
+
+        ReservationOutcome out = r.acquireRegion("humanTask", HUMAN, "east", true, 5);
+
+        assertEquals(ReservationResult.GRANTED_HUMAN_OVERRIDE, out.result());
+        assertEquals(2, r.size());
+        assertEquals("humanTask", r.regionReservations().get(0).taskId());
+        assertEquals("tileTask", r.tileReservations().get(0).taskId());
+    }
+
     @Test void resourceBudgetRejectsOverReservationAndNeverGoesNegative(){
         ReservationRegistry r = new ReservationRegistry();
         r.setCapacity("copper", 100);

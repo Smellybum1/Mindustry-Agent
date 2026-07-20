@@ -70,6 +70,7 @@ public final class Scenario{
     public final int initialWaveSpacing;   //ticks until wave 1
     public final int waveSpacing;          //ticks between subsequent waves
     public final Seq<SpawnGroup> spawnGroups = new Seq<>();
+    public final Seq<Integer> waveTicks = new Seq<>();
     public final int waveCount;
 
     /** Termination parameters (docs/SCENARIOS.md §Rules). */
@@ -119,7 +120,8 @@ public final class Scenario{
             OrePatch spec = new OrePatch(patch.getString("id", ""),
                 block(patch.getString("ore", "ore-copper")),
                 rect.getInt("x", 0), rect.getInt("y", 0),
-                rect.getInt("w", 0), rect.getInt("h", 0));
+                rect.getInt("w", 0), rect.getInt("h", 0),
+                patch.getString("role", ""));
             orePatches.add(spec);
             orePatchesById.put(spec.id, spec);
         }
@@ -217,6 +219,7 @@ public final class Scenario{
         //per-wave composition from the JSON is reproduced exactly (no arithmetic scaling).
         for(int i = 0; i < waveCount; i++){
             Jval w = waves.get(i);
+            waveTicks.add(w.getInt("tick", 0));
             int waveIndex = i; //engine wave index consumed by getSpawned(state.wave - 1)
             for(Jval s : w.get("spawns").asArray()){
                 UnitType type = content.unit(s.getString("unit", "dagger"));
@@ -298,6 +301,7 @@ public final class Scenario{
         m.put("scenario_version", version);
         m.put("width", width);
         m.put("height", height);
+        m.put("tile_size", tilesize);
         m.put("core_x", coreX);
         m.put("core_y", coreY);
         m.put("wave_count", waveCount);
@@ -305,6 +309,43 @@ public final class Scenario{
         m.put("wave_spacing", waveSpacing);
         m.put("win_tick", winTick);
         m.put("tick_cap", tickCap);
+        Jval ticks = Jval.newArray();
+        for(int tick : waveTicks) ticks.add(tick);
+        m.add("wave_ticks", ticks);
+
+        Jval patches = Jval.newArray();
+        for(OrePatch patch : orePatches){
+            Jval entry = Jval.newObject();
+            entry.put("id", patch.id);
+            entry.put("ore", patch.ore.name);
+            entry.put("role", patch.role);
+            entry.add("rect", rectMetadata(patch.x, patch.y, patch.w, patch.h));
+            patches.add(entry);
+        }
+        m.add("ore_patches", patches);
+
+        Jval regionData = Jval.newObject();
+        for(ObjectMap.Entry<String, RegionSpec> entry : regions){
+            RegionSpec region = entry.value;
+            Jval value = Jval.newObject();
+            value.add("rect", rectMetadata(region.x(), region.y(), region.w(), region.h()));
+            regionData.add(entry.key, value);
+        }
+        m.add("regions", regionData);
+        Jval objectiveData = Jval.newObject();
+        for(ObjectMap.Entry<TaskType, ObjectiveSpec> entry : objectives){
+            ObjectiveSpec objective = entry.value;
+            Jval value = Jval.newObject();
+            value.put("id", objective.id());
+            value.put("target_ref", objective.targetRef());
+            value.put("threshold", objective.threshold());
+            objectiveData.add(entry.key.name(), value);
+        }
+        m.add("objectives", objectiveData);
+        m.add("reference_schematic", schematicMetadata(referenceSchematicId,
+            referenceAnchorX, referenceAnchorY));
+        m.add("build_line", schematicMetadata(buildLineId, buildLineAnchorX,
+            buildLineAnchorY));
         return m;
     }
 
@@ -367,6 +408,40 @@ public final class Scenario{
         return readResource(RESOURCE);
     }
 
+    private Jval schematicMetadata(String id, int anchorX, int anchorY){
+        SchematicSpec spec = schematic(id);
+        Jval result = Jval.newObject();
+        result.put("id", id);
+        Jval anchor = Jval.newArray();
+        anchor.add(anchorX);
+        anchor.add(anchorY);
+        result.add("anchor", anchor);
+        Jval blocks = Jval.newArray();
+        if(spec != null){
+            for(BuildSpec block : spec.blocks()){
+                Jval entry = Jval.newObject();
+                entry.put("block", block.block());
+                Jval offset = Jval.newArray();
+                offset.add(block.offsetX());
+                offset.add(block.offsetY());
+                entry.add("offset", offset);
+                entry.put("rotation", block.rotation());
+                blocks.add(entry);
+            }
+        }
+        result.add("blocks", blocks);
+        return result;
+    }
+
+    private static Jval rectMetadata(int x, int y, int w, int h){
+        Jval rect = Jval.newObject();
+        rect.put("x", x);
+        rect.put("y", y);
+        rect.put("w", w);
+        rect.put("h", h);
+        return rect;
+    }
+
     private static Jval readResource(String resource){
         try(InputStream in = Scenario.class.getResourceAsStream(resource)){
             if(in == null){
@@ -408,8 +483,10 @@ public final class Scenario{
         public final String id;
         public final Block ore;
         public final int x, y, w, h;
-        OrePatch(String id, Block ore, int x, int y, int w, int h){
+        public final String role;
+        OrePatch(String id, Block ore, int x, int y, int w, int h, String role){
             this.id = id; this.ore = ore; this.x = x; this.y = y; this.w = w; this.h = h;
+            this.role = role;
         }
         boolean contains(int tx, int ty){
             return tx >= x && tx < x + w && ty >= y && ty < y + h;

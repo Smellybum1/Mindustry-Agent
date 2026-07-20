@@ -33,14 +33,27 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
   per tick on the sim thread with **no wall-clock budget** (docs/ENGINE_NOTES.md
   §5.5, §11.6). This was the single sanctioned upstream edit the brief reserved for
   Risk 1/Risk 3.
-- **File / lines**: `core/src/mindustry/ai/Pathfinder.java:356-378` — one new
-  `public void syncUpdate()` (25 lines incl. javadoc), inserted immediately before
-  `getField(...)`. No existing line changed.
-- **Diff summary**: adds
+- **File / lines**: `core/src/mindustry/ai/Pathfinder.java:356-402` — one new
+  `public void syncUpdate()` (48 added lines incl. javadoc), inserted immediately
+  before `getField(...)`. No existing line changed.
+- **Diff summary**: adds the following simulation-thread-only sequence:
   ```java
   public void syncUpdate(){
       if(net.client()) return;
       if(state.isPlaying()){
+          if(needsRefresh){
+              needsRefresh = false;
+              for(Flowfield path : mainList){
+                  if(path != null && path.needsRefresh()){
+                      synchronized(path.targets){
+                          path.updateTargetPositions();
+                      }
+                  }
+              }
+              for(Flowfield data : threadList){
+                  data.dirty = true;
+              }
+          }
           queue.run();
           for(Flowfield data : threadList){
               if(data.dirty && data.frontier.size == 0){
@@ -52,9 +65,11 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
       }
   }
   ```
-  It mirrors the body of `run()`'s loop **exactly**, substituting the `maxUpdate`
-  (8 ms) budget with `-1` (unbounded). `rl-server` calls it once per tick after
-  each `stepOnce()` (and once at reset). `ControlPathfinder` is **not** patched:
+  The queue/frontier portion mirrors `run()`'s loop, substituting the `maxUpdate`
+  (8 ms) budget with `-1` (unbounded). The leading block performs the refresh work
+  that normal play schedules through `afterGameUpdate`, without its wall-clock
+  delay or asynchronous queue hand-off. `rl-server` calls the method once per tick
+  after each `stepOnce()` (and once at reset). `ControlPathfinder` is **not** patched:
   wave `GroundAI` consults only the flow-field `Pathfinder`
   (`AIController.pathfind → pathfinder.getField(...).getNextTile(...)`);
   `ControlPathfinder` serves only `CommandAI`/`LogicAI`, which our units do not use.
@@ -67,14 +82,14 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
     an `IntQueue`; `updateTargets` iterates `IntSeq` targets in order. No unordered
     iteration, no floating-point reduction. Deterministic.
   - *RNG*: the only `Rand` in the flow-field code is
-    `Pathfinder.EnemyCoreField.getPositions()` (`:555-556`), guarded by
+    `Pathfinder.EnemyCoreField.getPositions()` (`:602-604`), guarded by
     `state.rules.randomWaveAI`. The scenario sets `randomWaveAI = false`, so the
     branch — and its `hashCode()`/`state.tick`-seeded `Rand` (the ENGINE_NOTES §6
     caveat) — is **never entered**. Belt-and-braces: `state.rules.waves = true`, so
     even if it were entered the seed would be `state.wave` (deterministic), never
     `hashCode()`. Neutralized by rules, not by patch.
   - *Wall clock*: `syncUpdate()` reads no clock. The one remaining `Time.millis()`
-    gate is the normal-mode `afterGameUpdate` refresh handler (`:190-193`). In the
+    gate is the normal-mode `afterGameUpdate` refresh handler (`:187-194`). In the
     thread-less deterministic path, `syncUpdate()` now consumes `needsRefresh`
     immediately on the simulation thread, refreshes targets, marks every registered
     flow field dirty, and fully converges it in the same call. It does not read or

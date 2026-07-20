@@ -5,8 +5,6 @@ package agentcore.skill;
  * deterministically while the engine owns weapon legality and projectile behavior.
  */
 public final class DefendRegion implements Skill{
-    private static final float ARRIVAL_TOLERANCE = 8f;
-
     private final float anchorX;
     private final float anchorY;
     private final float radius;
@@ -33,7 +31,7 @@ public final class DefendRegion implements Skill{
         }
         if(startTick == Long.MIN_VALUE) startTick = tick;
 
-        if(body.dst(anchorX, anchorY) > ARRIVAL_TOLERANCE){
+        if(body.dst(anchorX, anchorY) > SkillDefaults.ARRIVAL_TOLERANCE){
             body.steerToward(anchorX, anchorY);
         }else{
             body.halt();

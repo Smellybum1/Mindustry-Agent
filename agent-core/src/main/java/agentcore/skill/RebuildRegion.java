@@ -1,5 +1,7 @@
 package agentcore.skill;
 
+import agentcore.SkillStatus;
+
 import java.util.List;
 
 /** Rebuild destroyed team blocks in the engine's authoritative broken-plan order. */
@@ -36,7 +38,7 @@ public final class RebuildRegion implements Skill{
 
         SkillResult inner = current.tick(body, tick);
         float overall = progress(inner.progress());
-        if(inner.status() == agentcore.SkillStatus.SUCCEEDED){
+        if(inner.status() == SkillStatus.SUCCEEDED){
             completed++;
             current = null;
             return SkillResult.running(SkillReason.REBUILDING, progress(0f));

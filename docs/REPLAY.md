@@ -10,9 +10,11 @@ and scenario versions, policy name, episode count, and total tick count. Each
 episode begins with a reset row (`seed`, `agent_count`, initial `state_hash`).
 Every step row then records `expected_tick`, `ticks_to_advance`, the complete
 ordered `agent_actions`, resulting `state_hash`, structured `task_events`, and
-outcome. Runtime episode strings are deliberately excluded because the control
-server uses a nonce for connection safety; structured coordination `episode_id`
-remains the deterministic root seed and is verified.
+outcome. Runtime episode strings are deliberately excluded because replay identity
+comes from the manifest/seed rather than a transport handle. The transport handle
+is nevertheless deterministic and unique within one server process
+(`ep-<root_seed>-<reset_counter>`); structured coordination `episode_id` remains
+the deterministic root seed and is verified.
 
 Commands:
 

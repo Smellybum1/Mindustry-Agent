@@ -40,7 +40,9 @@ public final class SupplyBuilding implements Skill{
     public int tileY(){ return tileY; }
     public int requested(){ return amount; }
     public int delivered(){ return delivered; }
+    /** Initial native target stock, emitted in observations for the supply ledger. */
     public int targetStockBefore(){ return Math.max(0, targetStockBefore); }
+    /** Current native target stock, consumed by validation and core-short recovery policy. */
     public int targetStock(){ return targetStock; }
 
     @Override

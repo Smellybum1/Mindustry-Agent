@@ -10,8 +10,9 @@ import java.util.*;
  * Deterministic M5.1 candidate rule catalog for bootstrap-defense-v0.
  *
  * <p>Rules run in a fixed semantic order. Repeated entities (turrets) are sorted by
- * stable engine id before expansion. The WAIT fallback always occupies the final slot
- * if truncation is required, keeping the action surface bounded and never empty.
+ * stable engine id before expansion. On overflow, the highest-utility tasks are retained
+ * with one slot reserved for DEFEND, then restored to semantic order. The WAIT fallback
+ * always occupies the final slot, keeping the action surface bounded and never empty.
  */
 public final class CandidateGenerator{
     public static final int DEFAULT_MAX_CANDIDATES = 8;
@@ -105,17 +106,37 @@ public final class CandidateGenerator{
             .priority(0.05).estimatedTicks(60).requiredCapabilities(WAIT_CAPS)
             .exclusive(false).build(), agent.worldX(), agent.worldY());
 
-        if(pending.size() >= maxCandidates){
-            pending.subList(maxCandidates - 1, pending.size()).clear();
-        }
-        pending.add(wait);
-
-        ArrayList<TaskCandidate> result = new ArrayList<>(pending.size());
-        for(Pending item : pending){
+        ArrayList<ScoredPending> scored = new ArrayList<>(pending.size());
+        for(int i = 0; i < pending.size(); i++){
+            Pending item = pending.get(i);
             String invalid = invalidReason(agent, item);
-            double score = utility.score(agent.id(), item.task(), world.tick());
-            result.add(new TaskCandidate(item.task(), invalid.isEmpty(), invalid, score));
+            scored.add(new ScoredPending(item, invalid,
+                utility.score(agent.id(), item.task(), world.tick()), i));
         }
+
+        int taskSlots = maxCandidates - 1;
+        if(scored.size() > taskSlots){
+            ScoredPending defend = taskSlots == 0 ? null : scored.stream()
+                .filter(item -> item.pending().task().type() == TaskType.DEFEND_REGION)
+                .findFirst().orElse(null);
+            ArrayList<ScoredPending> ranked = new ArrayList<>(scored);
+            if(defend != null) ranked.remove(defend);
+            ranked.sort(Comparator.comparingDouble(ScoredPending::utility).reversed()
+                .thenComparingInt(ScoredPending::semanticIndex));
+            int ordinarySlots = taskSlots - (defend == null ? 0 : 1);
+            scored = new ArrayList<>(ranked.subList(0, ordinarySlots));
+            if(defend != null) scored.add(defend);
+            scored.sort(Comparator.comparingInt(ScoredPending::semanticIndex));
+        }
+
+        ArrayList<TaskCandidate> result = new ArrayList<>(scored.size() + 1);
+        for(ScoredPending item : scored){
+            result.add(new TaskCandidate(item.pending().task(), item.invalidReason().isEmpty(),
+                item.invalidReason(), item.utility()));
+        }
+        String waitInvalid = invalidReason(agent, wait);
+        result.add(new TaskCandidate(wait.task(), waitInvalid.isEmpty(), waitInvalid,
+            utility.score(agent.id(), wait.task(), world.tick())));
         return new CandidateSet(result);
     }
 
@@ -136,4 +157,6 @@ public final class CandidateGenerator{
     }
 
     private record Pending(TaskSpec task, float worldX, float worldY){}
+    private record ScoredPending(Pending pending, String invalidReason, double utility,
+                                 int semanticIndex){}
 }

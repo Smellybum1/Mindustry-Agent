@@ -217,14 +217,18 @@ public final class ReservationRegistry{
         return null;
     }
 
-    @SuppressWarnings("SuspiciousMethodCalls")
     private List<ReservationConflict> commitYields(List<Reservation> yielded, String winnerTaskId, AgentId winnerAgent,
                                                    boolean winnerHuman, long tick, String what){
         if(yielded.isEmpty()) return List.of();
         List<ReservationConflict> conflicts = new ArrayList<>();
         for(Reservation e : yielded){
-            tiles.remove(e);
-            regions.remove(e);
+            if(e instanceof TileReservation tile){
+                tiles.remove(tile);
+            }else if(e instanceof RegionReservation region){
+                regions.remove(region);
+            }else{
+                throw new IllegalStateException("only tile and region reservations may yield");
+            }
             ReservationConflict c = new ReservationConflict(tick, e.taskId(), e.agent(),
                 winnerTaskId, winnerAgent, winnerHuman, "agent reservation yielded to human on " + what);
             conflicts.add(c);

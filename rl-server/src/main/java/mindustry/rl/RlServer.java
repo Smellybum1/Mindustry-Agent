@@ -67,6 +67,7 @@ public final class RlServer{
     //episode state (simulation thread only)
     private String episodeId;
     private long rootSeed;
+    private long resetCounter;
     private int agentCount = 1;
     private long uptimeTicks;
     private final AtomicBoolean stop = new AtomicBoolean(false);
@@ -298,7 +299,8 @@ public final class RlServer{
         }
         stepGameEvents = Jval.newArray();
 
-        episodeId = "ep-" + rootSeed + "-" + System.nanoTime();
+        resetCounter++;
+        episodeId = "ep-" + rootSeed + "-" + resetCounter;
         uptimeTicks = 0;
 
         Jval r = Jval.newObject();

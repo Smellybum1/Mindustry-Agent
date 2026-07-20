@@ -89,12 +89,12 @@ disabled by default and must remain unset in training manifests.
 | field | type | notes |
 |---|---|---|
 | `request_id` | int | echoes the request |
-| `episode_id` | str | unique per episode |
+| `episode_id` | str | `ep-<root_seed>-<process_reset_counter>`; unique within the server process and wall-clock-free |
 | `tick` | int | always `0` after reset |
 | `initial_observations` | [obj] | one per agent, agent-index order |
 | `action_masks` | [obj] | one per agent |
 | `state_hash` | str | stable hash of initial state |
-| `metadata` | obj | scenario metadata |
+| `metadata` | obj | scenario metadata, including dimensions/core, tick size and wave schedule, termination ticks, ore-patch/region geometry, objective targets, and authoritative schematic anchors/blocks |
 
 ### 2.3 Step
 

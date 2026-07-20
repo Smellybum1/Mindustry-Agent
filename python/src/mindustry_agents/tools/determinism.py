@@ -313,13 +313,18 @@ def main(argv=None) -> int:
         env.handshake()
         first = env.reset(root_seed=args.seed, agent_count=2)
         second = env.reset(root_seed=args.seed, agent_count=2)
-        purity_ok = first.state_hash == second.state_hash
+        episode_ids_ok = (
+            first.episode_id == f"ep-{args.seed}-1"
+            and second.episode_id == f"ep-{args.seed}-2"
+        )
+        purity_ok = first.state_hash == second.state_hash and episode_ids_ok
         print(f"    reset#1 initial_hash={first.state_hash[:24]}")
         print(f"    reset#2 initial_hash={second.state_hash[:24]}")
+        print(f"    episode_ids={first.episode_id}, {second.episode_id}")
         if purity_ok:
-            print("    PASS: repeated reset produces identical initial hash")
+            print("    PASS: repeated reset is hash-pure with deterministic unique IDs")
         else:
-            print("    FAIL: reset is not pure (state leaked across episodes)", file=sys.stderr)
+            print("    FAIL: reset hash purity or deterministic episode IDs", file=sys.stderr)
 
     # --- Check 3: also confirm reset purity matches the cross-process reset hash
     reset_consistent = run_a[0][1] == first.state_hash

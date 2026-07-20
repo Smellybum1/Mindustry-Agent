@@ -349,3 +349,10 @@ that do not change loaded state do **not** bump it. The pair
 `(scenario_id, scenario_version)` plus `root_seed` fully identifies a v0 episode
 map; it is recorded in every run manifest (brief §21.1) and in the reset
 response metadata.
+
+The reset metadata also exposes the JSON-owned geometry needed by external
+policies: `tile_size`, exact `wave_ticks`, `ore_patches`, `regions`, typed
+objective target references, and the authoritative reference/build-line
+schematic anchors and ordered blocks. The M7 scripted expert derives mining,
+building, defending, rebuilding, wave, and termination parameters from this
+payload; it does not maintain a second set of scenario coordinates.

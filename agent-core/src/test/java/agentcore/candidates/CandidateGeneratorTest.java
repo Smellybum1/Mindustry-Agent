@@ -70,16 +70,22 @@ class CandidateGeneratorTest{
         assertTrue(candidates.candidates().get(5).valid(), "WAIT is always local to the agent");
     }
 
-    @Test void boundedCatalogRetainsWaitAsFinalFallback(){
+    @Test void boundedCatalogRanksByUtilityAndReservesDefend(){
         ArrayList<TurretSnapshot> turrets = new ArrayList<>();
         for(int i = 20; i >= 0; i--){
             turrets.add(new TurretSnapshot(i, 30 + i, 24, 0));
         }
 
-        CandidateSet candidates = new CandidateGenerator(8).generate(AGENT, activeWorld(turrets), UTILITY);
+        CandidateSet candidates = new CandidateGenerator(8).generate(AGENT, activeWorld(turrets),
+            (agent, task, tick) -> task.taskId().equals("T4:supply:20")
+                ? 100.0 : task.type() == TaskType.DEFEND_REGION ? -100.0 : task.priority());
+        List<String> ids = candidates.candidates().stream()
+            .map(candidate -> candidate.task().taskId()).toList();
         assertEquals(8, candidates.candidates().size());
         assertEquals("runtime:wait", candidates.candidates().get(7).task().taskId());
-        assertEquals("T4:supply:3", candidates.candidates().get(6).task().taskId());
+        assertTrue(ids.contains("T4:supply:20"), "late high-utility task must survive truncation");
+        assertTrue(ids.contains("T5:defend:east_lane"), "DEFEND always retains an overflow slot");
+        assertFalse(ids.contains("T1:harvest:copper"), "lower utility task should be truncated");
     }
 
     @Test void satisfiedAndSafeWorldProducesOnlyWait(){

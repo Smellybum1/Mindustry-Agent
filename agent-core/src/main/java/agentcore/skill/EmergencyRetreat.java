@@ -2,7 +2,6 @@ package agentcore.skill;
 
 /** Cancel active construction and weapon fire, then return to the team core. */
 public final class EmergencyRetreat implements Skill{
-    private static final float ARRIVAL_TOLERANCE = 8f;
     private boolean cancelled;
     private boolean complete;
 
@@ -23,9 +22,9 @@ public final class EmergencyRetreat implements Skill{
 
         if(!body.hasCore()){
             body.halt();
-            return SkillResult.blocked(SkillReason.NO_CORE, tick + 60L);
+            return SkillResult.blocked(SkillReason.NO_CORE, tick + SkillDefaults.RETRY_DELAY_TICKS);
         }
-        if(body.dst(body.coreX(), body.coreY()) <= ARRIVAL_TOLERANCE){
+        if(body.dst(body.coreX(), body.coreY()) <= SkillDefaults.ARRIVAL_TOLERANCE){
             complete = true;
             body.halt();
             return SkillResult.succeeded(SkillReason.RETREATED);

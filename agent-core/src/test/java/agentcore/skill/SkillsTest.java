@@ -261,6 +261,8 @@ class SkillsTest{
         assertEquals(0, body.coreItems);
         assertEquals(0, body.cargo);
         assertEquals(60, body.supplyStock);
+        assertEquals(0, supply.targetStockBefore());
+        assertEquals(60, supply.targetStock());
     }
 
     @Test void supplyStopsAtTargetCapacityAndReportsActualDelivery(){
@@ -275,6 +277,8 @@ class SkillsTest{
         assertEquals(15, body.coreItems);
         assertEquals(0, body.cargo);
         assertEquals(30, body.supplyStock);
+        assertEquals(0, supply.targetStockBefore());
+        assertEquals(30, supply.targetStock());
     }
 
     @Test void supplyBlocksWhenCoreRunsShortAfterPartialDelivery(){
@@ -287,6 +291,8 @@ class SkillsTest{
         assertEquals(10, supply.delivered());
         assertEquals(0, body.coreItems);
         assertEquals(0, body.cargo);
+        assertEquals(0, supply.targetStockBefore());
+        assertEquals(20, supply.targetStock());
     }
 
     @Test void supplyRejectsMismatchedExistingCargo(){

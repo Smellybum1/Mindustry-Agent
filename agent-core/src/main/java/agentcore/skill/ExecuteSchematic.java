@@ -1,5 +1,7 @@
 package agentcore.skill;
 
+import agentcore.SkillStatus;
+
 import java.util.*;
 
 /** Execute an authoritative ordered schematic as sequential {@link BuildBlock}s. */
@@ -37,7 +39,7 @@ public final class ExecuteSchematic implements Skill{
 
         SkillResult inner = current.tick(body, tick);
         float overall = (completed + inner.progress()) / blocks.size();
-        if(inner.status() == agentcore.SkillStatus.SUCCEEDED){
+        if(inner.status() == SkillStatus.SUCCEEDED){
             completed++;
             current = null;
             if(completed == blocks.size()) return SkillResult.succeeded(SkillReason.BUILT);

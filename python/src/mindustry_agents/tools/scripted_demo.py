@@ -4,16 +4,89 @@ from __future__ import annotations
 
 import argparse
 import copy
+import math
 import sys
 from dataclasses import dataclass, field
 from typing import Any
 
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
 
-WIN_TICK = 8100
-WAVE_TICKS = (2700, 4500, 6300)
 TERMINAL_SKILLS = {"SUCCEEDED", "BLOCKED", "FAILED"}
-DEFEND_COMMAND = {"type": "DEFEND", "x": 244, "y": 196, "radius": 220, "ticks": 9000}
+
+
+@dataclass(frozen=True)
+class ScenarioLayout:
+    """Runtime view of the authoritative scenario/schematic reset metadata."""
+
+    metadata: dict[str, Any]
+
+    @property
+    def tile_size(self) -> int:
+        return int(self.metadata["tile_size"])
+
+    @property
+    def win_tick(self) -> int:
+        return int(self.metadata["win_tick"])
+
+    @property
+    def tick_cap(self) -> int:
+        return int(self.metadata["tick_cap"])
+
+    @property
+    def wave_ticks(self) -> tuple[int, ...]:
+        return tuple(int(tick) for tick in self.metadata["wave_ticks"])
+
+    @property
+    def core_tile(self) -> tuple[int, int]:
+        return int(self.metadata["core_x"]), int(self.metadata["core_y"])
+
+    @property
+    def mine_tiles(self) -> tuple[tuple[int, int], ...]:
+        patch = next(
+            item
+            for item in self.metadata["ore_patches"]
+            if item["role"] == "east_ammo_feed"
+        )
+        rect = patch["rect"]
+        x, y = int(rect["x"]), int(rect["y"])
+        w, h = int(rect["w"]), int(rect["h"])
+        if w < 2 or h < 2:
+            raise ValueError("east_ammo_feed ore patch must be at least 2x2")
+        return (x, y), (x + w - 1, y), (x, y + h - 1)
+
+    @property
+    def reference_turrets(self) -> tuple[tuple[int, int], ...]:
+        schematic = self.metadata["reference_schematic"]
+        anchor_x, anchor_y = (int(value) for value in schematic["anchor"])
+        result = tuple(
+            (anchor_x + int(block["offset"][0]), anchor_y + int(block["offset"][1]))
+            for block in schematic["blocks"]
+            if block["block"] == "duo"
+        )
+        if len(result) != 2:
+            raise ValueError("reference schematic must contain two expert turrets")
+        return result
+
+    @property
+    def first_drill_progress(self) -> float:
+        count = len(self.metadata["build_line"]["blocks"])
+        if count <= 0:
+            raise ValueError("build-line schematic has no blocks")
+        return 1.0 / count
+
+    def region_for(self, task_type: str) -> dict[str, int]:
+        region_id = self.metadata["objectives"][task_type]["target_ref"]
+        return self.metadata["regions"][region_id]["rect"]
+
+    def defend_command(self) -> dict[str, Any]:
+        rect = self.region_for("DEFEND_REGION")
+        tile_size = self.tile_size
+        # Hold the western quarter of the lane: agents screen the core without
+        # overextending toward the spawn, while the radius covers the full region.
+        x = (int(rect["x"]) + (int(rect["w"]) - 1) / 4) * tile_size
+        y = (int(rect["y"]) + (int(rect["h"]) - 1) / 2) * tile_size
+        radius = math.hypot(int(rect["w"]) * tile_size, int(rect["h"]) * tile_size)
+        return {"type": "DEFEND", "x": x, "y": y, "radius": radius, "ticks": self.tick_cap}
 
 
 @dataclass
@@ -37,6 +110,7 @@ class EpisodeResult:
     copper_boundary_in: int = 0
     copper_boundary_out: int = 0
     units_lost: int = 0
+    win_tick: int = 0
 
 
 class ExpertEpisode:
@@ -45,6 +119,7 @@ class ExpertEpisode:
         self.seed = seed
         self.blocked_variant = blocked_variant
         reset = env.reset(root_seed=seed, agent_count=3)
+        self.layout = ScenarioLayout(reset.metadata)
         self.episode = reset.episode_id
         self.tick = reset.tick
         self.observations = reset.initial_observations
@@ -118,7 +193,7 @@ class ExpertEpisode:
                 self.first_drill_tick < 0
                 and event.get("task_type") == "BUILD_LINE"
                 and event.get("act") == "PROGRESS"
-                and float(event.get("progress", 0.0)) >= 1.0 / 9.0
+                and float(event.get("progress", 0.0)) >= self.layout.first_drill_progress
             ):
                 self.first_drill_tick = int(event["tick"])
         return response
@@ -228,7 +303,6 @@ class ExpertEpisode:
                 )
 
     def _bootstrap_copper(self, rounds: int = 2) -> None:
-        mine_tiles = ((28, 18), (31, 18), (28, 21))
         for _ in range(rounds):
             self._drive_commands(
                 {
@@ -238,7 +312,7 @@ class ExpertEpisode:
                         "tile_y": tile[1],
                         "amount": 20,
                     }
-                    for agent_id, tile in enumerate(mine_tiles)
+                    for agent_id, tile in enumerate(self.layout.mine_tiles)
                 },
                 600,
             )
@@ -247,20 +321,27 @@ class ExpertEpisode:
             )
 
     def _build_defense(self) -> None:
+        core_x, core_y = self.layout.core_tile
         walls = (
-            [(22, y) for y in range(22, 27)]
-            + [(26, y) for y in range(22, 25)]
-            + [(x, 22) for x in range(23, 26)]
-            + [(x, 26) for x in range(23, 25)]
-            + [(27, y) for y in range(21, 27) if y != 26]
+            [(core_x - 2, y) for y in range(core_y - 2, core_y + 3)]
+            + [(core_x + 2, y) for y in range(core_y - 2, core_y + 1)]
+            + [(x, core_y - 2) for x in range(core_x - 1, core_x + 2)]
+            + [(x, core_y + 2) for x in range(core_x - 1, core_x + 1)]
+            + [(core_x + 3, y) for y in range(core_y - 3, core_y + 2)]
         )
         builds: list[dict[str, Any]] = [
             {"type": "BUILD", "block": "copper-wall", "tile_x": x, "tile_y": y, "rotation": 0}
             for x, y in walls
         ]
         builds += [
-            {"type": "BUILD", "block": "duo", "tile_x": 29, "tile_y": 23, "rotation": 1},
-            {"type": "BUILD", "block": "duo", "tile_x": 29, "tile_y": 25, "rotation": 1},
+            {
+                "type": "BUILD",
+                "block": "duo",
+                "tile_x": tile_x - 3,
+                "tile_y": tile_y,
+                "rotation": 1,
+            }
+            for tile_x, tile_y in self.layout.reference_turrets
         ]
         for start in range(0, len(builds), 3):
             batch = {
@@ -296,8 +377,7 @@ class ExpertEpisode:
             if int(skill.get("target_stock", 0)) >= 10:
                 return
             helper = (agent_id + 1) % 3
-            mine_tiles = ((28, 18), (31, 18), (28, 21))
-            tile = mine_tiles[helper]
+            tile = self.layout.mine_tiles[helper]
             self._drive_commands(
                 {
                     helper: {
@@ -325,13 +405,20 @@ class ExpertEpisode:
         self.step(
             1,
             [
-                {"agent_id": agent_id, "command": dict(DEFEND_COMMAND)}
+                {"agent_id": agent_id, "command": self.layout.defend_command()}
                 for agent_id in range(3)
             ],
         )
 
     def _rebuild(self) -> None:
-        command = {"type": "REBUILD", "x1": 20, "y1": 18, "x2": 36, "y2": 30}
+        rect = self.layout.region_for("REPAIR_REGION")
+        command = {
+            "type": "REBUILD",
+            "x1": int(rect["x"]),
+            "y1": int(rect["y"]),
+            "x2": int(rect["x"]) + int(rect["w"]) - 1,
+            "y2": int(rect["y"]) + int(rect["h"]) - 1,
+        }
         try:
             self._drive_commands({0: command}, 900)
             return
@@ -340,7 +427,7 @@ class ExpertEpisode:
             if skill["status"] != "BLOCKED" or skill["reason"] != "RESOURCES_SHORT":
                 raise
 
-        mine_tiles = ((31, 18), (28, 21))
+        mine_tiles = self.layout.mine_tiles[1:]
         for _ in range(3):
             self._drive_commands(
                 {
@@ -372,13 +459,13 @@ class ExpertEpisode:
         self._start_defenders()
         previous_enemies = 0
         last_refill = self.tick
-        while self.tick < WIN_TICK and self.step_response.outcome == "running":
-            response = self.step(min(30, WIN_TICK - self.tick))
+        while self.tick < self.layout.win_tick and self.step_response.outcome == "running":
+            response = self.step(min(30, self.layout.win_tick - self.tick))
             team = response.observations[0]["team"]
             enemies = int(team["enemy_count"])
             if previous_enemies > 0 and enemies == 0:
                 self.wave_clear_ticks.append(self.tick)
-                if len(self.wave_clear_ticks) < len(WAVE_TICKS):
+                if len(self.wave_clear_ticks) < len(self.layout.wave_ticks):
                     self._rebuild()
                     self._supply_all()
                     self._start_defenders()
@@ -394,7 +481,7 @@ class ExpertEpisode:
                     self._supply_one(
                         0, int(turret["tile_x"]), int(turret["tile_y"])
                     )
-                    self.step(1, [{"agent_id": 0, "command": dict(DEFEND_COMMAND)}])
+                    self.step(1, [{"agent_id": 0, "command": self.layout.defend_command()}])
                     last_refill = self.tick
             previous_enemies = enemies
 
@@ -431,6 +518,7 @@ class ExpertEpisode:
             copper_boundary_in=self.copper_boundary_in,
             copper_boundary_out=self.copper_boundary_out,
             units_lost=sum(bool(observation["unit"]["dead"]) for observation in self.observations),
+            win_tick=self.layout.win_tick,
         )
 
 
@@ -462,8 +550,8 @@ def main(argv=None) -> int:
         f"line={result.line_complete_tick} schematic={result.schematic_complete_tick} "
         f"wave_clears={result.wave_clear_ticks} blocked_replans={result.resources_short_replans}"
     )
-    if result.outcome != "win" or result.tick != WIN_TICK:
-        print("SCRIPTED-DEMO FAIL: expert did not reach the tick-8100 win", file=sys.stderr)
+    if result.outcome != "win" or result.tick != result.win_tick:
+        print("SCRIPTED-DEMO FAIL: expert did not reach the scenario win", file=sys.stderr)
         return 1
     print("SCRIPTED-DEMO OK: deterministic three-agent expert survived all waves")
     return 0

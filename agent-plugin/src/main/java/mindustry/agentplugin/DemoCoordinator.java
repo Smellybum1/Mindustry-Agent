@@ -29,7 +29,7 @@ final class DemoCoordinator{
     }
 
     private static final String[] names = {"agent-copper", "agent-shield", "agent-relay"};
-    private static final int[][] mineTiles = {{28, 18}, {31, 18}, {28, 21}};
+    private static final int supplementalTurretOffsetX = -3;
 
     private record BuildPlacement(String block, int x, int y, int rotation){}
 
@@ -43,7 +43,6 @@ final class DemoCoordinator{
         boolean blocked;
         int recordedBlocks;
         int economyRounds;
-        int maintenanceRounds;
         boolean maintenanceDone;
 
         Agent(int index, Unit unit, DemoAgentController controller){
@@ -55,6 +54,10 @@ final class DemoCoordinator{
     }
 
     private final Scenario scenario;
+    private final int[][] mineTiles;
+    private final List<TileTarget> referenceTurrets;
+    private final Scenario.RegionSpec defendRegion;
+    private final Scenario.RegionSpec rebuildRegion;
     private final boolean probe;
     private final boolean waitForPlayer;
     private final boolean survivalProbe;
@@ -92,11 +95,16 @@ final class DemoCoordinator{
     private int taskSequence;
     private int previousEnemies;
     private int waveClears;
+    private int openingFortificationCount;
     private long maintenanceStartTick;
     private long maintenanceSupplyStartTick;
 
     DemoCoordinator(Scenario scenario, boolean probe, boolean waitForPlayer){
         this.scenario = scenario;
+        this.mineTiles = supportMineTiles(scenario);
+        this.referenceTurrets = referenceTurrets(scenario);
+        this.defendRegion = objectiveRegion(scenario, TaskType.DEFEND_REGION);
+        this.rebuildRegion = objectiveRegion(scenario, TaskType.REPAIR_REGION);
         this.probe = probe;
         this.waitForPlayer = waitForPlayer;
         this.survivalProbe = System.getProperty(AgentPlugin.modeProperty, "")
@@ -315,16 +323,9 @@ final class DemoCoordinator{
                 agent.controller.setSkill(new DeliverToCore());
             }
             case MAINTENANCE_DELIVER -> {
-                agent.maintenanceRounds++;
-                if(agent.maintenanceRounds < 1){
-                    int[] tile = mineTiles[agent.index];
-                    agent.stage = Stage.MAINTENANCE_MINE;
-                    agent.controller.setSkill(new MineResource(tile[0], tile[1], 20));
-                }else{
-                    complete(agent, tick);
-                    agent.maintenanceDone = true;
-                    idle(agent);
-                }
+                complete(agent, tick);
+                agent.maintenanceDone = true;
+                idle(agent);
             }
             case RESERVE_MINE -> {
                 agent.stage = Stage.RESERVE_DELIVER;
@@ -336,8 +337,7 @@ final class DemoCoordinator{
                 agent.stage = Stage.RESERVE_MINE;
                 agent.controller.setSkill(new MineResource(tile[0], tile[1], 20));
             }
-            case DEFEND -> agent.controller.setSkill(new DefendRegion(244f, 196f, 220f, Long.MAX_VALUE));
-            case IDLE -> { }
+            case DEFEND, IDLE -> { }
         }
     }
 
@@ -365,7 +365,8 @@ final class DemoCoordinator{
             dispatchSupply();
             if(supplyTargets.isEmpty() && suppliesInFlight == 0){
                 preparationComplete = true;
-                Log.info("AGENT-DEMO EXPERT READY tick=@ fortifications=20 turrets=4", (long)state.tick);
+                Log.info("AGENT-DEMO EXPERT READY tick=@ fortifications=@ turrets=@",
+                    (long)state.tick, openingFortificationCount, activeTurrets.size());
                 startReserveMining(tick, "opening_complete");
             }
         }
@@ -395,17 +396,28 @@ final class DemoCoordinator{
     }
 
     private void prepareFortifications(){
-        for(int y = 22; y <= 26; y++) fortifications.add(new BuildPlacement("copper-wall", 22, y, 0));
-        for(int y = 22; y <= 24; y++) fortifications.add(new BuildPlacement("copper-wall", 26, y, 0));
-        for(int x = 23; x <= 25; x++) fortifications.add(new BuildPlacement("copper-wall", x, 22, 0));
-        for(int x = 23; x <= 24; x++) fortifications.add(new BuildPlacement("copper-wall", x, 26, 0));
-        for(int y = 21; y <= 25; y++) fortifications.add(new BuildPlacement("copper-wall", 27, y, 0));
-        fortifications.add(new BuildPlacement("duo", 29, 23, 1));
-        fortifications.add(new BuildPlacement("duo", 29, 25, 1));
-        trackTurret(29, 23);
-        trackTurret(29, 25);
-        trackTurret(32, 23);
-        trackTurret(32, 25);
+        for(int y = scenario.coreY - 2; y <= scenario.coreY + 2; y++){
+            fortifications.add(new BuildPlacement("copper-wall", scenario.coreX - 2, y, 0));
+        }
+        for(int y = scenario.coreY - 2; y <= scenario.coreY; y++){
+            fortifications.add(new BuildPlacement("copper-wall", scenario.coreX + 2, y, 0));
+        }
+        for(int x = scenario.coreX - 1; x <= scenario.coreX + 1; x++){
+            fortifications.add(new BuildPlacement("copper-wall", x, scenario.coreY - 2, 0));
+        }
+        for(int x = scenario.coreX - 1; x <= scenario.coreX; x++){
+            fortifications.add(new BuildPlacement("copper-wall", x, scenario.coreY + 2, 0));
+        }
+        for(int y = scenario.coreY - 3; y <= scenario.coreY + 1; y++){
+            fortifications.add(new BuildPlacement("copper-wall", scenario.coreX + 3, y, 0));
+        }
+        for(TileTarget target : referenceTurrets){
+            int x = target.x() + supplementalTurretOffsetX;
+            fortifications.add(new BuildPlacement("duo", x, target.y(), 1));
+            trackTurret(x, target.y());
+            trackTurret(target.x(), target.y());
+        }
+        openingFortificationCount = fortifications.size();
     }
 
     private void dispatchFortifications(){
@@ -424,15 +436,20 @@ final class DemoCoordinator{
     }
 
     private void prepareMaintenanceExpansion(){
-        int wallX = waveClears == 1 ? 36 : 39;
+        int blocksBefore = expectedExpansions.size();
+        int turretsBefore = activeTurrets.size();
+        int wallX = rebuildRegion.x() + rebuildRegion.w() + (waveClears - 1) * 3;
         int turretX = wallX - 1;
-        for(int y = 21; y <= 27; y++) addExpansion("copper-wall", wallX, y, 0);
-        addExpansion("duo", turretX, 23, 1);
-        addExpansion("duo", turretX, 25, 1);
-        trackTurret(turretX, 23);
-        trackTurret(turretX, 25);
-        Log.info("AGENT-DEMO EXPANSION START wave=@ planned_blocks=9 planned_turrets=2",
-            waveClears);
+        for(int y = rebuildRegion.y() + 1; y < rebuildRegion.y() + rebuildRegion.h() - 1; y++){
+            addExpansion("copper-wall", wallX, y, 0);
+        }
+        for(TileTarget reference : referenceTurrets){
+            addExpansion("duo", turretX, reference.y(), 1);
+            trackTurret(turretX, reference.y());
+        }
+        Log.info("AGENT-DEMO EXPANSION START wave=@ planned_blocks=@ planned_turrets=@",
+            waveClears, expectedExpansions.size() - blocksBefore,
+            activeTurrets.size() - turretsBefore);
     }
 
     private void addExpansion(String block, int x, int y, int rotation){
@@ -473,8 +490,9 @@ final class DemoCoordinator{
             agent.taskId = null;
             ensureAgentBody(agent);
             begin(agent, "demo-defend-" + taskSequence++, TaskType.DEFEND_REGION,
-                new RegionTarget("east_lane"), ResourceCost.empty(),
-                new DefendRegion(244f + agent.index * 8f, 196f, 220f, Long.MAX_VALUE), Stage.DEFEND);
+                new RegionTarget(defendRegion.id()), ResourceCost.empty(),
+                new DefendRegion(regionHoldX(defendRegion) + agent.index * tilesize,
+                    regionCenterY(defendRegion), regionRadius(defendRegion), Long.MAX_VALUE), Stage.DEFEND);
         }
     }
 
@@ -527,7 +545,7 @@ final class DemoCoordinator{
             Building core = scenario.coreTeam.core();
             Log.info("AGENT-DEMO WAVE CLEAR tick=@ wave=@ core_health=@", tick, waveClears,
                 core == null ? 0 : Math.round(core.health));
-            if(waveClears < 3){
+            if(waveClears < scenario.waveCount){
                 startMaintenance(tick);
             }else{
                 startReserveMining(tick, "wave_clear");
@@ -554,14 +572,15 @@ final class DemoCoordinator{
             cancelControllerWork(agent);
             agent.taskId = null;
             agent.maintenanceDone = false;
-            agent.maintenanceRounds = 0;
             ensureAgentBody(agent);
         }
 
         Agent rebuilder = agents.get(0);
         begin(rebuilder, "demo-rebuild-" + taskSequence++, TaskType.REPAIR_REGION,
-            new RegionTarget("defense_block"), ResourceCost.empty(),
-            new RebuildRegion(20, 18, 40, 30), Stage.REBUILD);
+            new RegionTarget(rebuildRegion.id()), ResourceCost.empty(),
+            new RebuildRegion(rebuildRegion.x(), rebuildRegion.y(),
+                rebuildRegion.x() + rebuildRegion.w() - 1,
+                rebuildRegion.y() + rebuildRegion.h() - 1), Stage.REBUILD);
         for(int i = 1; i < agents.size; i++){
             Agent miner = agents.get(i);
             int[] tile = mineTiles[miner.index];
@@ -720,8 +739,7 @@ final class DemoCoordinator{
             throw new IllegalStateException("demo opening order drift: line=" + lineOrder
                 + " defense=" + defenseOrder);
         }
-        for(TileTarget target : List.of(new TileTarget(29, 23), new TileTarget(29, 25),
-                                        new TileTarget(32, 23), new TileTarget(32, 25))){
+        for(TileTarget target : activeTurrets){
             Building building = world.build(target.x(), target.y());
             if(building == null || building.block != Blocks.duo){
                 throw new IllegalStateException("expert turret missing at " + target.describe());
@@ -760,6 +778,58 @@ final class DemoCoordinator{
         ArrayList<String> result = new ArrayList<>();
         for(BuildSpec block : spec.blocks()) result.add(block.block());
         return List.copyOf(result);
+    }
+
+    private static int[][] supportMineTiles(Scenario scenario){
+        Scenario.OrePatch support = null;
+        for(Scenario.OrePatch patch : scenario.orePatches){
+            if(patch.role.equals("east_ammo_feed")){
+                support = patch;
+                break;
+            }
+        }
+        if(support == null || support.w < 2 || support.h < 2){
+            throw new IllegalStateException("scenario needs a 2x2 east_ammo_feed ore patch");
+        }
+        return new int[][]{
+            {support.x, support.y},
+            {support.x + support.w - 1, support.y},
+            {support.x, support.y + support.h - 1}
+        };
+    }
+
+    private static List<TileTarget> referenceTurrets(Scenario scenario){
+        ArrayList<TileTarget> result = new ArrayList<>();
+        Scenario.SchematicSpec spec = scenario.schematic(scenario.referenceSchematicId);
+        for(BuildSpec block : spec.blocks()){
+            if(block.block().equals("duo")){
+                result.add(new TileTarget(scenario.referenceAnchorX + block.offsetX(),
+                    scenario.referenceAnchorY + block.offsetY()));
+            }
+        }
+        if(result.size() != 2){
+            throw new IllegalStateException("reference schematic must contain two demo turrets");
+        }
+        return List.copyOf(result);
+    }
+
+    private static Scenario.RegionSpec objectiveRegion(Scenario scenario, TaskType type){
+        Scenario.ObjectiveSpec objective = scenario.objective(type);
+        Scenario.RegionSpec region = objective == null ? null : scenario.region(objective.targetRef());
+        if(region == null) throw new IllegalStateException("missing demo region for " + type);
+        return region;
+    }
+
+    private static float regionHoldX(Scenario.RegionSpec region){
+        return (region.x() + (region.w() - 1) / 4f) * tilesize;
+    }
+
+    private static float regionCenterY(Scenario.RegionSpec region){
+        return (region.y() + (region.h() - 1) / 2f) * tilesize;
+    }
+
+    private static float regionRadius(Scenario.RegionSpec region){
+        return (float)Math.hypot(region.w() * tilesize, region.h() * tilesize);
     }
 
     private String phase(){
