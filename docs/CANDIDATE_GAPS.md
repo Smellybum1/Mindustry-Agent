@@ -1,9 +1,8 @@
 # Candidate expressiveness gaps
 
-This is the M7.3 audit of what the public task-candidate seam could and could
-not express when it replaced the frozen `ExpertEpisode` macro as the primary
-expert. It is evidence for M7.4, not a claim that the current catalog is
-adaptive enough for learned play.
+This began as the M7.3 audit of what the public task-candidate seam could and
+could not express when it replaced the frozen `ExpertEpisode` macro. M7.4 now
+records which rigidity gaps were closed before scenario variation and learning.
 
 ## Starting failure
 
@@ -68,21 +67,26 @@ losses, and final core health vary; no cosmetic randomness was added.
 `ExpertEpisode` remains behaviorally frozen as `run_frozen_episode` for the
 M7.6 ladder and golden replay.
 
-## Remaining gaps assigned to M7.4+
+## Gaps closed in M7.4
 
-- Candidate priorities, estimates, the 600-tick defense lead, and the 30-ammo
-  reserve are fixed constants rather than readiness/incoming-DPS calculations.
-- Decisions are still polled at 30-tick external boundaries. Task terminal,
-  block, wave, and damage events do not yet wake a selector immediately.
-- Resource shortage has explicit regeneration/reselection; other failure and
-  damage cases can still retry or wait too long. Switching cost is not yet fed
-  from live assignment history.
-- `assignmentRange` is the map diagonal, so range masking remains inert even
-  though travel distance now uses real planned anchors.
-- `conveyor_path_connects` and `core_item_inflow_ge` remain proxy predicates
-  (REVIEW_M6 finding 7).
-- Base/fortification work can remain in flight when a wave arrives. Expansion
-  generation is enemy-gated, but full event-driven preemption belongs to M7.4.
+- Fixed priorities, the 600-tick lead, and the magic 30-ammo target were
+  replaced by live copper/economy/health/ammo coverage and engine-derived wave
+  HP/DPS, Duo DPS, inaccuracy, magazine, travel, and clear-time values.
+- `stop_on_decision_event` wakes the selector on task terminal/BLOCKED,
+  economy-ready, wave spawn/clear, and core damage. Default callers retain exact
+  requested stepping.
+- Recoverable BLOCKED reasons regenerate/reselect with a 3-per-180-tick policy
+  bound; assignment history supplies live switching cost.
+- Assignment range comes from scenario objective geometry, with real normalized
+  agent-to-target travel cost.
+- Live block/rotation traversal and a 600-tick automated core-inflow ledger now
+  implement `conveyor_path_connects` and `core_item_inflow_ge` (finding 7).
+- Wave preemption and one readiness-triggered logistics seat prevent build work
+  from blindly consuming every combat seat. DEFEND recurrence includes boundary
+  identity so that seat can legally return after resupply.
+
+## Remaining gaps assigned to M7.5+
+
 - Supply targets still use live engine entity IDs in task identity. Ordering is
   deterministic within a boundary, but a future learned feature table should
   prefer stable spatial/logical turret identity.

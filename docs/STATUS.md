@@ -624,6 +624,36 @@ repository-evidence mapping used for the M6 audit is:
 - REVIEW_M6 finding 2 is resolved. Finding 7 remains assigned to M7.4. No
   reward component, engine pin, accepted ADR, or upstream file changed.
 
+## Milestone 7.4 — adaptive planning v1 (DONE, verified 2026-07-21)
+
+- The public catalog now derives economy, wave, defense, ammo, and spatial
+  urgency from authoritative scenario/engine state. Fixed 600-tick anticipation,
+  magic priority bands, map-diagonal range, and the fixed ammo reserve are gone.
+- `AdaptiveWorldFacts` verifies the actual line footprint and conveyor direction,
+  then requires a grant/delivery-excluded 600-tick core inflow window at
+  **0.6 copper/s**. Defense readiness uses loaded wave composition and native
+  Duo damage/reload/inaccuracy/magazine values. Finding 7 is resolved.
+- The additive `stop_on_decision_event` request option wakes on task terminal or
+  block, economy readiness, wave spawn/clear, and core damage. Callers that omit
+  it retain exact requested advancement. Adaptive rolling state and recent
+  switching history are included in `state_hash`.
+- Recoverable BLOCKED reasons abandon/regenerate/reselect with a bound of three
+  replans per 180 ticks. The legal pressure fixture overcommits only after both
+  reservations, emits real resource blocks, performs five structured replans,
+  and wins at tick 8100 with 992 core health.
+- `bootstrap-defense-adaptive-probe` starts with 70 copper and grants 450 at tick
+  1100. Adaptive-v1 builds a working line at 1794, is defense-ready at 1382, and
+  wins at 8100; the frozen macro cannot finish its opening by 2401 and loses.
+  Across fixed+probe, adaptive mean idle fraction is **0.125 vs 0.878** and mean
+  censored defense-ready tick is **817 vs 5251**.
+- Closure validation: **108 JUnit**, **45 pytest**, Java/plugin compile, fixed
+  5/5 evaluation, normal+blocked scripted wins, `make adaptive-planning-check`,
+  and the full determinism gate. The regenerated trace retains two wins and
+  16,200 ticks across **670 checkpoints**; exact replay and the negative action
+  mutation check are green with adaptive rolling state included in the hash.
+- All REVIEW_M6 findings are resolved. No reward component, engine pin, accepted
+  ADR, upstream file, or `docs/ENGINE_NOTES.md` changed. Next: M7.5 and ADR-0012.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -643,7 +673,8 @@ repository-evidence mapping used for the M6 audit is:
   `evaluation`, and `telemetry` remain documented skeletons.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and
-  reference schematic). M5.1 turns those objectives plus live world state into
+  reference schematic), plus the delayed-loadout adaptive probe. M5.1 turns
+  those objectives plus live world state into
   scored candidates; M5.2 claims and executes them; M5.3 supplies deterministic
   task-level policy baselines. The winning primary expert is now the M7.3
   greedy candidate policy; the M6 macro remains a frozen baseline.
@@ -653,7 +684,7 @@ repository-evidence mapping used for the M6 audit is:
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 106 tests
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 108 tests
   green, including 31 M3/M4 skill tests). `agent-plugin:dist` and its isolated
   real-server acceptance probe are verified.
 - **No CI** configured yet.

@@ -100,12 +100,17 @@ their command callbacks through Mindustry's existing command path.
 ## Determinism and reset paths
 
 - **Step path**: request (I/O) → validated + queued → drained on sim thread →
-  atomic action-bundle applied → advance exactly `ticks_to_advance` updates at
-  fixed delta → build observations → compute stable `state_hash` → response.
+  atomic action bundle applied → advance exactly `ticks_to_advance` updates at
+  fixed delta (or, only when `stop_on_decision_event=true`, stop after the first
+  authoritative decision event) → build observations → compute stable
+  `state_hash` → response. The response always reports actual advanced ticks.
 - **Reset path**: reset the world in-process without a JVM restart (ADR-0003);
   clear all entities, tasks, rewards, and policy-visible state; re-seed from
   `root_seed`; return initial observations + `state_hash`. JVM restart is a
   crash-recovery mechanism, not the normal reset path.
+- Adaptive rolling inflow evidence, scenario-event cursor, and recent
+  coordination switching history are canonical hash inputs; they are updated
+  and read only on the simulation thread.
 - Same seed + same action trace ⇒ identical `state_hash` (target: 10,000 ticks;
   brief §24 Gate 1).
 

@@ -91,7 +91,17 @@ found by the conversion and their M7.3/M7.4 disposition are recorded in
 `docs/CANDIDATE_GAPS.md`. Five pinned seeds and the legal resource-pressure
 variant win. Finding 7 alone remains assigned to M7.4.
 
-## Planning-primitiveness inventory (drives M7.3–M7.5)
+## M7.4 resolution (verified 2026-07-21)
+
+Finding 7 is resolved. Line completion now requires the loaded block footprint,
+a directed path through live conveyor rotations from a mechanical drill to the
+core, and a full 600-tick rolling window at or above 0.6 automated copper/s.
+Scenario grants and unit cargo deliveries are excluded from that inflow ledger.
+The fixed scenario and delayed-loadout adaptive probe exercise the real
+predicate; the frozen macro cannot complete the probe opening, while adaptive-v1
+wins it. All REVIEW_M6 findings are now resolved.
+
+## Planning-primitiveness inventory (historical M6 review)
 
 - **Candidate generation**: compiled-in 6-rule catalog, fixed order, single
   thresholds, magic priorities (0.70–1.0) and estimates; only anchors are

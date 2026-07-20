@@ -4,16 +4,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M6 and M7.1–M7.3 complete, verified
+- **What currently works** (M0–M6 and M7.1–M7.4 complete, verified
   2026-07-21): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
-  layer** (106 JUnit tests), agent
+  layer** (108 JUnit tests), agent
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 41 pytest
+  crash-replacement, PettingZoo-shaped facade, vector collector; 45 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
   `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
   east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
@@ -112,14 +112,27 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   identity intentionally changes coordination hashes; the separately
   regenerated golden retains two wins, 16,200 ticks, and 672 checkpoints, with
   exact replay and a passing negative mutation check.
+  M7.4 replaces the remaining fixed planning constants with authoritative
+  economy/defense/spatial facts. The real line predicate requires directed
+  drill-to-core connectivity and a full 600-tick window at 0.6 copper/s; wave
+  HP/DPS and native Duo values derive readiness, ammo target, and defend lead.
+  Opt-in event-driven steps wake on task/economy/wave/core-damage transitions,
+  while default stepping remains exact. Typed BLOCKED replans are bounded and
+  recent assignments feed switching cost. The delayed-loadout adaptive probe
+  is won at tick 8100 (line 1794, defense-ready 1382), while the frozen macro
+  cannot complete its opening and loses. Across fixed+probe, adaptive mean idle
+  fraction is 0.125 vs 0.878 and censored defense-ready tick is 817 vs 5251.
+  `make adaptive-planning-check`, fixed 5/5 evaluation, and the legal
+  resource-pressure replan win are green. The M7.4 golden retains two wins and
+  16,200 ticks across 670 checkpoints, with exact replay and a passing negative
+  mutation. All REVIEW_M6 findings are resolved.
 - **What is stubbed**: training rewards remain empty pending the M8 reward-audit
   gate; learned training code and the
   M10 human goal/override/study surface remain future work.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
-- **Next roadmap item**: M7.4, adaptive planning v1 (wave readiness, real
-  economy predicates, spatial gating, event-driven decisions, and broader
-  replanning).
+- **Next roadmap item**: M7.5, bounded scenario variation + seed governance
+  (ADR-0012).
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -137,17 +150,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (41 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (45 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
-| `make test-java` | `gradlew agent-core:test` (106 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-21. |
+| `make test-java` | `gradlew agent-core:test` (108 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-21. |
 | `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-21. |
-| `make determinism` | Runs the legacy 79-boundary cross-process replay, reset purity with deterministic unique episode IDs, seed sensitivity, then the checked-in golden (672 checkpoints / 16,200 ticks / two wins). Exit 0. Verified 2026-07-21. |
+| `make determinism` | Runs the legacy 79-boundary cross-process replay, reset purity with deterministic unique episode IDs, seed sensitivity, then the checked-in golden (670 checkpoints / 16,200 ticks / two wins). Exit 0. Verified 2026-07-21; `REPLAY_NEGATIVE=1` also passes. |
 | `make candidate-policy-check` | Runs the pure public greedy selector over all five pinned seeds; requires 5/5 wins through the ordinary candidate/mask/task-action seam. Verified 2026-07-21. |
 | `make coordination-parity` | Compares two complete recorded decision sequences, runs the fixed-step shared expert, then boots the no-port plugin and requires identical live-opening digest/count. Current result: 356 recorded decisions; live digest `1571…a6c2`, 43 selections. Verified 2026-07-21. |
+| `make adaptive-planning-check` | Runs adaptive-v1 and frozen M6 on fixed+delayed-loadout scenarios. Requires adaptive 2/2 wins, fixed frozen win, probe frozen loss, all four decision-event reasons, lower mean idle fraction (0.125 < 0.878), and lower defense-ready tick (817 < 5251). Verified 2026-07-21. |
 | `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; latest M7.1 run: zero hash mismatches, median 1.31 ms, p95 2.60 ms, peak 298.3 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
-| `make scripted-demo` | Runs the M7.3 public greedy expert and legal 18-wall resource-pressure variant; both end at tick 8100 with `outcome=win`. Verified 2026-07-21. |
-| `make evaluate-scripted` | Runs five pinned seeds through the public selector and writes `runs/scripted-evaluation.jsonl`; current result is 5/5 wins, min/mean core health 1082/1096.4. Verified 2026-07-21. |
+| `make scripted-demo` | Runs adaptive-v1 and the legal post-reservation resource-pressure fixture; both end at tick 8100, and the fixture records a real `resources_short_replan`. Verified 2026-07-21. |
+| `make evaluate-scripted` | Runs five pinned fixed seeds and writes `runs/scripted-evaluation.jsonl`; current M7.4 result is 5/5 wins, min/mean core health 200/572.6. Verified 2026-07-21. |
 | `make demo-server` | Builds/boots the real server+plugin in an isolated no-port probe; verifies layout, full expert preparation, reserve mining, announcements, and controls; exits 0. `DEMO_SURVIVAL=1` clears three waves and reaches tick 8100 with 1100/1100 core health without opening a port. Use `DEMO_JOIN=1` only for an explicit private port-6567 human session. |
 
 (If `make` is unavailable on Windows, run `bash scripts/<name>.sh` directly.)
@@ -221,15 +235,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 41 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M5
+- **Passing**: 45 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.4
   action/board/event roundtrips, `test_supervisor.py`, `test_env.py`; fake-server
-  subprocess, no JVM, fast) and 106 Java JUnit tests (`agent-core`, incl.
+  subprocess, no JVM, fast) and 108 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
   the shell scripts (smoke/determinism/stress-reset/benchmark) — smoke includes
   the M5.2–M5.6 live coordination checks and determinism the scripted skill
   trace; all verified green 2026-07-21. M7.2 additionally has the recorded and
   live-runtime `coordination-parity` gate. M7.3 adds five-seed public
-  `candidate-policy-check`, primary evaluation, and blocked-replan coverage.
+  `candidate-policy-check`; M7.4 adds real predicate, event-boundary,
+  generalized blocked-replan, and adaptive-vs-frozen probe coverage.
 - **Skipped**: none.
 - **Flaky**: the stress-reset *leak* check was flaky under the original
   growth-trend methodology (passed for the author, failed on re-verification);
@@ -237,9 +252,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   never flaky.
 - **Failing**: none.
 - **Golden hashes**: the live harness and checked-in two-episode golden both
-  pass; 672 checkpoints cover 16,200 ticks and two wins. M7.3 regenerated the
-  trace because recurring task IDs now encode board state; frozen macro
-  outcomes and length did not change, and the negative mutation still diverges.
+  pass; 670 checkpoints cover 16,200 ticks and two wins. M7.4 regenerated the
+  trace because the hash now includes adaptive rolling facts and switching
+  history; frozen macro outcomes and length did not change, and the negative
+  mutation still diverges.
 
 ## Known risks and bugs
 
@@ -264,20 +280,19 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M7 item 7.4.
+**Authoritative work queue: `docs/ROADMAP.md` M7 item 7.5.
 Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M7.4: adaptive planning v1.** Replace fixed polling and rigid predicates
-   with wave-aware, spatial, event-driven replanning.
-2. **M7.5: scenario variation + seed governance.** Add bounded deterministic
+1. **M7.5: scenario variation + seed governance.** Add bounded deterministic
    variants and ADR-0012.
-3. **M7.6: evaluation ladder + teammate scorecard.** Compare scripted
+2. **M7.6: evaluation ladder + teammate scorecard.** Compare scripted
    baselines under frozen seed governance.
-4. **M8.1: reward vector and exploit audit.** Begin only after M7 closes.
-5. **M8.2: one learned selector seat.** Use the same public candidate/mask/task
+3. **M8.1: reward vector and exploit audit.** Begin only after M7 closes.
+4. **M8.2: one learned selector seat.** Use the same public candidate/mask/task
    action seam proven by M7.3.
+5. **M8.3: vector collection + replay buffer.** Start only after reward audit.
 
 ## Decisions
 

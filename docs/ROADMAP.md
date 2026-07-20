@@ -616,6 +616,20 @@ dependencies.
   (e.g. pre-damaged line, delayed loadout) that the linear macro cannot win but
   the adaptive policy does; idle fraction and time-to-defense-ready improve vs
   the frozen ExpertEpisode baseline on the variant set.
+- **Verified 2026-07-21:** priorities now derive from copper/economy/defense
+  deficits; loaded wave HP/DPS plus native Duo damage, reload, inaccuracy,
+  magazine, travel, and clear time derive ammo targets and defend lead.
+  `BUILD_LINE` completes only after the exact footprint has a directed
+  drill-to-core conveyor path and a 600-tick automated inflow window reaches
+  0.6 copper/s.
+- `stop_on_decision_event` is additive and opt-in: task terminal/BLOCKED,
+  economy-ready, wave spawn/clear, and core damage can end a chunk early without
+  changing default exact-step behavior. Recoverable BLOCKED replans are bounded
+  to 3/180 ticks and utility switching cost uses recent assignment history.
+- `make adaptive-planning-check` proves fixed adaptive/frozen wins, adaptive
+  delayed-loadout-probe win, and frozen probe loss. Across fixed+probe at seed
+  12345, adaptive mean idle fraction is **0.125 vs 0.878** and mean censored
+  defense-ready tick is **817 vs 5251**. Fixed evaluation remains 5/5.
 
 ### 7.5 Scenario variation v1 + seed governance (ADR-0012)
 - Objective: procedural jitter driven by root_seed within scenario_version 2:
@@ -644,10 +658,10 @@ dependencies.
   ADR-0012.
 
 Exit criteria:
-- [ ] All REVIEW_M6 findings resolved or explicitly waived with rationale
+- [x] All REVIEW_M6 findings resolved or explicitly waived with rationale
 - [x] One coordination brain; decision-level parity probe green
 - [ ] Utility-driven policy wins fixed 5/5 + ≥80% dev variants; macro retired
-- [ ] Seed-varied behaviour demonstrably adaptive (variant probe + metrics)
+- [x] Seed-varied behaviour demonstrably adaptive (variant probe + metrics)
 - [ ] Ladder + scorecard v0 reproducible; held-out governance in force
 
 ## Milestone 8: Learned task selector (single seat)

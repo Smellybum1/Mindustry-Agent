@@ -118,6 +118,11 @@ leaves both options unset and uses external task actions.
 | `expected_tick` | int | server's current tick as the client believes it; stale ⇒ reject |
 | `ticks_to_advance` | int | exact number of engine updates to apply |
 | `agent_actions` | [obj] | one high-level action per agent, applied atomically (see below) |
+| `stop_on_decision_event` | bool | M7.4 opt-in; stop after the first task/economy/wave/core-damage decision event (default `false`) |
+
+When `stop_on_decision_event=false`, `tick` advances by exactly
+`ticks_to_advance`. With the flag enabled it advances by at most that amount;
+the response reports the actual count and reasons in `decision_boundary`.
 
 **`agent_actions[]` entry (M3, additive — docs/M3_DESIGN.md D5):**
 
@@ -152,6 +157,12 @@ The unit observation always includes `build_queue_depth` and
 as `{breaking, block, tile_x, tile_y, rotation, progress}` for the first engine
 queue entry. The team observation includes `turrets[]`, sorted by building id,
 with `{id, block, tile_x, tile_y, total_ammo}` in native ammo units.
+M7.4 adds shared `line_blocks_complete`, `line_conveyor_connected`,
+`core_copper_inflow_per_s`, `core_copper_inflow_target_per_s`,
+`line_operational`, `next_wave_expected_enemies`, `next_wave_required_ammo`,
+`target_ammo_per_turret`, the three defense coverage fields,
+`defense_readiness`, `defend_lead_ticks`, and `wave_imminence`. These are
+derived on the simulation thread from the loaded scenario and live engine state.
 Actions are applied on
 the sim thread **before** advancing; each is validated and echoed in
 `action_results[]` — an invalid action is rejected there, never crashes the step.
@@ -192,7 +203,8 @@ the winner starts a skill, so input bundle order cannot choose the owner.
 | `task_events` | [obj] | coordination/task-board events this step |
 | `task_board` | [obj] | M5.2 bounded board snapshot (maximum 32, insertion order) |
 | `coordination_metrics` | obj | cumulative episode task/message/idle counters (M5.6) |
-| `game_events` | [obj] | step-scoped events; M4.6 emits `unit_damage` with tick, target unit/team/health/shield, nominal damage, source unit, and source agent (`-1` when not an agent) |
+| `game_events` | [obj] | step-scoped events; M4.6 emits `unit_damage`; M7.4 scheduled grants emit `scenario_event {event_type, tick, item, amount, reason}` |
+| `decision_boundary` | obj | M7.4 `{requested_ticks, advanced_ticks, triggered, reasons[]}` for opt-in event-driven stepping |
 | `state_hash` | str | stable hash after advancing |
 | `timing` | obj | `{engine_ms, observation_ms, serialization_ms, io_ms}` |
 

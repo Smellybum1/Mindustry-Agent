@@ -356,3 +356,24 @@ objective target references, and the authoritative reference/build-line
 schematic anchors and ordered blocks. The M7 scripted expert derives mining,
 building, defending, rebuilding, wave, and termination parameters from this
 payload; it does not maintain a second set of scenario coordinates.
+
+---
+
+# bootstrap-defense-adaptive-probe
+
+M7.4 adds one explicit acceptance variant, not a seed-randomized scenario. It
+uses the same 48×48 geometry, objective catalog, schematics, waves at
+2700/4500/6300, win tick 8100, and tick cap 9000 as the fixed scenario. Its only
+planning perturbation is loadout timing:
+
+- core starts with **70 copper**;
+- a deterministic `core_item_grant` adds **450 copper at tick 1100** and emits a
+  structured `scenario_event` with reason `delayed_loadout`;
+- the grant is excluded from the automated line-inflow ledger.
+
+The frozen M6 macro claims its opening once, leaves the 100-copper schematic
+blocked, and cannot complete the opening by tick 2401; the undefended run loses.
+Adaptive-v1 regenerates candidates after the delayed loadout, completes its
+defense at tick 1382 and the verified working line at tick 1794, then wins all
+three waves at tick 8100. This is the M7.4 discriminator. Bounded root-seed
+variation and train/dev/held-out governance remain M7.5/ADR-0012 work.
