@@ -45,6 +45,10 @@ public final class StateHasher{
             //tick is a double advanced by exactly +1.0 per update; hash the exact bits
             out.writeLong(Double.doubleToLongBits(state.tick));
             out.writeInt(state.wave);
+            //scenario wave counters: wavetime decrements by the fixed delta (bit-exact), and
+            //the live wave-team unit count. Both deterministic; they fingerprint the wave phase.
+            out.writeInt(Float.floatToIntBits(state.wavetime));
+            out.writeInt(state.enemies);
             out.writeBoolean(state.gameOver);
 
             //cores, sorted by team id for stability

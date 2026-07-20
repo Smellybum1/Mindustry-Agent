@@ -150,7 +150,8 @@
 
   "seed_policy": {
     "root_seed_feeds": "Mathf.rand at reset (docs/ENGINE_NOTES.md 6)",
-    "varies_with_root_seed_v0": [],
+    "note_v0": "The map (terrain/ore/core/spawn tile) is seed-independent. The native WaveSpawner applies a deterministic +-2-tile ground spawn spread seeded from root_seed, so enemy wave unit positions (and thus post-wave state hashes) DO vary with root_seed. See docs/SCENARIOS.md 'Implementation notes'. Does not bump scenario_version.",
+    "varies_with_root_seed_v0": ["wave_spawn_spread"],
     "planned_variation_axes_v1_plus": [
       "ore_patch_positions",
       "approach_lane_or_spawn_side",

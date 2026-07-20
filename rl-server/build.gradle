@@ -28,6 +28,16 @@ dependencies{
     implementation project(":agent-core")
 }
 
+// Single source of truth for the scenario: copy the checked-in machine-readable spec
+// onto the classpath so mindustry.rl.Scenario parses it at runtime (no hardcoded values).
+// The file stays authored under scenarios/; this only mirrors it into build outputs.
+processResources{
+    from("../scenarios/bootstrap-defense-v0"){
+        include "scenario.json"
+        into "scenarios/bootstrap-defense-v0"
+    }
+}
+
 // Self-contained fat jar. Runnable via `java -jar` (with cwd = ../core/assets).
 tasks.register('dist', Jar){
     dependsOn configurations.runtimeClasspath

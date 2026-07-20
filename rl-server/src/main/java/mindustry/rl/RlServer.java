@@ -48,7 +48,8 @@ public final class RlServer{
     private static final Jval EOF = Jval.newObject();
 
     private final int port;
-    private final Scenario scenario = new Scenario(48);
+    //constructed in boot() after content.init() — the loader resolves Mindustry content ids.
+    private Scenario scenario;
     private final FixedStepApplication app;
     private final RlAgentRegistry registry = new RlAgentRegistry();
 
@@ -117,6 +118,9 @@ public final class RlServer{
         }
 
         bases.load();
+
+        //content is now loaded: parse the scenario spec (resolves block/unit/item ids)
+        scenario = new Scenario();
 
         //listener order mirrors ServerLauncher.java:74-78, minus ServerControl
         Core.app.addListener(new ApplicationListener(){ public void update(){ asyncCore.begin(); } });
@@ -280,6 +284,7 @@ public final class RlServer{
         r.add("initial_observations", agentObservations());
         r.add("action_masks", replicate(Jval.newObject(), agentCount));
         r.put("state_hash", StateHasher.hash(registry));
+        r.put("outcome", "running");
         r.add("metadata", scenario.metadata());
         return r;
     }
@@ -311,6 +316,9 @@ public final class RlServer{
         app.graphics.setDeltaSeconds(1f / 60f);
         for(int i = 0; i < ticks; i++){
             app.stepOnce();
+            //deterministic enemy flowfield: converge on the sim thread each tick with the
+            //background Pathfinder thread stopped (upstream syncUpdate patch, docs/UPSTREAM_PATCHES.md).
+            pathfinder.syncUpdate();
         }
         long t1 = System.nanoTime();
         uptimeTicks += ticks;
@@ -319,6 +327,23 @@ public final class RlServer{
         Jval obs = agentObservations();
         String hash = StateHasher.hash(registry);
         long o1 = System.nanoTime();
+
+        //termination: win = core alive at winTick; loss = core destroyed; truncate at tick cap.
+        Building core = scenario.coreTeam.core();
+        boolean coreAlive = core != null && core.health > 0f && !state.gameOver;
+        int nowTick = (int)state.tick;
+        boolean terminated = false, truncated = false;
+        String outcome = "running";
+        if(!coreAlive){
+            outcome = "loss";
+            terminated = true;
+        }else if(nowTick >= scenario.winTick){
+            outcome = "win";
+            terminated = true;
+        }else if(nowTick >= scenario.tickCap){
+            outcome = "truncated";
+            truncated = true;
+        }
 
         Jval timing = Jval.newObject();
         timing.put("engine_ms", (t1 - t0) / 1e6);
@@ -337,8 +362,9 @@ public final class RlServer{
         r.add("action_results", actionResults);
         r.add("team_state", teamState());
         r.add("reward_breakdowns", replicate(Jval.newObject(), agentCount));
-        r.add("terminations", boolArray(agentCount, false));
-        r.add("truncations", boolArray(agentCount, false));
+        r.add("terminations", boolArray(agentCount, terminated));
+        r.add("truncations", boolArray(agentCount, truncated));
+        r.put("outcome", outcome);
         r.add("task_events", Jval.newArray());
         r.add("game_events", Jval.newArray());
         r.put("state_hash", hash);
@@ -406,11 +432,18 @@ public final class RlServer{
         scenario.load();   //fires WorldLoad* -> starts pathfinder threads
         logic.play();      //State.playing, loadout, PlayEvent (zeroes state.tick)
 
-        stopPathfinders(); //deterministic mode: agents steer straight, no pathing (§5.5, §11.6, D2)
+        //deterministic mode: stop the free-running wall-clock pathfinder threads. Our agent
+        //units steer straight (SkillController, no ControlPathfinder); enemy ground units use
+        //the flow-field Pathfinder, which is preloaded synchronously at world load and then
+        //driven per tick via pathfinder.syncUpdate() (§5.5, §11.6, D2, docs/UPSTREAM_PATCHES.md).
+        stopPathfinders();
 
         //M3 (D1): rebuild the agent registry after play() so the core exists; spawns
         //agent_count alpha units at deterministic offsets and installs SkillControllers
         registry.rebuild(agentCount);
+
+        //converge the preloaded enemy flow field once so the first observation is settled
+        pathfinder.syncUpdate();
     }
 
     /** Stop the two free-running pathfinder threads via their private stop() (no upstream edit). */
@@ -491,7 +524,7 @@ public final class RlServer{
     }
 
     private Jval worldObs(){
-        Building core = Team.sharded.core();
+        Building core = scenario.coreTeam.core();
         Jval o = Jval.newObject();
         o.put("tick", (long)state.tick);
         o.put("wave", state.wave);
@@ -500,8 +533,25 @@ public final class RlServer{
         o.put("unit_count", Groups.unit.size());
         o.put("building_count", Groups.build.size());
         o.put("core_health", core == null ? 0.0 : core.health);
+        //wave/enemy telemetry (scenario phase): time to the next spawn and live enemy summary.
+        o.put("time_to_next_wave", state.wavetime);
+        o.put("enemy_count", state.enemies);
+        o.put("enemy_nearest_core_dist", enemyNearestCoreDist(core));
         o.put("done", state.gameOver);
         return o;
+    }
+
+    /** Smallest distance (world units) from any wave-team unit to the core, or -1 if none. */
+    private double enemyNearestCoreDist(Building core){
+        if(core == null) return -1.0;
+        float best = Float.MAX_VALUE;
+        for(Unit u : Groups.unit){
+            if(u.team() == scenario.waveTeam){
+                float d = u.dst(core.x, core.y);
+                if(d < best) best = d;
+            }
+        }
+        return best == Float.MAX_VALUE ? -1.0 : best;
     }
 
     private Jval teamState(){
