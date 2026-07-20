@@ -20,7 +20,7 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 2. `docs/HANDOFF.md` — verified project state, exact commands with expected
    outputs, architecture map, performance, known risks.
 3. `docs/ROADMAP.md` — Milestones M4–M6 are broken into issue-sized items with
-   acceptance criteria. **Your work queue begins with the M6.4 manual join
+   acceptance criteria. **Your work queue begins with the M6.4 in-client stop
    acceptance, then M6.5 closure.**
 4. `docs/M4_DESIGN.md` — the approved design you are implementing (it has open
    questions to resolve against engine source and record in place — follow the
@@ -67,9 +67,12 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 - M6.3 checks in 16,200 ticks of complete expert actions/events/hashes. Fresh-JVM
   replay matches 678 checkpoints; the in-memory negative mutation flips one.
 - M6.4's code and automated real-server acceptance are implemented: the loadable
-  plugin legally builds/supplies the shared opening, matches both block orders,
-  renders rate-limited board announcements, and verifies pause/resume/stop in an
-  isolated no-port probe. The stock-client human join check is still pending.
+  plugin builds/supplies the full four-Duo expert defense, continuously mines
+  between waves, matches both shared-plan orders, renders rate-limited board
+  announcements, and verifies pause/resume/stop in an isolated no-port probe.
+  Its separate no-port survival probe clears three waves at 956 core health. A
+  stock v159.7 client joined/resumed and visually observed the behavior; only
+  the in-client `/agents stop` observation remains pending.
 
 ## Invariants (violating these is failure, even if tests pass)
 
@@ -96,10 +99,11 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Your first task
 
-`docs/ROADMAP.md` → **Milestone 6, item 6.4 manual join acceptance**.
-Milestones 4–5 and M6.1–6.3 are verified complete; M6.4 automated acceptance is
-green but must not be called DONE until a stock v159.7 client joins locally and
-checks observation/chat/emergency stop. The
+`docs/ROADMAP.md` → **Milestone 6, item 6.4 final manual stop acceptance**.
+Milestones 4–5 and M6.1–6.3 are verified complete; M6.4 automated acceptance and
+stock-client join/visual/chat observation are green, but it must not be called
+DONE until a stock v159.7 client types `/agents stop` and observes all three
+agents halt. The
 thread-less pathfinder refresh is wall-clock-free and the 79-boundary determinism
 trace legally executes and supplies the schematic, then builds a post-wave wall;
 `BuildBlock` uses real engine plans and balances core resources; reset/step now

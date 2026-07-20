@@ -17,7 +17,7 @@ and what is unverified.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **35 Python
+  client, parallel-env facade, vector collector) is stdlib-only too. **38 Python
   tests pass** via `python -m pytest python/tests -q` (verified 2026-07-20 with
   pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
@@ -448,7 +448,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   mismatch. It passed; no mutated trace is written. Parser/mutation unit tests
   bring pytest to **38 passed**. Format and commands are in `docs/REPLAY.md`.
 
-## Milestone 6.4 — real-time dedicated-server plugin (IMPLEMENTED; manual join pending)
+## Milestone 6.4 — real-time dedicated-server plugin (IMPLEMENTED; manual stop pending)
 
 - `agent-plugin:dist` builds `mindustry-coop-agents-plugin.jar` with a real
   `plugin.json`/`Plugin` entry point, shared `agentcore` classes, exact scenario
@@ -456,21 +456,75 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 - The stock `server:dist` path creates Bootstrap Defense v0, spawns three
   controlled Alphas, and runs the scripted opening through the same `TaskBoard`,
   skill FSMs, live engine mapping, and `AnnouncementRenderer` used by training
-  mode. A demo-specific controller subclass adds immediate pause and
-  emergency-stop semantics.
+  mode. It then constructs the full 20-piece/four-Duo expert defense. Available
+  agents continuously mine and deliver between waves, switch to defense on
+  contact, repair/resupply after waves 1–2, and resume mining. If an Alpha is
+  lost, its stable agent slot is visibly rebound to a replacement at the core.
+  A demo-specific controller subclass adds immediate pause and emergency-stop
+  semantics.
 - Server and client commands cover `agents status|pause|resume|stop`; stop clears
   velocity, mining, build plans, firing, and active skills on the simulation
   thread. Team chat receives only rate-limiter-approved structured events. Join
-  mode waits for the human's `/agents resume`, so client map loading cannot hide
-  the opening.
+  mode pauses both agents and the scenario clock until the human's `/agents
+  resume`, so client map loading cannot hide the opening or advance waves
+  unattended.
 - `make demo-server` is a non-networked isolated acceptance probe. Verified:
-  plugin load, three spawns, both real schematic completions, both turret supply
-  actions, exact per-plan block-order parity, five concise announcements, and
-  pause/resume/stop by tick 312. `DEMO_JOIN=1 make demo-server` is the only path
-  that opens the private game port (6567 by default).
-- **Still unverified:** a human stock v159.7 client has not yet performed the
-  final local visual join and `/agents stop` check. M6.4 and M6 closure remain
-  open until that manual acceptance is recorded.
+  plugin load, three spawns, both shared plans, 20 fortifications, four supplied
+  Duos, exact per-plan block-order parity, reserve mining, and pause/resume/stop
+  by approximately tick 1060. `DEMO_SURVIVAL=1 make demo-server` cleared all
+  three waves and reached tick 8100 with **956/1100** core health while logging
+  each mine/defend/maintenance transition. Both automated paths open no port.
+- A human joined locally with a stock v159.7 client as `Smellybum`, used
+  `/agents resume`, saw mining/building/supplying and concise chat, and supplied
+  the feedback that produced continuous reserve mining. **Still unverified:**
+  the human requested the server be shut down before typing the in-client
+  `/agents stop`; automated emergency-stop acceptance is green, but M6.4 and M6
+  closure remain open until that last manual command is observed.
+
+## Milestone 6.5 — closure validation (one manual check and tag pending)
+
+The 2026-07-20 non-networked closure matrix is green: **102 JUnit**, **38
+pytest**, full smoke, 79-boundary cross-process determinism, 678-checkpoint /
+16,200-tick golden replay, both scripted expert variants, 5/5 evaluation wins,
+the isolated plugin probe, and the three-wave real-time survival probe. The
+1,000-reset run had zero hash mismatches, 1.15 ms median / 2.59 ms p95 latency,
+298.7 MiB peak RSS, and no leak. The contention-sensitive benchmark reported
+27,341 engine-only and 20,456 wrapper ticks/sec; 1/2/4-JVM aggregate throughput
+was 13,613/21,076/21,671 ticks/sec. These are validation measurements, not a
+replacement for the less-contended historical M2 baseline in `BENCHMARKS.md`.
+
+The original brief §32 text is not checked into this repository; only the
+roadmap's requirement to record items 1–15 is available. The honest
+repository-evidence mapping used for the M6 audit is:
+
+1. **PASS — scenario:** the checked-in Bootstrap Defense v0 data loads and its
+   three waves/termination boundaries execute.
+2. **PASS — cooperative bodies:** three controlled agents are present in both
+   training and demo paths.
+3. **PASS — fixed expert:** the scripted team wins at tick 8100.
+4. **PASS — mining/delivery:** legal cargo and core ledgers are exercised.
+5. **PASS — construction:** the copper line and defensive schematics use real
+   build plans and exact resource costs.
+6. **PASS — supply/maintenance:** four Duos are supplied and damaged defenses
+   are rebuilt between waves.
+7. **PASS — combat:** agents switch from reserve mining to defense on contact
+   and the core survives wave 3.
+8. **PASS — blocked replan:** the insufficient-copper variant reports
+   `resources_short`, mines, replans, and wins.
+9. **PASS — coordination:** the shared board, claims, helpers, leases, and
+   reservations are exercised by deterministic checks.
+10. **PASS — structured communication:** human text is rendered only from
+    rate-limited structured events.
+11. **PASS — evaluation:** the defined five-seed set is 5/5 wins with recorded
+    per-episode metrics.
+12. **PASS — replay:** the checked-in complete trace matches fresh-JVM training
+    results and the negative mutation changes a hash.
+13. **PASS — real server:** the stock dedicated server loads the plugin; a stock
+    v159.7 client joined privately and observed/resumed the agents.
+14. **PENDING — manual emergency stop:** automated stop is green, but the human
+    has not yet typed `/agents stop` in the stock client.
+15. **PENDING — closure record/tag:** docs are prepared, but M6 must not be
+    checked off or tagged `milestone-6` until item 14 passes.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -499,13 +553,13 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 101 tests
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 102 tests
   green, including 31 M3/M4 skill tests). `agent-plugin:dist` and its isolated
   real-server acceptance probe are verified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
-- **Human demo acceptance:** stock v159.7 local join/visual/control check pending
-  as described in M6.4 above.
+- **Human demo acceptance:** stock v159.7 join and visual/chat observation pass;
+  the in-client `/agents stop` observation remains pending as described above.
 
 ## Known deviations from the brief
 

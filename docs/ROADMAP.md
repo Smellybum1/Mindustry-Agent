@@ -455,15 +455,19 @@ actually winning it, and humans watching it happen.
   reverted).
 
 ### 6.4 agent-plugin demo server (human-joinable)
-- **IMPLEMENTED; automated acceptance verified 2026-07-20, human join check
-  pending:** `agent-plugin:dist` now produces an official-layout loadable plugin
+- **IMPLEMENTED; automated and human visual acceptance verified 2026-07-20,
+  in-client stop check pending:** `agent-plugin:dist` now produces an
+  official-layout loadable plugin
   for `server:dist`. The isolated `make demo-server` probe loads the plugin in
-  the real server, spawns three Alphas, legally builds both shared JSON plans,
-  supplies both Duos, verifies the per-plan build order, renders rate-limited
-  board announcements, and proves pause/resume/stop. The safe default opens no
-  socket; `DEMO_JOIN=1` is the explicit private port-6567 path. Do not mark this
-  item DONE until a stock v159.7 client has completed the local visual/control
-  check.
+  the real server, spawns three Alphas, legally builds both shared JSON plans and
+  the full four-Duo expert defense, verifies the per-plan build order, renders
+  rate-limited board announcements, mines whenever no enemy is present, and
+  proves pause/resume/stop. `DEMO_SURVIVAL=1` clears all three waves without a
+  socket. A stock v159.7 client joined, resumed, and visually observed the
+  mining/building/supplying/chat path; user feedback produced the continuous
+  reserve-mining loop. The safe default opens no socket; `DEMO_JOIN=1` is the
+  explicit private port-6567 path. Do not mark this item DONE until the human
+  also types `/agents stop` and observes all agents halt.
 - Objective: `agent-plugin` loads into the REAL dedicated server
   (`server:dist` jar + plugin per official plugin layout; ENGINE_NOTES §boot):
   spawns the same agent units driven by the SAME `agentcore` skills/board (its

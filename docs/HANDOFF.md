@@ -8,11 +8,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
-  layer** (101 JUnit tests), agent
+  layer** (102 JUnit tests), agent
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 36 pytest
+  crash-replacement, PettingZoo-shaped facade, vector collector; 38 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
   `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
   east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
@@ -70,13 +70,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   M6.3 checks in a complete two-episode/16,200-tick action+coordination golden;
   fresh-JVM replay matches 678 checkpoints and the negative mutation test flips one.
   M6.4 now builds a loadable stock-server plugin. Its isolated real-server probe
-  legally completes the shared copper-line/east-Duo opening and supply actions,
-  matches both build orders, emits five rate-limited announcements, and verifies
-  pause/resume/emergency-stop without opening a port.
+  legally completes the shared copper-line/east-Duo opening, expands it to 20
+  fortifications/four supplied Duos, matches both build orders, enters reserve
+  mining, and verifies pause/resume/emergency-stop without opening a port. The
+  separate no-port survival probe clears three waves and reaches tick 8100 with
+  956 core health while switching mining → defense → maintenance.
 - **What is stubbed**: rewards are empty until M7; learned training code and the
   M10 human goal/override/study surface remain future work.
-- **What remains for M6**: one manual stock-v159.7 local join/visual/control
-  acceptance, then the full M6.5 closure matrix and tag. See `docs/STATUS.md`.
+- **What remains for M6**: stock-v159.7 local join/visual/chat acceptance passed,
+  but the user shut the server down before typing `/agents stop`. Observe that
+  one in-client command, then record the M6.5 checklist and tag. The full
+  non-networked closure matrix is green; see `docs/STATUS.md`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -95,14 +99,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
 | `make test` | Runs the Python suite (38 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
-| `make test-java` | `gradlew agent-core:test` (101 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
+| `make test-java` | `gradlew agent-core:test` (102 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
 | `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
 | `make determinism` | Runs the legacy 79-boundary cross-process replay, reset purity, seed sensitivity, then the checked-in M6 golden (678 checkpoints / 16,200 ticks / two wins). Exit 0. Verified 2026-07-20. |
-| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.6 run: median 1.08 ms, p95 2.35 ms, peak 300.1 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
+| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest M6 closure run: median 1.15 ms, p95 2.59 ms, peak 298.7 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | Runs the primary three-wave expert and the legal insufficient-copper replan variant; both end at tick 8100 with `outcome=win`. Verified 2026-07-20. |
 | `make evaluate-scripted` | Runs five pinned seeds, writes `runs/scripted-evaluation.jsonl`, and prints the M6 aggregate table; 5/5 wins. Verified 2026-07-20. |
-| `make demo-server` | Builds/boots the real server+plugin in an isolated no-port probe; verifies layout, opening parity, supply, announcements, and controls; exits 0. Use `DEMO_JOIN=1 make demo-server` only for an explicit private port-6567 human session. |
+| `make demo-server` | Builds/boots the real server+plugin in an isolated no-port probe; verifies layout, full expert preparation, reserve mining, announcements, and controls; exits 0. `DEMO_SURVIVAL=1` runs the no-port three-wave survival acceptance. Use `DEMO_JOIN=1` only for an explicit private port-6567 human session. |
 
 (If `make` is unavailable on Windows, run `bash scripts/<name>.sh` directly.)
 
@@ -173,9 +177,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 35 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M5
+- **Passing**: 38 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M5
   action/board/event roundtrips, `test_supervisor.py`, `test_env.py`; fake-server
-  subprocess, no JVM, fast) and 101 Java JUnit tests (`agent-core`, incl.
+  subprocess, no JVM, fast) and 102 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
   the shell scripts (smoke/determinism/stress-reset/benchmark) — smoke includes
   the M5.2–M5.6 live coordination checks and determinism the scripted skill
@@ -217,9 +221,9 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M6.4 manual acceptance.** Join the explicit private server with a stock
-   v159.7 client, visually confirm mining/building/supplying and team chat, then
-   prove `/agents stop` halts all three agents.
+1. **M6.4 final manual command.** Stock-v159.7 join and visual/chat acceptance
+   passed. Reopen the explicit private server and prove `/agents stop` halts all
+   three agents; this is the only remaining M6.4 check.
 2. **M6.5: milestone closure.** Run the full acceptance matrix, update truthful
    docs/benchmarks, and close M6 only when every exit criterion passes.
 3. **M7.1: learned selector baseline contract.** Begin only after M6 closure.
