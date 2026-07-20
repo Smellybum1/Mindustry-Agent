@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M4 and M5.1–5.2 complete, verified 2026-07-20): the
+- **What currently works** (M0–M4 and M5.1–5.3 complete, verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
@@ -12,7 +12,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 31 pytest
+  crash-replacement, PettingZoo-shaped facade, vector collector; 35 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
   `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
   east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
@@ -41,9 +41,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   maps claimed scenario tasks to legal skills, publishes bounded snapshots and
   drained structured events, and hashes non-empty board state. Its three-agent
   live check repeats byte-identically across two fresh JVMs through tick 280.
+  M5.3 adds dependency-free greedy and fixed-role task policies plus deterministic
+  helper coordination. Its live check records distinct miner/builder work, a
+  real resources-short block, an accepted 20-copper helper contract fulfilled by
+  21 legally mined/delivered copper, and one schematic completion; the full trace
+  repeats byte-identically across fresh JVMs through tick 912.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
-  autonomous policies, live reservations/recovery/metrics, and a scripted full
-  three-wave *win* path are still to come (M5.3–M6); rewards are empty until M7;
+  live reservations/recovery/metrics and a scripted full three-wave *win* path
+  are still to come (M5.4–M6); rewards are empty until M7;
   training/evaluation Python subpackages. See `docs/STATUS.md`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
@@ -61,12 +66,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + `agent-core`/`agent-plugin` classes, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (31 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (35 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (100 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
-| `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance, the M5.2 three-agent coordination check twice across fresh JVMs (through tick 280), and omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
+| `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance, M5.2 coordination, and the M5.3 policy/helper check twice across fresh JVMs (through tick 912), plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
 | `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary, including ordered schematic build+supply, deterministic agent combat, and **post-wave wall placement with moving/re-pathing enemies** (79 hashes); reset purity and seed sensitivity also pass. Ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
-| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.2 run: median 1.00 ms, p95 1.97 ms, peak 298.9 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
+| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.3 run: median 1.07 ms, p95 2.24 ms, peak 300.3 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
 | `make demo-server` | **Exits 1** — not implemented (M6/M10). |
@@ -178,50 +183,22 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M5 item 5.3 (then M5/M6,
+**Authoritative work queue: `docs/ROADMAP.md` M5 item 5.4 (then M5/M6,
 also broken down there). Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-*(The full bootstrap-defense-v0 scenario loader — world + deterministic waves +
-termination + seed-sensitivity + the `Pathfinder.syncUpdate()` patch — **landed
-2026-07-20**; see the Scenario section of `docs/STATUS.md` and
-`docs/UPSTREAM_PATCHES.md`. That was the previous next-issue 1; the rotation below
-promotes the remainder and adds the M4 follow-ons it unblocks.)*
-
-1. **M4: defend/repair + a scripted win path.**
-   - Objective: script the reference `east_duo_v1` build (2 Duos + wall column),
-     supply copper, and survive all 3 waves with the core alive at tick 8100 →
-     `outcome == "win"`. Adds the `BuildSchematic`/`SupplyBuilding`/`Repair` skills.
-   - Blocks on: **dynamic re-path determinism** (below) — daggers must re-route
-     around freshly built walls deterministically.
-   - Acceptance: a scripted trace reaches `outcome == "win"` before the cap; hashes
-     reproduce across processes; `scenario_check` gains a defended-win phase.
-2. **Dynamic re-path determinism (wall building under fire) — DONE (M4.1).**
-   - Objective: neutralize the `Pathfinder` `afterGameUpdate` `Time.millis()` refresh
-     gate (docs/UPSTREAM_PATCHES.md patch 2 audit) so flow-field refresh after a
-     `TileChangeEvent` is deterministic under the fixed step, not wall-clock-timed.
-   - Acceptance met: a wall is placed at tick 2880 in two fresh JVMs (same seed) →
-     73 identical hashes while daggers re-route around it.
-3. **Golden replay files + `tests/golden/`.**
-   - Objective: check in seed + action trace + expected hashes; wire
-     `make determinism` to also verify against the stored trace (≥10k ticks,
-     Gate 1). The M3 scripted trace (`tools/skill_trace.py`) is a natural
-     starting trace to freeze.
-   - Acceptance: byte-identical hashes vs the checked-in trace; CI-runnable.
-4. **agent-plugin demo-server skeleton (M6 prep).**
-   - Objective: plugin loads in the ordinary dedicated server, spawns one
-     server-controlled unit driven by the same `agentcore.skill` code (its own
-     `AgentBody` impl over the live server unit), announces via chat using
-     `agentcore.announce`.
-   - Acceptance: human can join locally (`make demo-server`) and watch it mine.
-5. **M5.3: scripted multi-agent policies.**
-   - Objective: add greedy-utility and fixed-role Python policies that drive the
-     M5.2 task actions, including a measurable helper offer/accept/fulfil flow.
-   - Why: turns single scripted skills into coordinated multi-agent behaviour; the
-     skill executors and per-agent obs from M3 are the substrate.
-   - Acceptance: two agents claim disjoint copper patches and deliver without
-     conflict; board events appear in `task_events[]`; determinism holds.
+1. **M5.4: reservations wired to real targets.** Reserve schematic footprints
+   and resource budgets during claims; prove overlapping builders cannot create
+   conflicting plans and emit a structured reservation-conflict event.
+2. **M5.5: lease expiry/failure recovery.** Add a deterministic heartbeat
+   suppression hook; prove expiry, reclaim, completion, and normal termination.
+3. **M5.6: announcements and coordination metrics.** Surface rendered messages
+   and bounded task/idle/duplicate counters; prove rate limits in a live run.
+4. **M6.1: scripted expert team.** Build on M5 policies to survive all three
+   scenario waves across the defined seed set and wire `make scripted-demo`.
+5. **M6.2: evaluation summaries.** Emit per-episode JSONL metrics and aggregate
+   scripted evaluation results into `docs/BENCHMARKS.md`.
 
 ## Decisions
 

@@ -218,6 +218,13 @@ helper_count}`. `task_events[]` is the authoritative structured
 capabilities/dependencies, lease/progress/reason/status transition, related
 agent, and `announce`. Human text is not authoritative (ADR-0005).
 
+An accepted `deliver copper` helper contract is fulfilled only after that
+helper issues a legal `DELIVER_CORE` skill carrying copper and the observed
+cargo decrease is at least the contracted amount. Fulfilment emits a structured
+`PROGRESS` event with `reason_code="help_fulfilled"`; it is included in board
+state hashing even though helper details remain summarized as `helper_count` in
+the bounded snapshot.
+
 `skill.status` is one of `READY`/`RUNNING`/`SUCCEEDED`/`BLOCKED`/`FAILED`/`CANCELLED`;
 `skill.reason` is a machine-readable code (e.g. `ARRIVED`, `INVALID_TARGET`, `STUCK`,
 `DELIVERED`, `BUILT`, `RESOURCES_SHORT`, `OCCUPIED`, `OUT_OF_RANGE`,

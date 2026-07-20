@@ -23,6 +23,8 @@ public final class CoordinationAdapter{
     private final RlAgentRegistry registry;
     private final TaskBoard board = new TaskBoard();
     private Assignment[] assignments = new Assignment[0];
+    private String[] helperDeliveryTasks = new String[0];
+    private int[] helperDeliveryCargo = new int[0];
 
     public CoordinationAdapter(Scenario scenario, RlAgentRegistry registry){
         this.scenario = scenario;
@@ -34,6 +36,8 @@ public final class CoordinationAdapter{
     public void reset(long episodeId, int agentCount){
         board.reset(episodeId);
         assignments = new Assignment[agentCount];
+        helperDeliveryTasks = new String[agentCount];
+        helperDeliveryCargo = new int[agentCount];
     }
 
     /** Apply one atomic bundle. SELECT claims finalize only after every bid is known. */
@@ -68,6 +72,7 @@ public final class CoordinationAdapter{
                 if(current(agentIndex) != null){
                     results[i] = result(agentIndex, false, "task_active", "");
                 }else{
+                    captureHelperDelivery(agent, command);
                     results[i] = ActionDecoder.apply(registry, scenario, action);
                 }
             }else if(!taskAction.isObject()){
@@ -124,9 +129,10 @@ public final class CoordinationAdapter{
     /** Advance lifecycle/leases after each engine tick. */
     public void tick(long tick){
         for(int i = 0; i < assignments.length; i++){
+            RlAgentRegistry.Agent agent = registry.get(i);
+            syncHelperDelivery(i, agent, tick);
             Assignment assignment = assignments[i];
             if(assignment == null) continue;
-            RlAgentRegistry.Agent agent = registry.get(i);
             TaskState task = board.task(assignment.taskId);
             if(agent == null || task == null || task.owner() == null
                 || task.owner().index() != i){
@@ -351,6 +357,45 @@ public final class CoordinationAdapter{
             ? board.acceptHelp(task.taskId(), AgentId.of(agent.index), helper, tick)
             : board.declineHelp(task.taskId(), AgentId.of(agent.index), helper, tick);
         return result(agent.index, op.ok(), op.reason(), type, task.taskId());
+    }
+
+    private void captureHelperDelivery(RlAgentRegistry.Agent agent, Jval command){
+        if(command == null || !command.isObject()
+            || !command.getString("type", "").equalsIgnoreCase("DELIVER_CORE")) return;
+        for(TaskState task : board.tasks()){
+            for(HelperContract contract : task.helpers()){
+                if(!contract.fulfilled() && contract.helper().index() == agent.index
+                    && contract.contribution().equalsIgnoreCase("deliver copper")
+                    && agent.unit.item() == Items.copper){
+                    helperDeliveryTasks[agent.index] = task.taskId();
+                    helperDeliveryCargo[agent.index] = agent.unit.stack().amount;
+                    return;
+                }
+            }
+        }
+    }
+
+    private void syncHelperDelivery(int agentIndex, RlAgentRegistry.Agent agent, long tick){
+        String taskId = helperDeliveryTasks[agentIndex];
+        if(taskId == null || agent == null) return;
+        SkillResult result = agent.controller.lastResult();
+        if(!(agent.controller.activeSkill() instanceof DeliverToCore)
+            || result.status() != SkillStatus.SUCCEEDED) return;
+
+        TaskState task = board.task(taskId);
+        if(task != null){
+            for(HelperContract contract : task.helpers()){
+                if(!contract.fulfilled() && contract.helper().index() == agentIndex){
+                    int delivered = helperDeliveryCargo[agentIndex] - agent.unit.stack().amount;
+                    if(delivered >= contract.amount()){
+                        board.reportHelpFulfilled(taskId, AgentId.of(agentIndex), tick);
+                    }
+                    break;
+                }
+            }
+        }
+        helperDeliveryTasks[agentIndex] = null;
+        helperDeliveryCargo[agentIndex] = 0;
     }
 
     private void reportRunning(

@@ -313,6 +313,14 @@ contract); Python sees it only through the protocol.
   the adapter must keep stable iteration).
 
 ### 5.3 Scripted multi-agent policies
+- **DONE (verified 2026-07-20):** dependency-free `GreedyUtilityPolicy` and
+  `RoleAssignmentPolicy` baselines consume the M5.2 candidates/masks and use a
+  stable lowest-index tie-break. `HelperCoordinator` implements deterministic
+  nearest-idle request/offer/accept actions. The live three-agent policy check
+  proves distinct miner/builder intent, a build blocked on real copper, an
+  accepted 20-copper helper contract fulfilled by 21 copper mined and delivered
+  through engine skills, exactly one schematic completion, and a byte-identical
+  transcript in a second fresh JVM through tick 912. Full smoke includes it.
 - Objective: (a) greedy-utility policy (each agent picks its highest-utility
   candidate, CONTINUEs until completion/blockage); (b) role-assignment policy
   (fixed roles: miner/builder/supplier per agent index); both in
@@ -354,9 +362,9 @@ contract); Python sees it only through the protocol.
   complete); rate-limit tests pass live; message count bounded.
 
 Exit criteria (brief, unchanged):
-- [ ] Two or more agents announce distinct work
-- [ ] A helper contract is accepted and completed
-- [ ] Duplicate task claims are resolved
+- [x] Two or more agents announce distinct work
+- [x] A helper contract is accepted and completed
+- [x] Duplicate task claims are resolved
 - [ ] Stale claim expires after a simulated agent failure
 - [ ] Communication rate limit passes tests
 

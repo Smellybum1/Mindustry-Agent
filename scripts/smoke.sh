@@ -25,6 +25,10 @@ echo "== M5.2 coordination check (port=$PORT seed=$SEED) =="
 "$PY" -m mindustry_agents.tools.coordination_check --port "$PORT" --seed "$SEED"
 
 echo
+echo "== M5.3 scripted policy check (port=$PORT seed=$SEED) =="
+"$PY" -m mindustry_agents.tools.policy_check --port "$PORT" --seed "$SEED"
+
+echo
 echo "== rl-server combat check (port=$PORT seed=$SEED) =="
 "$PY" -m mindustry_agents.tools.combat_check --port "$PORT" --seed "$SEED"
 

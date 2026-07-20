@@ -310,24 +310,50 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   zero hash mismatches, median **1.00 ms**, p95 **1.97 ms**, peak **298.9 MiB**,
   and no leak.
 
+## Milestone 5.3 — scripted multi-agent policies (DONE, verified 2026-07-20)
+
+- **Policies:** the dependency-free Python package now exports greedy-utility
+  and fixed-role baselines. Both continue active work, honor candidate masks,
+  select deterministically by utility then stable candidate index, and fall
+  back to `WAIT`. Fixed roles map agent indices to miner, builder, supplier, or
+  defender task families. `HelperCoordinator` produces the explicit typed
+  request/offer/accept/decline flow and selects the nearest idle agent with an
+  agent-index distance tie-break.
+- **Measurable helper fulfilment:** the sim-thread adapter associates an
+  accepted `deliver copper` contract with a helper's legal `DELIVER_CORE`
+  command. Only an observed copper cargo decrease meeting the contracted amount
+  calls `reportHelpFulfilled`; reset clears the pending measurement state.
+- **Acceptance:** `tools.policy_check` first proves simultaneous miner/builder
+  intent, then spends the live core to 98 copper, blocks the builder on the
+  100-copper schematic, records request/offer/accept, and has the nearest idle
+  helper mine and deliver 21 copper against a 20-copper contract. The fulfilment
+  event occurs at tick 901 and the single schematic completes at tick 912. A
+  second fresh JVM produces a byte-identical full transcript. Full smoke runs
+  this acceptance check.
+- **Verification:** **100 JUnit**, **35 pytest**, full smoke, and the
+  **79-boundary** determinism replay are green. The post-M5.3 1000-reset check
+  reports zero hash mismatches, median **1.07 ms**, p95 **2.24 ms**, peak
+  **300.3 MiB**, and no leak.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
   `CoordinationAct` (13), `SkillStatus` (6), `AgentId` record, the coordination
   board (M2), the **`agentcore.skill`** FSM layer (M3/M4), and the engine-free
-  deterministic M5.1 candidate catalog. Board-to-skill wiring is live in M5.2;
-  scripted policies (M5.3), real reservations (M5.4), and reward logic (M7) remain.
+  deterministic M5.1 candidate catalog. Board-to-skill wiring and measurable
+  helper fulfilment are live through M5.3; real reservations (M5.4) and reward
+  logic (M7) remain.
 - **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
   loadable Mindustry plugin. See `agent-plugin/README.md`.
-- **Python subpackages** `process`, `env`, and `tools` now carry real M1/M2 code
+- **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
-  `tools/{smoke,determinism,stress_reset,benchmark}.py`). `policies`, `training`,
-  `evaluation`, `telemetry`: still documented skeletons.
+  `tools/{smoke,determinism,stress_reset,benchmark,policy_check}.py`). `training`,
+  `evaluation`, and `telemetry` remain documented skeletons.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and
   reference schematic). M5.1 turns those objectives plus live world state into
-  scored candidates; M5.2 claims and executes them, while autonomous policy is
-  M5.3/M6.
+  scored candidates; M5.2 claims and executes them; M5.3 supplies deterministic
+  task-level policy baselines. The winning expert policy remains M6.
 - **`configs/`**: example YAML stubs marked unused-yet.
 
 ## What is unverified
