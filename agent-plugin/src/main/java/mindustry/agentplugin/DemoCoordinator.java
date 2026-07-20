@@ -65,6 +65,8 @@ final class DemoCoordinator{
     private final List<String> defenseOrder = new ArrayList<>();
     private final ArrayDeque<BuildPlacement> fortifications = new ArrayDeque<>();
     private final ArrayDeque<TileTarget> supplyTargets = new ArrayDeque<>();
+    private final List<TileTarget> activeTurrets = new ArrayList<>();
+    private final List<BuildPlacement> expectedExpansions = new ArrayList<>();
 
     private boolean started;
     private boolean paused;
@@ -80,6 +82,8 @@ final class DemoCoordinator{
     private boolean defenseStarted;
     private boolean maintenance;
     private boolean maintenanceSupplyStarted;
+    private boolean maintenanceExpansionPrepared;
+    private boolean maintenanceExpansionReported;
     private boolean rebuildDone;
     private long lastHeartbeat;
     private int announcements;
@@ -398,6 +402,10 @@ final class DemoCoordinator{
         for(int y = 21; y <= 25; y++) fortifications.add(new BuildPlacement("copper-wall", 27, y, 0));
         fortifications.add(new BuildPlacement("duo", 29, 23, 1));
         fortifications.add(new BuildPlacement("duo", 29, 25, 1));
+        trackTurret(29, 23);
+        trackTurret(29, 25);
+        trackTurret(32, 23);
+        trackTurret(32, 25);
     }
 
     private void dispatchFortifications(){
@@ -412,10 +420,30 @@ final class DemoCoordinator{
     }
 
     private void prepareSupply(){
-        supplyTargets.add(new TileTarget(29, 23));
-        supplyTargets.add(new TileTarget(29, 25));
-        supplyTargets.add(new TileTarget(32, 23));
-        supplyTargets.add(new TileTarget(32, 25));
+        for(TileTarget target : activeTurrets) supplyTargets.add(target);
+    }
+
+    private void prepareMaintenanceExpansion(){
+        int wallX = waveClears == 1 ? 36 : 39;
+        int turretX = wallX - 1;
+        for(int y = 21; y <= 27; y++) addExpansion("copper-wall", wallX, y, 0);
+        addExpansion("duo", turretX, 23, 1);
+        addExpansion("duo", turretX, 25, 1);
+        trackTurret(turretX, 23);
+        trackTurret(turretX, 25);
+        Log.info("AGENT-DEMO EXPANSION START wave=@ planned_blocks=9 planned_turrets=2",
+            waveClears);
+    }
+
+    private void addExpansion(String block, int x, int y, int rotation){
+        BuildPlacement placement = new BuildPlacement(block, x, y, rotation);
+        fortifications.add(placement);
+        expectedExpansions.add(placement);
+    }
+
+    private void trackTurret(int x, int y){
+        TileTarget candidate = new TileTarget(x, y);
+        if(!activeTurrets.contains(candidate)) activeTurrets.add(candidate);
     }
 
     private void dispatchSupply(){
@@ -432,6 +460,8 @@ final class DemoCoordinator{
     private void startDefense(long tick){
         maintenance = false;
         maintenanceSupplyStarted = false;
+        fortifications.clear();
+        buildsInFlight = 0;
         supplyTargets.clear();
         suppliesInFlight = 0;
         defenseStarted = true;
@@ -510,6 +540,8 @@ final class DemoCoordinator{
         maintenance = true;
         maintenanceStartTick = tick;
         maintenanceSupplyStarted = false;
+        maintenanceExpansionPrepared = false;
+        maintenanceExpansionReported = false;
         rebuildDone = false;
         defenseStarted = false;
         supplyTargets.clear();
@@ -529,7 +561,7 @@ final class DemoCoordinator{
         Agent rebuilder = agents.get(0);
         begin(rebuilder, "demo-rebuild-" + taskSequence++, TaskType.REPAIR_REGION,
             new RegionTarget("defense_block"), ResourceCost.empty(),
-            new RebuildRegion(20, 18, 36, 30), Stage.REBUILD);
+            new RebuildRegion(20, 18, 40, 30), Stage.REBUILD);
         for(int i = 1; i < agents.size; i++){
             Agent miner = agents.get(i);
             int[] tile = mineTiles[miner.index];
@@ -553,6 +585,36 @@ final class DemoCoordinator{
                     agent.taskId = null;
                 }
                 cancelControllerWork(agent);
+            }
+        }
+        if(!maintenanceExpansionPrepared){
+            prepareMaintenanceExpansion();
+            maintenanceExpansionPrepared = true;
+        }
+        dispatchFortifications();
+        if(!fortifications.isEmpty() || buildsInFlight > 0){
+            if(tick - maintenanceStartTick < 900) return;
+            Log.warn("AGENT-DEMO EXPANSION DEADLINE tick=@ wave=@; supplying completed turrets",
+                tick, waveClears);
+            fortifications.clear();
+            buildsInFlight = 0;
+            for(Agent agent : agents){
+                if(agent.stage != Stage.FORTIFY) continue;
+                if(agent.taskId != null){
+                    board.abandon(agent.taskId, agent.id, "expansion_deadline", tick);
+                    agent.taskId = null;
+                }
+                cancelControllerWork(agent);
+            }
+        }
+        if(!maintenanceExpansionReported){
+            maintenanceExpansionReported = true;
+            if(expansionReady()){
+                Log.info("AGENT-DEMO EXPANSION COMPLETE wave=@ turrets=@ blocks=@",
+                    waveClears, activeTurrets.size(), expectedExpansions.size());
+            }else{
+                Log.warn("AGENT-DEMO EXPANSION INCOMPLETE wave=@ turrets=@",
+                    waveClears, activeTurrets.size());
             }
         }
         if(!maintenanceSupplyStarted){
@@ -595,6 +657,14 @@ final class DemoCoordinator{
         Log.warn("AGENT-DEMO REBOUND agent=@ replacement_unit=@", agent.index, replacement.id);
     }
 
+    private boolean expansionReady(){
+        for(BuildPlacement placement : expectedExpansions){
+            Building building = world.build(placement.x(), placement.y());
+            if(building == null || !building.block.name.equals(placement.block())) return false;
+        }
+        return true;
+    }
+
     private void idle(Agent agent){
         agent.stage = Stage.IDLE;
         agent.controller.clearSkill();
@@ -607,10 +677,13 @@ final class DemoCoordinator{
     }
 
     private void abandon(Agent agent, String reason, long tick){
+        if(agent.stage == Stage.FORTIFY && buildsInFlight > 0) buildsInFlight--;
+        if(agent.stage == Stage.SUPPLY && suppliesInFlight > 0) suppliesInFlight--;
         if(agent.taskId != null) board.abandon(agent.taskId, agent.id, reason, tick);
         agent.taskId = null;
         agent.stage = Stage.IDLE;
         agent.controller.stopNow();
+        if(!stopped) agent.controller.resumeNow();
     }
 
     private void updateBuildOrder(Agent agent){

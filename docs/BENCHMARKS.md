@@ -170,13 +170,15 @@ pause/resume/emergency-stop before exiting 0. Wall time was about 22 seconds
 including the incremental Gradle build and about 16 seconds in the server.
 
 `DEMO_SURVIVAL=1 make demo-server` is the no-port real-time survival acceptance.
-The 2026-07-20 run entered reserve mining at tick 1054, cleared waves at ticks
-3036/4969/6830, returned to maintenance/mining after each clear, and reached
-tick 8100 with **956/1100** core health. Stable slots lost in combat were
-rebound with explicit `AGENT-DEMO REBOUND` telemetry.
+The final 2026-07-20 run entered reserve mining at tick 1072; after wave 1 it
+built a nine-block layer and grew from four to six supplied Duos, then repeated
+that expansion after wave 2 for eight supplied Duos and 14 new walls total.
+Waves cleared at ticks 3074/4864/6659 and the run reached tick 8100 with
+**1091/1100** core health. Stable slots lost in combat were rebound with
+explicit `AGENT-DEMO REBOUND` telemetry.
 
 The human path is intentionally separate: `DEMO_JOIN=1 make demo-server` opens
 port 6567 only after an explicit request and waits for a stock v159.7 client.
-A stock client joined locally, resumed the policy, and visually observed the
-mining/building/supplying/chat behavior. The client-side `/agents stop` manual
-check remains pending; only that command is still outside the automated proof.
+A stock client joined locally, resumed the policy, visually observed the
+mining/building/supplying/chat behavior through all three waves, then issued
+`/agents stop`; the log showed all three active tasks abandoned immediately.

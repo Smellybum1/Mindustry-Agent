@@ -58,11 +58,17 @@ if [[ "${DEMO_SURVIVAL:-0}" == "1" ]]; then
     grep -F "AGENT-DEMO RESERVE MINING" "$LOG" >/dev/null
     grep -F "AGENT-DEMO MAINTENANCE COMPLETE" "$LOG" | grep -F "wave=1" >/dev/null
     grep -F "AGENT-DEMO MAINTENANCE COMPLETE" "$LOG" | grep -F "wave=2" >/dev/null
+    grep -F "AGENT-DEMO EXPANSION COMPLETE" "$LOG" | grep -F "wave=1 turrets=6" >/dev/null
+    grep -F "AGENT-DEMO EXPANSION COMPLETE" "$LOG" | grep -F "wave=2 turrets=8" >/dev/null
     grep -F "AGENT-DEMO WAVE CLEAR" "$LOG" | grep -F "wave=1" >/dev/null
     grep -F "AGENT-DEMO WAVE CLEAR" "$LOG" | grep -F "wave=2" >/dev/null
     grep -F "AGENT-DEMO WAVE CLEAR" "$LOG" | grep -F "wave=3" >/dev/null
     if grep -F "AGENT-DEMO SURVIVAL FAIL" "$LOG" >/dev/null; then
         echo "demo-server: expert did not survive" >&2
+        exit 1
+    fi
+    if grep -F "AGENT-DEMO EXPANSION INCOMPLETE" "$LOG" >/dev/null; then
+        echo "demo-server: defense expansion incomplete" >&2
         exit 1
     fi
     echo "demo-server: SURVIVAL OK"
