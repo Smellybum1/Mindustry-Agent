@@ -353,6 +353,31 @@ public class Pathfinder implements Runnable{
         }
     }
 
+    /**
+     * Synchronous, deterministic flowfield update for external fixed-step drivers (rl-server).
+     * Performs exactly one {@link #run()} loop iteration's work, but with an <b>unbounded</b>
+     * (wall-clock-free) update budget so every flow field fully converges before the next
+     * observation boundary. Runs on the caller's (simulation) thread; the background
+     * {@link #thread} must NOT be started in this mode.
+     *
+     * <p>No behaviour change for normal (threaded) play: the engine never calls this method,
+     * and the threaded path in {@link #run()} is untouched. See docs/UPSTREAM_PATCHES.md.
+     */
+    public void syncUpdate(){
+        if(net.client()) return;
+        if(state.isPlaying()){
+            queue.run();
+            for(Flowfield data : threadList){
+                if(data.dirty && data.frontier.size == 0){
+                    updateTargets(data);
+                    data.dirty = false;
+                }
+                //-1 => no time budget: run the frontier BFS to full convergence, deterministically
+                updateFrontier(data, -1);
+            }
+        }
+    }
+
     public Flowfield getField(Team team, int costType, int fieldType){
         if(cache[team.id][costType][fieldType] == null){
             Flowfield field = fieldTypes.get(fieldType).get();

@@ -20,6 +20,71 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
   Android/Arc/localRhino conditionals, or Java version checks.
 - **Introduced by**: repository scaffold (this branch).
 
+### 2. `core/src/mindustry/ai/Pathfinder.java` — synchronous deterministic flowfield update
+
+- **Reason**: enemy ground units (wave daggers) steer by the flow-field
+  `Pathfinder`, which the engine updates on a **free-running, wall-clock-paced
+  background thread** (`run()`, 8 ms budget + `Thread.sleep`). That thread is
+  non-deterministic, so `rl-server` keeps it **stopped** (reflection, unchanged).
+  With it stopped, nothing advances a flow field when tiles change, and there is
+  no public entry point to converge one on the simulation thread — the update
+  methods (`updateFrontier`, `updateTargets`, `queue`) are all `private`. A tiny,
+  isolated method exposes exactly that, so the stepper can converge the field once
+  per tick on the sim thread with **no wall-clock budget** (docs/ENGINE_NOTES.md
+  §5.5, §11.6). This was the single sanctioned upstream edit the brief reserved for
+  Risk 1/Risk 3.
+- **File / lines**: `core/src/mindustry/ai/Pathfinder.java:356-378` — one new
+  `public void syncUpdate()` (25 lines incl. javadoc), inserted immediately before
+  `getField(...)`. No existing line changed.
+- **Diff summary**: adds
+  ```java
+  public void syncUpdate(){
+      if(net.client()) return;
+      if(state.isPlaying()){
+          queue.run();
+          for(Flowfield data : threadList){
+              if(data.dirty && data.frontier.size == 0){
+                  updateTargets(data);
+                  data.dirty = false;
+              }
+              updateFrontier(data, -1);   //-1 => unbounded budget, full convergence
+          }
+      }
+  }
+  ```
+  It mirrors the body of `run()`'s loop **exactly**, substituting the `maxUpdate`
+  (8 ms) budget with `-1` (unbounded). `rl-server` calls it once per tick after
+  each `stepOnce()` (and once at reset). `ControlPathfinder` is **not** patched:
+  wave `GroundAI` consults only the flow-field `Pathfinder`
+  (`AIController.pathfind → pathfinder.getField(...).getNextTile(...)`);
+  `ControlPathfinder` serves only `CommandAI`/`LogicAI`, which our units do not use.
+- **Behaviour change for normal game mode**: **none**. The engine never calls
+  `syncUpdate()`; the threaded `run()` path is byte-for-byte unchanged. The method
+  is only reachable from `rl-server` with the thread stopped.
+- **Determinism audit of the synchronous path**:
+  - *Iteration order*: `threadList` is appended in registration order (one field —
+    the wave-team ground core field — in v0); `updateFrontier` is a plain BFS over
+    an `IntQueue`; `updateTargets` iterates `IntSeq` targets in order. No unordered
+    iteration, no floating-point reduction. Deterministic.
+  - *RNG*: the only `Rand` in the flow-field code is
+    `Pathfinder.EnemyCoreField.getPositions()` (`:555-556`), guarded by
+    `state.rules.randomWaveAI`. The scenario sets `randomWaveAI = false`, so the
+    branch — and its `hashCode()`/`state.tick`-seeded `Rand` (the ENGINE_NOTES §6
+    caveat) — is **never entered**. Belt-and-braces: `state.rules.waves = true`, so
+    even if it were entered the seed would be `state.wave` (deterministic), never
+    `hashCode()`. Neutralized by rules, not by patch.
+  - *Wall clock*: `syncUpdate()` reads no clock. The one remaining `Time.millis()`
+    gate is the `afterGameUpdate` refresh handler (`:190-193`), reached **only** when
+    `needsRefresh` is set by a tile change; the current deterministic trace (mining
+    agents + waves, no building) never changes a pathfinding-relevant tile, so it
+    never fires. Dynamic re-pathing determinism (agents building walls under fire,
+    M4) will require neutralizing that gate and is tracked there.
+- **Risk**: minimal — additive public method, no existing code touched, no normal-mode
+  path affected. Verified by `bash scripts/determinism.sh` (two fresh JVMs, identical
+  hashes across the moving-enemy window) and `scripts/smoke.sh` (daggers path to the
+  core deterministically).
+- **Introduced by**: bootstrap-defense-v0 scenario loader (this branch, M4 prep).
+
 ## M1 decision: pathfinder threads — reflection, not an upstream patch
 
 The brief sanctioned a minimal upstream edit to force the two free-running
@@ -29,7 +94,17 @@ scenario has no waves, no enemies, and no commanded units, so no flowfields are
 ever created and nothing consumes pathfinding. `rl-server` stops both threads
 immediately after world load by invoking their private `stop()` via reflection
 (`RlServer.stopPathfinders()`), so they never run during an episode. This keeps
-the checkout free of upstream modifications. When units/enemies arrive (M3+) and
+the checkout free of upstream modifications.
+
+**Update (bootstrap-defense-v0 loader):** revisited and resolved. Enemy wave
+daggers do consume the flow-field `Pathfinder`, so the sanctioned `syncUpdate()`
+patch (entry 2 above) was added — the cleaner choice than reflecting into four
+private members (`threadList`, `queue`, `updateFrontier`, `updateTargets`), and the
+exact approach ENGINE_NOTES §11.6 recommends. Both threads stay stopped;
+`syncUpdate()` drives the field synchronously on the sim thread. `ControlPathfinder`
+still needs no patch (unused by wave AI and by our straight-steering agents).
+
+When units/enemies arrive (M3+) and
 pathfinding is actually consumed, a synchronous `syncUpdate()` — reflection or a
 catalogued upstream patch — will be revisited then (see `docs/ENGINE_NOTES.md`
 §5.5, §11.6).
