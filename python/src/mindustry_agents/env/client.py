@@ -154,7 +154,7 @@ class EnvClient:
         info)`` where each list is per-agent-slot in agent-index order, and
         ``info`` carries ``state_hash``, ``tick``, ``previous_tick``,
         ``team_state``, ``timing``, ``action_masks``, ``game_events``,
-        ``task_events``.
+        ``task_events`` and cumulative ``coordination_metrics``.
         """
         if self.episode_id is None:
             raise EnvClientError("step() called before reset()")
@@ -179,6 +179,7 @@ class EnvClient:
             "action_masks": resp.action_masks,
             "game_events": resp.game_events,
             "task_events": resp.task_events,
+            "coordination_metrics": resp.coordination_metrics,
         }
         return (
             list(resp.observations),

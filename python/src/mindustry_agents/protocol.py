@@ -146,6 +146,7 @@ class StepResponse:
     outcome: str = "running"
     task_events: list[dict[str, Any]] = field(default_factory=list)
     task_board: list[dict[str, Any]] = field(default_factory=list)
+    coordination_metrics: dict[str, Any] = field(default_factory=dict)
     game_events: list[dict[str, Any]] = field(default_factory=list)
     state_hash: str = ""
     timing: dict[str, Any] = field(default_factory=lambda: asdict(Timing()))

@@ -346,6 +346,7 @@ public final class RlServer{
             //deterministic enemy flowfield: converge on the sim thread each tick with the
             //background Pathfinder thread stopped (upstream syncUpdate patch, docs/UPSTREAM_PATCHES.md).
             pathfinder.syncUpdate();
+            coordination.recordMetricsTick();
             coordination.tick((long)state.tick);
         }
         long t1 = System.nanoTime();
@@ -378,6 +379,7 @@ public final class RlServer{
         timing.put("observation_ms", (o1 - o0) / 1e6);
         timing.put("serialization_ms", 0.0);
         timing.put("io_ms", 0.0);
+        Jval taskEvents = coordination.drainEvents();
 
         Jval r = Jval.newObject();
         r.put("type", "step_response");
@@ -393,8 +395,9 @@ public final class RlServer{
         r.add("terminations", boolArray(agentCount, terminated));
         r.add("truncations", boolArray(agentCount, truncated));
         r.put("outcome", outcome);
-        r.add("task_events", coordination.drainEvents());
+        r.add("task_events", taskEvents);
         r.add("task_board", coordination.boardSnapshot());
+        r.add("coordination_metrics", coordination.metrics());
         r.add("game_events", stepGameEvents);
         r.put("state_hash", hash);
         r.add("timing", timing);

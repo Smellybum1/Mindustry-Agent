@@ -90,13 +90,22 @@ class TestFraming(unittest.TestCase):
                 "message_id": 0,
                 "act": "START_TASK",
                 "task_id": "T3:build:east_duo_v1",
+                "announcement": "[Agent 0] Starting: build schematic.",
             }
         ]
+        metrics = {"tasks_completed": 1, "idle_fraction": 0.25}
         response = p.decode(
-            p.encode(p.StepResponse(task_board=board, task_events=events))
+            p.encode(
+                p.StepResponse(
+                    task_board=board,
+                    task_events=events,
+                    coordination_metrics=metrics,
+                )
+            )
         )
         self.assertEqual(response.task_board, board)
         self.assertEqual(response.task_events, events)
+        self.assertEqual(response.coordination_metrics, metrics)
 
     def test_m4_observation_records_roundtrip_in_step(self):
         plan = p.BuildPlanObservation(

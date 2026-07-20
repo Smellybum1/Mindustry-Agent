@@ -172,6 +172,9 @@ only — the structured event is always logged. Rules:
   `duplicateWindowTicks` (default 300 ≈ 5 s) is suppressed, urgent or not.
 
 Communication is never rewarded; spam has a cost, not a benefit (brief §17.5).
+At the wire boundary, every `task_events[]` entry includes `announcement`: the
+renderer output when `announce=true`, otherwise the empty string. Thus consumers
+never infer significance from prose, and routine structured traffic stays silent.
 
 ## Announcements (brief §20.3)
 
@@ -190,6 +193,12 @@ specialized per task type with a generic fallback. Examples produced:
 Display names are prettified (`agent-copper` → `Copper`). Scenario-specific detail
 (e.g. "at 4.2 items/sec") is supplied by callers via reason codes and targets so
 the renderer stays purely structural.
+
+Each step also exposes cumulative episode `coordination_metrics`: prevented
+duplicate-work incidents, completed/abandoned tasks, agent ticks, idle agent
+ticks, idle fraction, and structured/announced message counts. Occupancy is
+sampled exactly once per externally advanced engine tick on the simulation
+thread; these metrics are telemetry only and never affect reward or state.
 
 ## Utility scaffold (brief §11.1)
 
@@ -222,9 +231,9 @@ commitments regardless of how the score is produced.
 3. The existing M3/M4 **skill executors** perform real Mindustry actions; the
    M5.2 adapter maps claimed task types to those skills and feeds progress,
    blockage, completion, abandonment, and lease heartbeats back into the board.
-4. **Telemetry / protocol** drains `board.events()` each step and serializes the
-   structured events; `AnnouncementRenderer` renders the announceable subset for
-   humans in demo mode.
+4. **Telemetry / protocol** drains `board.events()` each step, serializes every
+   structured event, renders the rate-limited subset with
+   `AnnouncementRenderer`, and publishes cumulative coordination metrics.
 
 Every board operation returns an `OpResult`/`ClaimOutcome`/`ReservationOutcome`
 rather than throwing, so invalid actions are a maskable signal (brief §15.4), not
@@ -241,8 +250,6 @@ a crash.
   filters by capability upstream.
 - **Observation / reward construction.** Events are the substrate; observation
   tensors and reward accounting are built elsewhere.
-- **Protocol serialization.** Events are engine-independent value types ready to
-  serialize; the wire format lives in `protocol`/`python`.
 
 ## Resolved spec ambiguities
 

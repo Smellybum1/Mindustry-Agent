@@ -69,6 +69,7 @@ class TestEnvClient(unittest.TestCase):
                 self.assertEqual(terms, [False, False])
                 self.assertEqual(truncs, [False, False])
                 self.assertIn("engine_ms", info["timing"])
+                self.assertEqual(info["coordination_metrics"], {})
 
                 h = client.health()
                 self.assertTrue(h.ok)

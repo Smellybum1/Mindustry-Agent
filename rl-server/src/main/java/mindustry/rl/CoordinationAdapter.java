@@ -1,6 +1,7 @@
 package mindustry.rl;
 
 import agentcore.*;
+import agentcore.announce.*;
 import agentcore.board.*;
 import agentcore.candidates.*;
 import agentcore.event.*;
@@ -23,12 +24,20 @@ public final class CoordinationAdapter{
     private final Scenario scenario;
     private final RlAgentRegistry registry;
     private final TaskBoard board = new TaskBoard();
+    private final AnnouncementRenderer announcementRenderer = new AnnouncementRenderer();
     private Assignment[] assignments = new Assignment[0];
     private String[] helperDeliveryTasks = new String[0];
     private int[] helperDeliveryCargo = new int[0];
     private int failureAgent = -1;
     private long failureTick = -1L;
     private boolean failureApplied;
+    private long agentTicks;
+    private long idleAgentTicks;
+    private int duplicateWorkIncidents;
+    private int tasksCompleted;
+    private int tasksAbandoned;
+    private int structuredMessages;
+    private int announcedMessages;
 
     public CoordinationAdapter(Scenario scenario, RlAgentRegistry registry){
         this.scenario = scenario;
@@ -46,6 +55,13 @@ public final class CoordinationAdapter{
         failureAgent = -1;
         failureTick = -1L;
         failureApplied = false;
+        agentTicks = 0L;
+        idleAgentTicks = 0L;
+        duplicateWorkIncidents = 0;
+        tasksCompleted = 0;
+        tasksAbandoned = 0;
+        structuredMessages = 0;
+        announcedMessages = 0;
     }
 
     /** Configure the deterministic M5.5 validation hook after an episode reset. */
@@ -118,6 +134,7 @@ public final class CoordinationAdapter{
                 || state.owner().index() != selection.agent.index){
                 results[selection.actionIndex] = result(selection.agent.index, false,
                     "claim_lost", selection.actionType, selection.candidate.task().taskId());
+                duplicateWorkIncidents++;
                 continue;
             }
             Skill skill = skillFor(selection.agent, selection.candidate.task());
@@ -133,6 +150,7 @@ public final class CoordinationAdapter{
                 board.release(state.taskId(), AgentId.of(selection.agent.index), tick);
                 results[selection.actionIndex] = result(selection.agent.index, false,
                     reservationFailure, selection.actionType, state.taskId());
+                duplicateWorkIncidents++;
                 continue;
             }
             OpResult started = board.start(state.taskId(), AgentId.of(selection.agent.index), tick);
@@ -197,6 +215,14 @@ public final class CoordinationAdapter{
                     clearAssignment(i, registry.get(i));
                 }
             }
+        }
+    }
+
+    /** Record exactly one engine tick of assignment occupancy for episode metrics. */
+    public void recordMetricsTick(){
+        agentTicks += assignments.length;
+        for(int i = 0; i < assignments.length; i++){
+            if(assignments[i] == null) idleAgentTicks++;
         }
     }
 
@@ -290,9 +316,28 @@ public final class CoordinationAdapter{
         return out;
     }
 
+    /** Cumulative deterministic episode metrics for StepResponse infos. */
+    public Jval metrics(){
+        Jval out = Jval.newObject();
+        out.put("duplicate_work_incidents", duplicateWorkIncidents);
+        out.put("tasks_completed", tasksCompleted);
+        out.put("tasks_abandoned", tasksAbandoned);
+        out.put("agent_ticks", agentTicks);
+        out.put("idle_agent_ticks", idleAgentTicks);
+        out.put("idle_fraction", agentTicks == 0L ? 0.0
+            : idleAgentTicks / (double)agentTicks);
+        out.put("structured_messages", structuredMessages);
+        out.put("announced_messages", announcedMessages);
+        return out;
+    }
+
     public Jval drainEvents(){
         Jval out = Jval.newArray();
-        for(CoordinationEvent event : board.events().drain()) out.add(event(event));
+        for(CoordinationEvent event : board.events().drain()){
+            structuredMessages++;
+            if(event.announce()) announcedMessages++;
+            out.add(event(event));
+        }
         return out;
     }
 
@@ -368,7 +413,10 @@ public final class CoordinationAdapter{
                 if(assignment == null) yield result(agent.index, false, "no_current_task", type);
                 String reason = action.getString("reason", "policy_abandon");
                 OpResult op = board.abandon(assignment.taskId, id, reason, tick);
-                if(op.ok()) clearAssignment(agent.index, agent);
+                if(op.ok()){
+                    tasksAbandoned++;
+                    clearAssignment(agent.index, agent);
+                }
                 yield result(agent.index, op.ok(), op.reason(), type, assignment.taskId);
             }
             case "REQUEST_HELP" -> {
@@ -577,7 +625,9 @@ public final class CoordinationAdapter{
         if(assignment.spec.type() == TaskType.WAIT){
             board.release(assignment.taskId, AgentId.of(agent.index), tick);
         }else{
-            board.complete(assignment.taskId, AgentId.of(agent.index), tick);
+            OpResult completed = board.complete(assignment.taskId,
+                AgentId.of(agent.index), tick);
+            if(completed.ok()) tasksCompleted++;
         }
         clearAssignment(agent.index, agent);
     }
@@ -588,7 +638,9 @@ public final class CoordinationAdapter{
         String reason,
         long tick
     ){
-        board.abandon(assignment.taskId, AgentId.of(agent.index), reason, tick);
+        OpResult abandoned = board.abandon(assignment.taskId,
+            AgentId.of(agent.index), reason, tick);
+        if(abandoned.ok()) tasksAbandoned++;
         clearAssignment(agent.index, agent);
     }
 
@@ -735,7 +787,7 @@ public final class CoordinationAdapter{
         return out;
     }
 
-    private static Jval event(CoordinationEvent event){
+    private Jval event(CoordinationEvent event){
         Jval out = Jval.newObject();
         out.put("message_id", event.messageId());
         out.put("episode_id", event.episodeId());
@@ -768,6 +820,7 @@ public final class CoordinationAdapter{
         out.put("to_status", event.toStatus() == null ? "" : event.toStatus().name());
         out.put("related_agent_id", event.relatedAgent() == null ? -1 : event.relatedAgent().index());
         out.put("announce", event.announce());
+        out.put("announcement", event.announce() ? announcementRenderer.render(event) : "");
         return out;
     }
 

@@ -180,6 +180,7 @@ the winner starts a skill, so input bundle order cannot choose the owner.
 | `truncations` | [bool] | per agent |
 | `task_events` | [obj] | coordination/task-board events this step |
 | `task_board` | [obj] | M5.2 bounded board snapshot (maximum 32, insertion order) |
+| `coordination_metrics` | obj | cumulative episode task/message/idle counters (M5.6) |
 | `game_events` | [obj] | step-scoped events; M4.6 emits `unit_damage` with tick, target unit/team/health/shield, nominal damage, source unit, and source agent (`-1` when not an agent) |
 | `state_hash` | str | stable hash after advancing |
 | `timing` | obj | `{engine_ms, observation_ms, serialization_ms, io_ms}` |
@@ -229,7 +230,14 @@ release, or expiry. `task_events[]` is the authoritative structured
 `CoordinationEvent` schema: monotonic `message_id`, deterministic numeric
 `episode_id`, tick/agents/act/task identity, target/priority/estimate/cost/
 capabilities/dependencies, lease/progress/reason/status transition, related
-agent, and `announce`. Human text is not authoritative (ADR-0005).
+agent, and `announce`. M5.6 adds `announcement`, which is non-empty only when
+`announce=true` and is rendered deterministically from those structured fields.
+Human text is not authoritative (ADR-0005).
+
+`coordination_metrics` contains `{duplicate_work_incidents, tasks_completed,
+tasks_abandoned, agent_ticks, idle_agent_ticks, idle_fraction,
+structured_messages, announced_messages}`. It is cumulative from reset and is
+copied into every agent's Python `info`; it never contributes to reward.
 
 An accepted `deliver copper` helper contract is fulfilled only after that
 helper issues a legal `DELIVER_CORE` skill carrying copper and the observed
