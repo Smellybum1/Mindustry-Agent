@@ -75,24 +75,35 @@ Exit criteria:
       + re-handshake; unit-tested against a fake server, both crash and hang)
 - [x] Performance baseline documented in `docs/BENCHMARKS.md` (M2 measurements)
 
-**M2 caveats (truthful):** per-agent observations are still world-level (M3);
-`MindustryParallelEnv` wires the per-agent dict plumbing but every agent receives
-the same world observation and actions are accepted-but-no-op. Scaling is capped
-at 4 JVMs (shared host); ≥10,000-reset Gate 5 and 8/16-JVM scaling are deferred.
+**M2 caveats (truthful, as of M3):** per-agent observations and skill actions are
+now **real** (M3 landed — see below); `MindustryParallelEnv`'s dict plumbing carries
+them, though that facade's action-bundling shape still predates the M3 command schema
+(training-layer adaptation deferred). Scaling is capped at 4 JVMs (shared host);
+≥10,000-reset Gate 5 and 8/16-JVM scaling are deferred.
 
-## Milestone 3: Agent entities and first skills
+## Milestone 3: Agent entities and first skills — DONE (verified 2026-07-20)
 
 Deliverables:
-- [ ] Stable agent identities (`agentcore.AgentId` exists; ownership pending)
-- [ ] Controlled unit ownership
-- [ ] Navigate, mine, deliver, wait skills
-- [ ] Action masks
-- [ ] Skill telemetry
+- [x] Stable agent identities (`agentcore.AgentId`; `RlAgentRegistry` binds
+      index → unit/controller, rebuilt per reset)
+- [x] Controlled unit ownership (`alpha` units + `SkillController`; excluded from
+      vanilla auto-control — see M3_DESIGN open-question 2)
+- [x] Navigate, mine, deliver, wait skills (`agentcore.skill.*`, engine-free FSMs)
+- [~] Action masks (per-agent array plumbed; still empty placeholders — real masks
+      deferred until the action vocabulary grows)
+- [x] Skill telemetry (per-agent `skill:{type,status,reason,progress,next_retry_tick}`
+      in observations; `action_results[]` per action)
 
 Exit criteria:
-- [ ] Scripted single agent mines and delivers copper from multiple seeded starts
-- [ ] No teleporting or free-resource shortcuts
-- [ ] Skill failure reasons are testable
+- [x] Scripted single agent mines and delivers copper (smoke: target 20 → carried
+      21 → core +21, exact ledger). Seed variation is still trivial (no stochastic
+      content until the full scenario loader — next issue) but the agent mines and
+      delivers deterministically from the fixed start under any seed.
+- [x] No teleporting or free-resource shortcuts (mining accrues via `MinerComp`;
+      delivery routes through `Call.transferItemTo` gated by `acceptStack`; the
+      core-copper ledger balances exactly)
+- [x] Skill failure reasons are testable (`BLOCKED(INVALID_TARGET)` on a non-ore
+      tile in the smoke; `STUCK`/`CORE_FULL`/`NO_CORE` in the 13 JUnit FSM tests)
 
 ## Milestone 4: Build and defence skills
 

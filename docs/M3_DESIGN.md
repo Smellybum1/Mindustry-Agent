@@ -1,8 +1,17 @@
 # M3 Design — Agent Entities and First Skills
 
-Status: approved design, not yet implemented. Author: Fable bootstrap pass, 2026-07-20.
-Prereqs: M1 verified (fixed-step rl-server), M2 in progress (process pool/facade).
+Status: **IMPLEMENTED and verified 2026-07-20** (all four open questions resolved
+in place below). Author: Fable bootstrap pass, 2026-07-20.
+Prereqs: M1 verified (fixed-step rl-server), M2 verified (process pool/facade).
 Related: docs/ENGINE_NOTES.md (engine facts), docs/COORDINATION.md (board), ADR-0006.
+
+Implementation refinement of D3: the skill FSMs (`agentcore.skill.{NavigateTo,
+MineResource,DeliverToCore,Wait}`) are kept **engine-free**, steering through a thin
+`agentcore.skill.AgentBody` port (primitives + world coords) rather than importing
+mindustry directly. Only the body wrapper — `mindustry.rl.SkillController` (extends
+`AIController`, implements `AgentBody`) — touches the engine. This keeps the FSMs
+unit-testable without content init (13 JUnit tests) while still letting the
+agent-plugin demo reuse identical skills via its own body impl.
 
 ## Goal
 
@@ -103,9 +112,60 @@ patch, Erekir content, multi-world-per-JVM.
 
 ## Open questions for the implementer (resolve against source, record here)
 
-1. Exact core-unit spawn API and how respawn/despawn interacts with
-   `Logic.reset()` (ENGINE_NOTES §reset).
-2. Whether agent units need a `flag`/tag to be excluded from any vanilla
-   auto-control (rally, formations) — verify none applies headlessly.
-3. Legal unit->core transfer call that works without net (candidates above).
-4. Mining range/speed constants for acceptance-test arithmetic (cite source).
+**All four resolved during M3 implementation (2026-07-20). Answers below, cited
+against this checkout (v159.7).**
+
+1. **Exact core-unit spawn API and reset interaction. RESOLVED.**
+   Spawn via `UnitTypes.alpha.spawn(Team, worldX, worldY)`
+   (`core/src/mindustry/type/UnitType.java:611` → `:573`, which does
+   `create(team)` → set pos → `unit.add()`); then replace the controller with
+   `unit.controller(new SkillController(i))`
+   (`UnitComp.controller(UnitController)` at `core/src/mindustry/entities/comp/UnitComp.java:455`).
+   `Units.notifyUnitSpawn(unit)` mirrors the engine's own spawn idiom
+   (`Logic.java:573`). No despawn handling is needed: `Logic.reset()` →
+   `Groups.clear()` (`Logic.java:300`) removes **all** units, so the registry is
+   rebuilt from scratch each episode after `logic.play()`. Agent units are **not**
+   `spawnedByCore`, so the core-unit auto-removal at `UnitComp.java:848-849` never
+   fires. Implemented in `RlAgentRegistry.rebuild()`; verified leak-free and
+   hash-stable over 1000 stress resets.
+
+2. **Flag/tag to exclude from vanilla auto-control. RESOLVED: none needed.**
+   The three per-team AI paths in `Logic.update()` — `buildAi` (`:555`), `rtsAi`
+   (`:560`), and `prebuildAi` core-unit spawn (`:566-577`) — are all gated on
+   `Rules` flags that default `false` and stay `false` in this scenario
+   (`core/src/mindustry/game/Rules.java:357,360,365`). `Team.sharded` is
+   `state.rules.defaultTeam`, so `Team.isAI()` is `false`
+   (`core/src/mindustry/game/Team.java:112-114`) → no wave/flowfield control.
+   `AIController.isValidController()` defaults `true`
+   (`core/src/mindustry/entities/units/UnitController.java:14`), so the engine
+   never resets our controller (`UnitComp.java:844`). Therefore no flag/tag is
+   required headlessly under this ruleset.
+
+3. **Legal unit->core transfer call. RESOLVED:** `Call.transferItemTo(unit, item,
+   amount, x, y, core)` (`core/src/mindustry/input/InputHandler.java:247`) — the
+   exact path `MinerComp` uses (`MinerComp.java:81,106`). It removes `amount` from
+   `unit.stack` (`:250`) and calls `core.handleStack(item, amount, unit)` (`:256`),
+   which adds to `core.items` clamped to capacity
+   (`CoreBlock.java:738-741`, `BuildingComp.java:801-803`). Gate the amount with
+   `core.acceptStack(item, unit.stack.amount, unit)` (`BuildingComp.java:779-784`,
+   returns `min(headroom, requested)`) so no free items and no overflow. Net-safe
+   headlessly (`net.active()==false`, ENGINE_NOTES §8.3). Implemented in
+   `SkillController.transferCargoToCore()`.
+
+4. **Mining range/speed constants. RESOLVED.**
+   - `mineRange = 70f` world units (`UnitType.java:94` default; `alpha` does not
+     override) = 8.75 tiles.
+   - `mineTransferRange = 220f` world units (`core/src/mindustry/Vars.java:105`) =
+     27.5 tiles (the copper patch sits ~8 tiles from the core, so a miner is always
+     within transfer range — capacity-triggered auto-dump is avoided by keeping the
+     mine target below `itemCapacity`).
+   - `alpha`: `mineSpeed = 6.5`, `mineTier = 1`, `itemCapacity = 30`
+     (`core/src/mindustry/content/UnitTypes.java` alpha block).
+   - `mineHardnessScaling = true` (`UnitType.java:390` default) → per-item threshold
+     `50 + hardness*15`; copper `hardness = 1` (`Items.java:17`) → **65**. Accrual
+     `mineTimer += 1.0*6.5*1.0` per tick → **1 copper / 10 ticks**. The
+     mine→inventory transfer is deferred by `Fx.itemTransfer.lifetime = 12` ticks
+     (`InputHandler.createItemTransfer` → `transferItemToUnit`, `Fx.java:138`), which
+     is why `MineResource` drains to cargo-stability before succeeding. Verified in
+     the smoke: target 20 → carried 21 (one deferred item lands after the observed
+     cargo crossed the target), delivered exactly 21, core delta exactly 21.

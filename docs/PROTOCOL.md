@@ -95,7 +95,20 @@ Fail fast on incompatible **major** versions.
 | `episode_id` | str | must match the active episode |
 | `expected_tick` | int | server's current tick as the client believes it; stale ⇒ reject |
 | `ticks_to_advance` | int | exact number of engine updates to apply |
-| `agent_actions` | [obj] | one high-level action per agent, applied atomically |
+| `agent_actions` | [obj] | one high-level action per agent, applied atomically (see below) |
+
+**`agent_actions[]` entry (M3, additive — docs/M3_DESIGN.md D5):**
+
+```json
+{"agent_id": 0, "command": {"type": "MINE", "tile_x": 32, "tile_y": 32, "amount": 20}}
+```
+
+`command.type` is one of `NAVIGATE` / `MINE` / `DELIVER_CORE` / `WAIT` / `CONTINUE`.
+An absent `command` (or `CONTINUE`) keeps the agent's current skill running.
+Params by type: `NAVIGATE {x, y, tolerance?}` (world coords), `MINE {tile_x, tile_y,
+amount?}` (tile coords), `DELIVER_CORE {}`, `WAIT {ticks?}`. Actions are applied on
+the sim thread **before** advancing; each is validated and echoed in
+`action_results[]` — an invalid action is rejected there, never crashes the step.
 
 `StepResponse` (`type = "step_response"`)
 
@@ -105,8 +118,9 @@ Fail fast on incompatible **major** versions.
 | `episode_id` | str | |
 | `previous_tick` | int | tick before advancing |
 | `tick` | int | tick after advancing (`previous_tick + ticks_to_advance`) |
-| `observations` | [obj] | one per agent |
+| `observations` | [obj] | one per agent (see per-agent shape below) |
 | `action_masks` | [obj] | one per agent |
+| `action_results` | [obj] | M3 additive: one per submitted action, `{agent_id, accepted, reason, command_type}` |
 | `team_state` | obj | shared team-level summary |
 | `reward_breakdowns` | [obj] | per-agent, per-component; never only a sum (brief §17.6) |
 | `terminations` | [bool] | per agent |
@@ -115,6 +129,26 @@ Fail fast on incompatible **major** versions.
 | `game_events` | [obj] | engine events (waves, deaths, builds) |
 | `state_hash` | str | stable hash after advancing |
 | `timing` | obj | `{engine_ms, observation_ms, serialization_ms, io_ms}` |
+
+**Per-agent observation shape (M3 — docs/M3_DESIGN.md D6).** Each entry of
+`observations[]` / `initial_observations[]` is agent-scoped:
+
+```json
+{
+  "agent_id": 0,
+  "unit":  {"x": 216.0, "y": 192.0, "vx": 0.0, "vy": 0.0, "health": 150.0,
+            "item": "copper", "item_amount": 21, "mining": false, "flag": 0.0, "dead": false},
+  "skill": {"type": "MINE", "status": "SUCCEEDED", "reason": "TARGET_REACHED",
+            "progress": 1.0, "next_retry_tick": -1},
+  "team":  {"tick": 860, "wave": 1, "copper": 100, "lead": 0, "unit_count": 2,
+            "building_count": 1, "core_health": 1100.0, "done": false}
+}
+```
+
+`skill.status` is one of `READY`/`RUNNING`/`SUCCEEDED`/`BLOCKED`/`FAILED`/`CANCELLED`;
+`skill.reason` is a machine-readable code (e.g. `ARRIVED`, `INVALID_TARGET`, `STUCK`,
+`DELIVERED`). Raw floats are reported here; the state hash quantizes positions/velocity
+to 1e-3 (docs/M3_DESIGN.md D6/D7).
 
 ### 2.4 Health and control
 

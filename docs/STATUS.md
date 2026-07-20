@@ -121,11 +121,46 @@ All M2 exit criteria met on this machine; no Java changes were needed.
   (`Xmx + 300 MiB` native/metaspace allowance); within-cap growth is reported
   as informational. A genuine native leak still fails the ceiling.
 
+## Milestone 3 — agent entities + first skills (DONE, verified 2026-07-20)
+
+All M3 exit criteria met on this machine; **zero upstream engine edits**.
+
+- **`agentcore.skill`** (agent-core): `Skill` contract returning `SkillResult`
+  (status + machine-readable `SkillReason` + progress + next-retry), the FSMs
+  `NavigateTo` / `MineResource` / `DeliverToCore` / `Wait`, and a thin engine-free
+  `AgentBody` port. The FSMs import no mindustry — they are unit-tested against a
+  fake body (**13 new JUnit tests; 77 total**), no content init needed.
+- **`rl-server`**: `RlAgentRegistry` spawns `agent_count` `alpha` units per reset
+  at deterministic index-ordered offsets and installs `SkillController` (extends
+  `AIController`, implements `AgentBody`) which runs the active skill on the sim
+  thread. Straight-line steering only (pathfinder threads stay stopped; no
+  `CommandAI`). `ActionDecoder` turns `NAVIGATE/MINE/DELIVER_CORE/WAIT/CONTINUE`
+  into skills with validated `action_results` (invalid ⇒ `accepted=false` + reason,
+  never a crash). Per-agent observations `{agent_id, unit, skill, team}` (D6); the
+  state hash gains unit cargo/velocity + registry + skill state (D7).
+- **Protocol** (additive, still v1): `StepResponse.action_results`, `agent_actions`
+  command objects — `docs/PROTOCOL.md`, `protocol.py` (+3 tests), Java side.
+- **Honesty check**: the smoke's scripted phase mines copper with `agent_0`
+  (target 20 → carried **21**, the extra from the 12-tick deferred mine transfer)
+  and delivers it; the core copper delta equals **exactly** the delivered amount
+  (100 → 121), read from real engine observations, with the full ledger printed.
+  `agent_1` mining a non-ore tile reports `BLOCKED(INVALID_TARGET)`.
+- **Determinism**: the determinism harness replays the same scripted trace — two
+  fresh JVMs produce identical hashes at all **35** boundaries (reset + 10 plain +
+  24 scripted), so the skill state machines are now covered. Reset purity holds
+  (agent units respawned identically). Stress-reset (1000 in-JVM resets) stays
+  green with the registry rebuild: 0 hash mismatches, no leak.
+- **Verified**: `./gradlew agent-core:test` (77) + `rl-server:dist` green;
+  `pytest python/tests -q` → 29 pass; `bash scripts/smoke.sh` → exit 0 (600-tick
+  advance + balanced ledger); `bash scripts/determinism.sh` → exit 0;
+  `bash scripts/stress-reset.sh` → exit 0.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
-  `CoordinationAct` (13), `SkillStatus` (6), `AgentId` record — plus a JUnit
-  test. No task board, skills, observations, or reward logic yet.
+  `CoordinationAct` (13), `SkillStatus` (6), `AgentId` record, the coordination
+  board (M2), and now the **`agentcore.skill`** FSM layer (M3, above). No task-board
+  wiring to skills (M5) or reward logic (M7) yet.
 - **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
   loadable Mindustry plugin. See `agent-plugin/README.md`.
 - **Python subpackages** `process`, `env`, and `tools` now carry real M1/M2 code
@@ -137,10 +172,10 @@ All M2 exit criteria met on this machine; no Java changes were needed.
 
 ## What is unverified
 
-- **`rl-server` Java build/run is now verified** (`./gradlew rl-server:classes`
-  and `:dist` green; jar boots headlessly and passes smoke + determinism).
-  `agent-core` and `agent-plugin` builds are still unverified by this track.
-- **Java unit tests** (`agent-core` `AgentCoreTypesTest`): written, not run.
+- **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
+  jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 77 tests
+  green, including the 13 M3 skill tests). `agent-plugin` build still unverified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
 

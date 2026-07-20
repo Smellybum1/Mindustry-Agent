@@ -4,17 +4,20 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M2 complete, all verified 2026-07-20): the
+- **What currently works** (M0–M3 complete, all verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
-  board (64 JUnit tests), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 26 pytest
+  board **and the M3 `agentcore.skill` FSM layer** (77 JUnit tests), agent
+  entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
+  `ActionDecoder`; agents mine copper and deliver it to the core with an exact
+  balance ledger), the Python env/process layer (supervisor pool with
+  crash-replacement, PettingZoo-shaped facade, vector collector; 29 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and the full
   `bootstrap-defense-v0` scenario spec (`docs/SCENARIOS.md`, `scenario.json`).
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
-  per-agent observations/actions (plumbing exists; payloads are world-level
-  no-ops until M3 — see `docs/M3_DESIGN.md`); the scenario *loader* still builds
-  the minimal M1 world, not the full bootstrap-defense-v0 spec (no waves yet);
+  the scenario *loader* still builds the minimal M1 world, not the full
+  bootstrap-defense-v0 spec (no waves yet — so the seed lever is still trivial);
+  `action_masks` are empty placeholders; rewards are empty until M7;
   training/evaluation Python subpackages. See `docs/STATUS.md`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
@@ -35,8 +38,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make test` | Runs the Python suite (26 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (64 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
-| `make smoke` | Builds `rl-server.jar` if missing, launches one JVM, handshake + `reset(seed=12345)` + 10×60 ticks; prints transcript ending `SMOKE OK: tick advanced exactly 600`, exit 0. Verified 2026-07-20. |
-| `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary; in-JVM reset purity check; ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
+| `make smoke` | Builds `rl-server.jar` if missing, launches one JVM, handshake + `reset(seed=12345)` + 10×60 plain ticks, **then the M3 scripted skill phase** (`agent_0` mines copper → delivers; `agent_1` mines a non-ore tile → `BLOCKED(INVALID_TARGET)`); asserts the core-copper ledger balances exactly (100 → 121, delta == delivered); ends `SMOKE OK: 600-tick advance + mine/deliver ledger balanced`, exit 0. Verified 2026-07-20. |
+| `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary (reset + 10 plain chunks + **24 scripted skill steps** = 35 hashes), so the skill state machines are covered; in-JVM reset purity check (agent units respawned identically); ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
 | `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling (within-cap growth is heap ergonomics, informational only — trend thresholds proved flaky); ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20 (twice, incl. after the methodology fix). |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
@@ -79,8 +82,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   fixed-delta engine updates → observation + SHA-256 canonical hash.
 - **Observation path**: built on the sim thread at the step boundary (M1 minimal:
   tick/wave/core items/counts/health; per-agent observations are M3).
-- **Task/skill path**: `agentcore` contract board implemented (M5-ready);
-  skill executors + engine adapter TODO (M3–M5).
+- **Task/skill path**: `agentcore` contract board implemented (M5-ready); the M3
+  skill layer is live — `agentcore.skill.{Skill,SkillResult,SkillReason,AgentBody}`
+  + FSMs `NavigateTo/MineResource/DeliverToCore/Wait` (engine-free, unit-tested),
+  wrapped engine-side by `mindustry.rl.SkillController` (extends `AIController`,
+  implements `AgentBody`) and bound per episode by `mindustry.rl.RlAgentRegistry`;
+  `mindustry.rl.ActionDecoder` maps protocol commands → skills. Task-board → skill
+  wiring is M5.
 
 ## Current performance
 
@@ -104,11 +112,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 26 Python tests (`test_import.py`, `test_protocol.py`,
-  `test_supervisor.py`, `test_env.py`; fake-server subprocess, no JVM, fast) and
-  64 Java JUnit tests (`agent-core`, via `make test-java`). Real-JVM coverage is
-  the shell scripts (smoke/determinism/stress-reset/benchmark) — all verified
-  green 2026-07-20 by a second party (orchestrator re-ran them independently).
+- **Passing**: 29 Python tests (`test_import.py`, `test_protocol.py` incl. the M3
+  `action_results`/`agent_actions` roundtrips, `test_supervisor.py`, `test_env.py`;
+  fake-server subprocess, no JVM, fast) and 77 Java JUnit tests (`agent-core`, incl.
+  the 13 M3 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
+  the shell scripts (smoke/determinism/stress-reset/benchmark) — smoke now includes
+  the mine/deliver ledger and determinism the scripted skill trace; all verified
+  green 2026-07-20.
 - **Skipped**: none.
 - **Flaky**: the stress-reset *leak* check was flaky under the original
   growth-trend methodology (passed for the author, failed on re-verification);
@@ -135,40 +145,43 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-1. **M3: agent entities + first skills (mine/deliver).**
-   - Objective: implement `docs/M3_DESIGN.md` — `RlAgentRegistry`,
-     `SkillController` (custom `AIController`), skills NavigateTo / MineResource
-     / DeliverToCore / Wait in `agentcore.skill`, per-agent observations and the
-     additive action schema (D5/D6), hash extension (D7).
-   - Why: first real agent behaviour in the exact engine; unblocks M4–M6.
-   - Likely files: `agent-core/src/**/skill/`, `rl-server/src/**` (registry,
-     controller, action decode, obs build), `python/.../tools/smoke.py`,
-     `docs/PROTOCOL.md` (additive fields).
-   - Acceptance (ROADMAP M3): scripted agent mines copper and delivers it —
-     core copper increases by exactly the mined amount; skill failure reasons
-     visible in responses; determinism holds with a scripted action trace.
-   - Excludes: building/repair/defend (M4), task-board wiring (M5), rewards.
-2. **Full bootstrap-defense-v0 scenario loader.**
+*(M3 — agent entities + first skills — landed 2026-07-20; see the M3 section of
+`docs/STATUS.md` and the resolved open questions in `docs/M3_DESIGN.md`.)*
+
+1. **Full bootstrap-defense-v0 scenario loader.**
    - Objective: extend the in-code generator to the spec in
      `scenarios/bootstrap-defense-v0/scenario.json` (patches, lead, east lane,
      spawn point, deterministic 3-wave schedule).
    - Acceptance: waves spawn at exact ticks; hashes reproduce across processes;
      losing (build nothing) and winning (per SCENARIOS.md arithmetic) both
-     reachable; seed-sensitivity finally demonstrable.
-3. **Golden replay files + `tests/golden/`.**
+     reachable; seed-sensitivity finally demonstrable. Now unblocked: with M3's
+     skill layer, "winning" becomes drivable by scripted skills, and the seed
+     lever finally has stochastic content (waves) to influence.
+2. **Golden replay files + `tests/golden/`.**
    - Objective: check in seed + action trace + expected hashes; wire
      `make determinism` to also verify against the stored trace (≥10k ticks,
-     Gate 1).
+     Gate 1). The M3 scripted trace (`tools/skill_trace.py`) is a natural
+     starting trace to freeze.
    - Acceptance: byte-identical hashes vs the checked-in trace; CI-runnable.
-4. **agent-plugin demo-server skeleton (M6 prep).**
+3. **agent-plugin demo-server skeleton (M6 prep).**
    - Objective: plugin loads in the ordinary dedicated server, spawns one
-     server-controlled unit driven by the same `agentcore.skill` code, announces
-     via chat using `agentcore.announce`.
+     server-controlled unit driven by the same `agentcore.skill` code (its own
+     `AgentBody` impl over the live server unit), announces via chat using
+     `agentcore.announce`.
    - Acceptance: human can join locally (`make demo-server`) and watch it mine.
-5. **Collector scaling fix (only if training start nears).**
+4. **Collector scaling fix (only if training start nears).**
    - Objective: raise 4-JVM efficiency above ~80% (larger tick chunks per
      request and/or process-based collector).
    - Acceptance: updated `docs/BENCHMARKS.md` scaling table.
+5. **M5: task-board → skill wiring (candidate generation + selection).**
+   - Objective: connect the `agentcore` board (tasks/claims/reservations) to the
+     new skill layer — generate candidate tasks from scenario objectives, add the
+     `SELECT_CANDIDATE_TASK` action (D5 forward-ref) that decomposes a claimed task
+     into the M3 skills, and surface the task-board snapshot in observations (D6).
+   - Why: turns single scripted skills into coordinated multi-agent behaviour; the
+     skill executors and per-agent obs from M3 are the substrate.
+   - Acceptance: two agents claim disjoint copper patches and deliver without
+     conflict; board events appear in `task_events[]`; determinism holds.
 
 ## Decisions
 
@@ -180,4 +193,4 @@ See `docs/decisions/ADR-0001..0010` (do not relitigate).
   JSON; the schema lives in `docs/PROTOCOL.md` and `protocol.py`. Protobuf +
   generated bindings are deferred to Stage D. This avoids dead scaffolding.
 - `tests/{determinism,integration,golden}/` from the brief tree are not created
-  yet; golden trace files are next-issue 3.
+  yet; golden trace files are next-issue 2.
