@@ -1,0 +1,808 @@
+"""M8.4 masked PPO for one selector seat with exact run/checkpoint manifests."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import platform
+import random
+import subprocess
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any
+
+import torch
+import torch.nn.functional as functional
+
+from mindustry_agents import ENGINE_COMMIT, ENGINE_TAG, PROTOCOL_VERSION
+from mindustry_agents.policies import GreedyUtilityPolicy
+from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess, repo_root
+from mindustry_agents.training.model import MODEL_SCHEMA, SelectorActorCritic, feature_tensors
+from mindustry_agents.training.reward import REWARD_SCHEMA, SelectorReward
+from mindustry_agents.training.selector import (
+    FEATURE_SCHEMA,
+    SelectorFeatures,
+    SelectorHistory,
+    build_selector_features,
+    selector_action,
+)
+
+ARC_HASH = "208a754044"
+LEARNED_SEAT = 0
+SCRIPTED_POLICY = "adaptive-v1"
+LIFECYCLE_POLICY = "adaptive-lifecycle-v1"
+
+
+@dataclass
+class Transition:
+    candidates: torch.Tensor
+    scalars: torch.Tensor
+    candidate_present: torch.Tensor
+    action_mask: torch.Tensor
+    action: int
+    old_log_prob: float
+    old_value: float
+    reward: float
+    advanced_ticks: int
+    done: bool
+    policy_loss_mask: bool
+
+
+@dataclass
+class EpisodeRollout:
+    seed: int
+    outcome: str
+    tick: int
+    core_health: float
+    transitions: list[Transition]
+    reward_components: dict[str, float]
+    trace: list[dict[str, Any]]
+    coordination_metrics: dict[str, Any]
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _json_digest(value: Any) -> str:
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def _load_json(path: Path) -> dict[str, Any]:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _seed_set(root: Path, relative: str, required_split: str) -> dict[str, Any]:
+    document = _load_json(root / relative)
+    split = str(document.get("split", ""))
+    if split == "held-out" or required_split == "held-out":
+        raise ValueError("held-out execution is forbidden in M8.4")
+    if split != required_split:
+        raise ValueError(f"seed set {relative} is {split}, expected {required_split}")
+    return document
+
+
+def _configure_torch(config: dict[str, Any]) -> None:
+    torch.use_deterministic_algorithms(True)
+    try:
+        torch.set_num_threads(int(config.get("torch_threads", 1)))
+        torch.set_num_interop_threads(1)
+    except RuntimeError:
+        pass
+
+
+def _model_outputs(
+    model: SelectorActorCritic, features: SelectorFeatures
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, tuple[torch.Tensor, ...]]:
+    tensors = feature_tensors(features)
+    raw, masked, value = model(*tensors)
+    return raw[0], masked[0], value[0], tuple(item[0].cpu() for item in tensors)
+
+
+def _select_index(
+    masked_logits: torch.Tensor,
+    features: SelectorFeatures,
+    *,
+    evaluation: bool,
+    generator: torch.Generator,
+) -> tuple[int, float]:
+    legal = [index for index, allowed in enumerate(features.action_mask) if allowed]
+    if len(legal) == 1:
+        index = legal[0]
+    elif evaluation:
+        index = int(torch.argmax(masked_logits).item())
+    else:
+        probabilities = torch.softmax(masked_logits, dim=-1)
+        index = int(torch.multinomial(probabilities, 1, generator=generator).item())
+    log_prob = float(torch.log_softmax(masked_logits, dim=-1)[index].item())
+    return index, log_prob
+
+
+def _scripted_index(action: dict[str, Any]) -> int:
+    task_action = action.get("task_action", {})
+    action_type = task_action.get("type")
+    if action_type == "SELECT_CANDIDATE_TASK":
+        return int(task_action["candidate_index"])
+    if action_type == "CONTINUE_CURRENT_TASK":
+        return 8
+    return 9
+
+
+def rollout_episode(
+    env: RlServerProcess,
+    model: SelectorActorCritic,
+    *,
+    seed: int,
+    scenario_id: str,
+    scenario_version: int,
+    evaluation: bool,
+    action_generator: torch.Generator,
+) -> EpisodeRollout:
+    reset = env.reset(
+        seed,
+        scenario_id=scenario_id,
+        scenario_version=scenario_version,
+        agent_count=3,
+    )
+    observations = reset.initial_observations
+    masks = reset.action_masks
+    metadata = reset.metadata
+    episode_id = reset.episode_id
+    tick = reset.tick
+    board: list[dict[str, Any]] = []
+    boundary_reasons: list[str] = []
+    history = SelectorHistory()
+    reward = SelectorReward()
+    scripted = GreedyUtilityPolicy()
+    transitions: list[Transition] = []
+    trace: list[dict[str, Any]] = []
+    reward_totals: dict[str, float] = {}
+    previous_team = dict(observations[0]["team"])
+    outcome = "running"
+    final_metrics: dict[str, Any] = {}
+
+    while outcome == "running" and tick < int(metadata["tick_cap"]):
+        scripted_bundle = scripted.actions(observations, masks)
+        features = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            task_board=board,
+            boundary_reasons=boundary_reasons,
+            history=history,
+            agent_id=LEARNED_SEAT,
+        )
+        with torch.no_grad():
+            raw_logits, masked_logits, value, tensors = _model_outputs(model, features)
+
+        scripted_action = scripted_bundle[LEARNED_SEAT]
+        scripted_type = scripted_action.get("task_action", {}).get("type")
+        forced = (
+            features.forced_task_action is not None
+            or not features.policy_loss_mask
+            or scripted_type == "ABANDON"
+        )
+        if forced:
+            selected_index = _scripted_index(scripted_action)
+            log_prob = float(
+                torch.log_softmax(masked_logits, dim=-1)[selected_index].item()
+            )
+            learned_action = scripted_action
+        else:
+            selected_index, log_prob = _select_index(
+                masked_logits,
+                features,
+                evaluation=evaluation,
+                generator=action_generator,
+            )
+            learned_action = {
+                "agent_id": LEARNED_SEAT,
+                "task_action": selector_action(
+                    selected_index, observations[LEARNED_SEAT]["task_candidates"]
+                ),
+            }
+        raw_action_valid = forced or bool(features.action_mask[selected_index])
+        if not raw_action_valid:
+            learned_action = {
+                "agent_id": LEARNED_SEAT,
+                "task_action": {"type": "WAIT"},
+            }
+        bundle = list(scripted_bundle)
+        bundle[LEARNED_SEAT] = learned_action
+
+        response = env.step(
+            episode_id,
+            expected_tick=tick,
+            ticks_to_advance=max(1, int(metadata["tick_cap"]) - tick),
+            agent_actions=bundle,
+            stop_on_decision_event=True,
+        )
+        scripted.observe_action_results(response.action_results)
+        selected_task_type = None
+        if selected_index < 8 and selected_index < len(
+            observations[LEARNED_SEAT]["task_candidates"]
+        ):
+            selected_task_type = observations[LEARNED_SEAT]["task_candidates"][
+                selected_index
+            ]["task_type"]
+        for result in response.action_results:
+            if int(result.get("agent_id", -1)) != LEARNED_SEAT or not result.get(
+                "accepted", False
+            ):
+                continue
+            if learned_action["task_action"]["type"] == "SELECT_CANDIDATE_TASK":
+                reward.record_learned_selection(str(result.get("task_id", "")))
+                if selected_task_type is not None:
+                    history.record_selection(selected_task_type, tick)
+
+        current_team = dict(response.observations[0]["team"])
+        reasons = list(response.decision_boundary.get("reasons", []))
+        breakdown = reward.observe(
+            previous_team,
+            current_team,
+            advanced_ticks=int(response.decision_boundary.get("advanced_ticks", response.tick - tick)),
+            tick_cap=int(metadata["tick_cap"]),
+            outcome=response.outcome,
+            task_events=response.task_events,
+            boundary_reasons=reasons,
+            raw_action_valid=raw_action_valid,
+        )
+        for key, amount in breakdown.components.items():
+            reward_totals[key] = reward_totals.get(key, 0.0) + amount
+        done = response.outcome != "running"
+        transitions.append(
+            Transition(
+                candidates=tensors[0],
+                scalars=tensors[1],
+                candidate_present=tensors[2],
+                action_mask=tensors[3],
+                action=selected_index,
+                old_log_prob=log_prob,
+                old_value=float(value.item()),
+                reward=breakdown.total,
+                advanced_ticks=int(response.decision_boundary.get("advanced_ticks", response.tick - tick)),
+                done=done,
+                policy_loss_mask=features.policy_loss_mask and not forced,
+            )
+        )
+        trace.append(
+            {
+                "tick": tick,
+                "advanced_ticks": transitions[-1].advanced_ticks,
+                "action": learned_action["task_action"],
+                "action_index": selected_index,
+                "policy_loss_mask": transitions[-1].policy_loss_mask,
+                "raw_logits": [float(value) for value in raw_logits.tolist()],
+                "masked_logits": [float(value) for value in masked_logits.tolist()],
+                "log_probability": log_prob,
+                "value_prediction": float(value.item()),
+                "reward_components": breakdown.components,
+                "boundary_reasons": reasons,
+                "state_hash": response.state_hash,
+                "task_events": response.task_events,
+                "outcome": response.outcome,
+            }
+        )
+        observations = response.observations
+        masks = response.action_masks
+        board = response.task_board
+        boundary_reasons = reasons
+        previous_team = current_team
+        tick = response.tick
+        outcome = response.outcome
+        final_metrics = response.coordination_metrics
+
+    return EpisodeRollout(
+        seed=seed,
+        outcome=outcome,
+        tick=tick,
+        core_health=float(observations[0]["team"]["core_health"]),
+        transitions=transitions,
+        reward_components=reward_totals,
+        trace=trace,
+        coordination_metrics=final_metrics,
+    )
+
+
+def _advantages(
+    episodes: list[EpisodeRollout], config: dict[str, Any]
+) -> tuple[list[Transition], torch.Tensor, torch.Tensor]:
+    gamma_per_second = float(config["gamma_per_second"])
+    gae_lambda = float(config["gae_lambda"])
+    flat: list[Transition] = []
+    advantages: list[float] = []
+    returns: list[float] = []
+    for episode in episodes:
+        episode_advantages = [0.0] * len(episode.transitions)
+        next_value = 0.0
+        next_advantage = 0.0
+        for index in range(len(episode.transitions) - 1, -1, -1):
+            item = episode.transitions[index]
+            gamma = gamma_per_second ** (item.advanced_ticks / 60.0)
+            continuation = 0.0 if item.done else 1.0
+            delta = item.reward + gamma * next_value * continuation - item.old_value
+            advantage = delta + gamma * gae_lambda * next_advantage * continuation
+            episode_advantages[index] = advantage
+            next_value = item.old_value
+            next_advantage = advantage
+        flat.extend(episode.transitions)
+        advantages.extend(episode_advantages)
+        returns.extend(
+            advantage + item.old_value
+            for advantage, item in zip(episode_advantages, episode.transitions)
+        )
+    advantage_tensor = torch.tensor(advantages, dtype=torch.float32)
+    actor = torch.tensor([item.policy_loss_mask for item in flat], dtype=torch.bool)
+    if actor.any():
+        selected = advantage_tensor[actor]
+        advantage_tensor[actor] = (selected - selected.mean()) / selected.std(
+            unbiased=False
+        ).clamp_min(1e-8)
+    return flat, advantage_tensor, torch.tensor(returns, dtype=torch.float32)
+
+
+def ppo_update(
+    model: SelectorActorCritic,
+    optimizer: torch.optim.Optimizer,
+    episodes: list[EpisodeRollout],
+    config: dict[str, Any],
+    shuffle_generator: torch.Generator,
+) -> dict[str, float]:
+    transitions, advantages, returns = _advantages(episodes, config)
+    candidates = torch.stack([item.candidates for item in transitions])
+    scalars = torch.stack([item.scalars for item in transitions])
+    present = torch.stack([item.candidate_present for item in transitions])
+    masks = torch.stack([item.action_mask for item in transitions])
+    actions = torch.tensor([item.action for item in transitions], dtype=torch.long)
+    old_log_probs = torch.tensor(
+        [item.old_log_prob for item in transitions], dtype=torch.float32
+    )
+    actor_mask = torch.tensor(
+        [item.policy_loss_mask for item in transitions], dtype=torch.bool
+    )
+    batch_size = int(config["minibatch_size"])
+    metrics = {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0, "batches": 0.0}
+    for _ in range(int(config["ppo_epochs"])):
+        order = torch.randperm(len(transitions), generator=shuffle_generator)
+        for start in range(0, len(transitions), batch_size):
+            index = order[start : start + batch_size]
+            _, masked_logits, values = model(
+                candidates[index], scalars[index], present[index], masks[index]
+            )
+            log_probs = torch.log_softmax(masked_logits, dim=-1).gather(
+                1, actions[index, None]
+            ).squeeze(1)
+            probabilities = torch.softmax(masked_logits, dim=-1)
+            entropy = -(probabilities * torch.log_softmax(masked_logits, dim=-1)).sum(
+                dim=-1
+            )
+            active = actor_mask[index]
+            if active.any():
+                ratio = torch.exp(log_probs[active] - old_log_probs[index][active])
+                unclipped = ratio * advantages[index][active]
+                clipped = torch.clamp(
+                    ratio,
+                    1.0 - float(config["clip_ratio"]),
+                    1.0 + float(config["clip_ratio"]),
+                ) * advantages[index][active]
+                policy_loss = -torch.minimum(unclipped, clipped).mean()
+                entropy_loss = entropy[active].mean()
+            else:
+                policy_loss = values.sum() * 0.0
+                entropy_loss = values.sum() * 0.0
+            value_loss = functional.mse_loss(values, returns[index])
+            loss = (
+                policy_loss
+                + float(config["value_coefficient"]) * value_loss
+                - float(config["entropy_coefficient"]) * entropy_loss
+            )
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), float(config["max_grad_norm"]))
+            optimizer.step()
+            metrics["policy_loss"] += float(policy_loss.item())
+            metrics["value_loss"] += float(value_loss.item())
+            metrics["entropy"] += float(entropy_loss.item())
+            metrics["batches"] += 1.0
+    divisor = max(1.0, metrics["batches"])
+    return {key: value / divisor if key != "batches" else value for key, value in metrics.items()}
+
+
+def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
+    return {
+        "seed": episode.seed,
+        "outcome": episode.outcome,
+        "tick": episode.tick,
+        "core_health": episode.core_health,
+        "return": sum(episode.reward_components.values()),
+        "reward_components": episode.reward_components,
+        "decisions": len(episode.transitions),
+        "policy_decisions": sum(item.policy_loss_mask for item in episode.transitions),
+        "idle_fraction": float(episode.coordination_metrics.get("idle_fraction", 0.0)),
+        "duplicate_work_incidents": int(
+            episode.coordination_metrics.get("duplicate_work_incidents", 0)
+        ),
+        "trace_digest": _json_digest(episode.trace),
+    }
+
+
+def _evaluate(
+    model: SelectorActorCritic,
+    seeds: list[int],
+    config: dict[str, Any],
+    *,
+    java: str,
+    port: int,
+) -> list[EpisodeRollout]:
+    model.eval()
+    generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
+    with RlServerProcess(
+        LaunchConfig(port=port, java=java, build_if_missing=False)
+    ) as env:
+        env.handshake("m8-ppo-evaluation")
+        return [
+            rollout_episode(
+                env,
+                model,
+                seed=seed,
+                scenario_id=str(config["scenario_id"]),
+                scenario_version=int(config["scenario_version"]),
+                evaluation=True,
+                action_generator=generator,
+            )
+            for seed in seeds
+        ]
+
+
+def save_checkpoint(
+    path: Path,
+    model: SelectorActorCritic,
+    optimizer: torch.optim.Optimizer,
+    *,
+    config_sha256: str,
+    parent_checkpoint: str,
+    update: int,
+) -> str:
+    payload = {
+        "feature_schema": FEATURE_SCHEMA,
+        "reward_schema": REWARD_SCHEMA,
+        "model_schema": MODEL_SCHEMA,
+        "config_sha256": config_sha256,
+        "parent_checkpoint": parent_checkpoint,
+        "update": update,
+        "model_state": model.state_dict(),
+        "optimizer_state": optimizer.state_dict(),
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(payload, path)
+    return _sha256(path)
+
+
+def load_checkpoint(path: Path, model: SelectorActorCritic) -> dict[str, Any]:
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    expected = (FEATURE_SCHEMA, REWARD_SCHEMA, MODEL_SCHEMA)
+    actual = (
+        payload.get("feature_schema"),
+        payload.get("reward_schema"),
+        payload.get("model_schema"),
+    )
+    if actual != expected:
+        raise ValueError(f"checkpoint schema mismatch: {actual} != {expected}")
+    model.load_state_dict(payload["model_state"])
+    model.eval()
+    return payload
+
+
+def _git_evidence(root: Path) -> dict[str, Any]:
+    git_executable = os.environ.get("M8_GIT", "git")
+    git_root = os.environ.get("M8_GIT_ROOT", str(root))
+
+    def run(*args: str) -> str:
+        return subprocess.run(
+            [git_executable, "-C", git_root, *args],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+    status = run("status", "--short").splitlines()
+    return {
+        "commit": run("rev-parse", "HEAD"),
+        "dirty": bool(status),
+        "status": status,
+        "executable": git_executable,
+    }
+
+
+def _manifest(
+    root: Path,
+    config_path: Path,
+    config: dict[str, Any],
+    train_set: dict[str, Any],
+    dev_set: dict[str, Any],
+    checkpoint_path: Path,
+    checkpoint_sha256: str,
+    train_summaries: list[dict[str, Any]],
+    dev_summaries: list[dict[str, Any]],
+    verification: dict[str, Any],
+    optimizer_updates: list[dict[str, Any]],
+    dev_selection: list[dict[str, Any]],
+    parent_checkpoint: str,
+    produced_checkpoints: list[Path],
+    verification_paths: list[Path],
+) -> dict[str, Any]:
+    lock = root / "python" / "requirements-rl-linux-py312.lock"
+    return {
+        "schema": "selector_training_run_v1",
+        "engine": {"tag": ENGINE_TAG, "commit": ENGINE_COMMIT, "arc": ARC_HASH},
+        "protocol_version": PROTOCOL_VERSION,
+        "scenario": {"id": config["scenario_id"], "version": config["scenario_version"]},
+        "schemas": {"feature": FEATURE_SCHEMA, "reward": REWARD_SCHEMA, "model": MODEL_SCHEMA},
+        "repository": _git_evidence(root),
+        "runtime": {
+            "python": platform.python_version(),
+            "platform": platform.platform(),
+            "wsl_distribution": os.environ.get("WSL_DISTRO_NAME", ""),
+            "processor": platform.processor(),
+            "torch": torch.__version__,
+            "device": "cpu",
+            "torch_threads": torch.get_num_threads(),
+            "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+            "rl_lockfile": str(lock.relative_to(root)),
+            "rl_lock_sha256": _sha256(lock),
+        },
+        "seed_sets": {
+            "train": {key: train_set[key] for key in ("seed_set_id", "seed_set_version", "split")},
+            "dev": {key: dev_set[key] for key in ("seed_set_id", "seed_set_version", "split")},
+            "held_out": {"seed_set_id": config["held_out_seed_set_id"], "seed_set_version": config["held_out_seed_set_version"], "active": False},
+            "active_splits": ["train", "dev"],
+        },
+        "rng_seeds": {
+            key: config[key]
+            for key in ("model_init_seed", "action_sampling_seed", "shuffle_seed", "minibatch_seed")
+        } | {
+            "environment_root_seeds": {
+                "train": list(train_set["seeds"]),
+                "dev": list(dev_set["seeds"]),
+            }
+        },
+        "controller": {
+            "learned_seat_id": LEARNED_SEAT,
+            "scripted_teammate_policy": SCRIPTED_POLICY,
+            "lifecycle_policy": LIFECYCLE_POLICY,
+            "action_cadence": "server decision events with stop_on_decision_event=true",
+            "jvm_cap": 4,
+        },
+        "normalizers": config["normalizers"],
+        "model_architecture": config["model_architecture"],
+        "optimizer_ppo": config["optimizer_ppo"],
+        "rollout_update_counts": {
+            "train_episodes": len(train_summaries),
+            "dev_episodes": len(dev_summaries),
+            "updates": len(optimizer_updates),
+        },
+        "source_config": {
+            "path": str(config_path.relative_to(root)),
+            "sha256": _sha256(config_path),
+        },
+        "checkpoint": {
+            "path": str(checkpoint_path.relative_to(root)),
+            "sha256": checkpoint_sha256,
+            "parent_checkpoint": parent_checkpoint,
+        },
+        "optimizer_updates": optimizer_updates,
+        "dev_checkpoint_selection": dev_selection,
+        "train": train_summaries,
+        "dev": dev_summaries,
+        "reward_component_totals": {
+            key: sum(float(row["reward_components"].get(key, 0.0)) for row in train_summaries)
+            for key in train_summaries[0]["reward_components"]
+        } if train_summaries else {},
+        "scorecard": {
+            "dev_wins": sum(row["outcome"] == "win" for row in dev_summaries),
+            "dev_episodes": len(dev_summaries),
+            "dev_mean_core_health": sum(row["core_health"] for row in dev_summaries) / max(1, len(dev_summaries)),
+            "dev_mean_idle_fraction": sum(row["idle_fraction"] for row in dev_summaries) / max(1, len(dev_summaries)),
+        },
+        "action_state_trace_digest": _json_digest([row["trace_digest"] for row in dev_summaries]),
+        "deterministic_checkpoint_verification": verification,
+        "artifacts": [
+            *(str(path.relative_to(root)) for path in produced_checkpoints),
+            *(str(path.relative_to(root)) for path in verification_paths),
+            *(
+                [str((checkpoint_path.parent / "reward-adversaries.json").relative_to(root))]
+                if (checkpoint_path.parent / "reward-adversaries.json").exists()
+                else []
+            ),
+            str(checkpoint_path.with_suffix(".manifest.json").relative_to(root)),
+        ],
+    }
+
+
+def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[str, Any]:
+    root = repo_root()
+    config = _load_json(config_path)
+    _configure_torch(config)
+    train_set = _seed_set(root, str(config["train_seed_set"]), "train")
+    dev_set = _seed_set(root, str(config["dev_seed_set"]), "dev")
+    model = SelectorActorCritic(int(config["model_init_seed"]))
+    optimizer = torch.optim.Adam(
+        model.parameters(),
+        lr=float(config["learning_rate"]),
+        eps=float(config["adam_epsilon"]),
+    )
+    action_generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
+    minibatch_generator = torch.Generator().manual_seed(int(config["minibatch_seed"]))
+    train_episodes: list[EpisodeRollout] = []
+    optimizer_updates: list[dict[str, Any]] = []
+    seeds = [int(seed) for seed in train_set["seeds"]]
+    random.Random(int(config["shuffle_seed"])).shuffle(seeds)
+    episodes_per_update = int(config["episodes_per_update"])
+    output_dir.mkdir(parents=True, exist_ok=True)
+    dev_seeds = [int(seed) for seed in dev_set["seeds"]]
+    dev_candidates: list[list[EpisodeRollout]] = []
+    dev_selection: list[dict[str, Any]] = []
+    produced_checkpoints: list[Path] = []
+    parent_checkpoint = ""
+    with RlServerProcess(
+        LaunchConfig(port=port, java=java, build_if_missing=False)
+    ) as env:
+        env.handshake("m8-ppo-training")
+        for start in range(0, len(seeds), episodes_per_update):
+            model.eval()
+            batch = [
+                rollout_episode(
+                    env,
+                    model,
+                    seed=seed,
+                    scenario_id=str(config["scenario_id"]),
+                    scenario_version=int(config["scenario_version"]),
+                    evaluation=False,
+                    action_generator=action_generator,
+                )
+                for seed in seeds[start : start + episodes_per_update]
+            ]
+            train_episodes.extend(batch)
+            model.train()
+            optimizer_updates.append(
+                ppo_update(model, optimizer, batch, config, minibatch_generator)
+            )
+            checkpoint = output_dir / f"selector-v1-update-{len(optimizer_updates)}.pt"
+            checkpoint_sha = save_checkpoint(
+                checkpoint,
+                model,
+                optimizer,
+                config_sha256=_sha256(config_path),
+                parent_checkpoint=parent_checkpoint,
+                update=len(optimizer_updates),
+            )
+            produced_checkpoints.append(checkpoint)
+            parent_checkpoint = checkpoint_sha
+            candidate_dev = _evaluate(
+                model, dev_seeds, config, java=java, port=port + 1
+            )
+            dev_candidates.append(candidate_dev)
+            summaries = [_episode_summary(item) for item in candidate_dev]
+            dev_selection.append(
+                {
+                    "update": len(optimizer_updates),
+                    "checkpoint_path": str(checkpoint.relative_to(root)),
+                    "checkpoint_sha256": checkpoint_sha,
+                    "wins": sum(item["outcome"] == "win" for item in summaries),
+                    "mean_return": sum(item["return"] for item in summaries) / len(summaries),
+                    "mean_core_health": sum(item["core_health"] for item in summaries) / len(summaries),
+                }
+            )
+
+    best_index = max(
+        range(len(dev_selection)),
+        key=lambda index: (
+            dev_selection[index]["wins"],
+            dev_selection[index]["mean_return"],
+            dev_selection[index]["mean_core_health"],
+            -dev_selection[index]["update"],
+        ),
+    )
+    checkpoint_path = produced_checkpoints[best_index]
+    checkpoint_sha = str(dev_selection[best_index]["checkpoint_sha256"])
+    selected_payload = load_checkpoint(checkpoint_path, model)
+    dev_episodes = dev_candidates[best_index]
+
+    verify_seed = int(dev_set["seeds"][0])
+    traces = []
+    for offset in (2, 3):
+        replay_model = SelectorActorCritic(int(config["model_init_seed"]))
+        load_checkpoint(checkpoint_path, replay_model)
+        replay = _evaluate(
+            replay_model, [verify_seed], config, java=java, port=port + offset
+        )[0]
+        traces.append(replay.trace)
+    verification = {
+        "seed": verify_seed,
+        "fresh_runs": 2,
+        "trace_digest_a": _json_digest(traces[0]),
+        "trace_digest_b": _json_digest(traces[1]),
+        "bit_exact": traces[0] == traces[1],
+    }
+    if not verification["bit_exact"]:
+        raise RuntimeError("frozen checkpoint evaluation traces diverged")
+    verification_paths = [
+        output_dir / "checkpoint-replay-a.jsonl",
+        output_dir / "checkpoint-replay-b.jsonl",
+    ]
+    for path, replay_trace in zip(verification_paths, traces):
+        path.write_text(
+            "".join(
+                json.dumps(item, sort_keys=True, separators=(",", ":")) + "\n"
+                for item in replay_trace
+            ),
+            encoding="utf-8",
+        )
+    verification["trace_paths"] = [
+        str(path.relative_to(root)) for path in verification_paths
+    ]
+
+    train_summaries = [_episode_summary(item) for item in train_episodes]
+    dev_summaries = [_episode_summary(item) for item in dev_episodes]
+    manifest = _manifest(
+        root,
+        config_path,
+        config,
+        train_set,
+        dev_set,
+        checkpoint_path,
+        checkpoint_sha,
+        train_summaries,
+        dev_summaries,
+        verification,
+        optimizer_updates,
+        dev_selection,
+        str(selected_payload.get("parent_checkpoint", "")),
+        produced_checkpoints,
+        verification_paths,
+    )
+    manifest_path = checkpoint_path.with_suffix(".manifest.json")
+    manifest_path.write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    print(
+        f"train={len(train_summaries)} dev={len(dev_summaries)} "
+        f"dev_wins={manifest['scorecard']['dev_wins']} checkpoint={checkpoint_sha[:16]}"
+    )
+    print(
+        f"checkpoint_replay={verification['trace_digest_a'][:16]} "
+        f"bit_exact={verification['bit_exact']}"
+    )
+    print(f"manifest={manifest_path}")
+    print("M8-PPO OK")
+    return manifest
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="M8.4 one-seat masked PPO selector")
+    root = repo_root()
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=root / "configs" / "training" / "m8-selector-v1.json",
+    )
+    parser.add_argument(
+        "--output-dir", type=Path, default=root / "runs" / "m8-selector-v1"
+    )
+    parser.add_argument("--java", default="java")
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    args = parser.parse_args(argv)
+    train(args.config.resolve(), args.output_dir.resolve(), java=args.java, port=args.port)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

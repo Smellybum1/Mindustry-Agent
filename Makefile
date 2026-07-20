@@ -38,6 +38,7 @@ help: ## List available targets
 	@echo "  evaluate-ladder permanent baselines + teammate scorecard (M7.6)"
 	@echo "  verify-rl-boundary reconstruct pinned WSL2 CPU training runtime (M8.2)"
 	@echo "  training-gate WSL2 event collector + inference + 10k resets (M8.3)"
+	@echo "  train-selector WSL2 audited one-seat PPO + exact checkpoint replay (M8.4)"
 	@echo "  demo-server   human-joinable real-time server (M6/M10)"
 
 codex-status: ## Print compact read-only takeover status
@@ -96,6 +97,9 @@ verify-rl-boundary: ## Reconstruct and verify the M8.2 WSL2 CPU runtime
 
 training-gate: ## Run the M8.3 WSL2 throughput and long-reset gates
 	@bash $(SCRIPTS)/training-gate.sh
+
+train-selector: ## Train and verify the M8.4 one-seat selector
+	@bash $(SCRIPTS)/train-selector.sh
 
 demo-server: ## Human-joinable real-time server (M6/M10)
 	@bash $(SCRIPTS)/demo-server.sh
