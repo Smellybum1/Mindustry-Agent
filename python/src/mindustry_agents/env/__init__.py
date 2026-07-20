@@ -6,5 +6,10 @@ in a single world into one atomic step, plus the framework-neutral env contracts
 framework import (no ``torch``, no training-only deps) so the environment is
 testable in isolation (ADR-0007).
 
-Currently a skeleton package; the facade lands in roadmap M2.
+M2 status: implemented (framework-neutral, stdlib only). ``client.EnvClient``
+wraps one connection with episode/tick bookkeeping; ``parallel_env`` provides the
+PettingZoo ``ParallelEnv`` method surface duck-typed (no pettingzoo import);
+``vector.VectorCollector`` steps a pool of worlds in lockstep. Per-agent
+observations remain world-level until M3 (the plumbing is per-agent; only the
+payload changes).
 """
