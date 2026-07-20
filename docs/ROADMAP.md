@@ -81,7 +81,8 @@ Exit criteria:
 now **real** (M3 landed — see below); `MindustryParallelEnv`'s dict plumbing carries
 them, though that facade's action-bundling shape still predates the M3 command schema
 (training-layer adaptation deferred). Scaling is capped at 4 JVMs (shared host);
-≥10,000-reset Gate 5 and 8/16-JVM scaling are deferred.
+M8.3 later completed the 10,000-reset Gate 5; 8/16-JVM scaling remains outside
+the accepted host cap.
 
 ## Milestone 3: Agent entities and first skills — DONE (verified 2026-07-20)
 
@@ -734,6 +735,14 @@ Not the destination — the proof that learning plugs into the seam.
   long), process-based or chunk-batched collector if needed; Gate 5 overnight
   run (≥10k resets); record honest scaling on WSL2. Do not train until ≥50×
   aggregate real-time at 4 JVMs with inference in the loop.
+- **DONE (verified 2026-07-21):** the supervised vector path now carries
+  `stop_on_decision_event` and sums each child's actual advance. A frozen
+  M8-shape CPU graph runs in shadow mode at initial/real decision boundaries;
+  its logits never affect scripted actions. On Ubuntu 24.04/WSL2 the certified
+  1/2/4-JVM cells reached 122.4×/212.7×/293.5× aggregate real-time, with all
+  episodes winning and the same final hash. The long gate completed 10,000
+  in-process resets with zero hash mismatches, 0.93 ms median / 1.27 ms p95,
+  338.3 MiB peak RSS below the 650 MiB ceiling, and no orphan process.
 ### 8.4 PPO selector + run manifests
 - Feed-forward first, recent-history features; run manifest per brief §21.1;
   checkpoints reproduce evaluation bit-exactly (eval mode deterministic).

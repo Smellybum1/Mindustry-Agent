@@ -17,7 +17,7 @@ and what is unverified.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **54 Python
+  client, parallel-env facade, vector collector) is stdlib-only too. **55 Python
   tests pass** via `python -m pytest python/tests -q` (verified 2026-07-21 with
   pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
@@ -741,6 +741,28 @@ repository-evidence mapping used for the M6 audit is:
   collector optimization, engine/upstream change, or held-out run entered
   M8.2. Next: M8.3 throughput bring-up on WSL2.
 
+## Milestone 8.3 — WSL2 training throughput (DONE, verified 2026-07-21)
+
+- `EnvClient`, `ProcessSupervisor`, and `VectorCollector` now carry the opt-in
+  decision-event stop flag end to end. Vector timing sums actual per-child
+  advances, so early asynchronous boundaries cannot inflate throughput.
+- The training-only `throughput` probe runs a frozen M8-shape CPU graph in
+  shadow mode at reset and real decision events. Scripted adaptive actions
+  remain authoritative; logits never affect an action and no reward exists.
+- On the exact ADR-0011 lock and project-local Temurin 21.0.11+10, WSL2
+  1/2/4-JVM cells delivered 122.4×/212.7×/293.5× aggregate real-time. All
+  episodes won at tick 8100 and shared final hash
+  `9f244b8741f7948220d57cc143796568bbf42d725c1e285ff628ca30cf9e0042`.
+  The ≥50× four-JVM prerequisite passes by 5.87×.
+- The same noninteractive gate completed 10,000 in-JVM resets: zero hash
+  mismatches; median/p95 0.93/1.27 ms; 338.3 MiB peak RSS below the 650 MiB
+  ceiling; exact child PID absent after close. Gate 5 is complete.
+- `runs/m8-throughput.json` and `runs/m8-stress-reset.json` hold the current
+  machine-readable evidence. They are intentionally gitignored run outputs;
+  methodology and certified figures are recorded in `docs/BENCHMARKS.md`.
+  Next: M8.4 feature adapter, audited reward implementation, PPO selector, and
+  exact run/checkpoint manifests. Held-out remains sealed.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -757,8 +779,9 @@ repository-evidence mapping used for the M6 audit is:
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,
   shared_policy_check}.py` plus the reservation/chaos/announcement checks).
   `evaluation` now contains the real dependency-free M6 summaries and M7.6
-  ladder/bootstrap machinery; `training` and `telemetry` remain documented
-  skeletons.
+  ladder/bootstrap machinery. `training` contains the M8.3 shadow inference
+  throughput gate but no optimizer or learned policy; `telemetry` remains a
+  documented skeleton.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and
   reference schematic), plus the delayed-loadout adaptive probe. M5.1 turns
