@@ -114,6 +114,12 @@ resolved against source and recorded in place, M3-style). Issue-sized items
 below; implement in order — 4.1/4.2 unblock everything else.
 
 ### 4.1 Dynamic re-path determinism (prerequisite)
+- **DONE (verified 2026-07-20):** thread-less `Pathfinder.syncUpdate()` consumes
+  pending tile-change refreshes without the `Time.millis()` gate. The extended
+  determinism trace places a copper wall at `(33,24)` after wave 1 spawns and
+  matches all 73 hash boundaries across two fresh JVMs while daggers continue
+  around the changed tile. Normal threaded play is untouched; ControlPathfinder
+  remains out of scope.
 - Objective: building/destroying blocks mid-episode must not break cross-process
   determinism. `Pathfinder`'s tile-change refresh is gated by `Time.millis()`
   in `afterGameUpdate` (see docs/UPSTREAM_PATCHES.md entry 2 caveat) — neutralize

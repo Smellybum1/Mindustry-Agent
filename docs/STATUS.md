@@ -174,6 +174,10 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   the new **`Pathfinder.syncUpdate()` upstream patch** (`docs/UPSTREAM_PATCHES.md`
   entry 2 — the one sanctioned engine edit, with a full determinism audit).
   `randomWaveAI = false` keeps the `hashCode()`-seeded RNG branch out of play.
+  **M4.1 dynamic re-pathing is now verified:** when a tile change sets
+  `needsRefresh`, the thread-less `syncUpdate()` path refreshes targets, marks flow
+  fields dirty, and converges them immediately without consulting the normal
+  `Time.millis()` throttle. Normal threaded play retains its original throttle.
 - **Termination**: step response now carries honest `terminations`/`truncations`
   and an `outcome` field (`running`/`win`/`loss`/`truncated`): win = core alive at
   tick 8100, loss = core destroyed, truncate at the 9000-tick cap. Observations gain
@@ -181,8 +185,9 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   `state.wavetime` + `state.enemies`.
 - **Seed lever is now real**: same seed → identical hashes across processes/resets;
   **different seeds diverge** once enemies spawn (spawn spread). Both asserted by
-  `tools/determinism.py` (now steps past wave 1 with moving enemies; **65** hash
-  boundaries) — this is the first genuine seed-sensitivity evidence.
+  `tools/determinism.py` (now steps past wave 1, places a copper wall in the lane,
+  and follows the re-pathing enemies; **73** hash boundaries) — this is the first
+  genuine seed-sensitivity and dynamic-tile-change evidence.
 - **Undefended loss**: `tools/scenario_check.py` (wired into `scripts/smoke.sh`)
   fast-forwards past wave 1, asserts daggers spawned (`enemy_count > 0`) and **move**
   toward the core (nearest-core distance strictly decreases), then runs on to the
@@ -195,6 +200,17 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   0 (moving enemies + seed sensitivity); `bash scripts/stress-reset.sh` → exit 0
   (1000 resets, 0 mismatches, reset latency median **1.07 ms** / p95 2.11 ms /
   max 44.94 ms warmup — comfortably under the 250 ms gate even with the bigger world).
+
+## Milestone 4 — build and defence skills (IN PROGRESS)
+
+- **4.1 dynamic re-path determinism is done (verified 2026-07-20).** The minimal
+  upstream amendment is catalogued in `docs/UPSTREAM_PATCHES.md`. Validation:
+  `./gradlew agent-core:test rl-server:dist` green; 29 pytest green; smoke and
+  scenario loss path green; determinism green at all 73 boundaries across two
+  fresh JVMs, including a wall placed after wave 1 and live enemy re-pathing.
+- **4.2–4.8 remain unimplemented.** The temporary wall-placement acceptance hook
+  is gated by `-Dmindustry.rl.testHooks=true`, is absent from normal launches, and
+  will be removed when 4.2's legal `BUILD` action replaces it.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

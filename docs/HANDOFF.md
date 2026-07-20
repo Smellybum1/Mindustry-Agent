@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M3 complete, all verified 2026-07-20): the
+- **What currently works** (M0–M3 + M4.1 complete, all verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board **and the M3 `agentcore.skill` FSM layer** (77 JUnit tests), agent
@@ -18,7 +18,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   2700/4500/6300 with moving enemies, win/loss/truncate termination). Enemy pathing
   is deterministic via the one sanctioned upstream patch, `Pathfinder.syncUpdate()`
   (`docs/UPSTREAM_PATCHES.md`). The **seed lever is now real**: different seeds
-  diverge once enemies spawn, same seed stays identical.
+  diverge once enemies spawn, same seed stays identical. M4.1 also neutralizes
+  the tile-change `Time.millis()` refresh gate in thread-less mode; a wall placed
+  after wave 1 produces identical re-pathing hashes across fresh JVMs.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
   the scenario now loads fully, but its scored `objectives[]` (M5 task-board
   wiring), the reference-schematic build, and a scripted *win* path are still to
@@ -44,7 +46,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (64 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
 | `make smoke` | Builds `rl-server.jar` if missing, launches one JVM, handshake + `reset(seed=12345)` + 10×60 plain ticks, **then the M3 scripted skill phase** (`agent_0` mines copper → delivers; `agent_1` mines a non-ore tile → `BLOCKED(INVALID_TARGET)`); asserts the core-copper ledger balances exactly (250 → 271, delta == delivered); **then the scenario check** (`tools/scenario_check.py`): waves spawn, daggers path to the core, undefended core lost before the cap; ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
-| `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary (reset + 10 plain chunks + 24 scripted skill steps + **the post-wave phase with moving enemies** = 65 hashes); in-JVM reset purity; **plus check 4 — seed sensitivity: a different seed diverges post-wave** while the same seed stays identical; ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
+| `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary (reset + 10 plain chunks + 24 scripted skill steps + **post-wave wall placement and moving/re-pathing enemies** = 73 hashes); in-JVM reset purity; **plus check 4 — seed sensitivity: a different seed diverges post-wave** while the same seed stays identical; ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
 | `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling (within-cap growth is heap ergonomics, informational only — trend thresholds proved flaky); ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20 (twice, incl. after the methodology fix). |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
@@ -143,12 +145,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   from `root_seed`), while the same seed stays bit-identical across processes and
   resets. Proven by `tools/determinism.py` check 4. Pre-wave state is still
   seed-independent (nothing consumes `root_seed` before tick 2700) — expected.
-- **Dynamic re-path determinism is not yet proven**: enemy flow fields converge
-  deterministically for a *static* map (the current traces never change a
-  pathfinding tile). When agents build walls under fire (M4 defended play), the
-  `Pathfinder` `afterGameUpdate` refresh gate reads `Time.millis()` (wall clock);
-  that gate must be neutralized for determinism before defended episodes are hashed.
-  Tracked in `docs/UPSTREAM_PATCHES.md` (patch 2 audit) and the next-issues list.
+- **Dynamic re-path determinism is resolved (M4.1)**: the thread-less
+  `Pathfinder.syncUpdate()` path consumes pending tile changes immediately without
+  the normal-mode wall-clock gate. `tools/determinism.py` places a copper wall at
+  tick 2880 and matches all 73 hashes across fresh JVMs while daggers continue
+  around it. The temporary placement hook is test-property-gated and will be
+  removed when M4.2 supplies the legal `BUILD` action.
 - **4-JVM scaling is Python-bound** (~53% efficiency): GIL-bound JSON in the
   collector, not the engine. Fine for now; revisit before large-scale training
   (larger tick chunks or process-based collection).
@@ -178,12 +180,12 @@ promotes the remainder and adds the M4 follow-ons it unblocks.)*
      around freshly built walls deterministically.
    - Acceptance: a scripted trace reaches `outcome == "win"` before the cap; hashes
      reproduce across processes; `scenario_check` gains a defended-win phase.
-2. **Dynamic re-path determinism (wall building under fire).**
+2. **Dynamic re-path determinism (wall building under fire) — DONE (M4.1).**
    - Objective: neutralize the `Pathfinder` `afterGameUpdate` `Time.millis()` refresh
      gate (docs/UPSTREAM_PATCHES.md patch 2 audit) so flow-field refresh after a
      `TileChangeEvent` is deterministic under the fixed step, not wall-clock-timed.
-   - Acceptance: build a wall mid-episode in two fresh JVMs (same seed) → identical
-     hashes while daggers re-route around it.
+   - Acceptance met: a wall is placed at tick 2880 in two fresh JVMs (same seed) →
+     73 identical hashes while daggers re-route around it.
 3. **Golden replay files + `tests/golden/`.**
    - Objective: check in seed + action trace + expected hashes; wire
      `make determinism` to also verify against the stored trace (≥10k ticks,

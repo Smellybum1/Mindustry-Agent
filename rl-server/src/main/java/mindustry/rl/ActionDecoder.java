@@ -2,6 +2,8 @@ package mindustry.rl;
 
 import agentcore.skill.*;
 import arc.util.serialization.*;
+import mindustry.content.*;
+import mindustry.game.*;
 
 import static mindustry.Vars.*;
 
@@ -79,6 +81,21 @@ final class ActionDecoder{
                     return result(agentId, false, "malformed", type);
                 }
                 agent.controller.setSkill(new Wait(ticks));
+                return result(agentId, true, "accepted", type);
+            }
+
+            //M4.1 acceptance-only hook. It is unavailable in every normal launch and is
+            //removed once the legal BUILD skill supplies this trace in M4.2.
+            case "TEST_PLACE_WALL":{
+                if(!Boolean.getBoolean("mindustry.rl.testHooks")){
+                    return result(agentId, false, "test_hooks_disabled", type);
+                }
+                int tx = command.getInt("tile_x", Integer.MIN_VALUE);
+                int ty = command.getInt("tile_y", Integer.MIN_VALUE);
+                if(!inBounds(tx, ty)){
+                    return result(agentId, false, "out_of_bounds", type);
+                }
+                world.tile(tx, ty).setBlock(Blocks.copperWall, Team.sharded, 0);
                 return result(agentId, true, "accepted", type);
             }
 

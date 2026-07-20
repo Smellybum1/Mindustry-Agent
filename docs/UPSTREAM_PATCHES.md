@@ -74,16 +74,20 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
     even if it were entered the seed would be `state.wave` (deterministic), never
     `hashCode()`. Neutralized by rules, not by patch.
   - *Wall clock*: `syncUpdate()` reads no clock. The one remaining `Time.millis()`
-    gate is the `afterGameUpdate` refresh handler (`:190-193`), reached **only** when
-    `needsRefresh` is set by a tile change; the current deterministic trace (mining
-    agents + waves, no building) never changes a pathfinding-relevant tile, so it
-    never fires. Dynamic re-pathing determinism (agents building walls under fire,
-    M4) will require neutralizing that gate and is tracked there.
+    gate is the normal-mode `afterGameUpdate` refresh handler (`:190-193`). In the
+    thread-less deterministic path, `syncUpdate()` now consumes `needsRefresh`
+    immediately on the simulation thread, refreshes targets, marks every registered
+    flow field dirty, and fully converges it in the same call. It does not read or
+    update the wall-clock timestamp. The ordinary threaded handler is untouched.
 - **Risk**: minimal — additive public method, no existing code touched, no normal-mode
   path affected. Verified by `bash scripts/determinism.sh` (two fresh JVMs, identical
   hashes across the moving-enemy window) and `scripts/smoke.sh` (daggers path to the
   core deterministically).
 - **Introduced by**: bootstrap-defense-v0 scenario loader (this branch, M4 prep).
+- **M4.1 amendment (2026-07-20)**: extended only `syncUpdate()` with the
+  thread-less tile-change refresh described above. Verified by the determinism
+  harness placing a copper wall in the east lane after wave 1 spawns, then comparing
+  hashes across two fresh JVMs while daggers continue around the changed tile.
 
 ## M1 decision: pathfinder threads — reflection, not an upstream patch
 

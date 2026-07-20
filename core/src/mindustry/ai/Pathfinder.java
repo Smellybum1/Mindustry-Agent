@@ -366,6 +366,29 @@ public class Pathfinder implements Runnable{
     public void syncUpdate(){
         if(net.client()) return;
         if(state.isPlaying()){
+            //The normal afterGameUpdate handler deliberately coalesces tile changes behind
+            //a wall-clock gate. External fixed-step drivers stop this class's background
+            //thread, so consume that pending refresh here on the simulation thread instead.
+            //No normal-mode behaviour changes: the engine never calls syncUpdate().
+            if(needsRefresh){
+                needsRefresh = false;
+
+                for(Flowfield path : mainList){
+                    if(path != null && path.needsRefresh()){
+                        synchronized(path.targets){
+                            path.updateTargetPositions();
+                        }
+                    }
+                }
+
+                //The stopped background thread has exclusive ownership in normal play. In
+                //thread-less deterministic mode this caller owns threadList, so mark fields
+                //directly and converge them below without an asynchronous queue hand-off.
+                for(Flowfield data : threadList){
+                    data.dirty = true;
+                }
+            }
+
             queue.run();
             for(Flowfield data : threadList){
                 if(data.dirty && data.frontier.size == 0){

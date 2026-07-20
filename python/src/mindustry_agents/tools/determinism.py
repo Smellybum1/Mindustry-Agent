@@ -28,11 +28,25 @@ CHUNK = 60
 CHUNKS = 10
 SEED = 12345
 
-# Scenario phase: step past wave 1 (spawn tick 2700) so enemy daggers spawn and
-# march the lane under the deterministic synchronous flow-field. Hashes across this
-# window are the critical new determinism evidence (moving enemies), and are what
-# makes two *different* seeds diverge (wave spawn spread is seeded from root_seed).
-POSTWAVE_TARGET = 2880
+# Scenario phase: step past wave 1 (spawn tick 2700), then place a wall in the
+# approach lane at tick 2880. The remaining window proves the tile-change refresh
+# and enemy re-path are deterministic, not merely static-map flow-field movement.
+WALL_TICK = 2880
+POSTWAVE_TARGET = 3300
+WALL_TILE = (33, 24)
+
+
+def _test_wall_action() -> list[dict]:
+    return [
+        {
+            "agent_id": 0,
+            "command": {
+                "type": "TEST_PLACE_WALL",
+                "tile_x": WALL_TILE[0],
+                "tile_y": WALL_TILE[1],
+            },
+        }
+    ]
 
 
 def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
@@ -62,19 +76,54 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
         tick = sr.tick
         hashes.append((f"{label}@{tick}", sr.state_hash))
 
-    # Scenario phase: idle (undefended) past wave 1 so daggers spawn and move.
+    # Scenario phase 1: idle until the daggers are moving toward the lane wall.
+    while tick < WALL_TICK:
+        step = min(CHUNK, WALL_TICK - tick)
+        sr = env.step(rr.episode_id, expected_tick=tick, ticks_to_advance=step)
+        if sr.tick != tick + step:
+            raise AssertionError(f"tick {sr.tick} != {tick + step} (non-exact advance)")
+        tick = sr.tick
+        hashes.append((f"wave@{tick}", sr.state_hash))
+
+    before_dist = float(sr.observations[0]["team"]["enemy_nearest_core_dist"])
+
+    # M4.1: place a pathfinding-relevant wall after wave 1 has spawned. This test
+    # hook is JVM-property gated and replaced by the legal BUILD skill in M4.2.
+    sr = env.step(
+        rr.episode_id,
+        expected_tick=tick,
+        ticks_to_advance=1,
+        agent_actions=_test_wall_action(),
+    )
+    if not sr.action_results or not sr.action_results[0].get("accepted"):
+        raise AssertionError(f"test wall placement rejected: {sr.action_results}")
+    tick = sr.tick
+    hashes.append((f"wall@{tick}", sr.state_hash))
+
+    # Continue while the daggers encounter and route around the new wall. Their
+    # nearest-core distance must keep falling, proving the refreshed field is live.
     while tick < POSTWAVE_TARGET:
         step = min(CHUNK, POSTWAVE_TARGET - tick)
         sr = env.step(rr.episode_id, expected_tick=tick, ticks_to_advance=step)
         if sr.tick != tick + step:
             raise AssertionError(f"tick {sr.tick} != {tick + step} (non-exact advance)")
         tick = sr.tick
-        hashes.append((f"wave@{tick}", sr.state_hash))
+        hashes.append((f"repath@{tick}", sr.state_hash))
+    after_dist = float(sr.observations[0]["team"]["enemy_nearest_core_dist"])
+    if not 0 <= after_dist < before_dist:
+        raise AssertionError(
+            f"daggers did not continue around wall: nearest-core distance {before_dist} -> {after_dist}"
+        )
     return hashes
 
 
 def _fresh_run(port: int, java: str, seed: int) -> list[tuple[str, str]]:
-    with RlServerProcess(LaunchConfig(port=port, java=java)) as env:
+    config = LaunchConfig(
+        port=port,
+        java=java,
+        jvm_args=("-Dmindustry.rl.testHooks=true",),
+    )
+    with RlServerProcess(config) as env:
         env.handshake()
         return run_schedule(env, seed)
 
