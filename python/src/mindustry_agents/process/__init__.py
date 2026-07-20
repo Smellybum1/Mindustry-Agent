@@ -5,5 +5,9 @@ Will launch and supervise one persistent ``rl-server`` JVM per environment
 dead children, and restart crashed processes. One environment maps to one JVM;
 parallelism comes from many persistent processes, not many worlds per JVM.
 
-Currently a skeleton package; the supervisor lands in roadmap M2.
+M2 status: implemented. ``launcher.py`` owns a single JVM (build/spawn, READY
+parsing, control connection, stderr capture, graceful shutdown). ``supervisor.py``
+manages a pool of them — unique ports, per-child seeds/logs, handshake
+verification, crash/hang detection with automatic replacement, and orphan-free
+shutdown (atexit + context manager).
 """
