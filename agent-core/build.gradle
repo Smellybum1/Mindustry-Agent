@@ -6,6 +6,8 @@
 //
 // Repositories and Java 17 release target come from the root build.gradle.
 
+apply plugin: "java"
+
 sourceSets.main.java.srcDirs = ["src/main/java"]
 sourceSets.test.java.srcDirs = ["src/test/java"]
 

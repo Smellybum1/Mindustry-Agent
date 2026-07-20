@@ -7,6 +7,8 @@
 // Repositories, Java 17 release target, and JavaCompile options are applied by
 // the root build.gradle to all subprojects; keep this file minimal.
 
+apply plugin: "java"
+
 sourceSets.main.java.srcDirs = ["src/main/java"]
 
 project.ext.mainClassName = "mindustry.rl.RlServerMain"
