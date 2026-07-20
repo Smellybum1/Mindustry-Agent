@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# test-java.sh — Java JUnit tests.
-# Not implemented yet. Exits nonzero by design (see AGENTS.md §1).
+# test-java.sh — Java JUnit tests (agent-core) + compile checks for custom modules.
 set -euo pipefail
-echo "not implemented: see docs/ROADMAP.md#milestone-0" >&2
-echo "(Java JUnit tests)" >&2
-exit 1
+cd "$(dirname "$0")/.."
+./gradlew agent-core:test rl-server:classes agent-plugin:classes --console=plain
+echo "test-java: OK"

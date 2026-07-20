@@ -30,9 +30,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make build` | Validates the Python package imports; prints that the Java build is not wired into this target yet. (Java build is manual until M0/M1.) |
 | `make test` | Runs Python tests (13 pass) and notes the Java test harness is pending. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
-| `make test-java` | **Exits 1** — not implemented (M0). |
-| `make smoke` | **Exits 1** — not implemented (M1). |
-| `make determinism` | **Exits 1** — not implemented (M1). |
+| `make test-java` | `gradlew agent-core:test` (64 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
+| `make smoke` | Builds `rl-server.jar` if missing, launches one JVM, handshake + `reset(seed=12345)` + 10×60 ticks; prints transcript ending `SMOKE OK: tick advanced exactly 600`, exit 0. Verified 2026-07-20. |
+| `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary; in-JVM reset purity check; ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
 | `make stress-reset` | **Exits 1** — not implemented (M2). |
 | `make benchmark` | **Exits 1** — not implemented (M2). |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
@@ -45,18 +45,28 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 - **Key modules**: `rl-server` (headless fixed-step launcher, `mindustry.rl`),
   `agent-core` (`agentcore`), `agent-plugin` (`mindustry.agentplugin`); Python
   `mindustry_agents` package. See `docs/ARCHITECTURE.md`.
-- **Important classes/functions**: `mindustry.rl.RlServerMain` (entry point,
-  placeholder); `agentcore.{TaskType,CoordinationAct,SkillStatus,AgentId}`;
-  `mindustry_agents.protocol.{encode,decode,decode_stream,read_message}`.
+- **Important classes/functions**: `mindustry.rl.RlServer` (fixed-step launcher +
+  control loop; see `FixedStepApplication`, `FixedStepGraphics`, `StateHasher`,
+  `ScenarioLoader` in `rl-server/src/main/java/mindustry/rl/`);
+  `agentcore.board.TaskBoard` + `agentcore.{task,reservation,event,announce,utility}`
+  (see `docs/COORDINATION.md`);
+  `mindustry_agents.protocol.{encode,decode,decode_stream,read_message}`;
+  `mindustry_agents.process.launcher` (JVM supervisor, tracks spawned PID only).
 - **Protocol entry points**: `docs/PROTOCOL.md` (spec v1);
-  `python/src/mindustry_agents/protocol.py` (reference impl). Java encoder TODO
-  (M1).
+  `python/src/mindustry_agents/protocol.py` (reference impl); Java side in
+  `mindustry.rl` (length-prefixed JSON, byte-compatible — verified by smoke).
 - **Simulation thread rules**: only the sim thread reads/mutates game state; I/O
   threads parse+queue (`docs/ARCHITECTURE.md` threading rule).
-- **Reset path**: TODO (M1/M2) — in-process reset, no JVM restart.
-- **Step path**: TODO (M1) — atomic action bundle → advance exact ticks → hash.
-- **Observation path**: TODO (M1/M3) — built on the sim thread at a boundary.
-- **Task/skill path**: TODO (M3–M5) — task board + skill executors in `agent-core`.
+- **Reset path**: `RlServer` reset handler — `Logic.reset()` plus the gaps it
+  leaves (reseed `Mathf.rand`, reset `EntityGroup.lastId`, zero `Time` incl.
+  `globalTimeRaw`, pathfinder threads stopped); in-process, no JVM restart,
+  ~4 ms median. See `docs/ENGINE_NOTES.md`.
+- **Step path**: queued request → sim thread applies action bundle → exactly N
+  fixed-delta engine updates → observation + SHA-256 canonical hash.
+- **Observation path**: built on the sim thread at the step boundary (M1 minimal:
+  tick/wave/core items/counts/health; per-agent observations are M3).
+- **Task/skill path**: `agentcore` contract board implemented (M5-ready);
+  skill executors + engine adapter TODO (M3–M5).
 
 ## Current performance
 
