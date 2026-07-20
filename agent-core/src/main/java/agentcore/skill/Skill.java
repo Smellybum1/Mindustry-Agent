@@ -10,7 +10,8 @@ package agentcore.skill;
  *
  * <p>The M3/M4 set includes {@link NavigateTo}, {@link MineResource},
  * {@link DeliverToCore}, {@link Wait}, {@link BuildBlock}, and
- * {@link ExecuteSchematic}. Higher-level task actions (M5) compose these unchanged.
+ * {@link ExecuteSchematic}, and {@link SupplyBuilding}. Higher-level task actions
+ * (M5) compose these unchanged.
  */
 public interface Skill{
 

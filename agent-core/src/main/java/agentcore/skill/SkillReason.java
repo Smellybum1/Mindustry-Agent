@@ -50,5 +50,15 @@ public enum SkillReason{
     /** The unit could not enter engine build range. */
     OUT_OF_RANGE,
     /** An enqueued build plan disappeared before completion. */
-    PLAN_REMOVED
+    PLAN_REMOVED,
+    /** Withdrawing requested items from the team core. */
+    WITHDRAWING,
+    /** Carrying/depositing requested items into a building. */
+    SUPPLYING,
+    /** Target received the request or refuses further stock. */
+    SUPPLIED,
+    /** The team core cannot provide more of the requested item. */
+    CORE_SHORT,
+    /** Existing unit cargo is a different item and cannot be mixed. */
+    CARGO_MISMATCH
 }

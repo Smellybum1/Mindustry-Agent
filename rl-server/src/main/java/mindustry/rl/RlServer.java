@@ -520,6 +520,12 @@ public final class RlServer{
         o.put("reason", r.reason().name());
         o.put("progress", r.progress());
         o.put("next_retry_tick", r.nextRetryTick());
+        if(sc.activeSkill() instanceof SupplyBuilding supply){
+            o.put("requested", supply.requested());
+            o.put("delivered", supply.delivered());
+            o.put("target_stock_before", supply.targetStockBefore());
+            o.put("target_stock", supply.targetStock());
+        }
         return o;
     }
 

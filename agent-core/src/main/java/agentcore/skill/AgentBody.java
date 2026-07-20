@@ -12,8 +12,8 @@ package agentcore.skill;
  *
  * <p>Contract: all reads reflect current engine state on the simulation thread; all
  * movement/mining calls take effect on the tick they are issued. No teleports and no
- * free items — {@link #transferCargoToCore()} routes through the game's legal transfer
- * path (docs/M3_DESIGN.md D4, open question 3).
+ * free items — core delivery and building supply route through the game's legal
+ * transfer paths (docs/M3_DESIGN.md D4; docs/M4_DESIGN.md S3).
  */
 public interface AgentBody{
 
@@ -61,6 +61,9 @@ public interface AgentBody{
 
     int cargoCapacity();
 
+    /** Carried item content id, or the empty string when cargo is empty. */
+    String cargoItem();
+
     // -- core delivery -----------------------------------------------------
 
     boolean hasCore();
@@ -104,4 +107,31 @@ public interface AgentBody{
 
     /** Whether the team core currently holds the full recipe for this block. */
     boolean hasBuildResources(String block);
+
+    // -- building supply -------------------------------------------------
+
+    /** Legal player/unit item interaction range in world units. */
+    float supplyRange();
+
+    float supplyTargetX(int tileX, int tileY);
+
+    float supplyTargetY(int tileX, int tileY);
+
+    /** Classify the current team building and whether it can accept this item. */
+    SupplyTargetState supplyTargetState(String item, int tileX, int tileY);
+
+    /** Item count the target would accept now; zero for a full/refusing target. */
+    int supplyTargetCapacity(String item, int tileX, int tileY);
+
+    /** Engine-native stored amount (turret ammo units for an item turret). */
+    int supplyTargetStock(String item, int tileX, int tileY);
+
+    /** Current amount of an item held by the team core. */
+    int coreItemAmount(String item);
+
+    /** Withdraw through the engine's legal core-to-unit path; returns actual moved. */
+    int withdrawFromCore(String item, int amount);
+
+    /** Deposit carried items through the legal unit-to-building path. */
+    int transferCargoToBuilding(String item, int tileX, int tileY, int amount);
 }

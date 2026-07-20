@@ -77,9 +77,8 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
         tick = sr.tick
         hashes.append((f"{label}@{tick}", sr.state_hash))
 
-    # M4.3: execute the full data-backed seven-block schematic beside, but clear
-    # of, the approach lane. Keeping the builder near the later dynamic wall
-    # makes that trace exercise re-pathing rather than long-distance navigation.
+    # M4.3: execute the full data-backed seven-block schematic away from the
+    # combat lane so supplied turrets do not alter the later wall-under-fire ledger.
     schematic_before = int(sr.observations[0]["team"]["copper"])
     schematic_actions = [
         {
@@ -87,8 +86,8 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
             "command": {
                 "type": "SCHEMATIC",
                 "name": "east_duo_v1",
-                "tile_x": 28,
-                "tile_y": 18,
+                "tile_x": 12,
+                "tile_y": 12,
             },
         }
     ]
@@ -112,6 +111,64 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
         raise AssertionError(
             f"schematic ledger did not consume 100 copper: {schematic_before} -> {schematic_after}"
         )
+
+    # M4.4: each empty Duo accepts 15 copper as 30 ammo units. Supply both in
+    # agent-index order and cover the legal core-withdraw/deposit state in replay.
+    supply_before = schematic_after
+    sr = env.step(
+        rr.episode_id,
+        expected_tick=tick,
+        ticks_to_advance=10,
+        agent_actions=[
+            {
+                "agent_id": agent_id,
+                "command": {
+                    "type": "SUPPLY",
+                    "item": "copper",
+                    "tile_x": 12,
+                    "tile_y": tile_y,
+                    "amount": 30,
+                },
+            }
+            for agent_id, tile_y in ((0, 11), (1, 13))
+        ],
+    )
+    tick = sr.tick
+    hashes.append((f"supply@{tick}", sr.state_hash))
+    supply_after = int(sr.observations[0]["team"]["copper"])
+    if supply_before - supply_after != 30:
+        raise AssertionError(
+            f"supply ledger did not consume 30 copper: {supply_before} -> {supply_after}"
+        )
+    for i, obs in enumerate(sr.observations):
+        skill = obs["skill"]
+        if skill["status"] != "SUCCEEDED" or skill["reason"] != "SUPPLIED":
+            raise AssertionError(f"agent {i} supply did not complete: {skill}")
+        if int(skill.get("delivered", -1)) != 15 or int(skill.get("target_stock", -1)) != 30:
+            raise AssertionError(f"agent {i} supply accounting mismatch: {skill}")
+        if int(obs["unit"]["item_amount"]) != 0:
+            raise AssertionError(f"agent {i} retained cargo after supply: {obs['unit']}")
+
+    # Return the builder near (but outside) the approach lane before enemies
+    # spawn. This keeps the later legal wall build focused on path refresh.
+    reposition = [
+        {
+            "agent_id": 0,
+            "command": {"type": "NAVIGATE", "x": 244, "y": 164, "tolerance": 4},
+        }
+    ]
+    for _ in range(5):
+        sr = env.step(
+            rr.episode_id,
+            expected_tick=tick,
+            ticks_to_advance=60,
+            agent_actions=reposition,
+        )
+        reposition = []
+        tick = sr.tick
+        hashes.append((f"builder-ready@{tick}", sr.state_hash))
+    if sr.observations[0]["skill"]["status"] != "SUCCEEDED":
+        raise AssertionError(f"builder did not return to lane: {sr.observations[0]['skill']}")
 
     # Scenario phase 1: idle until the daggers are moving toward the lane wall.
     while tick < WALL_TICK:

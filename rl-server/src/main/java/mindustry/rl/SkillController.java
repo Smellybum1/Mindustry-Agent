@@ -7,6 +7,7 @@ import mindustry.gen.*;
 import mindustry.type.*;
 import mindustry.world.*;
 import mindustry.world.blocks.ConstructBlock.*;
+import mindustry.world.blocks.defense.turrets.*;
 
 import static mindustry.Vars.*;
 
@@ -23,8 +24,9 @@ import static mindustry.Vars.*;
  * flat bootstrap map moves deterministically (docs/ENGINE_NOTES.md §5.3).
  *
  * <p>All state reads/writes happen on the simulation thread. No teleports and no free
- * items: mining accrues through the engine's {@code MinerComp} and delivery routes through
- * {@code Call.transferItemTo} (docs/M3_DESIGN.md D4, resolved open question 3).
+ * items: mining accrues through the engine's {@code MinerComp}; delivery/supply route
+ * through {@code Call.transferItemTo}, and core withdrawal through {@code Call.takeItems}
+ * (docs/M3_DESIGN.md D4; docs/M4_DESIGN.md S3).
  */
 public final class SkillController extends AIController implements AgentBody{
     private static final Vec2 steer = new Vec2();
@@ -104,6 +106,11 @@ public final class SkillController extends AIController implements AgentBody{
     @Override public int cargoAmount(){ return ((Itemsc)unit).stack().amount; }
 
     @Override public int cargoCapacity(){ return unit.type.itemCapacity; }
+
+    @Override public String cargoItem(){
+        Item item = ((Itemsc)unit).item();
+        return item == null ? "" : item.name;
+    }
 
     @Override public boolean hasCore(){ return core() != null; }
 
@@ -205,6 +212,93 @@ public final class SkillController extends AIController implements AgentBody{
         return true;
     }
 
+    @Override public float supplyRange(){ return itemTransferRange; }
+
+    @Override public float supplyTargetX(int tileX, int tileY){
+        Building target = building(tileX, tileY);
+        return target == null ? tileCenterX(tileX) : target.x;
+    }
+
+    @Override public float supplyTargetY(int tileX, int tileY){
+        Building target = building(tileX, tileY);
+        return target == null ? tileCenterY(tileY) : target.y;
+    }
+
+    @Override
+    public SupplyTargetState supplyTargetState(String item, int tileX, int tileY){
+        Building target = building(tileX, tileY);
+        Item requested = content.item(item);
+        if(target == null || requested == null || target.team != unit.team
+            || target.items == null || !target.interactable(unit.team())){
+            return SupplyTargetState.INVALID;
+        }
+        if(target.block instanceof ItemTurret turret && !turret.ammoTypes.containsKey(requested)){
+            return SupplyTargetState.INVALID;
+        }
+        return target.acceptStack(requested, 1, unit) > 0
+            ? SupplyTargetState.ACCEPTING : SupplyTargetState.FULL;
+    }
+
+    @Override
+    public int supplyTargetCapacity(String item, int tileX, int tileY){
+        Building target = building(tileX, tileY);
+        Item requested = content.item(item);
+        if(target == null || requested == null || target.team != unit.team || target.items == null
+            || !target.interactable(unit.team())){
+            return 0;
+        }
+        if(target.block instanceof ItemTurret turret && !turret.ammoTypes.containsKey(requested)){
+            return 0;
+        }
+        return target.acceptStack(requested, Integer.MAX_VALUE, unit);
+    }
+
+    @Override
+    public int supplyTargetStock(String item, int tileX, int tileY){
+        Building target = building(tileX, tileY);
+        Item requested = content.item(item);
+        if(target == null || requested == null || target.items == null) return 0;
+        if(target instanceof Turret.TurretBuild turret) return turret.totalAmmo;
+        return target.items.get(requested);
+    }
+
+    @Override
+    public int coreItemAmount(String item){
+        Building c = core();
+        Item requested = content.item(item);
+        return c == null || requested == null || c.items == null ? 0 : c.items.get(requested);
+    }
+
+    @Override
+    public int withdrawFromCore(String item, int amount){
+        Building c = core();
+        Item requested = content.item(item);
+        if(c == null || requested == null || amount <= 0 || c.team != unit.team
+            || !c.interactable(unit.team()) || !unit.within(c, itemTransferRange)){
+            return 0;
+        }
+        int before = ((Itemsc)unit).stack().amount;
+        Call.takeItems(c, requested, amount, unit);
+        return ((Itemsc)unit).stack().amount - before;
+    }
+
+    @Override
+    public int transferCargoToBuilding(String item, int tileX, int tileY, int amount){
+        Building target = building(tileX, tileY);
+        Item requested = content.item(item);
+        Itemsc items = (Itemsc)unit;
+        if(target == null || requested == null || amount <= 0 || items.item() != requested
+            || target.team != unit.team || target.items == null || !target.interactable(unit.team())
+            || !unit.within(target, itemTransferRange)){
+            return 0;
+        }
+        int accepted = target.acceptStack(requested, Math.min(amount, items.stack().amount), unit);
+        if(accepted > 0){
+            Call.transferItemTo(unit, requested, accepted, unit.x, unit.y, target);
+        }
+        return accepted;
+    }
+
     private Block block(String name){
         return content.block(name);
     }
@@ -212,4 +306,10 @@ public final class SkillController extends AIController implements AgentBody{
     private Building core(){
         return unit.team().core();
     }
+
+    private Building building(int tileX, int tileY){
+        Tile tile = world.tile(tileX, tileY);
+        return tile == null ? null : tile.build;
+    }
+
 }

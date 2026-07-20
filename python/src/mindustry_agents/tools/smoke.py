@@ -231,7 +231,7 @@ def run_build_phase(env, seed: int) -> int:
 
 
 def run_schematic_phase(env, seed: int) -> int:
-    """Execute east_duo_v1 from data and prove its seven-block 100-copper ledger."""
+    """Build east_duo_v1, then supply both Duos through exact engine ledgers."""
     print("\n== M4 ExecuteSchematic phase ==")
     rr = env.reset(root_seed=seed, agent_count=2)
     episode = rr.episode_id
@@ -277,6 +277,53 @@ def run_schematic_phase(env, seed: int) -> int:
         print(f"FAIL: east_duo_v1 cost {before - after} != 100", file=sys.stderr)
         return 1
     print("  SCHEMATIC BALANCE OK: 2 Duos + 5 walls completed in data order for 100 copper")
+
+    print("\n== M4 SupplyBuilding phase ==")
+    supply_before = after
+    actions = [
+        {
+            "agent_id": agent_id,
+            "command": {
+                "type": "SUPPLY",
+                "item": "copper",
+                "tile_x": 32,
+                "tile_y": tile_y,
+                # A Duo holds 30 ammo units and copper has ammoMultiplier=2,
+                # so it legally accepts 15 of this 30-item request then refuses.
+                "amount": 30,
+            },
+        }
+        for agent_id, tile_y in ((0, 23), (1, 25))
+    ]
+    for _ in range(10):
+        sr = env.step(
+            episode, expected_tick=tick, ticks_to_advance=10, agent_actions=actions
+        )
+        actions = []
+        tick = sr.tick
+        skills = [_skill(sr, 0), _skill(sr, 1)]
+        if all(s["status"] in {"SUCCEEDED", "BLOCKED", "FAILED"} for s in skills):
+            break
+
+    supply_after = _core_copper(sr)
+    skills = [_skill(sr, 0), _skill(sr, 1)]
+    cargo = [int(sr.observations[i]["unit"]["item_amount"]) for i in range(2)]
+    print(f"  core copper before/after          : {supply_before} -> {supply_after}")
+    for i, supplied in enumerate(skills):
+        print(
+            f"  Duo {i} delivered/ammo            : {supplied.get('delivered')} copper / "
+            f"{supplied.get('target_stock')} ammo; cargo={cargo[i]}"
+        )
+    ok = supply_before - supply_after == 30 and cargo == [0, 0]
+    for supplied in skills:
+        ok = ok and supplied["status"] == "SUCCEEDED" and supplied["reason"] == "SUPPLIED"
+        ok = ok and int(supplied.get("delivered", -1)) == 15
+        ok = ok and int(supplied.get("target_stock_before", -1)) == 0
+        ok = ok and int(supplied.get("target_stock", -1)) == 30
+    if not ok:
+        print(f"FAIL: supply ledger mismatch: skills={skills} cargo={cargo}", file=sys.stderr)
+        return 1
+    print("  SUPPLY BALANCE OK: two Duos accepted 15 copper each as 30 ammo; core spent exactly 30")
     return 0
 
 
@@ -368,7 +415,7 @@ def main(argv=None) -> int:
         h = env.health()
         print(f"health: ok={h.ok} uptime_ticks={h.uptime_ticks} episode={h.episode_id}")
 
-    print("\nSMOKE OK: exact stepping + mine/deliver/build/schematic ledgers balanced")
+    print("\nSMOKE OK: exact stepping + mine/deliver/build/schematic/supply ledgers balanced")
     return 0
 
 

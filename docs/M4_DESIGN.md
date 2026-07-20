@@ -1,6 +1,6 @@
 # M4 Design — Build, Supply, Rebuild, Defend Skills
 
-Status: approved design; implementation in progress (M4.1–4.3 completed 2026-07-20).
+Status: approved design; implementation in progress (M4.1–4.4 completed 2026-07-20).
 Author: Fable bootstrap pass, 2026-07-20.
 Prereqs: M3 verified (skill layer + agent units); bootstrap-defense-v0 scenario
 loader with waves (in progress) — Defend/Rebuild need live enemies to be testable.
@@ -45,8 +45,9 @@ no free items or teleports; all mutations on the sim thread.
   `Call.transferItemTo` (same call as M3 deliver, target = the building).
 - Turrets accept copper as ammo through `ItemTurret.handleStack/acceptStack`
   (verify); SUCCEEDED when `amount` delivered or the building refuses further
-  stock (report actual delivered in the result); BLOCKED(CORE_SHORT) if the
-  core cannot supply.
+  stock (report actual delivered in the result). Withdrawal is capped to current
+  target capacity, so a full target never strands excess cargo; BLOCKED(CORE_SHORT)
+  if the core cannot supply.
 
 ### S4. RebuildRegion(rect)
 
@@ -99,8 +100,9 @@ supply runs must perturb it deterministically.
 - FSM unit tests with stubbed `AgentBody` (mirror M3's 13).
 - Integration (real engine, scripted): build a single Duo from core stock —
   assert core copper decreased by exactly the Duo cost (35 per STRATEGY_NOTES;
-  cite Blocks.java) and the building exists; supply 30 copper to it — assert
-  turret ammo increased accordingly and core decreased by exactly 30;
+  cite Blocks.java) and the building exists; supply both schematic Duos with 15
+  copper each — assert each turret gains 30 ammo units and core decreases by
+  exactly 30 (one Duo cannot accept 30 copper; resolved question 4);
   schematic east_duo_v1 completes; determinism across two processes with the
   full build+supply trace; smoke ledger extended to cover build/supply flows.
 - With waves live: defend integration — 2 supplied Duos + 1 defending agent
@@ -115,8 +117,9 @@ board wiring (M5), rewards (M7), multi-unit squads.
 
 ## Open questions for the implementer (resolve against source, record here)
 
-**Questions 1 and 5 resolved during M4.2 implementation (2026-07-20); 2–4 remain
-for their owning roadmap items. Answers cite this checkout (v159.7).**
+**Questions 1 and 5 resolved during M4.2 implementation and 2 and 4 during M4.4
+(2026-07-20); question 3 remains for its owning roadmap item. Answers cite this
+checkout (v159.7).**
 
 1. **Core resource consumption for unit build plans. RESOLVED.**
    `BuilderComp.updateBuildLogic()` begins a legal placement through
@@ -128,10 +131,26 @@ for their owning roadmap items. Answers cite this checkout (v159.7).**
    `BuilderComp` copies engine progress to `BuildPlan.progress` and marks unchanged
    progress stuck (`BuilderComp.java:220-221`). Thus shortage stalls a real plan;
    `BuildBlock` detects that stall without placing blocks or editing inventory.
-2. Legal core-withdrawal call for S3 and its constraints (amount caps, range).
+2. **Legal core withdrawal. RESOLVED.** The player handler validates team
+   interaction, positive amount, and `itemTransferRange` (220 world units) in
+   `InputHandler.requestItem` (`core/src/mindustry/input/InputHandler.java:496-507`),
+   then calls `Call.takeItems`. There is no `Player` for an RL unit, so the live
+   adapter enforces the same unit/range/content constraints and calls that lower
+   legal path directly. `InputHandler.takeItems` (`:166-175`) removes at most
+   `min(unit.maxAccepted(item), amount)` from the building, adds exactly that to
+   the unit, and creates only transfer effects afterward. `SupplyBuilding` also
+   caps withdrawal to target capacity, preventing leftover cargo when a target fills.
 3. Exact field for the broken-block/rebuild queue and its determinism
    (iteration order) for S4.
-4. Turret ammo accounting for hash inclusion (ItemTurret ammo representation).
+4. **Turret ammo accounting. RESOLVED for S3.** `TurretBuild` stores ordered
+   `ammo` entries and integer `totalAmmo` (`Turret.java:282-283`).
+   `ItemTurretBuild.acceptStack` caps item count by
+   `(maxAmmo-totalAmmo)/ammoMultiplier` (`ItemTurret.java:133-138`), while
+   `handleItem` adds the bullet type's multiplier to `totalAmmo` and its ordered
+   entry (`:155-183`). Duo copper has `ammoMultiplier=2` (`Blocks.java:3261-3265`)
+   and `Turret.maxAmmo` defaults to 30 (`Turret.java:47`); therefore one empty Duo accepts exactly
+   15 copper and reaches 30 ammo units. The smoke supplies two Duos for a truthful
+   aggregate core delta of 30. M4.7 still owns canonical-hash inclusion.
 5. **Duo cost. RESOLVED:** `Blocks.duo` is created at
    `core/src/mindustry/content/Blocks.java:3258` with
    `requirements(Category.turret, with(Items.copper, 35))` at `:3259`. Live smoke

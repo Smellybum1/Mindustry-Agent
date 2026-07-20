@@ -34,6 +34,11 @@ public record SkillResult(SkillStatus status, SkillReason reason, float progress
         return new SkillResult(SkillStatus.SUCCEEDED, reason, 1f, -1L);
     }
 
+    /** Successful terminal result with partial requested progress (e.g. target full). */
+    public static SkillResult succeeded(SkillReason reason, float progress){
+        return new SkillResult(SkillStatus.SUCCEEDED, reason, progress, -1L);
+    }
+
     public static SkillResult blocked(SkillReason reason, long nextRetryTick){
         return new SkillResult(SkillStatus.BLOCKED, reason, 0f, nextRetryTick);
     }

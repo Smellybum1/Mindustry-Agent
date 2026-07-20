@@ -2,6 +2,7 @@ package mindustry.rl;
 
 import agentcore.skill.*;
 import arc.util.serialization.*;
+import mindustry.type.*;
 import mindustry.world.*;
 
 import static mindustry.Vars.*;
@@ -13,7 +14,8 @@ import static mindustry.Vars.*;
  * <p>Every action is validated; an invalid one yields {@code accepted=false} with a reason
  * code in the {@code action_results[]} entry and <b>never</b> throws. Command types:
  * {@code NAVIGATE}, {@code MINE}, {@code DELIVER_CORE}, {@code WAIT}, {@code BUILD},
- * and {@code CONTINUE} (or an absent command) which keeps the current skill running.
+ * {@code SCHEMATIC}, {@code SUPPLY}, and {@code CONTINUE} (or an absent command)
+ * which keeps the current skill running.
  *
  * <p>Well-formedness (finite numbers, in-bounds tiles) is checked here; semantic
  * conditions such as a tile not actually being ore surface as a {@code BLOCKED} skill
@@ -116,6 +118,22 @@ final class ActionDecoder{
                     }
                 }
                 agent.controller.setSkill(new ExecuteSchematic(name, anchorX, anchorY, spec.blocks()));
+                return result(agentId, true, "accepted", type);
+            }
+
+            case "SUPPLY":{
+                String itemName = command.getString("item", "");
+                int tx = command.getInt("tile_x", Integer.MIN_VALUE);
+                int ty = command.getInt("tile_y", Integer.MIN_VALUE);
+                int amount = command.getInt("amount", 0);
+                Item item = content.item(itemName);
+                if(!inBounds(tx, ty)){
+                    return result(agentId, false, "out_of_bounds", type);
+                }
+                if(item == null || amount <= 0){
+                    return result(agentId, false, "malformed", type);
+                }
+                agent.controller.setSkill(new SupplyBuilding(item.name, tx, ty, amount));
                 return result(agentId, true, "accepted", type);
             }
 

@@ -249,4 +249,69 @@ class SkillsTest{
         assertEquals(2, schematic.total());
         assertEquals("copper-wall", body.buildBlock, "second authoritative entry ran last");
     }
+
+    @Test void supplyWithdrawsAndDepositsExactRequestedAmount(){
+        FakeBody body = new FakeBody(4f, 4f);
+        body.coreItems = 30;
+        SupplyBuilding supply = new SupplyBuilding("copper", 8, 8, 30);
+        SkillResult result = run(supply, body, 20);
+        assertEquals(SkillStatus.SUCCEEDED, result.status());
+        assertEquals(SkillReason.SUPPLIED, result.reason());
+        assertEquals(30, supply.delivered());
+        assertEquals(0, body.coreItems);
+        assertEquals(0, body.cargo);
+        assertEquals(60, body.supplyStock);
+    }
+
+    @Test void supplyStopsAtTargetCapacityAndReportsActualDelivery(){
+        FakeBody body = new FakeBody(4f, 4f);
+        body.coreItems = 30;
+        body.supplyCapacity = 15;
+        SupplyBuilding supply = new SupplyBuilding("copper", 8, 8, 30);
+        SkillResult result = run(supply, body, 20);
+        assertEquals(SkillStatus.SUCCEEDED, result.status());
+        assertEquals(0.5f, result.progress(), 1e-6f);
+        assertEquals(15, supply.delivered());
+        assertEquals(15, body.coreItems);
+        assertEquals(0, body.cargo);
+        assertEquals(30, body.supplyStock);
+    }
+
+    @Test void supplyBlocksWhenCoreRunsShortAfterPartialDelivery(){
+        FakeBody body = new FakeBody(4f, 4f);
+        body.coreItems = 10;
+        SupplyBuilding supply = new SupplyBuilding("copper", 8, 8, 30);
+        SkillResult result = run(supply, body, 20);
+        assertEquals(SkillStatus.BLOCKED, result.status());
+        assertEquals(SkillReason.CORE_SHORT, result.reason());
+        assertEquals(10, supply.delivered());
+        assertEquals(0, body.coreItems);
+        assertEquals(0, body.cargo);
+    }
+
+    @Test void supplyRejectsMismatchedExistingCargo(){
+        FakeBody body = new FakeBody(4f, 4f);
+        body.coreItems = 30;
+        body.cargo = 5;
+        body.cargoItem = "lead";
+        SkillResult result = new SupplyBuilding("copper", 8, 8, 10).tick(body, 0);
+        assertEquals(SkillStatus.BLOCKED, result.status());
+        assertEquals(SkillReason.CARGO_MISMATCH, result.reason());
+        assertEquals(5, body.cargo);
+        assertEquals(30, body.coreItems);
+    }
+
+    @Test void supplyFullTargetSucceedsWithoutWithdrawing(){
+        FakeBody body = new FakeBody(4f, 4f);
+        body.coreItems = 30;
+        body.supplyCapacity = 0;
+        SupplyBuilding supply = new SupplyBuilding("copper", 8, 8, 30);
+        SkillResult result = supply.tick(body, 0);
+        assertEquals(SkillStatus.SUCCEEDED, result.status());
+        assertEquals(SkillReason.SUPPLIED, result.reason());
+        assertEquals(0f, result.progress(), 1e-6f);
+        assertEquals(0, supply.delivered());
+        assertEquals(30, body.coreItems);
+        assertEquals(0, body.cargo);
+    }
 }

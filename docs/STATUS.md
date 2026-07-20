@@ -186,8 +186,8 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 - **Seed lever is now real**: same seed → identical hashes across processes/resets;
   **different seeds diverge** once enemies spawn (spawn spread). Both asserted by
   `tools/determinism.py` (now steps past wave 1, places a copper wall in the lane,
-  and follows the re-pathing enemies; the M4.3 trace also executes the ordered
-  seven-block schematic; **78** hash boundaries) — this is the first
+  and follows the re-pathing enemies; the M4 trace also executes and supplies the
+  ordered seven-block schematic; **79** hash boundaries) — this is the first
   genuine seed-sensitivity and dynamic-tile-change evidence.
 - **Undefended loss**: `tools/scenario_check.py` (wired into `scripts/smoke.sh`)
   fast-forwards past wave 1, asserts daggers spawned (`enemy_count > 0`) and **move**
@@ -195,7 +195,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   loss. Observed: core destroyed at tick **~3420–3450** (~12 s after wave 1),
   matching `docs/SCENARIOS.md` arithmetic (c) (travel + ~8.9 s contact kill), well
   under the cap.
-- **Verified 2026-07-20**: `./gradlew rl-server:dist agent-core:test` green (83
+- **Verified 2026-07-20**: `./gradlew rl-server:dist agent-core:test` green (88
   JUnit); `pytest python/tests -q` → 29 pass; `bash scripts/smoke.sh` → exit 0
   (mine/deliver ledger **and** scenario check); `bash scripts/determinism.sh` → exit
   0 (moving enemies + seed sensitivity); `bash scripts/stress-reset.sh` → exit 0
@@ -222,8 +222,14 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   engine-free `ExecuteSchematic` FSM sequences legal `BuildBlock` skills,
   reports monotone aggregate progress, and propagates inner typed failures.
   Live smoke completes two Duos plus five walls for exactly 100 core copper;
-  two fresh JVMs reproduce every one of the expanded trace's 78 hashes.
-- **4.4–4.8 remain unimplemented.**
+  two fresh JVMs reproduce the expanded trace.
+- **M4.4 — SupplyBuilding is complete.** The engine-free FSM uses the live
+  adapter's range-checked `Call.takeItems` withdrawal and `Call.transferItemTo`
+  deposit, reports actual delivered/target stock, and has typed `CORE_SHORT` and
+  `CARGO_MISMATCH` outcomes. Live smoke supplies 15 copper to each schematic Duo:
+  both reach 30 native ammo units, the core loses exactly 30 copper, and both
+  cargo stacks end empty. The full build+supply+re-path trace matches 79 hashes.
+- **4.5–4.8 remain unimplemented.**
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -248,8 +254,8 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 83 tests
-  green, including 19 M3/M4 skill tests). `agent-plugin` build still unverified.
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 88 tests
+  green, including 24 M3/M4 skill tests). `agent-plugin` build still unverified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
 

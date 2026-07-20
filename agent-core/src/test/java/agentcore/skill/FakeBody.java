@@ -32,6 +32,14 @@ final class FakeBody implements AgentBody{
 
     int cargo = 0;
     int capacity = 30;
+    String cargoItem = "copper";
+
+    float supplyRange = 220f;
+    boolean supplyTargetValid = true;
+    int supplyX = 8, supplyY = 8;
+    int supplyCapacity = 30;
+    int supplyStock = 0;
+    int supplyMultiplier = 2;
 
     // accrual model
     int ticksPerItem = 10;
@@ -121,6 +129,7 @@ final class FakeBody implements AgentBody{
 
     @Override public int cargoAmount(){ return cargo; }
     @Override public int cargoCapacity(){ return capacity; }
+    @Override public String cargoItem(){ return cargo <= 0 ? "" : cargoItem; }
 
     @Override public boolean hasCore(){ return hasCore; }
     @Override public float coreX(){ return coreX; }
@@ -159,4 +168,39 @@ final class FakeBody implements AgentBody{
         return buildProgress;
     }
     @Override public boolean hasBuildResources(String block){ return buildResources; }
+
+    @Override public float supplyRange(){ return supplyRange; }
+    @Override public float supplyTargetX(int tileX, int tileY){ return tileCenterX(tileX); }
+    @Override public float supplyTargetY(int tileX, int tileY){ return tileCenterY(tileY); }
+    @Override public SupplyTargetState supplyTargetState(String item, int tileX, int tileY){
+        if(!supplyTargetValid || tileX != supplyX || tileY != supplyY){
+            return SupplyTargetState.INVALID;
+        }
+        return supplyCapacity > 0 ? SupplyTargetState.ACCEPTING : SupplyTargetState.FULL;
+    }
+    @Override public int supplyTargetCapacity(String item, int tileX, int tileY){
+        return supplyTargetState(item, tileX, tileY) == SupplyTargetState.ACCEPTING
+            ? supplyCapacity : 0;
+    }
+    @Override public int supplyTargetStock(String item, int tileX, int tileY){
+        return supplyStock;
+    }
+    @Override public int coreItemAmount(String item){ return coreItems; }
+    @Override public int withdrawFromCore(String item, int amount){
+        int moved = Math.min(Math.min(coreItems, amount), capacity - cargo);
+        if(moved > 0){
+            coreItems -= moved;
+            cargo += moved;
+            cargoItem = item;
+        }
+        return moved;
+    }
+    @Override public int transferCargoToBuilding(String item, int tileX, int tileY, int amount){
+        if(!item.equals(cargoItem)) return 0;
+        int moved = Math.min(Math.min(cargo, amount), supplyTargetCapacity(item, tileX, tileY));
+        cargo -= moved;
+        supplyCapacity -= moved;
+        supplyStock += moved * supplyMultiplier;
+        return moved;
+    }
 }

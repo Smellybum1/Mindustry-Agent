@@ -167,12 +167,20 @@ below; implement in order — 4.1/4.2 unblock everything else.
 - Depends: 4.2.
 
 ### 4.4 SupplyBuilding (S3)
+- **DONE (verified 2026-07-20):** engine-free `SupplyBuilding` withdraws through
+  `Call.takeItems`, deposits through `Call.transferItemTo`, exposes actual delivered
+  and target-stock telemetry, and reports typed `CORE_SHORT`/`CARGO_MISMATCH`
+  blocking. Five FSM tests bring the Java total to 88. Live smoke supplies both
+  schematic Duos with 15 copper each: both reach 30 ammo units, core copper drops
+  by exactly 30, and both unit cargo stacks end empty. The expanded trace matches
+  all 79 hashes across fresh JVMs.
 - Objective: withdraw copper from core via the legal reverse path (resolve
   M4_DESIGN open question 2 — cite the call), carry, `transferItemTo` the
   turret; `SUPPLY {x,y,item,amount}` action; BLOCKED(CORE_SHORT) reachable.
-- Acceptance: supply 30 copper to a built Duo — turret ammo +30-equivalent
-  (resolve ammo accounting, open question 4), core copper −30 exactly, agent
-  cargo 0; ledger printed in smoke.
+- Acceptance: supply 30 copper across the two built Duos — each empty Duo legally
+  accepts 15 copper as 30 ammo units (`maxAmmo=30`, copper multiplier 2), core
+  copper −30 exactly, both agents cargo 0; ledger printed in smoke. The original
+  singular-Duo wording was impossible under the pinned engine's capacity rule.
 - Depends: 4.2 (needs a turret to exist).
 
 ### 4.5 RebuildRegion (S4)
