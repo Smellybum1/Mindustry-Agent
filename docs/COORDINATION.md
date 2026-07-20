@@ -219,6 +219,29 @@ SHA-256 digest covers decision kind, agent, task type, and target while excludin
 runtime tick/pacing differences. `make coordination-parity` checks both a
 recorded snapshot sequence and the two live runtime openings.
 
+## Public greedy expert (M7.3)
+
+The primary fixed-step expert deliberately does **not** enable
+`shared_expert_policy`. `UtilityExpertEpisode` reads each agent's bounded
+`task_candidates` and aligned mask, and dependency-free `GreedyUtilityPolicy`
+selects the highest score with stable candidate-index tie-breaking. It submits
+ordinary `SELECT_CANDIDATE_TASK` / `CONTINUE_CURRENT_TASK` / `ABANDON` actions,
+so M8's learned selector will inherit exactly the board, reservation, skill,
+event, and metric path proven by the winning expert.
+
+`ExpertCoordinationPlan` is also the source for public opening-fortification and
+wave-expansion schematics. `EngineCandidates` exposes only the next physically
+eligible planned layer. Tick/wave-scoped IDs make harvest, construction,
+supply, and repair retryable; the adapter suppresses simultaneous semantic
+duplicates for exclusive work. DEFEND is non-exclusive and agent-scoped.
+
+On `BLOCKED(RESOURCES_SHORT|CORE_SHORT)`, the greedy policy submits
+`ABANDON(reason=resources_short_replan)`. The next authoritative boundary
+regenerates candidates and utility scores, allowing mining or another legal
+task to win instead of silently retrying the blocked skill. The adapter counts
+successful transitions in `resource_replans`. See `CANDIDATE_GAPS.md` for the
+fixed gaps and the intentionally deferred M7.4 work.
+
 ## Utility scaffold (brief §11.1)
 
 `HandTunedUtility` implements the additive utility:
@@ -231,7 +254,7 @@ utility = team_value + urgency + capability_fit + role_fit + proximity
 ```
 
 Raw feature magnitudes come from a pluggable `FeatureSource` (the engine adapter
-fills in proximity, travel cost, danger, etc. later); `UtilityWeights` scales each
+fills in proximity, travel cost, danger, role fit, etc.); `UtilityWeights` scales each
 term, with documented hand-tuned defaults (`human_priority` dominates;
 `team_value`/`urgency` drive autonomous choice; `duplication_risk`/`switching_cost`
 discourage thrashing). `breakdown(...)` exposes every weighted term for telemetry.

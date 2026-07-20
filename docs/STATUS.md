@@ -17,7 +17,7 @@ and what is unverified.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **40 Python
+  client, parallel-env facade, vector collector) is stdlib-only too. **41 Python
   tests pass** via `python -m pytest python/tests -q` (verified 2026-07-21 with
   pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
@@ -26,8 +26,10 @@ and what is unverified.
   Milestone 1 section above.
 - **M2 scripts** (`stress-reset`, `benchmark`): implemented and passing — see the
   Milestone 2 section below.
-- **M6 entry points are implemented:** `scripted-demo`, `evaluate-scripted`,
-  golden replay through `determinism`, and the real-server `demo-server` probe.
+- **M6/M7 entry points are implemented:** `scripted-demo` and
+  `evaluate-scripted` now use the M7.3 public greedy candidate policy;
+  `candidate-policy-check` isolates that seam. Frozen M6 golden replay through
+  `determinism` and the real-server `demo-server` probe remain available.
   Human join mode remains deliberately opt-in (`DEMO_JOIN=1`) so no game port is
   grabbed silently.
 
@@ -583,6 +585,45 @@ repository-evidence mapping used for the M6 audit is:
 - Next: M7.3, make the utility layer the primary expert. REVIEW_M6 finding 5 is
   resolved; findings 2 and 7 remain assigned to M7.3/M7.4.
 
+## Milestone 7.3 — the utility layer is the expert (DONE, verified 2026-07-21)
+
+- The primary `run_episode` no longer calls the hand-authored `ExpertEpisode`
+  macro or enables the validation-only shared driver. `UtilityExpertEpisode`
+  applies dependency-free `GreedyUtilityPolicy` to live candidates and masks;
+  every task enters through `SELECT_CANDIDATE_TASK`, deterministic board claim
+  resolution, reservations, and the existing skill adapter. `ExpertEpisode` is
+  retained as `run_frozen_episode` for the future ladder and golden replay.
+- The scenario-derived shared plan now supplies a 22-block/six-turret opening
+  fortification and two nine-block/two-turret expansions to both runtime modes.
+  The public catalog gained planned schematics, deterministic recurring task
+  identity, physical prerequisite gates, a 30-ammo turret reserve, accurate
+  planned-target urgency/distance, and per-agent non-exclusive defense tasks.
+- `BLOCKED(RESOURCES_SHORT|CORE_SHORT)` causes a structured
+  `ABANDON(resources_short_replan)` followed by candidate regeneration and
+  reselection; cumulative `resource_replans` is exposed in coordination
+  metrics. A legal 18-wall pre-spend variant wins at tick 8100 with 209 core
+  health and seven replans.
+- The five pinned evaluation seeds all win at tick 8100 with final core health
+  **1082 minimum / 1096.4 mean**. Static pre-wave milestones remain truthful and
+  identical; native seeded spawn spread produces different wave-clear ticks,
+  structured-message counts, unit losses, and final health. No random policy
+  branch or cosmetic timing jitter was added.
+- The enriched M7.2 parity gate remains green: 90 recorded snapshots, 356
+  decisions/42 selections across all six task types, and 43 live opening
+  selections with fixed-step/plugin digest
+  `157134ba5a4e3f39ccc3cf237093481dc8474b7edd1d20e16b274ec338b1a6c2`.
+  `docs/CANDIDATE_GAPS.md` records every fixed gap and the remaining M7.4 work.
+- The stock-paced no-port survival probe reaches the six-turret opening at tick
+  1814, completes the eight-/ten-turret expansions, clears waves at ticks
+  3015/4799/6606, and finishes tick 8100 with **1100/1100** core health.
+- Recurring and retry task IDs now encode current board state, intentionally
+  changing coordination hashes without changing the frozen macro's outcome or
+  length. The checked-in golden was regenerated separately: two wins, 16,200
+  ticks, 672 checkpoints, exact fresh-JVM replay, and a passing negative MINE
+  mutation check.
+- REVIEW_M6 finding 2 is resolved. Finding 7 remains assigned to M7.4. No
+  reward component, engine pin, accepted ADR, or upstream file changed.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -604,14 +645,15 @@ repository-evidence mapping used for the M6 audit is:
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and
   reference schematic). M5.1 turns those objectives plus live world state into
   scored candidates; M5.2 claims and executes them; M5.3 supplies deterministic
-  task-level policy baselines. The winning expert policy remains M6.
+  task-level policy baselines. The winning primary expert is now the M7.3
+  greedy candidate policy; the M6 macro remains a frozen baseline.
 - **`configs/`**: example YAML stubs marked unused-yet.
 
 ## What is unverified
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 104 tests
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 106 tests
   green, including 31 M3/M4 skill tests). `agent-plugin:dist` and its isolated
   real-server acceptance probe are verified.
 - **No CI** configured yet.

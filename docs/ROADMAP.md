@@ -571,6 +571,20 @@ dependencies.
   beyond adaptation.
 
 ### 7.3 The utility layer becomes the expert
+- **DONE (verified 2026-07-21):** `evaluate-scripted` now drives the pure
+  `GreedyUtilityPolicy` through public candidate observations, masks,
+  `SELECT_CANDIDATE_TASK`, the task board, reservations, and existing skills;
+  the M6 `ExpertEpisode` is retained only as the frozen ladder/golden baseline.
+  Scenario-derived fortification/expansion candidates, recurring task identity,
+  real planned-target utility, multi-seat defense, a 30-ammo reserve, and
+  structured resource-block abandon/regenerate/reselection close the fixed
+  scenario gaps recorded in `docs/CANDIDATE_GAPS.md`. The five pinned seeds all
+  win at tick 8100 (core health min/mean 1082/1096.4); the legal pre-spend
+  variant wins with 209 core health and seven explicit replans. Pre-wave
+  milestones correctly remain fixed, while seeded spawn spread produces real
+  wave-clear/message/loss/core-health variation. The enriched shared plan keeps
+  fixed-step/plugin decision parity green (43 selections, digest
+  `157134ba5a4e3f39ccc3cf237093481dc8474b7edd1d20e16b274ec338b1a6c2`).
 - Objective: retire the hand-authored `ExpertEpisode` macro as the primary
   policy (REVIEW_M6 finding 2). The greedy-utility policy over the candidate
   catalog must win bootstrap-defense-v0 5/5 (+ blocked variant) end to end.

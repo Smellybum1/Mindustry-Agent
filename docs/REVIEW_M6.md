@@ -80,6 +80,17 @@ selections and normalized digest
 `f335f6b950ac1b58857ca84b40e7151f966d5d53408fd0e643fbc54a39671385`.
 Findings 2 and 7 remain assigned to M7.3 and M7.4 respectively.
 
+## M7.3 resolution (verified 2026-07-21)
+
+Finding 2 is resolved. The primary `scripted-demo`/`evaluate-scripted` runner
+is now `GreedyUtilityPolicy` over the live `task_candidates` and aligned action
+masks; every selection enters through `SELECT_CANDIDATE_TASK` and the same
+board/reservation/skill path reserved for the M8 learned selector. The former
+`ExpertEpisode` macro is exposed only as `run_frozen_episode`. Candidate gaps
+found by the conversion and their M7.3/M7.4 disposition are recorded in
+`docs/CANDIDATE_GAPS.md`. Five pinned seeds and the legal resource-pressure
+variant win. Finding 7 alone remains assigned to M7.4.
+
 ## Planning-primitiveness inventory (drives M7.3–M7.5)
 
 - **Candidate generation**: compiled-in 6-rule catalog, fixed order, single

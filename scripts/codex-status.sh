@@ -26,4 +26,4 @@ do
 done
 
 printf '\nnext roadmap item:\n'
-sed -n '/^### 7\.3 /,/^### 7\.4 /p' docs/ROADMAP.md | sed '$d'
+sed -n '/^### 7\.4 /,/^### 7\.5 /p' docs/ROADMAP.md | sed '$d'

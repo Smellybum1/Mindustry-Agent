@@ -235,3 +235,42 @@ it includes decision kind, agent, task type, and target. The separate no-port
 `DEMO_SURVIVAL=1 make demo-server` run after extraction built both nine-block/
 two-turret expansion layers, cleared waves at ticks 3102/4865/6655, and reached
 tick 8100 with **1091/1100** core health. No game port was opened.
+
+## M7.3 public greedy-candidate evaluation (2026-07-21)
+
+Commands: `make candidate-policy-check`, `make evaluate-scripted`, and
+`make scripted-demo`. The primary runner uses public candidate observations,
+masks, `SELECT_CANDIDATE_TASK`, board claims/reservations, and skills. The
+frozen M6 macro is not used.
+
+| seed | outcome | core hp | first drill | line | initial turrets | supplied | wave clears | lost | messages |
+|---:|:---:|---:|---:|---:|---:|---:|:---|---:|---:|
+| 12345 | win | 1100 | 37 | 62 | 250 | 1470 | 3000/4770/6630 | 2 | 3445/53 |
+| 23456 | win | 1100 | 37 | 62 | 250 | 1470 | 2940/4770/6570 | 1 | 2644/56 |
+| 34567 | win | 1100 | 37 | 62 | 250 | 1470 | 2970/4800/6600 | 3 | 1933/38 |
+| 45678 | win | 1082 | 37 | 62 | 250 | 1470 | 2970/4770/6600 | 2 | 2605/51 |
+| 987666666 | win | 1100 | 37 | 62 | 250 | 1470 | 2940/4770/6600 | 2 | 2441/42 |
+
+Aggregate: **5/5 wins**, minimum/mean final core health **1082/1096.4**.
+Pre-wave construction is intentionally identical because scenario version 1 is
+seed-independent before tick 2700. Wave-clear timing, messages, losses, and core
+health vary from native root-seeded spawn spread; the policy adds no random
+branch. The legal 18-wall pre-spend variant also wins at tick 8100 with **209**
+core health and **7** explicit resource replans.
+
+The M7.3 plan enrichment changed the M7.2 parity baseline without weakening it:
+the recorded probe now matches 90 snapshots, 356 decisions, and 42 selections;
+fixed-step and plugin openings both make 43 selections with digest
+`157134ba5a4e3f39ccc3cf237093481dc8474b7edd1d20e16b274ec338b1a6c2`.
+
+The final stock-paced `DEMO_SURVIVAL=1 make demo-server` probe reached expert
+readiness at tick 1814 with 22 fortification blocks/six supplied turrets,
+completed the eight-/ten-turret expansions, cleared waves at ticks
+3015/4799/6606, and finished tick 8100 with **1100/1100** core health. No game
+port was opened.
+
+Recurring/retry task identity now includes current board state, so its
+coordination hashes intentionally differ from the prior checked-in trace. The
+frozen macro remains two wins over 16,200 ticks and 672 checkpoints; the
+separately regenerated golden replays exactly in a fresh JVM and the deliberate
+one-line MINE mutation still diverges.

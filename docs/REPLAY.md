@@ -32,3 +32,10 @@ python -m mindustry_agents.tools.replay --negative-check
 `make determinism` runs the legacy 79-boundary engine/skill replay first and the
 checked-in M6 golden second. Set `REPLAY_NEGATIVE=1` to include the deliberate
 negative test. The mutation is never written to disk.
+
+M7.3 intentionally regenerated the checked-in trace in a separate commit.
+Recurring and retry task IDs now encode current board state so that repeated
+work is distinguishable at the protocol boundary; those IDs participate in the
+canonical coordination hash. The frozen macro still records two wins over
+16,200 ticks and 672 checkpoints, and the negative MINE mutation still forces a
+replay mismatch.

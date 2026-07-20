@@ -5,9 +5,9 @@ to our accepted decisions (`docs/decisions/ADR-0001..0010`).
 
 ## Two modes, one behaviour core
 
-The same coordination driver, task board, skills, observations, action schema,
-and announcement templates drive both modes. Only the *pacing and entry point*
-differ (ADR-0006, brief §7.3).
+The same scenario-derived plan, task-board semantics, skills, action schema, and
+announcement templates drive both modes. Only the *pacing and policy entry
+point* differ (ADR-0006, brief §7.3).
 
 ```text
                         TRAINING MODE
@@ -44,6 +44,15 @@ differ (ADR-0006, brief §7.3).
               |
    policy process OR in-process scripted fallback
 ```
+
+M7.2's `ExpertCoordinationDriver` remains the one in-process coordination
+driver used by the real-time plugin and the fixed-step parity option. M7.3's
+primary training expert instead selects the public candidate table through the
+external task-action contract—the exact seam a learned selector will use. Both
+paths share `ExpertCoordinationPlan`, `HandTunedUtility`, board semantics, and
+skills. The remaining stage-local candidate construction in the in-process
+driver is explicitly tracked in `docs/CANDIDATE_GAPS.md`; policy code has not
+been copied back into `agent-plugin`.
 
 ## Module responsibilities
 

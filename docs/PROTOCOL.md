@@ -90,6 +90,10 @@ driver select and advance tasks on fixed-step boundaries. It is disabled by
 default so the externally supplied action contract remains unchanged; training
 manifests must leave it unset unless they are explicitly evaluating that
 scripted baseline.
+`shared_expert_blocked_variant=true` is an additional validation-only option
+for that shared-driver baseline; it legally pre-spends copper before opening
+work and is ignored unless `shared_expert_policy=true`. The primary M7.3 expert
+leaves both options unset and uses external task actions.
 
 `ResetResponse` (`type = "reset_response"`)
 
@@ -220,6 +224,11 @@ the winner starts a skill, so input bundle order cannot choose the owner.
 M5.1 adds a bounded `task_candidates` array (at most eight) at every reset/step
 boundary. Candidate order is authoritative for the boundary and deterministic:
 fixed rule order, repeated entity targets by ascending engine ID, `WAIT` last.
+M7.3 adds scenario-derived planned fortification/expansion candidates and
+deterministic recurring identity (`:at-<tick>` and, where relevant,
+`:wave-<n>`/`:agent-<n>`). A candidate ID is stable for its observation
+boundary; policy actions must use that boundary's index. Exclusive work with a
+different recurring ID is masked while the same semantic target is active.
 `valid=false` carries a typed `invalid_reason` (`missing_capability:<name>` or
 `out_of_range`). `action_masks[agent_id].candidate_task` is aligned by candidate
 index and is stricter: it also checks current assignment, board status, and task
@@ -242,12 +251,13 @@ agent, and `announce`. M5.6 adds `announcement`, which is non-empty only when
 Human text is not authoritative (ADR-0005).
 
 `coordination_metrics` contains `{duplicate_work_incidents, tasks_completed,
-tasks_abandoned, agent_ticks, idle_agent_ticks, idle_fraction,
+tasks_abandoned, resource_replans, agent_ticks, idle_agent_ticks, idle_fraction,
 structured_messages, announced_messages}`. When the validation-only shared
 expert is enabled it additionally contains `shared_decision_count`,
-`shared_decision_digest`, and `shared_policy_phase`. Metrics are cumulative from
-reset and copied into every agent's Python `info`; they never contribute to
-reward.
+`shared_decision_digest`, `shared_policy_phase`, `shared_policy_name`,
+`shared_first_line_block_tick`, `shared_resources_short_blocks`, and
+`shared_resources_short_replans`. Metrics are cumulative from reset and copied
+into every agent's Python `info`; they never contribute to reward.
 
 An accepted `deliver copper` helper contract is fulfilled only after that
 helper issues a legal `DELIVER_CORE` skill carrying copper and the observed

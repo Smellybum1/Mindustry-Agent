@@ -10,10 +10,10 @@ The demo uses the exact checked-in scenario and schematic JSON as training mode.
 It spawns three Alpha units and runs the shared `TaskBoard`, low-level skill FSMs,
 and `AnnouncementRenderer` on the vanilla simulation thread. The only pacing
 difference is that the stock server advances in real time and keeps its normal
-pathfinder threads. Its fallback policy builds a four-Duo expert defense, keeps
+pathfinder threads. Its fallback policy builds a six-Duo expert defense, keeps
 every available agent mining and delivering copper between waves, switches to
 defense when enemies appear, then repairs, adds two Duos plus seven walls after
-each of the first two waves, supplies all six/eight active turrets, and resumes
+each of the first two waves, supplies all eight/ten active turrets, and resumes
 mining.
 A lost agent slot is rebound to a replacement Alpha at the core and reported in
 the server log; tasks and controllers remain attached to the same stable slot.
