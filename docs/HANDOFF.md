@@ -159,6 +159,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
+**Authoritative work queue: `docs/ROADMAP.md` M4 items 4.1–4.8 (then M5/M6,
+also broken down there). Handoff prompt for the next agent:
+`docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
+queue.
+
 *(The full bootstrap-defense-v0 scenario loader — world + deterministic waves +
 termination + seed-sensitivity + the `Pathfinder.syncUpdate()` patch — **landed
 2026-07-20**; see the Scenario section of `docs/STATUS.md` and
