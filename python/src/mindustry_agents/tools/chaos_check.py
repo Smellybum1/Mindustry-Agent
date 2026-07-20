@@ -105,16 +105,23 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
             ]
         )
         assert reclaimed.action_results[0]["accepted"] is True
-        assert reclaimed.task_board[0]["owner_agent_id"] == 1
-        assert reclaimed.task_board[0]["reservation_count"] == 2
+        reclaimed_id = reclaimed.action_results[0]["task_id"]
+        reclaimed_task = next(
+            task for task in reclaimed.task_board if task["task_id"] == reclaimed_id
+        )
+        assert reclaimed_task["owner_agent_id"] == 1
+        assert reclaimed_task["reservation_count"] == 2
 
         completed = reclaimed
         for _ in range(40):
             completed = step(30)
-            if completed.task_board[0]["status"] == "COMPLETED":
+            reclaimed_task = next(
+                task for task in completed.task_board if task["task_id"] == reclaimed_id
+            )
+            if reclaimed_task["status"] == "COMPLETED":
                 break
-        assert completed.task_board[0]["status"] == "COMPLETED"
-        assert completed.task_board[0]["reservation_count"] == 0
+        assert reclaimed_task["status"] == "COMPLETED"
+        assert reclaimed_task["reservation_count"] == 0
         completion = next(
             event
             for event in events

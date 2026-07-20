@@ -14,6 +14,8 @@ public record ExpertCoordinationPlan(
     long winTick,
     Schematic line,
     Schematic defense,
+    Schematic fortification,
+    List<Schematic> expansions,
     List<TileTarget> mineTiles,
     List<TileTarget> referenceTurrets,
     Region defendRegion,
@@ -25,6 +27,8 @@ public record ExpertCoordinationPlan(
         if(waveCount <= 0) throw new IllegalArgumentException("waveCount must be positive");
         Objects.requireNonNull(line, "line");
         Objects.requireNonNull(defense, "defense");
+        Objects.requireNonNull(fortification, "fortification");
+        expansions = List.copyOf(expansions);
         mineTiles = List.copyOf(mineTiles);
         referenceTurrets = List.copyOf(referenceTurrets);
         Objects.requireNonNull(defendRegion, "defendRegion");
@@ -33,6 +37,9 @@ public record ExpertCoordinationPlan(
         if(mineTiles.size() != 3) throw new IllegalArgumentException("exactly three mine tiles required");
         if(referenceTurrets.size() != 2){
             throw new IllegalArgumentException("exactly two reference turrets required");
+        }
+        if(expansions.size() != Math.max(0, waveCount - 1)){
+            throw new IllegalArgumentException("one expansion per non-final wave required");
         }
     }
 

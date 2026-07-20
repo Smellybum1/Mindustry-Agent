@@ -4,6 +4,7 @@ import agentcore.*;
 import agentcore.board.*;
 import agentcore.skill.*;
 import agentcore.task.*;
+import agentcore.utility.*;
 
 import java.nio.charset.*;
 import java.security.*;
@@ -18,6 +19,7 @@ public final class ExpertCoordinationDriver{
         IDLE, BUILD_LINE, BUILD_DEFENSE, MINE, DELIVER,
         ECONOMY_MINE, ECONOMY_DELIVER, FORTIFY, SUPPLY, DEFEND,
         REBUILD, MAINTENANCE_MINE, MAINTENANCE_DELIVER,
+        RECOVERY_MINE, RECOVERY_DELIVER,
         RESERVE_MINE, RESERVE_DELIVER
     }
 
@@ -34,10 +36,19 @@ public final class ExpertCoordinationDriver{
         void setSkill(int agentIndex, Skill skill);
         void cancelWork(int agentIndex);
         void ensureAgent(int agentIndex);
+        boolean agentAvailable(int agentIndex);
+        int coreCopper();
         boolean buildingMatches(BuildPlacement placement);
     }
 
     public record BuildPlacement(String block, int x, int y, int rotation){}
+
+    private record WorkCandidate(
+        TaskSpec spec,
+        Skill skill,
+        Stage stage,
+        int semanticIndex
+    ){}
 
     public record PolicyDecision(
         long sequence,
@@ -61,7 +72,6 @@ public final class ExpertCoordinationDriver{
     ){}
 
     private static final String[] names = {"agent-copper", "agent-shield", "agent-relay"};
-    private static final int supplementalTurretOffsetX = -3;
     private static final long heartbeatInterval = 120L;
 
     private static final class Agent{
@@ -82,6 +92,8 @@ public final class ExpertCoordinationDriver{
 
     private final ExpertCoordinationPlan plan;
     private final Port port;
+    private final HandTunedUtility utility;
+    private final boolean blockedVariant;
     private final TaskBoard board = new TaskBoard();
     private final Agent[] agents = new Agent[names.length];
     private final List<String> lineOrder = new ArrayList<>();
@@ -94,6 +106,7 @@ public final class ExpertCoordinationDriver{
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
 
     private boolean started;
+    private boolean blockedSetup;
     private boolean lineComplete;
     private boolean baseDefenseComplete;
     private boolean economyStarted;
@@ -106,6 +119,7 @@ public final class ExpertCoordinationDriver{
     private boolean maintenanceExpansionPrepared;
     private boolean maintenanceExpansionReported;
     private boolean rebuildDone;
+    private boolean recoveryActive;
     private long lastHeartbeat;
     private long decisionSequence;
     private int buildsInFlight;
@@ -117,10 +131,23 @@ public final class ExpertCoordinationDriver{
     private long maintenanceStartTick;
     private long maintenanceSupplyStartTick;
     private long lastUpdateTick;
+    private long firstLineBlockTick;
+    private int resourcesShortBlocks;
+    private int resourceReplans;
 
     public ExpertCoordinationDriver(ExpertCoordinationPlan plan, Port port){
+        this(plan, port, false);
+    }
+
+    public ExpertCoordinationDriver(
+        ExpertCoordinationPlan plan,
+        Port port,
+        boolean blockedVariant
+    ){
         this.plan = Objects.requireNonNull(plan, "plan");
         this.port = Objects.requireNonNull(port, "port");
+        this.blockedVariant = blockedVariant;
+        this.utility = new HandTunedUtility(this::utilityFeatures);
         for(int i = 0; i < agents.length; i++) agents[i] = new Agent(i);
     }
 
@@ -131,6 +158,10 @@ public final class ExpertCoordinationDriver{
     public boolean maintenance(){ return maintenance; }
     public int waveClears(){ return waveClears; }
     public int openingFortificationCount(){ return openingFortificationCount; }
+    public String policyName(){ return "greedy-utility-expert-v1"; }
+    public int resourcesShortBlocks(){ return resourcesShortBlocks; }
+    public int resourceReplans(){ return resourceReplans; }
+    public long firstLineBlockTick(){ return firstLineBlockTick; }
     public List<String> lineOrder(){ return List.copyOf(lineOrder); }
     public List<String> defenseOrder(){ return List.copyOf(defenseOrder); }
     public List<TileTarget> activeTurrets(){ return List.copyOf(activeTurrets); }
@@ -176,6 +207,7 @@ public final class ExpertCoordinationDriver{
         decisions.clear();
         signals.clear();
         started = false;
+        blockedSetup = false;
         lineComplete = false;
         baseDefenseComplete = false;
         economyStarted = false;
@@ -188,6 +220,7 @@ public final class ExpertCoordinationDriver{
         maintenanceExpansionPrepared = false;
         maintenanceExpansionReported = false;
         rebuildDone = false;
+        recoveryActive = false;
         lastHeartbeat = 0L;
         decisionSequence = 0L;
         buildsInFlight = 0;
@@ -199,25 +232,48 @@ public final class ExpertCoordinationDriver{
         maintenanceStartTick = 0L;
         maintenanceSupplyStartTick = 0L;
         lastUpdateTick = Long.MIN_VALUE;
+        firstLineBlockTick = -1L;
+        resourcesShortBlocks = 0;
+        resourceReplans = 0;
     }
 
     public void startOpening(long tick){
         if(started) return;
         started = true;
-        begin(agents[0], "demo-line", TaskType.BUILD_LINE,
+        if(blockedVariant){
+            blockedSetup = true;
+            for(int y = 4; y < 29; y++){
+                fortifications.add(new BuildPlacement("copper-wall", 10, y, 0));
+            }
+            record(tick, null, "PLAN_BLOCKED_VARIANT", "", null,
+                "legal_prespent_walls=" + fortifications.size());
+            return;
+        }
+        beginOpening(tick);
+    }
+
+    private void beginOpening(long tick){
+        ArrayList<WorkCandidate> candidates = new ArrayList<>();
+        candidates.add(work("demo-line", TaskType.BUILD_LINE,
             new TileTarget(plan.line().anchorX(), plan.line().anchorY()),
             ResourceCost.of("copper", plan.line().copperCost()),
             new ExecuteSchematic(plan.line().name(), plan.line().anchorX(),
-                plan.line().anchorY(), plan.line().blocks()), Stage.BUILD_LINE, tick);
-        begin(agents[1], "demo-defense", TaskType.BUILD_SCHEMATIC,
+                plan.line().anchorY(), plan.line().blocks()), Stage.BUILD_LINE, 0.88, 0));
+        candidates.add(work("demo-defense", TaskType.BUILD_SCHEMATIC,
             new TileTarget(plan.defense().anchorX(), plan.defense().anchorY()),
             ResourceCost.of("copper", plan.defense().copperCost()),
             new ExecuteSchematic(plan.defense().name(), plan.defense().anchorX(),
-                plan.defense().anchorY(), plan.defense().blocks()), Stage.BUILD_DEFENSE, tick);
+                plan.defense().anchorY(), plan.defense().blocks()), Stage.BUILD_DEFENSE, 0.90, 1));
         TileTarget mine = plan.mineTiles().get(2);
-        begin(agents[2], "demo-harvest", TaskType.HARVEST_RESOURCE,
+        candidates.add(work("demo-harvest", TaskType.HARVEST_RESOURCE,
             new ResourceTarget("copper", 300), ResourceCost.empty(),
-            new MineResource(mine.x(), mine.y(), 20), Stage.MINE, tick);
+            new MineResource(mine.x(), mine.y(), 20), Stage.MINE, 0.70, 2));
+        for(Agent agent : agents){
+            WorkCandidate selected = select(agent, candidates, tick);
+            if(selected == null) continue;
+            candidates.remove(selected);
+            begin(agent, selected.spec(), selected.skill(), selected.stage(), tick);
+        }
     }
 
     /** Advance lifecycle and policy once for an authoritative simulation snapshot. */
@@ -226,7 +282,7 @@ public final class ExpertCoordinationDriver{
         if(tick <= lastUpdateTick) return;
         lastUpdateTick = tick;
         for(Agent agent : agents){
-            updateBuildOrder(agent);
+            updateBuildOrder(agent, tick);
             SkillResult result = port.lastResult(agent.index);
             if(result == null) result = SkillResult.ready();
             if(tick - lastHeartbeat >= heartbeatInterval && agent.taskId != null){
@@ -235,8 +291,12 @@ public final class ExpertCoordinationDriver{
             }
             if(result.status() == SkillStatus.BLOCKED && !agent.blocked && agent.taskId != null){
                 agent.blocked = true;
+                if(result.reason() == SkillReason.RESOURCES_SHORT) resourcesShortBlocks++;
                 board.reportBlocked(agent.taskId, agent.id,
                     result.reason().name().toLowerCase(Locale.ROOT), tick);
+                if((result.reason() == SkillReason.RESOURCES_SHORT
+                    || result.reason() == SkillReason.CORE_SHORT)
+                    && startResourceRecovery(agent, tick)) continue;
             }else if(result.status() == SkillStatus.RUNNING && agent.blocked && agent.taskId != null){
                 agent.blocked = false;
                 board.reportProgress(agent.taskId, agent.id, result.progress(), tick);
@@ -272,6 +332,7 @@ public final class ExpertCoordinationDriver{
     }
 
     public String phase(){
+        if(blockedSetup) return "blocked-setup";
         if(defenseStarted) return "defend";
         if(maintenance) return "maintenance";
         for(Agent agent : agents){
@@ -294,16 +355,112 @@ public final class ExpertCoordinationDriver{
             .estimatedCost(cost)
             .requiredCapabilities(Set.of(skill.type().toLowerCase(Locale.ROOT)))
             .build();
+        begin(agent, spec, skill, stage, tick);
+    }
+
+    private void begin(Agent agent, TaskSpec spec, Skill skill, Stage stage, long tick){
+        double score = utility.score(agent.id, spec, tick);
+        String taskId = spec.taskId();
         board.propose(spec, tick);
-        board.announceIntent(taskId, agent.id, 1.0, tick);
-        board.claim(taskId, agent.id, 1.0, tick);
+        board.announceIntent(taskId, agent.id, score, tick);
+        board.claim(taskId, agent.id, score, tick);
         board.start(taskId, agent.id, tick);
         agent.taskId = taskId;
         agent.stage = stage;
         agent.blocked = false;
         agent.recordedBlocks = 0;
         port.setSkill(agent.index, skill);
-        record(tick, agent, "SELECT_TASK", taskId, type, skill.type());
+        record(tick, agent, "UTILITY_SCORE", taskId, spec.type(),
+            String.format(Locale.ROOT, "%.6f", score));
+        record(tick, agent, "SELECT_TASK", taskId, spec.type(), skill.type());
+    }
+
+    private WorkCandidate work(
+        String taskId,
+        TaskType type,
+        Target target,
+        ResourceCost cost,
+        Skill skill,
+        Stage stage,
+        double priority,
+        int semanticIndex
+    ){
+        TaskSpec spec = TaskSpec.builder(taskId, type)
+            .target(target)
+            .priority(priority)
+            .estimatedTicks(900)
+            .estimatedCost(cost)
+            .requiredCapabilities(Set.of(skill.type().toLowerCase(Locale.ROOT)))
+            .build();
+        return new WorkCandidate(spec, skill, stage, semanticIndex);
+    }
+
+    private WorkCandidate select(Agent agent, List<WorkCandidate> candidates, long tick){
+        WorkCandidate best = null;
+        double bestScore = Double.NEGATIVE_INFINITY;
+        for(WorkCandidate candidate : candidates){
+            double score = utility.score(agent.id, candidate.spec(), tick);
+            if(best == null || score > bestScore
+                || (Double.compare(score, bestScore) == 0
+                    && candidate.semanticIndex() < best.semanticIndex())){
+                best = candidate;
+                bestScore = score;
+            }
+        }
+        return best;
+    }
+
+    private UtilityFeatures utilityFeatures(AgentId agentId, TaskSpec task, long tick){
+        Agent agent = agentId.index() >= 0 && agentId.index() < agents.length
+            ? agents[agentId.index()] : null;
+        int copper = Math.max(1, port.coreCopper());
+        double resourceCost = clamp(task.estimatedCost().amount("copper") / (double)copper);
+        double danger = task.type() == TaskType.DEFEND_REGION ? 0.0
+            : clamp(previousEnemies / 5.0);
+        return UtilityFeatures.builder()
+            .teamValue(task.priority())
+            .urgency(taskUrgency(task.type()))
+            .capabilityFit(agent != null && port.agentAvailable(agent.index) ? 1.0 : 0.0)
+            .roleFit(agent == null ? 0.0 : roleFit(agent.index, task.type()))
+            .helpSynergy(task.helpersRequested() > 0 ? 1.0 : 0.0)
+            .resourceCost(resourceCost)
+            .danger(danger)
+            .build();
+    }
+
+    private double taskUrgency(TaskType type){
+        return switch(type){
+            case DEFEND_REGION -> previousEnemies > 0 ? 1.0 : 0.85;
+            case REPAIR_REGION -> maintenance ? 1.0 : 0.4;
+            case SUPPLY_TURRET -> supplyStarted || maintenanceSupplyStarted ? 0.9 : 0.5;
+            case BUILD_LINE, BUILD_SCHEMATIC -> preparationComplete ? 0.6 : 1.0;
+            case HARVEST_RESOURCE -> preparationComplete ? 0.65 : 0.8;
+            default -> 0.2;
+        };
+    }
+
+    private static double roleFit(int agentIndex, TaskType type){
+        return switch(agentIndex){
+            case 0 -> switch(type){
+                case BUILD_LINE, BUILD_SCHEMATIC, REPAIR_REGION -> 1.0;
+                case SUPPLY_TURRET -> 0.6;
+                default -> 0.35;
+            };
+            case 1 -> switch(type){
+                case BUILD_SCHEMATIC, SUPPLY_TURRET, DEFEND_REGION -> 1.0;
+                case REPAIR_REGION -> 0.6;
+                default -> 0.4;
+            };
+            default -> switch(type){
+                case HARVEST_RESOURCE, DEFEND_REGION -> 1.0;
+                case SUPPLY_TURRET -> 0.7;
+                default -> 0.35;
+            };
+        };
+    }
+
+    private static double clamp(double value){
+        return Math.max(0.0, Math.min(1.0, value));
     }
 
     private void replaceSkill(Agent agent, Skill skill, Stage stage, long tick){
@@ -365,6 +522,13 @@ public final class ExpertCoordinationDriver{
                 agent.maintenanceDone = true;
                 idle(agent);
             }
+            case RECOVERY_MINE -> replaceSkill(agent, new DeliverToCore(),
+                Stage.RECOVERY_DELIVER, tick);
+            case RECOVERY_DELIVER -> {
+                complete(agent, tick);
+                recoveryActive = false;
+                idle(agent);
+            }
             case RESERVE_MINE -> replaceSkill(agent, new DeliverToCore(), Stage.RESERVE_DELIVER, tick);
             case RESERVE_DELIVER -> {
                 if(agent.taskId != null) board.reportProgress(agent.taskId, agent.id, 0.05, tick);
@@ -376,10 +540,19 @@ public final class ExpertCoordinationDriver{
     }
 
     private void dispatchPolicy(long tick){
+        if(blockedSetup){
+            dispatchFortifications(tick);
+            if(fortifications.isEmpty() && buildsInFlight == 0){
+                blockedSetup = false;
+                beginOpening(tick);
+            }
+            return;
+        }
         if(maintenance){
             dispatchMaintenance(tick);
             return;
         }
+        if(defenseStarted) return;
         if(!economyStarted && lineComplete && baseDefenseComplete){
             startEconomy(tick);
             return;
@@ -426,27 +599,14 @@ public final class ExpertCoordinationDriver{
     }
 
     private void prepareFortifications(long tick){
-        for(int y = plan.coreY() - 2; y <= plan.coreY() + 2; y++){
-            fortifications.add(new BuildPlacement("copper-wall", plan.coreX() - 2, y, 0));
+        ExpertCoordinationPlan.Schematic schematic = plan.fortification();
+        for(BuildSpec block : schematic.blocks()){
+            int x = schematic.anchorX() + block.offsetX();
+            int y = schematic.anchorY() + block.offsetY();
+            fortifications.add(new BuildPlacement(block.block(), x, y, block.rotation()));
+            if(block.block().equals("duo")) trackTurret(x, y);
         }
-        for(int y = plan.coreY() - 2; y <= plan.coreY(); y++){
-            fortifications.add(new BuildPlacement("copper-wall", plan.coreX() + 2, y, 0));
-        }
-        for(int x = plan.coreX() - 1; x <= plan.coreX() + 1; x++){
-            fortifications.add(new BuildPlacement("copper-wall", x, plan.coreY() - 2, 0));
-        }
-        for(int x = plan.coreX() - 1; x <= plan.coreX(); x++){
-            fortifications.add(new BuildPlacement("copper-wall", x, plan.coreY() + 2, 0));
-        }
-        for(int y = plan.coreY() - 3; y <= plan.coreY() + 1; y++){
-            fortifications.add(new BuildPlacement("copper-wall", plan.coreX() + 3, y, 0));
-        }
-        for(TileTarget target : plan.referenceTurrets()){
-            int x = target.x() + supplementalTurretOffsetX;
-            fortifications.add(new BuildPlacement("duo", x, target.y(), 1));
-            trackTurret(x, target.y());
-            trackTurret(target.x(), target.y());
-        }
+        for(TileTarget target : plan.referenceTurrets()) trackTurret(target.x(), target.y());
         openingFortificationCount = fortifications.size();
         record(tick, null, "PLAN_OPENING", "", null,
             "blocks=" + openingFortificationCount + ",turrets=" + activeTurrets.size());
@@ -454,14 +614,26 @@ public final class ExpertCoordinationDriver{
 
     private void dispatchFortifications(long tick){
         for(Agent agent : agents){
-            if(agent.stage != Stage.IDLE || fortifications.isEmpty()) continue;
-            BuildPlacement build = fortifications.removeFirst();
+            if(agent.stage != Stage.IDLE || !port.agentAvailable(agent.index)
+                || fortifications.isEmpty()) continue;
+            LinkedHashMap<WorkCandidate, BuildPlacement> options = new LinkedHashMap<>();
+            int semantic = 0;
+            for(BuildPlacement build : fortifications){
+                WorkCandidate candidate = work(
+                    "demo-fortify-" + taskSequence + "-" + semantic,
+                    TaskType.BUILD_SCHEMATIC, new TileTarget(build.x(), build.y()),
+                    ResourceCost.of("copper", plan.copperCost(build.block())),
+                    new BuildBlock(build.block(), build.x(), build.y(), build.rotation()),
+                    Stage.FORTIFY, 0.92, semantic++);
+                options.put(candidate, build);
+            }
+            WorkCandidate selected = select(agent, new ArrayList<>(options.keySet()), tick);
+            if(selected == null) continue;
+            BuildPlacement build = options.get(selected);
+            fortifications.remove(build);
             buildsInFlight++;
-            begin(agent, "demo-fortify-" + taskSequence++, TaskType.BUILD_SCHEMATIC,
-                new TileTarget(build.x(), build.y()),
-                ResourceCost.of("copper", plan.copperCost(build.block())),
-                new BuildBlock(build.block(), build.x(), build.y(), build.rotation()),
-                Stage.FORTIFY, tick);
+            taskSequence++;
+            begin(agent, selected.spec(), selected.skill(), selected.stage(), tick);
         }
     }
 
@@ -472,15 +644,12 @@ public final class ExpertCoordinationDriver{
     private void prepareMaintenanceExpansion(long tick){
         int blocksBefore = expectedExpansions.size();
         int turretsBefore = activeTurrets.size();
-        ExpertCoordinationPlan.Region region = plan.rebuildRegion();
-        int wallX = region.x() + region.w() + (waveClears - 1) * 3;
-        int turretX = wallX - 1;
-        for(int y = region.y() + 1; y < region.y() + region.h() - 1; y++){
-            addExpansion("copper-wall", wallX, y, 0);
-        }
-        for(TileTarget reference : plan.referenceTurrets()){
-            addExpansion("duo", turretX, reference.y(), 1);
-            trackTurret(turretX, reference.y());
+        ExpertCoordinationPlan.Schematic schematic = plan.expansions().get(waveClears - 1);
+        for(BuildSpec block : schematic.blocks()){
+            int x = schematic.anchorX() + block.offsetX();
+            int y = schematic.anchorY() + block.offsetY();
+            addExpansion(block.block(), x, y, block.rotation());
+            if(block.block().equals("duo")) trackTurret(x, y);
         }
         int blocks = expectedExpansions.size() - blocksBefore;
         int turrets = activeTurrets.size() - turretsBefore;
@@ -502,17 +671,31 @@ public final class ExpertCoordinationDriver{
 
     private void dispatchSupply(long tick){
         for(Agent agent : agents){
-            if(agent.stage != Stage.IDLE || supplyTargets.isEmpty()) continue;
-            TileTarget target = supplyTargets.removeFirst();
+            if(agent.stage != Stage.IDLE || !port.agentAvailable(agent.index)
+                || supplyTargets.isEmpty()) continue;
+            LinkedHashMap<WorkCandidate, TileTarget> options = new LinkedHashMap<>();
+            int semantic = 0;
+            for(TileTarget target : supplyTargets){
+                WorkCandidate candidate = work(
+                    "demo-supply-" + taskSequence + "-" + semantic,
+                    TaskType.SUPPLY_TURRET, target, ResourceCost.of("copper", 15),
+                    new SupplyBuilding("copper", target.x(), target.y(), 15),
+                    Stage.SUPPLY, 0.85, semantic++);
+                options.put(candidate, target);
+            }
+            WorkCandidate selected = select(agent, new ArrayList<>(options.keySet()), tick);
+            if(selected == null) continue;
+            TileTarget target = options.get(selected);
+            supplyTargets.remove(target);
             suppliesInFlight++;
-            begin(agent, "demo-supply-" + taskSequence++, TaskType.SUPPLY_TURRET,
-                target, ResourceCost.of("copper", 15),
-                new SupplyBuilding("copper", target.x(), target.y(), 15), Stage.SUPPLY, tick);
+            taskSequence++;
+            begin(agent, selected.spec(), selected.skill(), selected.stage(), tick);
         }
     }
 
     private void startDefense(long tick){
         maintenance = false;
+        recoveryActive = false;
         maintenanceSupplyStarted = false;
         fortifications.clear();
         buildsInFlight = 0;
@@ -523,6 +706,7 @@ public final class ExpertCoordinationDriver{
         for(Agent agent : agents){
             transitionAway(agent, "enemy_wave", tick);
             port.ensureAgent(agent.index);
+            if(!port.agentAvailable(agent.index)) continue;
             begin(agent, "demo-defend-" + taskSequence++, TaskType.DEFEND_REGION,
                 new RegionTarget(region.id()), ResourceCost.empty(),
                 new DefendRegion(regionHoldX(region) + agent.index * plan.tileSize(),
@@ -536,6 +720,7 @@ public final class ExpertCoordinationDriver{
         for(Agent agent : agents){
             transitionAway(agent, reason, tick);
             port.ensureAgent(agent.index);
+            if(!port.agentAvailable(agent.index)) continue;
             TileTarget tile = plan.mineTiles().get(agent.index);
             begin(agent, "demo-reserve-" + taskSequence++, TaskType.HARVEST_RESOURCE,
                 new ResourceTarget("copper", 300), ResourceCost.empty(),
@@ -564,6 +749,7 @@ public final class ExpertCoordinationDriver{
 
     private void startMaintenance(long tick){
         maintenance = true;
+        recoveryActive = false;
         maintenanceStartTick = tick;
         maintenanceSupplyStarted = false;
         maintenanceExpansionPrepared = false;
@@ -575,17 +761,22 @@ public final class ExpertCoordinationDriver{
 
         for(Agent agent : agents){
             transitionAway(agent, "wave_clear_maintenance", tick);
-            agent.maintenanceDone = false;
             port.ensureAgent(agent.index);
+            agent.maintenanceDone = !port.agentAvailable(agent.index);
         }
 
         ExpertCoordinationPlan.Region region = plan.rebuildRegion();
-        begin(agents[0], "demo-rebuild-" + taskSequence++, TaskType.REPAIR_REGION,
-            new RegionTarget(region.id()), ResourceCost.empty(),
-            new RebuildRegion(region.x(), region.y(), region.x() + region.w() - 1,
-                region.y() + region.h() - 1), Stage.REBUILD, tick);
+        if(port.agentAvailable(agents[0].index)){
+            begin(agents[0], "demo-rebuild-" + taskSequence++, TaskType.REPAIR_REGION,
+                new RegionTarget(region.id()), ResourceCost.empty(),
+                new RebuildRegion(region.x(), region.y(), region.x() + region.w() - 1,
+                    region.y() + region.h() - 1), Stage.REBUILD, tick);
+        }else{
+            rebuildDone = true;
+        }
         for(int i = 1; i < agents.length; i++){
             Agent miner = agents[i];
+            if(!port.agentAvailable(miner.index)) continue;
             TileTarget tile = plan.mineTiles().get(miner.index);
             begin(miner, "demo-maintenance-mine-" + taskSequence++,
                 TaskType.HARVEST_RESOURCE, new ResourceTarget("copper", 60),
@@ -655,6 +846,30 @@ public final class ExpertCoordinationDriver{
         return true;
     }
 
+    private boolean startResourceRecovery(Agent agent, long tick){
+        if(recoveryActive) return false;
+        Skill active = port.activeSkill(agent.index);
+        if(agent.stage == Stage.FORTIFY && active instanceof BuildBlock build){
+            fortifications.addFirst(new BuildPlacement(build.block(), build.tileX(),
+                build.tileY(), build.rotation()));
+            if(buildsInFlight > 0) buildsInFlight--;
+        }else if(agent.stage == Stage.SUPPLY && active instanceof SupplyBuilding supply){
+            supplyTargets.addFirst(new TileTarget(supply.tileX(), supply.tileY()));
+            if(suppliesInFlight > 0) suppliesInFlight--;
+        }else{
+            return false;
+        }
+
+        transitionAway(agent, "resources_short_replan", tick);
+        recoveryActive = true;
+        resourceReplans++;
+        TileTarget tile = plan.mineTiles().get(agent.index);
+        begin(agent, "demo-recovery-" + taskSequence++, TaskType.HARVEST_RESOURCE,
+            new ResourceTarget("copper", 20), ResourceCost.empty(),
+            new MineResource(tile.x(), tile.y(), 20), Stage.RECOVERY_MINE, tick);
+        return true;
+    }
+
     private void transitionAway(Agent agent, String reason, long tick){
         if(agent.taskId != null){
             board.abandon(agent.taskId, agent.id, reason, tick);
@@ -691,12 +906,14 @@ public final class ExpertCoordinationDriver{
         port.cancelWork(agent.index);
     }
 
-    private void updateBuildOrder(Agent agent){
+    private void updateBuildOrder(Agent agent, long tick){
         if(!(port.activeSkill(agent.index) instanceof ExecuteSchematic active)) return;
         ExpertCoordinationPlan.Schematic spec = agent.stage == Stage.BUILD_LINE
             ? plan.line() : plan.defense();
         List<String> output = agent.stage == Stage.BUILD_LINE ? lineOrder : defenseOrder;
         while(agent.recordedBlocks < active.completed()){
+            if(agent.stage == Stage.BUILD_LINE && agent.recordedBlocks == 0
+                && firstLineBlockTick < 0) firstLineBlockTick = tick;
             output.add(spec.blocks().get(agent.recordedBlocks).block());
             agent.recordedBlocks++;
         }

@@ -25,11 +25,11 @@ def main(argv=None) -> int:
             episode = reset.episode_id
             tick = reset.tick
             metrics = {}
-            while tick < 1500:
+            while tick < 2100:
                 response = env.step(
                     episode,
                     expected_tick=tick,
-                    ticks_to_advance=min(30, 1500 - tick),
+                    ticks_to_advance=min(30, 2100 - tick),
                     agent_actions=[],
                 )
                 tick = response.tick

@@ -9,6 +9,7 @@ from typing import Any
 
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
 from mindustry_agents.tools.expert_common import EpisodeResult, ScenarioLayout
+from mindustry_agents.tools.utility_expert import run_utility_episode
 
 TERMINAL_SKILLS = {"SUCCEEDED", "BLOCKED", "FAILED"}
 
@@ -422,22 +423,34 @@ class ExpertEpisode:
         )
 
 
-def run_episode(env, seed: int, *, blocked_variant: bool = False) -> EpisodeResult:
+def run_frozen_episode(env, seed: int, *, blocked_variant: bool = False) -> EpisodeResult:
     return ExpertEpisode(env, seed, blocked_variant=blocked_variant).run()
 
 
+def run_episode(env, seed: int, *, blocked_variant: bool = False) -> EpisodeResult:
+    """Run the primary M7.3 utility expert; retained name is the stable facade."""
+
+    return run_utility_episode(env, seed, blocked_variant=blocked_variant)
+
+
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="M6 scripted expert demonstration")
+    parser = argparse.ArgumentParser(description="M7.3 utility expert demonstration")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--seed", type=int, default=12345)
     parser.add_argument("--java", default="java")
     parser.add_argument("--blocked-variant", action="store_true")
+    parser.add_argument(
+        "--frozen-expert",
+        action="store_true",
+        help="run the frozen M6 macro baseline instead of the primary utility expert",
+    )
     args = parser.parse_args(argv)
 
     try:
         with RlServerProcess(LaunchConfig(port=args.port, java=args.java)) as env:
             env.handshake()
-            result = run_episode(env, args.seed, blocked_variant=args.blocked_variant)
+            runner = run_frozen_episode if args.frozen_expert else run_episode
+            result = runner(env, args.seed, blocked_variant=args.blocked_variant)
     except Exception as exc:
         print(f"SCRIPTED-DEMO FAIL: {exc}", file=sys.stderr)
         return 1
@@ -453,7 +466,8 @@ def main(argv=None) -> int:
     if result.outcome != "win" or result.tick != result.win_tick:
         print("SCRIPTED-DEMO FAIL: expert did not reach the scenario win", file=sys.stderr)
         return 1
-    print("SCRIPTED-DEMO OK: deterministic three-agent expert survived all waves")
+    policy = "frozen M6 macro" if args.frozen_expert else "greedy utility expert"
+    print(f"SCRIPTED-DEMO OK: deterministic {policy} survived all waves")
     return 0
 
 

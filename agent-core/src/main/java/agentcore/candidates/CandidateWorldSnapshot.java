@@ -29,6 +29,8 @@ public record CandidateWorldSnapshot(
     float schematicWorldX,
     float schematicWorldY,
     String schematicId,
+    int waveNumber,
+    List<PlannedSchematicSnapshot> plannedSchematics,
     List<TurretSnapshot> turrets,
     int turretTargetAmmo,
     int brokenBlockCount,
@@ -45,7 +47,7 @@ public record CandidateWorldSnapshot(
     public CandidateWorldSnapshot{
         if(tileSize <= 0 || coreCopper < 0 || harvestCopperThreshold < 0
             || buildLineCopperCost < 0 || schematicCopperCost < 0
-            || turretTargetAmmo < 0 || brokenBlockCount < 0 || enemyCount < 0
+            || waveNumber < 1 || turretTargetAmmo < 0 || brokenBlockCount < 0 || enemyCount < 0
             || defendLeadTicks < 0){
             throw new IllegalArgumentException("candidate counts/costs must be non-negative");
         }
@@ -59,6 +61,7 @@ public record CandidateWorldSnapshot(
         buildLineId = requireName(buildLineId, "buildLineId");
         rebuildRegionId = requireName(rebuildRegionId, "rebuildRegionId");
         defendRegionId = requireName(defendRegionId, "defendRegionId");
+        plannedSchematics = List.copyOf(plannedSchematics == null ? List.of() : plannedSchematics);
         turrets = List.copyOf(turrets == null ? List.of() : turrets);
     }
 

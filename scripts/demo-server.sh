@@ -58,8 +58,8 @@ if [[ "${DEMO_SURVIVAL:-0}" == "1" ]]; then
     grep -F "AGENT-DEMO RESERVE MINING" "$LOG" >/dev/null
     grep -F "AGENT-DEMO MAINTENANCE COMPLETE" "$LOG" | grep -F "wave=1" >/dev/null
     grep -F "AGENT-DEMO MAINTENANCE COMPLETE" "$LOG" | grep -F "wave=2" >/dev/null
-    grep -F "AGENT-DEMO EXPANSION COMPLETE" "$LOG" | grep -F "wave=1 turrets=6" >/dev/null
-    grep -F "AGENT-DEMO EXPANSION COMPLETE" "$LOG" | grep -F "wave=2 turrets=8" >/dev/null
+    grep -F "AGENT-DEMO EXPANSION COMPLETE" "$LOG" | grep -F "wave=1 turrets=8" >/dev/null
+    grep -F "AGENT-DEMO EXPANSION COMPLETE" "$LOG" | grep -F "wave=2 turrets=10" >/dev/null
     grep -F "AGENT-DEMO WAVE CLEAR" "$LOG" | grep -F "wave=1" >/dev/null
     grep -F "AGENT-DEMO WAVE CLEAR" "$LOG" | grep -F "wave=2" >/dev/null
     grep -F "AGENT-DEMO WAVE CLEAR" "$LOG" | grep -F "wave=3" >/dev/null

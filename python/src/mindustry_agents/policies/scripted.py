@@ -49,6 +49,19 @@ class GreedyUtilityPolicy:
         observation: dict[str, Any],
         action_mask: dict[str, Any],
     ) -> dict[str, Any]:
+        skill = observation.get("skill", {})
+        if (
+            action_mask.get("abandon", False)
+            and skill.get("status") == "BLOCKED"
+            and skill.get("reason") in {"RESOURCES_SHORT", "CORE_SHORT"}
+        ):
+            return {
+                "agent_id": agent_id,
+                "task_action": {
+                    "type": "ABANDON",
+                    "reason": "resources_short_replan",
+                },
+            }
         task_action = _continue_or_none(action_mask)
         if task_action is None:
             selected = _highest_utility(_valid_candidates(observation, action_mask))

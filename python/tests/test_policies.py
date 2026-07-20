@@ -7,9 +7,10 @@ from mindustry_agents.policies import (
 )
 
 
-def observation(x=0.0, candidates=None):
+def observation(x=0.0, candidates=None, skill=None):
     return {
         "unit": {"x": x, "y": 0.0},
+        "skill": skill or {},
         "task_candidates": candidates
         or [
             {"index": 0, "task_type": "HARVEST_RESOURCE", "utility": 2.0},
@@ -35,6 +36,17 @@ class TestScriptedPolicies(unittest.TestCase):
             2, observation(), {"continue_current_task": True}
         )
         self.assertEqual(action["task_action"], {"type": "CONTINUE_CURRENT_TASK"})
+
+    def test_greedy_replans_resource_block_instead_of_retrying(self):
+        action = GreedyUtilityPolicy().action(
+            2,
+            observation(skill={"status": "BLOCKED", "reason": "RESOURCES_SHORT"}),
+            {"continue_current_task": True, "abandon": True},
+        )
+        self.assertEqual(
+            action["task_action"],
+            {"type": "ABANDON", "reason": "resources_short_replan"},
+        )
 
     def test_roles_choose_distinct_preferred_work(self):
         policy = RoleAssignmentPolicy(("miner", "builder"))

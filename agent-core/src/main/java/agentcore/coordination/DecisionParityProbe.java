@@ -67,6 +67,14 @@ public final class DecisionParityProbe{
             24, 24, 8, 3, 8100,
             new ExpertCoordinationPlan.Schematic("line", 28, 28, 7, line),
             new ExpertCoordinationPlan.Schematic("defense", 32, 24, 76, defense),
+            new ExpertCoordinationPlan.Schematic("fortification", 24, 24, 6,
+                List.of(new BuildSpec("copper-wall", -2, 0, 0))),
+            List.of(
+                new ExpertCoordinationPlan.Schematic("expansion-1", 24, 24, 6,
+                    List.of(new BuildSpec("copper-wall", 12, 0, 0))),
+                new ExpertCoordinationPlan.Schematic("expansion-2", 24, 24, 6,
+                    List.of(new BuildSpec("copper-wall", 15, 0, 0)))
+            ),
             List.of(new TileTarget(28, 18), new TileTarget(31, 18), new TileTarget(28, 21)),
             List.of(new TileTarget(32, 23), new TileTarget(32, 25)),
             new ExpertCoordinationPlan.Region("east_lane", 26, 21, 21, 7),
@@ -89,6 +97,8 @@ public final class DecisionParityProbe{
         @Override public void setSkill(int agentIndex, Skill skill){ active[agentIndex] = skill; }
         @Override public void cancelWork(int agentIndex){ active[agentIndex] = null; }
         @Override public void ensureAgent(int agentIndex){ }
+        @Override public boolean agentAvailable(int agentIndex){ return true; }
+        @Override public int coreCopper(){ return 250; }
         @Override public boolean buildingMatches(ExpertCoordinationDriver.BuildPlacement placement){
             return true;
         }

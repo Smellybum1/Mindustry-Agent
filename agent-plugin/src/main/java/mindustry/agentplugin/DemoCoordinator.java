@@ -300,6 +300,18 @@ final class DemoCoordinator{
         }
 
         @Override
+        public boolean agentAvailable(int agentIndex){
+            Agent agent = agent(agentIndex);
+            return agent != null && agent.unit != null && agent.unit.isValid() && !agent.unit.dead();
+        }
+
+        @Override
+        public int coreCopper(){
+            Building core = scenario.coreTeam.core();
+            return core == null ? 0 : core.items.get(Items.copper);
+        }
+
+        @Override
         public boolean buildingMatches(ExpertCoordinationDriver.BuildPlacement placement){
             Building building = world.build(placement.x(), placement.y());
             return building != null && building.block.name.equals(placement.block());

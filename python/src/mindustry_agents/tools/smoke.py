@@ -413,7 +413,7 @@ def run_rebuild_phase(env, seed: int) -> int:
         print("FAIL: broken wall plan disappeared before rebuild", file=sys.stderr)
         return 1
     candidate_ids = _candidate_ids(sr.observations[0])
-    if "T5:defend:east_lane" not in candidate_ids:
+    if not any(task_id.startswith("T5:defend:east_lane:") for task_id in candidate_ids):
         print(f"FAIL: active wave did not produce a defend candidate: {candidate_ids}", file=sys.stderr)
         return 1
     before_rebuild = _core_copper(sr)
@@ -485,9 +485,9 @@ def main(argv=None) -> int:
             return 1
         initial_candidates = _candidate_ids(rr.initial_observations[0])
         if initial_candidates != [
-            "T1:harvest:copper",
-            "T2:build:copper_line_v1",
-            "T3:build:east_duo_v1",
+            "T1:harvest:copper:at-0",
+            "T2:build:copper_line_v1:at-0",
+            "T3:build:east_duo_v1:at-0",
             "runtime:wait",
         ]:
             print(f"FAIL: initial candidate catalog mismatch: {initial_candidates}", file=sys.stderr)

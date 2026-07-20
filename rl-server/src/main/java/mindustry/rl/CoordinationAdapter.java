@@ -24,9 +24,11 @@ public final class CoordinationAdapter{
 
     private final Scenario scenario;
     private final RlAgentRegistry registry;
+    private final ExpertCoordinationPlan expertPlan;
     private final TaskBoard board = new TaskBoard();
     private final AnnouncementRenderer announcementRenderer = new AnnouncementRenderer();
     private boolean sharedExpertEnabled;
+    private boolean sharedExpertBlockedVariant;
     private ExpertCoordinationDriver sharedExpert;
     private Assignment[] assignments = new Assignment[0];
     private String[] helperDeliveryTasks = new String[0];
@@ -39,12 +41,14 @@ public final class CoordinationAdapter{
     private int duplicateWorkIncidents;
     private int tasksCompleted;
     private int tasksAbandoned;
+    private int resourceReplans;
     private int structuredMessages;
     private int announcedMessages;
 
     public CoordinationAdapter(Scenario scenario, RlAgentRegistry registry){
         this.scenario = scenario;
         this.registry = registry;
+        this.expertPlan = ExpertCoordinationPlans.fromScenario(scenario);
     }
 
     public TaskBoard board(){ return sharedExpert == null ? board : sharedExpert.board(); }
@@ -52,6 +56,11 @@ public final class CoordinationAdapter{
     /** Opt-in scripted policy used by the M7.2 fixed-step/demo parity acceptance path. */
     public void setSharedExpertEnabled(boolean enabled){
         sharedExpertEnabled = enabled;
+    }
+
+    /** Validation-only legal pre-spend that exercises utility-policy recovery. */
+    public void setSharedExpertBlockedVariant(boolean enabled){
+        sharedExpertBlockedVariant = enabled;
     }
 
     public void reset(long episodeId, int agentCount){
@@ -68,11 +77,13 @@ public final class CoordinationAdapter{
         duplicateWorkIncidents = 0;
         tasksCompleted = 0;
         tasksAbandoned = 0;
+        resourceReplans = 0;
         structuredMessages = 0;
         announcedMessages = 0;
         if(sharedExpertEnabled){
             sharedExpert = new ExpertCoordinationDriver(
-                ExpertCoordinationPlans.fromScenario(scenario), new SharedExpertPort());
+                ExpertCoordinationPlans.fromScenario(scenario), new SharedExpertPort(),
+                sharedExpertBlockedVariant);
             sharedExpert.reset(episodeId);
             sharedExpert.startOpening((long)state.tick);
         }else{
@@ -187,9 +198,11 @@ public final class CoordinationAdapter{
                 continue;
             }
             selection.agent.controller.setSkill(skill);
+            int startCoreCopper = StateHasher.coreItem(Items.copper);
             assignments[selection.agent.index] = new Assignment(
                 state.taskId(), selection.candidate.task(),
-                stageFor(selection.candidate.task()), StateHasher.coreItem(Items.copper), tick);
+                stageFor(selection.candidate.task()), startCoreCopper,
+                harvestTarget(selection.candidate.task(), startCoreCopper), tick);
             results[selection.actionIndex] = result(selection.agent.index, true,
                 "accepted", selection.actionType, state.taskId());
         }
@@ -223,6 +236,18 @@ public final class CoordinationAdapter{
                 || task.owner().index() != i){
                 clearAssignment(i, agent);
                 continue;
+            }
+
+            if(assignment.spec.type() == TaskType.DEFEND_REGION){
+                int enemies = waveEnemyCount();
+                if(enemies > 0) assignment.sawEnemy = true;
+                if(assignment.sawEnemy && enemies == 0){
+                    OpResult completed = board.complete(assignment.taskId,
+                        AgentId.of(agent.index), tick);
+                    if(completed.ok()) tasksCompleted++;
+                    clearAssignment(i, agent);
+                    continue;
+                }
             }
 
             SkillResult skill = agent.controller.lastResult();
@@ -368,6 +393,7 @@ public final class CoordinationAdapter{
         out.put("duplicate_work_incidents", duplicateWorkIncidents);
         out.put("tasks_completed", tasksCompleted);
         out.put("tasks_abandoned", tasksAbandoned);
+        out.put("resource_replans", resourceReplans);
         out.put("agent_ticks", agentTicks);
         out.put("idle_agent_ticks", idleAgentTicks);
         out.put("idle_fraction", agentTicks == 0L ? 0.0
@@ -375,9 +401,13 @@ public final class CoordinationAdapter{
         out.put("structured_messages", structuredMessages);
         out.put("announced_messages", announcedMessages);
         if(sharedExpert != null){
+            out.put("shared_policy_name", sharedExpert.policyName());
             out.put("shared_decision_count", sharedExpert.selectionCount());
             out.put("shared_decision_digest", sharedExpert.selectionDigest());
             out.put("shared_policy_phase", sharedExpert.phase());
+            out.put("shared_first_line_block_tick", sharedExpert.firstLineBlockTick());
+            out.put("shared_resources_short_blocks", sharedExpert.resourcesShortBlocks());
+            out.put("shared_resources_short_replans", sharedExpert.resourceReplans());
         }
         return out;
     }
@@ -466,6 +496,7 @@ public final class CoordinationAdapter{
                 OpResult op = board.abandon(assignment.taskId, id, reason, tick);
                 if(op.ok()){
                     tasksAbandoned++;
+                    if(reason.equals("resources_short_replan")) resourceReplans++;
                     clearAssignment(agent.index, agent);
                 }
                 yield result(agent.index, op.ok(), op.reason(), type, assignment.taskId);
@@ -558,23 +589,55 @@ public final class CoordinationAdapter{
     }
 
     private Rect schematicFootprint(TaskSpec task){
-        boolean line = task.type() == TaskType.BUILD_LINE;
-        String id = line ? scenario.buildLineId : scenario.referenceSchematicId;
-        int anchorX = line ? scenario.buildLineAnchorX : scenario.referenceAnchorX;
-        int anchorY = line ? scenario.buildLineAnchorY : scenario.referenceAnchorY;
-        Scenario.SchematicSpec spec = scenario.schematic(id);
+        ExecutableSchematic spec = executableSchematic(task);
+        if(spec == null) throw new IllegalArgumentException("unknown schematic task " + task.taskId());
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
         for(BuildSpec build : spec.blocks()){
             mindustry.world.Block block = content.block(build.block());
-            int x = anchorX + build.offsetX() + block.sizeOffset;
-            int y = anchorY + build.offsetY() + block.sizeOffset;
+            int x = spec.anchorX() + build.offsetX() + block.sizeOffset;
+            int y = spec.anchorY() + build.offsetY() + block.sizeOffset;
             minX = Math.min(minX, x);
             minY = Math.min(minY, y);
             maxX = Math.max(maxX, x + block.size);
             maxY = Math.max(maxY, y + block.size);
         }
         return new Rect(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    private ExecutableSchematic executableSchematic(TaskSpec task){
+        if(!(task.target() instanceof RegionTarget target)) return null;
+        String id = target.regionId();
+        if(task.type() == TaskType.BUILD_LINE && id.equals(scenario.buildLineId)){
+            Scenario.SchematicSpec spec = scenario.schematic(id);
+            return spec == null ? null : new ExecutableSchematic(spec.name(),
+                scenario.buildLineAnchorX, scenario.buildLineAnchorY, spec.blocks());
+        }
+        if(task.type() != TaskType.BUILD_SCHEMATIC) return null;
+        if(id.equals(scenario.referenceSchematicId)){
+            Scenario.SchematicSpec spec = scenario.schematic(id);
+            return spec == null ? null : new ExecutableSchematic(spec.name(),
+                scenario.referenceAnchorX, scenario.referenceAnchorY, spec.blocks());
+        }
+        ExpertCoordinationPlan.Schematic planned = plannedSchematic(id);
+        return planned == null ? null : new ExecutableSchematic(planned.name(),
+            planned.anchorX(), planned.anchorY(), planned.blocks());
+    }
+
+    private ExpertCoordinationPlan.Schematic plannedSchematic(String id){
+        if(expertPlan.fortification().name().equals(id)) return expertPlan.fortification();
+        for(ExpertCoordinationPlan.Schematic expansion : expertPlan.expansions()){
+            if(expansion.name().equals(id)) return expansion;
+        }
+        return null;
+    }
+
+    private int waveEnemyCount(){
+        int enemies = 0;
+        for(Unit unit : Groups.unit){
+            if(unit.team == scenario.waveTeam && !unit.dead()) enemies++;
+        }
+        return enemies;
     }
 
     private int initialCopperBudget(){
@@ -668,10 +731,9 @@ public final class CoordinationAdapter{
                 assignment.lastHeartbeatTick = tick;
                 return;
             }
-            int threshold = scenario.objective(TaskType.HARVEST_RESOURCE).threshold();
-            if(StateHasher.coreItem(Items.copper) < threshold){
+            if(StateHasher.coreItem(Items.copper) < assignment.targetCoreCopper){
                 assignment.stage = "mine";
-                agent.controller.setSkill(mineSkill(agent));
+                agent.controller.setSkill(mineSkill(agent, assignment.targetCoreCopper));
                 board.reportProgress(assignment.taskId, AgentId.of(agent.index),
                     taskProgress(assignment, 0f), tick);
                 return;
@@ -702,17 +764,9 @@ public final class CoordinationAdapter{
 
     private Skill skillFor(RlAgentRegistry.Agent agent, TaskSpec task){
         return switch(task.type()){
-            case HARVEST_RESOURCE -> mineSkill(agent);
-            case BUILD_LINE -> {
-                Scenario.SchematicSpec spec = scenario.schematic(scenario.buildLineId);
-                yield spec == null ? null : new ExecuteSchematic(spec.name(),
-                    scenario.buildLineAnchorX, scenario.buildLineAnchorY, spec.blocks());
-            }
-            case BUILD_SCHEMATIC -> {
-                Scenario.SchematicSpec spec = scenario.schematic(scenario.referenceSchematicId);
-                yield spec == null ? null : new ExecuteSchematic(spec.name(),
-                    scenario.referenceAnchorX, scenario.referenceAnchorY, spec.blocks());
-            }
+            case HARVEST_RESOURCE -> mineSkill(agent,
+                harvestTarget(task, StateHasher.coreItem(Items.copper)));
+            case BUILD_LINE, BUILD_SCHEMATIC -> executeSchematic(task);
             case SUPPLY_TURRET -> supplySkill(task);
             case REPAIR_REGION -> regionSkill(task, true);
             case DEFEND_REGION -> regionSkill(task, false);
@@ -721,7 +775,7 @@ public final class CoordinationAdapter{
         };
     }
 
-    private Skill mineSkill(RlAgentRegistry.Agent agent){
+    private Skill mineSkill(RlAgentRegistry.Agent agent, int targetCoreCopper){
         Scenario.ObjectiveSpec objective = scenario.objective(TaskType.HARVEST_RESOURCE);
         Scenario.OrePatch patch = scenario.orePatch(objective.targetRef());
         if(patch == null) return null;
@@ -739,9 +793,14 @@ public final class CoordinationAdapter{
                 }
             }
         }
-        int threshold = objective.threshold();
-        int remaining = Math.max(1, threshold - StateHasher.coreItem(Items.copper));
+        int remaining = Math.max(1, targetCoreCopper - StateHasher.coreItem(Items.copper));
         return bestX < 0 ? null : new MineResource(bestX, bestY, Math.min(20, remaining));
+    }
+
+    private Skill executeSchematic(TaskSpec task){
+        ExecutableSchematic schematic = executableSchematic(task);
+        return schematic == null ? null : new ExecuteSchematic(schematic.name(),
+            schematic.anchorX(), schematic.anchorY(), schematic.blocks());
     }
 
     private Skill supplySkill(TaskSpec task){
@@ -771,16 +830,27 @@ public final class CoordinationAdapter{
 
     private double taskProgress(Assignment assignment, float skillProgress){
         if(assignment.spec.type() != TaskType.HARVEST_RESOURCE) return skillProgress;
-        int threshold = scenario.objective(TaskType.HARVEST_RESOURCE).threshold();
-        int denominator = Math.max(1, threshold - assignment.startCoreCopper);
+        int denominator = Math.max(1, assignment.targetCoreCopper - assignment.startCoreCopper);
         double delivered = Math.max(0, StateHasher.coreItem(Items.copper) - assignment.startCoreCopper);
         double base = Math.min(1.0, delivered / denominator);
         if(assignment.stage.equals("mine")) return Math.min(0.99, base + skillProgress * 0.1);
         return Math.min(0.99, base + skillProgress * 0.05);
     }
 
+    private static int harvestTarget(TaskSpec task, int startCoreCopper){
+        if(task.type() != TaskType.HARVEST_RESOURCE
+            || !(task.target() instanceof ResourceTarget target)) return startCoreCopper;
+        return startCoreCopper + target.amount();
+    }
+
     private boolean taskAvailable(TaskSpec task){
         if(!dependenciesComplete(task)) return false;
+        if(task.exclusive()){
+            for(TaskState existing : board.tasks()){
+                if(existing.terminal() || existing.spec().type() != task.type()) continue;
+                if(Objects.equals(existing.spec().target(), task.target())) return false;
+            }
+        }
         TaskState state = board.task(task.taskId());
         return state == null || state.status() == TaskStatus.OPEN;
     }
@@ -920,6 +990,17 @@ public final class CoordinationAdapter{
         }
 
         @Override
+        public boolean agentAvailable(int agentIndex){
+            RlAgentRegistry.Agent agent = registry.get(agentIndex);
+            return agent != null && agent.unit.isValid() && !agent.unit.dead();
+        }
+
+        @Override
+        public int coreCopper(){
+            return StateHasher.coreItem(Items.copper);
+        }
+
+        @Override
         public boolean buildingMatches(ExpertCoordinationDriver.BuildPlacement placement){
             Building building = world.build(placement.x(), placement.y());
             return building != null && building.block.name.equals(placement.block());
@@ -933,26 +1014,37 @@ public final class CoordinationAdapter{
         String actionType
     ){}
 
+    private record ExecutableSchematic(
+        String name,
+        int anchorX,
+        int anchorY,
+        List<BuildSpec> blocks
+    ){}
+
     private static final class Assignment{
         final String taskId;
         final TaskSpec spec;
         final int startCoreCopper;
+        final int targetCoreCopper;
         long lastHeartbeatTick;
         int lastProgressBucket = -1;
         String stage;
         String blockedReason = "";
+        boolean sawEnemy;
 
         Assignment(
             String taskId,
             TaskSpec spec,
             String stage,
             int startCoreCopper,
+            int targetCoreCopper,
             long tick
         ){
             this.taskId = taskId;
             this.spec = spec;
             this.stage = stage;
             this.startCoreCopper = startCoreCopper;
+            this.targetCoreCopper = targetCoreCopper;
             this.lastHeartbeatTick = tick;
         }
     }

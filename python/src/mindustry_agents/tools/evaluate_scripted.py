@@ -1,4 +1,4 @@
-"""Run the M6 expert seed set, write JSONL summaries, and print a table."""
+"""Run the primary utility expert seed set, write summaries, and print a table."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from mindustry_agents.tools.scripted_demo import run_episode
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(description="Evaluate the M6 scripted expert")
+    parser = argparse.ArgumentParser(description="Evaluate the M7.3 utility expert")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--java", default="java")
     parser.add_argument("--output", type=Path, default=Path("runs/scripted-evaluation.jsonl"))
@@ -26,7 +26,7 @@ def main(argv=None) -> int:
     summaries = []
     try:
         with RlServerProcess(LaunchConfig(port=args.port, java=args.java)) as env:
-            handshake = env.handshake("m6-scripted-evaluation")
+            handshake = env.handshake("m7.3-utility-evaluation")
             manifest = {
                 "engine_tag": handshake.engine_version,
                 "engine_commit": handshake.engine_commit,
@@ -34,7 +34,7 @@ def main(argv=None) -> int:
                 "protocol_version": handshake.protocol_version,
                 "scenario_id": "bootstrap-defense-v0",
                 "scenario_version": 1,
-                "policy": "scripted-expert-v1",
+                "policy": "greedy-utility-expert-v1",
                 "agent_count": 3,
                 "python": platform.python_version(),
             }

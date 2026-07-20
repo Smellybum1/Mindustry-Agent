@@ -12,7 +12,13 @@ from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServ
 
 def _candidate(observation: dict[str, Any], suffix: str) -> dict[str, Any]:
     for candidate in observation["task_candidates"]:
-        if candidate["task_id"].endswith(suffix):
+        task_id = candidate["task_id"]
+        overlap = suffix.endswith(":overlap-probe")
+        stem = suffix.removesuffix(":overlap-probe")
+        if task_id.startswith(stem) and (
+            task_id.endswith(":overlap-probe") if overlap
+            else not task_id.endswith(":overlap-probe")
+        ):
             return candidate
     raise AssertionError(f"candidate suffix not found: {suffix}")
 
@@ -170,7 +176,7 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
         ]
         assert len(supply_tasks) == 2
         assert all(task["reservation_count"] == 1 for task in supply_tasks)
-        assert all(task["reserved_resources"] == {"copper": 5} for task in supply_tasks)
+        assert all(task["reserved_resources"] == {"copper": 15} for task in supply_tasks)
 
         for _ in range(40):
             supplied = step(10)

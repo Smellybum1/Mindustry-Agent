@@ -2,6 +2,7 @@ package mindustry.rl;
 
 import agentcore.*;
 import agentcore.candidates.*;
+import agentcore.coordination.*;
 import agentcore.skill.*;
 import agentcore.task.*;
 import agentcore.utility.*;
@@ -19,11 +20,13 @@ import static mindustry.Vars.*;
 /** Simulation-thread adapter from live Mindustry state to the engine-free M5 catalog. */
 public final class EngineCandidates{
     private static final int DEFEND_LEAD_TICKS = 600;
+    private static final int EXPERT_TURRET_TARGET_AMMO = 30;
     private static final Set<String> ALPHA_CAPABILITIES =
         Set.of("build", "carry", "combat", "mine", "wait");
 
     private final Scenario scenario;
     private final RlAgentRegistry registry;
+    private final ExpertCoordinationPlan expertPlan;
     private final CandidateGenerator generator = new CandidateGenerator();
     private final Scenario.ObjectiveSpec harvest;
     private final Scenario.ObjectiveSpec buildLine;
@@ -39,6 +42,7 @@ public final class EngineCandidates{
     public EngineCandidates(Scenario scenario, RlAgentRegistry registry){
         this.scenario = scenario;
         this.registry = registry;
+        this.expertPlan = ExpertCoordinationPlans.fromScenario(scenario);
         harvest = requireObjective(TaskType.HARVEST_RESOURCE);
         buildLine = requireObjective(TaskType.BUILD_LINE);
         schematic = requireObjective(TaskType.BUILD_SCHEMATIC);
@@ -88,7 +92,8 @@ public final class EngineCandidates{
             scenario.buildLineId,
             scenario.referenceAnchorX * tilesize, scenario.referenceAnchorY * tilesize,
             scenario.referenceSchematicId,
-            turrets, supply.threshold(),
+            Math.max(1, state.wave), plannedSchematics(),
+            turrets, Math.max(supply.threshold(), EXPERT_TURRET_TARGET_AMMO),
             brokenBlocksIn(rebuildRegion),
             center(rebuildRegion.x(), rebuildRegion.w()), center(rebuildRegion.y(), rebuildRegion.h()),
             rebuildRegion.id(),
@@ -96,6 +101,37 @@ public final class EngineCandidates{
             center(defendRegion.x(), defendRegion.w()), center(defendRegion.y(), defendRegion.h()),
             defendRegion.id()
         );
+    }
+
+    private List<PlannedSchematicSnapshot> plannedSchematics(){
+        ArrayList<PlannedSchematicSnapshot> result = new ArrayList<>();
+        ExpertCoordinationPlan.Schematic fortification = expertPlan.fortification();
+        if(!schematicComplete(fortification)){
+            if(schematicComplete(scenario.schematic(scenario.buildLineId),
+                scenario.buildLineAnchorX, scenario.buildLineAnchorY)
+                && schematicComplete(scenario.schematic(scenario.referenceSchematicId))){
+                result.add(planned(fortification, 1, 0.92));
+            }
+            return List.copyOf(result);
+        }
+        for(int i = 0; i < expertPlan.expansions().size(); i++){
+            ExpertCoordinationPlan.Schematic expansion = expertPlan.expansions().get(i);
+            if(schematicComplete(expansion)) continue;
+            result.add(planned(expansion, i + 2, 0.95));
+            break;
+        }
+        return List.copyOf(result);
+    }
+
+    private PlannedSchematicSnapshot planned(
+        ExpertCoordinationPlan.Schematic schematic,
+        int minimumWave,
+        double priority
+    ){
+        String taskId = "expert:build:" + schematic.name() + ":at-" + (long)state.tick;
+        return new PlannedSchematicSnapshot(taskId, schematic.name(),
+            schematic.anchorX(), schematic.anchorY(), schematic.copperCost(),
+            false, minimumWave, priority, List.of());
     }
 
     public CandidateSet generate(RlAgentRegistry.Agent agent, CandidateWorldSnapshot world){
@@ -150,8 +186,16 @@ public final class EngineCandidates{
         return schematicComplete(spec, scenario.referenceAnchorX, scenario.referenceAnchorY);
     }
 
+    private boolean schematicComplete(ExpertCoordinationPlan.Schematic spec){
+        return schematicComplete(spec.blocks(), spec.anchorX(), spec.anchorY());
+    }
+
     private boolean schematicComplete(Scenario.SchematicSpec spec, int anchorX, int anchorY){
-        for(BuildSpec block : spec.blocks()){
+        return schematicComplete(spec.blocks(), anchorX, anchorY);
+    }
+
+    private boolean schematicComplete(List<BuildSpec> blocks, int anchorX, int anchorY){
+        for(BuildSpec block : blocks){
             Tile tile = world.tile(anchorX + block.offsetX(), anchorY + block.offsetY());
             if(tile == null || tile.build == null || !tile.block().name.equals(block.block())
                 || tile.build.rotation != block.rotation()) return false;

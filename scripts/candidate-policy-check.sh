@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# evaluate-scripted.sh — five-seed M7.3 greedy-policy evaluation and summaries.
+# candidate-policy-check.sh — public candidate/mask/action greedy-policy survival check.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -14,5 +14,4 @@ if [[ ! -f "$JAR" ]]; then
   else bash ./gradlew rl-server:dist --console=plain; fi
 fi
 
-exec "$PY" -m mindustry_agents.tools.evaluate_scripted \
-  --port "$PORT" --output "${EVALUATION_OUTPUT:-runs/scripted-evaluation.jsonl}"
+exec "$PY" -m mindustry_agents.tools.candidate_policy_check --port "$PORT"

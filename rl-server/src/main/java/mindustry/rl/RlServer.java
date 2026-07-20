@@ -292,6 +292,8 @@ public final class RlServer{
             && options.getBool("reservation_overlap_probe", false));
         coordination.setSharedExpertEnabled(options != null && options.isObject()
             && options.getBool("shared_expert_policy", false));
+        coordination.setSharedExpertBlockedVariant(options != null && options.isObject()
+            && options.getBool("shared_expert_blocked_variant", false));
 
         doReset(rootSeed);
         if(options != null && options.isObject()){

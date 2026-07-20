@@ -198,7 +198,7 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
         ]
         assert len(supply_tasks) == 2
         assert all(task["status"] == "COMPLETED" for task in supply_tasks)
-        assert [int(t["total_ammo"]) for t in observations[0]["team"]["turrets"]] == [10, 10]
+        assert [int(t["total_ammo"]) for t in observations[0]["team"]["turrets"]] == [30, 30]
 
         waited = step(actions=[{"agent_id": 2, "task_action": {"type": "WAIT"}}])
         assert waited.action_results[0]["accepted"] is True
