@@ -13,11 +13,11 @@ and what is unverified.
   `ENGINE_VERSION`, `Makefile`, `.gitignore` additions.
 - **Docs**: `ARCHITECTURE.md`, `ROADMAP.md`, `STATUS.md`, `HANDOFF.md`,
   `UPSTREAM_PATCHES.md`, `PROTOCOL.md`, `REWARD_AUDIT.md`, `SCENARIOS.md`,
-  `BENCHMARKS.md`, ADR-0001..0010, and ADR-0012 under `docs/decisions/`.
+  `BENCHMARKS.md` and ADR-0001..0012 under `docs/decisions/`.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **53 Python
+  client, parallel-env facade, vector collector) is stdlib-only too. **54 Python
   tests pass** via `python -m pytest python/tests -q` (verified 2026-07-21 with
   pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
@@ -721,6 +721,26 @@ repository-evidence mapping used for the M6 audit is:
   engine change, or held-out run was added. Next: M8.2 ADR-0011, exact RL
   dependency boundary, lockfile, and WSL2 bring-up/reverification.
 
+## Milestone 8.2 — RL dependency boundary (DONE, verified 2026-07-21)
+
+- ADR-0011 keeps core `dependencies = []` and confines NumPy, PettingZoo, and
+  PyTorch imports to `mindustry_agents.training`. An AST regression rejects
+  those imports anywhere else in the package.
+- The `rl` extra pins NumPy 2.4.2, PettingZoo 1.26.1, and PyTorch 2.12.1.
+  `python/requirements-rl-linux-py312.lock` pins all 15 Linux CPU packages and
+  hashes; uv 0.11.16 regenerated it byte-identically at SHA-256
+  `8d865c8c710a61d7e37b8896b38166a1dcf121e40d17fbb1a47e948b4861bf6c`.
+- `make verify-rl-boundary` is the reproducible Linux/WSL2 gate. On Ubuntu
+  24.04, kernel 6.6.114.1-microsoft-standard-WSL2, it ran 33 core tests under
+  Python `-S`, constructed a temporary environment, and reported CPython
+  3.12.3, NumPy 2.4.2, PettingZoo 1.26.1, and PyTorch 2.12.1+cpu with CUDA
+  unavailable. No package was installed machine-globally.
+- Windows remains the dev/demo reference. The full 54-test Python suite,
+  smoke, 670-checkpoint/16,200-tick golden replay, and 65-episode evaluation
+  ladder are green after the metadata change. No model, reward emission,
+  collector optimization, engine/upstream change, or held-out run entered
+  M8.2. Next: M8.3 throughput bring-up on WSL2.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -759,7 +779,9 @@ repository-evidence mapping used for the M6 audit is:
   green, including 31 M3/M4 skill tests). `agent-plugin:dist` and its isolated
   real-server acceptance probe are verified.
 - **No CI** configured yet.
-- **No lockfile** for Python yet (pinned deps are trivial/none for the core).
+- **RL lock is verified** for Linux CPython 3.12 CPU; core remains dependency
+  free. Native Windows training, CUDA, and other Python/platform locks are not
+  certified and require an explicit later decision.
 - **Human demo acceptance:** stock v159.7 join, visual/chat observation, all
   three waves, and in-client emergency stop are verified.
 

@@ -722,6 +722,13 @@ Not the destination — the proof that learning plugs into the seam.
   stdlib (ADR-0007 intact). Lockfile for the rl extra. WSL2 becomes the
   training runtime (bring-up + re-verification there is part of this item);
   Windows remains the dev/demo runtime.
+- **DONE (verified 2026-07-21):** ADR-0011 accepts the exact
+  NumPy 2.4.2/PettingZoo 1.26.1/PyTorch 2.12.1 CPU boundary. uv 0.11.16
+  regenerates the hashed Linux CPython 3.12 lock byte-identically. On Ubuntu
+  24.04/WSL2, 33 core tests pass under `python -S` and the temporary locked
+  environment reports Python 3.12.3, PyTorch 2.12.1+cpu, and no CUDA device.
+  The full Windows Python suite (54 tests), smoke, determinism golden, and
+  65-episode fixed/dev ladder remain green; held-out remained sealed.
 ### 8.3 Throughput bring-up for training
 - Larger step chunks at decision boundaries (event-driven cadence makes steps
   long), process-based or chunk-batched collector if needed; Gate 5 overnight
