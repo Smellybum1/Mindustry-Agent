@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M5 and M6.1 complete, verified 2026-07-20): the
+- **What currently works** (M0–M5 and M6.1–6.2 complete, verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
@@ -12,7 +12,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 35 pytest
+  crash-replacement, PettingZoo-shaped facade, vector collector; 36 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
   `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
   east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
@@ -65,6 +65,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   all three waves on the five-seed set. Final core health is
   848/884/1001/920/983; the legal insufficient-copper variant emits a structured
   block, replans through mining, and also wins.
+  M6.2 writes pinned JSONL episode summaries and aggregates the same five seeds:
+  5/5 wins, minimum/mean core health 848/927.2, with full figures in BENCHMARKS.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
   a scripted full three-wave *win* path and evaluation/golden replay work remain
   in M6; rewards are empty until M7;
@@ -85,7 +87,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + `agent-core`/`agent-plugin` classes, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (35 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (36 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (101 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
 | `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
@@ -93,6 +95,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.6 run: median 1.08 ms, p95 2.35 ms, peak 300.1 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | Runs the primary three-wave expert and the legal insufficient-copper replan variant; both end at tick 8100 with `outcome=win`. Verified 2026-07-20. |
+| `make evaluate-scripted` | Runs five pinned seeds, writes `runs/scripted-evaluation.jsonl`, and prints the M6 aggregate table; 5/5 wins. Verified 2026-07-20. |
 | `make demo-server` | **Exits 1** — not implemented (M6/M10). |
 
 (If `make` is unavailable on Windows, run `bash scripts/<name>.sh` directly.)
@@ -202,20 +205,19 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M6 item 6.2 (then the remaining M6
+**Authoritative work queue: `docs/ROADMAP.md` M6 item 6.3 (then the remaining M6
 items in order). Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M6.2: evaluation summaries.** Emit per-episode JSONL metrics and aggregate
-   scripted evaluation results into `docs/BENCHMARKS.md`.
-2. **M6.3: replay and golden traces.** Record complete coordination/action traces
+1. **M6.3: replay and golden traces.** Record complete coordination/action traces
    and verify a checked-in ≥10,000-tick replay in `make determinism`.
-3. **M6.4: agent-plugin demo server.** Run the same board/skills/policy in an
+2. **M6.4: agent-plugin demo server.** Run the same board/skills/policy in an
    ordinary human-joinable v159.7 dedicated server with emergency-stop commands.
-4. **M6.5: milestone closure.** Run the full acceptance matrix, update truthful
+3. **M6.5: milestone closure.** Run the full acceptance matrix, update truthful
    docs/benchmarks, and close M6 only when every exit criterion passes.
-5. **M7.1: learned selector baseline contract.** Begin only after M6 closure.
+4. **M7.1: learned selector baseline contract.** Begin only after M6 closure.
+5. **M7.2: PPO selector implementation.** Remains unauthorized until M7 begins.
 
 ## Decisions
 

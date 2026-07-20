@@ -424,6 +424,12 @@ actually winning it, and humans watching it happen.
   variant (insufficient copper hook) shows BLOCKED → replan per brief §12.4.
 
 ### 6.2 Evaluation metrics + episode summaries
+- **DONE (verified 2026-07-20):** `make evaluate-scripted` runs the fixed
+  five-seed set in one persistent JVM, writes pinned per-episode JSONL under
+  `runs/`, and prints the aggregate table recorded in `docs/BENCHMARKS.md`.
+  Summaries include all requested milestone, core/unit/resource, task, idle,
+  and message fields; the run is 5/5 wins with minimum/mean core health
+  848/927.2 and two agent losses across all episodes.
 - Objective: per-episode JSONL summary (outcome, milestone ticks: first drill,
   line complete, turrets built, turrets supplied; core damage; units lost;
   resource totals; task stats: completed/abandoned/duplicated; idle fraction;

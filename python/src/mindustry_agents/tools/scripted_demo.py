@@ -27,6 +27,15 @@ class EpisodeResult:
     schematic_complete_tick: int = -1
     wave_clear_ticks: list[int] = field(default_factory=list)
     resources_short_replans: int = 0
+    first_drill_tick: int = -1
+    turrets_supplied_tick: int = -1
+    copper_start: int = 250
+    copper_final: int = 0
+    copper_peak: int = 250
+    copper_min: int = 250
+    copper_boundary_in: int = 0
+    copper_boundary_out: int = 0
+    units_lost: int = 0
 
 
 class ExpertEpisode:
@@ -44,6 +53,14 @@ class ExpertEpisode:
         self.schematic_complete_tick = -1
         self.wave_clear_ticks: list[int] = []
         self.resources_short_replans = 0
+        self.first_drill_tick = -1
+        self.turrets_supplied_tick = -1
+        self.copper_start = int(self.observations[0]["team"]["copper"])
+        self.last_copper = self.copper_start
+        self.copper_peak = self.copper_start
+        self.copper_min = self.copper_start
+        self.copper_boundary_in = 0
+        self.copper_boundary_out = 0
 
     def step(self, ticks: int = 30, actions: list[dict[str, Any]] | None = None):
         response = self.env.step(
@@ -55,6 +72,15 @@ class ExpertEpisode:
         self.tick = response.tick
         self.observations = response.observations
         self.step_response = response
+        copper = int(response.observations[0]["team"]["copper"])
+        delta = copper - self.last_copper
+        if delta > 0:
+            self.copper_boundary_in += delta
+        elif delta < 0:
+            self.copper_boundary_out -= delta
+        self.last_copper = copper
+        self.copper_peak = max(self.copper_peak, copper)
+        self.copper_min = min(self.copper_min, copper)
         for event in response.task_events:
             line = event.get("announcement", "")
             if line:
@@ -66,6 +92,13 @@ class ExpertEpisode:
                     self.schematic_complete_tick = int(event["tick"])
             if event.get("act") == "BLOCKED" and event.get("reason_code") == "resources_short":
                 self.resources_short_replans += 1
+            if (
+                self.first_drill_tick < 0
+                and event.get("task_type") == "BUILD_LINE"
+                and event.get("act") == "PROGRESS"
+                and float(event.get("progress", 0.0)) >= 1.0 / 9.0
+            ):
+                self.first_drill_tick = int(event["tick"])
         return response
 
     @staticmethod
@@ -352,6 +385,7 @@ class ExpertEpisode:
         self._bootstrap_copper(rounds=4 if self.blocked_variant else 2)
         self._build_defense()
         self._supply_all()
+        self.turrets_supplied_tick = self.tick
         self._hold_to_win()
         response = self.step_response
         team = response.observations[0]["team"]
@@ -366,6 +400,15 @@ class ExpertEpisode:
             schematic_complete_tick=self.schematic_complete_tick,
             wave_clear_ticks=self.wave_clear_ticks,
             resources_short_replans=self.resources_short_replans,
+            first_drill_tick=self.first_drill_tick,
+            turrets_supplied_tick=self.turrets_supplied_tick,
+            copper_start=self.copper_start,
+            copper_final=int(team["copper"]),
+            copper_peak=self.copper_peak,
+            copper_min=self.copper_min,
+            copper_boundary_in=self.copper_boundary_in,
+            copper_boundary_out=self.copper_boundary_out,
+            units_lost=sum(bool(observation["unit"]["dead"]) for observation in self.observations),
         )
 
 

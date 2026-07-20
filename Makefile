@@ -12,7 +12,7 @@ SCRIPTS := scripts
 .DEFAULT_GOAL := help
 
 .PHONY: help bootstrap build test test-java test-python smoke determinism \
-        stress-reset benchmark scripted-demo demo-server
+        stress-reset benchmark scripted-demo evaluate-scripted demo-server
 
 help: ## List available targets
 	@echo "mindustry-coop-agents — make targets:"
@@ -26,6 +26,7 @@ help: ## List available targets
 	@echo "  stress-reset  repeated in-memory reset test (M2)"
 	@echo "  benchmark     scaling + timing report (M2)"
 	@echo "  scripted-demo headless scripted team (M6)"
+	@echo "  evaluate-scripted five-seed episode summaries (M6)"
 	@echo "  demo-server   human-joinable real-time server (M6/M10)"
 
 bootstrap: ## Verify/print toolchain versions (works today)
@@ -57,6 +58,9 @@ benchmark: ## Scaling + timing report (M2)
 
 scripted-demo: ## Headless scripted team (M6)
 	@bash $(SCRIPTS)/scripted-demo.sh
+
+evaluate-scripted: ## Evaluate the scripted M6 expert
+	@bash $(SCRIPTS)/evaluate-scripted.sh
 
 demo-server: ## Human-joinable real-time server (M6/M10)
 	@bash $(SCRIPTS)/demo-server.sh

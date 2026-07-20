@@ -134,3 +134,25 @@ Measure each layer separately; do not conflate them.
 | 6. Protocol overhead | serialization+transport < ~10% of step time | — | conditional (~0.25 ms/step; <10% at large step sizes, ~22% at 60-tick steps) |
 
 Do not proceed to expensive RL training until the relevant gates pass.
+
+## M6 scripted expert evaluation (2026-07-20)
+
+Command: `make evaluate-scripted` (equivalently
+`bash scripts/evaluate-scripted.sh`). The evaluator uses one persistent JVM,
+the pinned `scripted-expert-v1` policy, three agents, scenario version 1, and
+writes `runs/scripted-evaluation.jsonl`. Copper in/out totals below are honest
+net changes at deterministic external step boundaries; they are not claimed as
+per-engine-operation accounting.
+
+| seed | outcome | core hp | first drill | line complete | turrets built | supplied | units lost | messages |
+|---:|:---:|---:|---:|---:|---:|---:|---:|---:|
+| 12345 | win | 848 | 15 | 40 | 250 | 1082 | 0 | 158 / 5 |
+| 23456 | win | 884 | 15 | 40 | 250 | 1082 | 0 | 158 / 5 |
+| 34567 | win | 1001 | 15 | 40 | 250 | 1082 | 0 | 158 / 5 |
+| 45678 | win | 920 | 15 | 40 | 250 | 1082 | 1 | 158 / 5 |
+| 987666666 | win | 983 | 15 | 40 | 250 | 1082 | 1 | 158 / 5 |
+
+Aggregate: **5/5 wins**, minimum final core health **848**, mean **927.2**,
+two agent losses, 790 structured messages and 25 rendered announcements. The
+primary seed reports boundary-observed copper 250 start / 21 final / 272 peak /
+1 minimum, with 219 total positive and 448 total negative boundary deltas.

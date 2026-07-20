@@ -418,7 +418,20 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   records one `resources_short` block, mines/delivers to recover, and wins with
   992 core health. No reset hook, free items, teleport, or state poke is used.
 - `make scripted-demo` runs both transcripts noninteractively. **102 JUnit**,
-  **35 pytest**, and the full legacy smoke suite are green after the change.
+  **36 pytest**, and the full legacy smoke suite are green after the change.
+
+## Milestone 6.2 — evaluation summaries (DONE, verified 2026-07-20)
+
+- `make evaluate-scripted` runs the fixed five-seed set in one persistent JVM,
+  writes canonical JSONL to `runs/scripted-evaluation.jsonl`, and prints a
+  Markdown table. Each row embeds the engine/Arc/protocol/scenario/policy/Python
+  manifest plus outcome, milestone ticks, core damage, units lost, boundary
+  copper totals, task counts, idle fraction, and structured/rendered messages.
+- The verified aggregate is 5/5 wins, minimum/mean final core health 848/927.2,
+  two agent losses, and 790/25 structured/rendered messages. Full numbers and
+  the boundary-accounting caveat are recorded in `docs/BENCHMARKS.md`.
+- The dependency-free summarizer/aggregator has unit coverage; pytest is now
+  **36 passed**.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
