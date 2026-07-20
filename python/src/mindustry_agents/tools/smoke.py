@@ -495,6 +495,9 @@ def main(argv=None) -> int:
         if rr.action_masks[0].get("candidate_task") != [True, True, True, True]:
             print(f"FAIL: initial candidate mask mismatch: {rr.action_masks[0]}", file=sys.stderr)
             return 1
+        if not rr.action_masks[0].get("wait", False):
+            print(f"FAIL: canonical WAIT action is not legal: {rr.action_masks[0]}", file=sys.stderr)
+            return 1
 
         tick = rr.tick
         total_engine_ms = 0.0

@@ -432,6 +432,8 @@ public final class Scenario{
         m.put("tile_size", tilesize);
         m.put("core_x", coreX);
         m.put("core_y", coreY);
+        m.put("core_health_max", coreBlock.health);
+        m.put("copper_budget", coreBlock.itemCapacity);
         m.put("wave_count", waveCount);
         m.put("initial_wave_tick", initialWaveSpacing);
         m.put("wave_spacing", waveSpacing);

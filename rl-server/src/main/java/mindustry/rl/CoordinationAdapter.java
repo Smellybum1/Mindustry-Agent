@@ -173,12 +173,14 @@ public final class CoordinationAdapter{
                 results[i] = result(agentIndex, false, "malformed_task_action", "");
             }else{
                 String type = taskAction.getString("type", "").toUpperCase(Locale.ROOT);
-                if(type.equals("SELECT_CANDIDATE_TASK") || type.equals("WAIT")){
-                    int candidateIndex = type.equals("WAIT")
-                        ? waitIndex(candidatesFor(candidates, agentIndex))
-                        : taskAction.getInt("candidate_index", -1);
+                if(type.equals("SELECT_CANDIDATE_TASK")){
+                    int candidateIndex = taskAction.getInt("candidate_index", -1);
                     prepareSelection(i, agent, candidateIndex, type,
                         candidatesFor(candidates, agentIndex), pending, results, tick);
+                }else if(type.equals("WAIT")){
+                    results[i] = current(agentIndex) == null
+                        ? result(agentIndex, true, "accepted", type)
+                        : result(agentIndex, false, "task_active", type);
                 }else{
                     results[i] = applyImmediate(agent, taskAction, type, tick);
                 }
@@ -380,7 +382,7 @@ public final class CoordinationAdapter{
         out.put("request_help", !idle);
         int waitIndex = waitIndex(candidates);
         out.put("wait", idle && waitIndex >= 0
-            && taskAvailable(candidates.candidates().get(waitIndex).task()));
+            && candidates.candidates().get(waitIndex).valid());
 
         Jval offers = Jval.newArray();
         AgentId agent = AgentId.of(agentIndex);
@@ -1029,6 +1031,24 @@ public final class CoordinationAdapter{
             return 0.5 * (1.0 - elapsed / 120.0);
         }
         return 0.0;
+    }
+
+    /** Whether equivalent work already has a live board entry at this boundary. */
+    public boolean semanticTaskActive(TaskSpec task){
+        for(TaskState state : board().tasks()){
+            if(!state.terminal() && sameWork(state.spec(), task)) return true;
+        }
+        return false;
+    }
+
+    /** Whether equivalent live work is owned by another seat at this boundary. */
+    public boolean semanticTaskOwnedByOther(int agentIndex, TaskSpec task){
+        AgentId self = AgentId.of(agentIndex);
+        for(TaskState state : board().tasks()){
+            if(!state.terminal() && state.owner() != null && !state.owner().equals(self)
+                && sameWork(state.spec(), task)) return true;
+        }
+        return false;
     }
 
     private void rememberTransition(int agentIndex, TaskSpec task, long tick, boolean failed){

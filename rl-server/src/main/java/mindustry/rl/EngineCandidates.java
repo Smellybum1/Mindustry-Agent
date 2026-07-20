@@ -166,10 +166,18 @@ public final class EngineCandidates{
         this.coordination = coordination;
     }
 
-    public Jval observation(CandidateSet set){
+    public Jval observation(
+        RlAgentRegistry.Agent agent,
+        CandidateWorldSnapshot world,
+        CandidateSet set
+    ){
         Jval out = Jval.newArray();
+        EngineFeatureSource featureSource = new EngineFeatureSource(scenario, registry, world,
+            facts.assignmentRange(), coordination);
         int index = 0;
         for(TaskCandidate candidate : set.candidates()){
+            UtilityFeatures features = featureSource.featuresFor(AgentId.of(agent.index),
+                candidate.task(), world.tick());
             Jval item = Jval.newObject();
             item.put("index", index++);
             item.put("task_id", candidate.task().taskId());
@@ -178,6 +186,9 @@ public final class EngineCandidates{
                 : candidate.task().target().describe());
             item.put("priority", candidate.task().priority());
             item.put("estimated_ticks", candidate.task().estimatedTicks());
+            item.put("helpers_requested", candidate.task().helpersRequested());
+            item.put("dependency_count", candidate.task().dependencyTaskIds().size());
+            item.put("exclusive", candidate.task().exclusive());
             Jval cost = Jval.newObject();
             candidate.task().estimatedCost().asMap().forEach(cost::put);
             item.add("estimated_cost", cost);
@@ -187,8 +198,31 @@ public final class EngineCandidates{
             item.put("valid", candidate.valid());
             item.put("invalid_reason", candidate.invalidReason());
             item.put("utility", candidate.utility());
+            item.add("utility_features", utilityFeatures(features));
+            item.put("semantic_task_active", coordination != null
+                && coordination.semanticTaskActive(candidate.task()));
+            item.put("semantic_task_owned_by_other", coordination != null
+                && coordination.semanticTaskOwnedByOther(agent.index, candidate.task()));
             out.add(item);
         }
+        return out;
+    }
+
+    private static Jval utilityFeatures(UtilityFeatures features){
+        Jval out = Jval.newObject();
+        out.put("team_value", features.teamValue());
+        out.put("urgency", features.urgency());
+        out.put("capability_fit", features.capabilityFit());
+        out.put("role_fit", features.roleFit());
+        out.put("proximity", features.proximity());
+        out.put("help_synergy", features.helpSynergy());
+        out.put("human_priority", features.humanPriority());
+        out.put("travel_cost", features.travelCost());
+        out.put("resource_cost", features.resourceCost());
+        out.put("duplication_risk", features.duplicationRisk());
+        out.put("switching_cost", features.switchingCost());
+        out.put("danger", features.danger());
+        out.put("uncertainty", features.uncertainty());
         return out;
     }
 

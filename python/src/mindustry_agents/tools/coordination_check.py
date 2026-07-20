@@ -202,20 +202,11 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
 
         waited = step(actions=[{"agent_id": 2, "task_action": {"type": "WAIT"}}])
         assert waited.action_results[0]["accepted"] is True
-        abandoned = step(
-            actions=[
-                {
-                    "agent_id": 2,
-                    "task_action": {"type": "ABANDON", "reason": "acceptance_done"},
-                }
-            ]
-        )
-        assert abandoned.action_results[0]["accepted"] is True
-        assert any(
-            task["task_type"] == "WAIT" and task["status"] == "ABANDONED"
-            for task in abandoned.task_board
-        )
-        assert len(abandoned.task_board) <= 32
+        waited_again = step(actions=[{"agent_id": 2, "task_action": {"type": "WAIT"}}])
+        assert waited_again.action_results[0]["accepted"] is True
+        assert not any(task["task_type"] == "WAIT" for task in waited_again.task_board)
+        assert waited_again.action_masks[2]["wait"] is True
+        assert len(waited_again.task_board) <= 32
 
         summary = {
             "winner": expected_winner,
@@ -226,7 +217,7 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
                 if event["task_type"] == "BUILD_SCHEMATIC" and event["act"] == "COMPLETE"
             ),
             "final_tick": tick,
-            "board_tasks": len(abandoned.task_board),
+            "board_tasks": len(waited_again.task_board),
             "turret_ammo": [
                 int(t["total_ammo"]) for t in observations[0]["team"]["turrets"]
             ],

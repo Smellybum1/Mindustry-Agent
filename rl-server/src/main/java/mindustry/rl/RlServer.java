@@ -280,6 +280,7 @@ public final class RlServer{
         features.add("task_candidates");
         features.add("task_actions");
         features.add("task_board");
+        features.add("selector_features_v1");
         r.add("supported_features", features);
         r.put("process_id", ProcessHandle.current().pid());
         return r;
@@ -596,7 +597,8 @@ public final class RlServer{
             o.add("unit", unitObs(agent));
             o.add("skill", skillObs(agent));
             o.add("team", Jval.read(world.toString(Jval.Jformat.plain)));
-            o.add("task_candidates", engineCandidates.observation(candidates));
+            o.add("task_candidates", engineCandidates.observation(agent, candidateWorld,
+                candidates));
             arr.add(o);
         }
         //fallback: if there are no agents (agent_count 0), still emit the world view
@@ -633,8 +635,10 @@ public final class RlServer{
         o.put("vx", u.vel().x);
         o.put("vy", u.vel().y);
         o.put("health", u.health);
+        o.put("max_health", u.maxHealth);
         o.put("item", it.item() == null ? "" : it.item().name);
         o.put("item_amount", it.stack().amount);
+        o.put("item_capacity", u.itemCapacity());
         o.put("mining", mn.mining());
         o.put("flag", u.flag);
         o.put("dead", u.dead());

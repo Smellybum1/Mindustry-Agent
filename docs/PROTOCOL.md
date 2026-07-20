@@ -185,7 +185,10 @@ one `task_action` instead of `command`:
 Supported types are `SELECT_CANDIDATE_TASK {candidate_index}`,
 `CONTINUE_CURRENT_TASK`, `OFFER_HELP {task_index, contribution, amount?}`,
 `ACCEPT_HELP {offer_index}`, `DECLINE_HELP {offer_index}`,
-`ABANDON {reason?}`, `REQUEST_HELP {helpers_requested?}`, and `WAIT`. Candidate,
+`ABANDON {reason?}`, `REQUEST_HELP {helpers_requested?}`, and `WAIT`. `WAIT` is
+the canonical repeatable no-op task action: it does not create or terminalize a
+board task. The M8 learned selector never selects the catalog's encoded WAIT
+row through `SELECT_CANDIDATE_TASK`. Candidate,
 task, and offer indices refer to the immediately preceding boundary. One entry
 per agent is allowed; duplicate, ambiguous, stale/invalid-index, dependency,
 ownership, and unsupported-target failures return `accepted=false` with a typed
@@ -222,7 +225,8 @@ the winner starts a skill, so input bundle order cannot choose the owner.
 {
   "agent_id": 0,
   "unit":  {"x": 216.0, "y": 192.0, "vx": 0.0, "vy": 0.0, "health": 150.0,
-            "item": "copper", "item_amount": 21, "mining": false, "flag": 0.0,
+            "max_health": 150.0, "item": "copper", "item_amount": 21,
+            "item_capacity": 30, "mining": false, "flag": 0.0,
             "dead": false, "build_queue_depth": 0, "build_plan_progress": 0.0},
   "skill": {"type": "MINE", "status": "SUCCEEDED", "reason": "TARGET_REACHED",
             "progress": 1.0, "next_retry_tick": -1},
@@ -230,8 +234,16 @@ the winner starts a skill, so input bundle order cannot choose the owner.
     {"index": 0, "task_id": "T1:harvest:copper",
      "task_type": "HARVEST_RESOURCE", "target": "50 copper",
      "priority": 0.7, "estimated_ticks": 300, "estimated_cost": {},
+     "helpers_requested": 0, "dependency_count": 0, "exclusive": true,
      "required_capabilities": ["carry", "mine"],
-     "valid": true, "invalid_reason": "", "utility": 2.41}
+     "valid": true, "invalid_reason": "", "utility": 2.41,
+     "utility_features": {"team_value": 0.7, "urgency": 0.5,
+       "capability_fit": 1.0, "role_fit": 0.35, "proximity": 0.6,
+       "help_synergy": 0.0, "human_priority": 0.0, "travel_cost": 0.4,
+       "resource_cost": 0.0, "duplication_risk": 0.0,
+       "switching_cost": 0.0, "danger": 0.0, "uncertainty": 0.0},
+     "semantic_task_active": false,
+     "semantic_task_owned_by_other": false}
   ],
   "team":  {"tick": 860, "wave": 1, "copper": 100, "lead": 0, "unit_count": 2,
             "building_count": 1, "broken_block_count": 0, "core_health": 1100.0,
@@ -251,11 +263,18 @@ different recurring ID is masked while the same semantic target is active.
 `valid=false` carries a typed `invalid_reason` (`missing_capability:<name>` or
 `out_of_range`). `action_masks[agent_id].candidate_task` is aligned by candidate
 index and is stricter: it also checks current assignment, board status, and task
-dependencies. Other M5.2 mask keys are `continue_current_task`, `abandon`,
+dependencies. For backward-compatible scripted clients the catalog WAIT row
+remains selectable; `selector_features_v1` masks that SELECT logit and uses
+`action_masks[].wait` as its single canonical WAIT action, which remains legal
+on every live idle boundary. Other M5.2 mask keys are `continue_current_task`, `abandon`,
 `request_help`, `wait`, and index-aligned `offer_help`/`accept_help`/`decline_help`.
 The utility is a deterministic `HandTunedUtility` score from the same captured
 engine boundary (priority, deficit/urgency, capability/role fit, distance,
-resource cost, and enemy danger).
+resource cost, and enemy danger). M8.4 exposes all 13 raw `utility_features`,
+candidate task-context fields, and semantic board bits from that same immutable
+boundary for `selector_features_v1`; Python does not reconstruct them from task
+IDs or prose. Reset metadata adds `core_health_max` and `copper_budget` as fixed
+normalizers. The handshake advertises `selector_features_v1`.
 
 `task_board[]` entries contain `{index, task_id, task_type, target, status,
 owner_agent_id, lease_expiry_tick, progress, reason, pending_offer_count,
