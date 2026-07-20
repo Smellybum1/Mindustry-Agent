@@ -84,8 +84,11 @@ final class DemoCoordinator{
 
     void playerJoined(Player player){
         if(player.team() != scenario.coreTeam) return;
-        player.sendMessage("[accent]Cooperative agents ready. /agents status|pause|resume|stop");
-        if(waitForPlayer && !started && !stopped) startOpening();
+        if(waitForPlayer && !started && !stopped){
+            player.sendMessage("[accent]Cooperative agents ready. Type /agents resume when you are ready to watch.");
+        }else{
+            player.sendMessage("[accent]Cooperative agents active. /agents status|pause|resume|stop");
+        }
     }
 
     void startOpening(){

@@ -460,7 +460,9 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   emergency-stop semantics.
 - Server and client commands cover `agents status|pause|resume|stop`; stop clears
   velocity, mining, build plans, firing, and active skills on the simulation
-  thread. Team chat receives only rate-limiter-approved structured events.
+  thread. Team chat receives only rate-limiter-approved structured events. Join
+  mode waits for the human's `/agents resume`, so client map loading cannot hide
+  the opening.
 - `make demo-server` is a non-networked isolated acceptance probe. Verified:
   plugin load, three spawns, both real schematic completions, both turret supply
   actions, exact per-plan block-order parity, five concise announcements, and

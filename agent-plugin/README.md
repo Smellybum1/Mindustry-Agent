@@ -35,9 +35,10 @@ bash scripts/demo-server.sh
 DEMO_JOIN=1 bash scripts/demo-server.sh
 ```
 
-Join `localhost:6567` with a stock v159.7 client. The policy waits for the first
-Sharded player before beginning, so the opening and concise team-chat
-announcements are visible. `DEMO_PORT=<port>` may be used when 6567 is occupied.
+Join `localhost:6567` with a stock v159.7 client. The policy waits until the
+player types `/agents resume`, so map loading cannot hide the opening or its
+concise team-chat announcements. `DEMO_PORT=<port>` may be used when 6567 is
+occupied.
 
 Every run uses an isolated temporary server data directory under `runs/`; it
 does not install into the user's real Mindustry mod folder. The stock ArcNet
