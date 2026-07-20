@@ -33,14 +33,16 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     records: list[dict] = []
+    total_ticks = 0
     try:
         with RlServerProcess(LaunchConfig(port=args.port, java=args.java)) as env:
             handshake = env.handshake("m6-golden-recorder")
             for seed in GOLDEN_SEEDS:
                 episode = ExpertEpisode(env, seed)
                 result = episode.run()
-                if result.outcome != "win" or result.tick != 8100:
+                if result.outcome != "win" or result.tick != result.win_tick:
                     raise AssertionError(f"seed {seed} did not produce a golden win")
+                total_ticks += result.tick
                 records.extend(episode.trace_records)
     except Exception as exc:
         print(f"RECORD-REPLAY FAIL: {exc}", file=sys.stderr)
@@ -57,7 +59,7 @@ def main(argv=None) -> int:
         "scenario_version": 1,
         "policy": "scripted-expert-v1",
         "episodes": len(GOLDEN_SEEDS),
-        "total_ticks": 8100 * len(GOLDEN_SEEDS),
+        "total_ticks": total_ticks,
     }
     write_trace(args.output, header, records)
     print(
