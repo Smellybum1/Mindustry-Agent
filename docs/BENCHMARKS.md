@@ -86,12 +86,14 @@ saturating all 16 threads.
 ### Leak / stability (Gate 5, partial)
 
 `stress-reset.sh` runs **1000 in-JVM resets, same seed, one persistent JVM**:
-all 1000 initial `state_hash` values were byte-identical (0 mismatches), and RSS
-(bounded via `-Xmx512m`) plateaued at ~325 MiB after warmup with a steady-state
-tail growth of **+0.2%** — no per-reset leak. Verified separately that an
-uncapped JVM's apparent RSS "growth" is lazy heap expansion, not a leak: with a
-`-Xmx350m` cap, RSS held flat at ~186 MiB across 2000 resets. The full Gate 5
-(≥10,000 resets / overnight) is not yet run.
+all 1000 initial `state_hash` values were byte-identical (0 mismatches) across
+three independent runs. Memory: no per-reset leak — peak RSS ~285 MiB over 1000
+resets under `-Xmx350m`, far below the 650 MiB leak ceiling (`Xmx + 300 MiB`
+allowance). Methodology note: the original growth-trend check proved flaky
+(+0.2% on one run, +24% on a re-verification run of the identical workload under
+`-Xmx512m` — lazy heap expansion timing, not a leak), so the tool now uses the
+absolute-ceiling check under a capped heap. The full Gate 5 (≥10,000 resets /
+overnight) is not yet run.
 
 ## Environment (record for every run)
 

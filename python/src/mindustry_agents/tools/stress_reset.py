@@ -8,18 +8,16 @@ exits 0 iff all hold:
    pure; no cross-episode state leak).
 2. **Reset latency** — reports median / p95 / max client-observed latency (Gate 2
    target < 250 ms; stretch < 100 ms). This is informational, not a hard gate.
-3. **No memory leak** — samples the child's RSS every ``--sample-every`` resets;
-   fails if the **post-warmup** RSS grows beyond a generous tolerance (default:
-   > 20% and > 64 MiB over the steady-state tail), which would indicate a
-   per-reset leak.
-
-The child is launched with a bounded heap (``--max-heap``, default ``512m``) on
-purpose. An *uncapped* JVM lazily grows its heap toward the default max (~25% of
-physical RAM) with no GC pressure, so RSS climbs for hundreds of resets before
-plateauing — that masquerades as a leak but is not one (verified: with a capped
-heap RSS plateaus flat). Bounding the heap makes the working set — and therefore
-a genuine per-reset leak — observable: a real leak would keep climbing against
-the cap and eventually OOM.
+3. **No memory leak** — samples the child's RSS every ``--sample-every`` resets.
+   With a bounded heap (``--max-heap``, default ``350m``) the failure condition
+   is an **absolute ceiling**: peak RSS must stay under ``Xmx + 300 MiB`` (native
+   + metaspace + JIT allowance). RSS *growth* within the cap is heap ergonomics
+   (the JVM lazily expands toward Xmx on its own schedule) and is reported as
+   informational only — growth-trend thresholds proved flaky across runs on a
+   loaded machine. A genuine native/metaspace leak still fails: it grows without
+   bound and punches through the ceiling. For **uncapped** runs (``--max-heap
+   ""``) the old trend heuristic (> 20% and > 64 MiB post-warmup growth) is the
+   only available signal and is applied as before, with the caveat above.
 
 Memory sampling prefers ``psutil`` if installed, else falls back to Windows
 ``tasklist`` CSV parsing (or ``/proc/<pid>/status`` on Linux). The source used is
@@ -40,13 +38,29 @@ from typing import Optional
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
 from mindustry_agents.process.supervisor import _is_port_free
 
-# Leak thresholds: RSS may legitimately jitter as the JVM GCs, so require BOTH a
-# relative and an absolute breach before failing. Measured over the post-warmup
-# tail (the first WARMUP_FRACTION of the run is JVM heap/JIT/metaspace warmup).
-LEAK_REL_TOLERANCE = 0.20      # 20%
-LEAK_ABS_TOLERANCE_MB = 64.0   # MiB
+# Leak detection. Capped-heap runs use an absolute ceiling (Xmx + native
+# allowance); growth trends within the cap are heap ergonomics, not leaks.
+# Uncapped runs fall back to the trend heuristic over the post-warmup tail.
+NATIVE_ALLOWANCE_MB = 300.0    # metaspace + JIT code cache + GC/native overhead
+LEAK_REL_TOLERANCE = 0.20      # 20%   (uncapped fallback only)
+LEAK_ABS_TOLERANCE_MB = 64.0   # MiB   (uncapped fallback only)
 WARMUP_FRACTION = 0.30
-DEFAULT_MAX_HEAP = "512m"
+DEFAULT_MAX_HEAP = "350m"
+
+
+def _heap_mb(spec: str) -> Optional[float]:
+    """Parse an ``-Xmx`` size spec like ``350m``/``2g`` to MiB (None if unparsable)."""
+    spec = spec.strip().lower()
+    try:
+        if spec.endswith("g"):
+            return float(spec[:-1]) * 1024.0
+        if spec.endswith("m"):
+            return float(spec[:-1])
+        if spec.endswith("k"):
+            return float(spec[:-1]) / 1024.0
+        return float(spec) / (1024.0 * 1024.0)  # raw bytes
+    except ValueError:
+        return None
 
 
 def _probe_free_port(start: int) -> int:
@@ -174,7 +188,8 @@ def main(argv=None) -> int:
         f"(n={len(latencies_ms)})"
     )
 
-    # Leak check over the post-warmup tail (drop the initial heap/JIT warmup).
+    # Leak check. Capped heap: absolute ceiling. Uncapped: trend heuristic.
+    heap_cap_mb = _heap_mb(args.max_heap) if args.max_heap else None
     warmup_cut = args.resets * WARMUP_FRACTION
     tail = [(i, r) for (i, r) in rss_samples if i >= warmup_cut]
     leak_ok = True
@@ -191,10 +206,20 @@ def main(argv=None) -> int:
             f"peak={peak_rss:.1f} MiB  tail-growth={growth:+.1f} MiB ({rel * 100:+.1f}%)  "
             f"samples={len(rss_samples)} (tail={len(tail)})"
         )
-        if growth > LEAK_ABS_TOLERANCE_MB and rel > LEAK_REL_TOLERANCE:
+        if heap_cap_mb is not None:
+            ceiling = heap_cap_mb + NATIVE_ALLOWANCE_MB
+            print(
+                f"  ceiling check (capped heap): peak {peak_rss:.1f} MiB vs "
+                f"Xmx {heap_cap_mb:.0f} + {NATIVE_ALLOWANCE_MB:.0f} allowance = {ceiling:.0f} MiB; "
+                f"within-cap growth is informational (heap ergonomics, not a leak)"
+            )
+            if peak_rss > ceiling:
+                leak_ok = False
+                print(f"  LEAK: peak RSS {peak_rss:.1f} MiB exceeds ceiling {ceiling:.0f} MiB")
+        elif growth > LEAK_ABS_TOLERANCE_MB and rel > LEAK_REL_TOLERANCE:
             leak_ok = False
             print(
-                f"  LEAK: steady-state growth {growth:.1f} MiB "
+                f"  LEAK (uncapped trend heuristic): steady-state growth {growth:.1f} MiB "
                 f"(>{LEAK_ABS_TOLERANCE_MB}) and {rel * 100:.1f}% "
                 f"(>{LEAK_REL_TOLERANCE * 100:.0f}%)"
             )

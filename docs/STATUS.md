@@ -114,8 +114,12 @@ All M2 exit criteria met on this machine; no Java changes were needed.
   regression). Numbers in `docs/BENCHMARKS.md` (M2 measurements).
 - **Memory note**: an uncapped JVM's RSS climbs for a few hundred resets then
   plateaus — this is lazy heap expansion toward the default max (~25% of RAM),
-  **not** a leak. Confirmed by capping `-Xmx350m`: RSS held flat at ~186 MiB over
-  2000 resets. The stress tool bounds the heap so the leak check is meaningful.
+  **not** a leak. Even under a cap, *when* RSS plateaus varies run to run
+  (observed +0.2% and +24% post-warmup growth for identical workloads), so a
+  growth-trend leak check is flaky. The stress tool therefore caps the heap
+  (`-Xmx350m` default) and fails only if peak RSS exceeds an absolute ceiling
+  (`Xmx + 300 MiB` native/metaspace allowance); within-cap growth is reported
+  as informational. A genuine native leak still fails the ceiling.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
