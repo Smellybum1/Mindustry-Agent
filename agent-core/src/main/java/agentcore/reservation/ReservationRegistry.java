@@ -4,7 +4,7 @@ import agentcore.AgentId;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +36,7 @@ public final class ReservationRegistry{
     private final List<TileReservation> tiles = new ArrayList<>();
     private final List<ResourceReservation> resources = new ArrayList<>();
     private final List<RegionReservation> regions = new ArrayList<>();
-    private final Map<String, Integer> capacity = new HashMap<>();
+    private final Map<String, Integer> capacity = new LinkedHashMap<>();
 
     private final List<ReservationConflict> conflictLog = new ArrayList<>();
 
@@ -73,6 +73,11 @@ public final class ReservationRegistry{
         return Collections.unmodifiableList(out);
     }
 
+    /** Active tile reservations in deterministic acquisition order. */
+    public List<TileReservation> tileReservations(){
+        return Collections.unmodifiableList(tiles);
+    }
+
     // ---- resources ----
 
     /** Attempt to reserve {@code amount} of {@code item} for a task. */
@@ -101,6 +106,11 @@ public final class ReservationRegistry{
         return total;
     }
 
+    /** Active resource reservations in deterministic acquisition order. */
+    public List<ResourceReservation> resourceReservations(){
+        return Collections.unmodifiableList(resources);
+    }
+
     // ---- regions ----
 
     /** Attempt to reserve a named region of responsibility for a task. */
@@ -124,6 +134,20 @@ public final class ReservationRegistry{
             if(r.regionId().equals(regionId)) return true;
         }
         return false;
+    }
+
+    /** Active region reservations in deterministic acquisition order. */
+    public List<RegionReservation> regionReservations(){
+        return Collections.unmodifiableList(regions);
+    }
+
+    /** Number of active reservations of every kind owned by {@code taskId}. */
+    public int countForTask(String taskId){
+        int count = 0;
+        for(TileReservation reservation : tiles) if(reservation.taskId().equals(taskId)) count++;
+        for(ResourceReservation reservation : resources) if(reservation.taskId().equals(taskId)) count++;
+        for(RegionReservation reservation : regions) if(reservation.taskId().equals(taskId)) count++;
+        return count;
     }
 
     // ---- lifecycle ----

@@ -104,4 +104,19 @@ class ReservationRegistryTest{
         assertEquals(3, r.releaseAll("t"));
         assertEquals(0, r.size());
     }
+
+    @Test void deterministicViewsAndPerTaskCountExposeActiveReservations(){
+        ReservationRegistry r = new ReservationRegistry();
+        r.acquireTile("a", A, Rect.ofTile(1, 1), false, 0);
+        r.acquireResource("a", A, "copper", 20, false, 0);
+        r.acquireRegion("b", B, "east", false, 0);
+
+        assertEquals(2, r.countForTask("a"));
+        assertEquals(1, r.countForTask("b"));
+        assertEquals("a", r.tileReservations().get(0).taskId());
+        assertEquals("a", r.resourceReservations().get(0).taskId());
+        assertEquals("b", r.regionReservations().get(0).taskId());
+        assertThrows(UnsupportedOperationException.class,
+            () -> r.tileReservations().clear());
+    }
 }
