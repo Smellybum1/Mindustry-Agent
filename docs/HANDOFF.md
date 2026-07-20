@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M4 and M5.1 complete, all verified 2026-07-20): the
+- **What currently works** (M0–M4 and M5.1–5.2 complete, verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
@@ -12,7 +12,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 30 pytest
+  crash-replacement, PettingZoo-shaped facade, vector collector; 31 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
   `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
   east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
@@ -37,10 +37,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   candidate catalog; engine-backed utility features and aligned capability/range
   masks are live in reset/step observations. Smoke covers build/supply/defend
   candidate transitions.
+  M5.2 hosts a reset-safe board on the sim thread, accepts typed task actions,
+  maps claimed scenario tasks to legal skills, publishes bounded snapshots and
+  drained structured events, and hashes non-empty board state. Its three-agent
+  live check repeats byte-identically across two fresh JVMs through tick 280.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
-  task-board claiming/execution and a scripted full three-wave *win* path are
-  still to come (M5.2–M6); candidate masks are live but other action masks remain
-  pending; rewards are empty until M7;
+  autonomous policies, live reservations/recovery/metrics, and a scripted full
+  three-wave *win* path are still to come (M5.3–M6); rewards are empty until M7;
   training/evaluation Python subpackages. See `docs/STATUS.md`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
@@ -58,12 +61,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + `agent-core`/`agent-plugin` classes, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (30 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (31 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (100 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
-| `make smoke` | Runs exact stepping + M3/M4 resource ledgers, rebuild, RETREAT/DEFEND checks, the single-agent M4 acceptance (wave 1 clear at tick 3271, core 1100 HP), and both omitted-defense loss checks (tick 3450). Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
+| `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance, the M5.2 three-agent coordination check twice across fresh JVMs (through tick 280), and omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
 | `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary, including ordered schematic build+supply, deterministic agent combat, and **post-wave wall placement with moving/re-pathing enemies** (79 hashes); reset purity and seed sensitivity also pass. Ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
-| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.1 run: median 1.00 ms, p95 1.88 ms, peak 300.0 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
+| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.2 run: median 1.00 ms, p95 1.97 ms, peak 298.9 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
 | `make demo-server` | **Exits 1** — not implemented (M6/M10). |
@@ -106,13 +109,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   fixed-delta engine updates → observation + SHA-256 canonical hash.
 - **Observation path**: built on the sim thread at the step boundary (M1 minimal:
   tick/wave/core items/counts/health; per-agent observations are M3).
-- **Task/skill path**: `agentcore` contract board implemented (M5-ready); the M3
-  skill layer is live — `agentcore.skill.{Skill,SkillResult,SkillReason,AgentBody}`
-  + FSMs `NavigateTo/MineResource/DeliverToCore/Wait` (engine-free, unit-tested),
-  wrapped engine-side by `mindustry.rl.SkillController` (extends `AIController`,
-  implements `AgentBody`) and bound per episode by `mindustry.rl.RlAgentRegistry`;
-  `mindustry.rl.ActionDecoder` maps protocol commands → skills. Task-board → skill
-  wiring is M5.
+- **Task/skill path**: `agentcore` owns the board and engine-free skills;
+  `mindustry.rl.CoordinationAdapter` owns the per-episode board, validates task
+  actions, resolves bundle-wide claims, maps task types to M3/M4 skills, and
+  reports lifecycle/events/snapshots. `SkillController` and `RlAgentRegistry`
+  remain the engine ports; `ActionDecoder` retains the legacy direct-command path.
 
 ## Current performance
 
@@ -138,12 +139,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 30 Python tests (`test_import.py`, `test_protocol.py` incl. the M3/M4
-  `action_results`/`agent_actions` roundtrips, `test_supervisor.py`, `test_env.py`;
-  fake-server subprocess, no JVM, fast) and 95 Java JUnit tests (`agent-core`, incl.
+- **Passing**: 31 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M5
+  action/board/event roundtrips, `test_supervisor.py`, `test_env.py`; fake-server
+  subprocess, no JVM, fast) and 100 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
   the shell scripts (smoke/determinism/stress-reset/benchmark) — smoke now includes
-  the mine/deliver ledger and determinism the scripted skill trace; all verified
+  the coordination replay and determinism the scripted skill trace; all verified
   green 2026-07-20.
 - **Skipped**: none.
 - **Flaky**: the stress-reset *leak* check was flaky under the original
@@ -177,7 +178,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M5 item 5.2 (then M5/M6,
+**Authoritative work queue: `docs/ROADMAP.md` M5 item 5.3 (then M5/M6,
 also broken down there). Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
@@ -214,11 +215,9 @@ promotes the remainder and adds the M4 follow-ons it unblocks.)*
      `AgentBody` impl over the live server unit), announces via chat using
      `agentcore.announce`.
    - Acceptance: human can join locally (`make demo-server`) and watch it mine.
-5. **M5.2: task-board → skill wiring and protocol selection.**
-   - Objective: connect the `agentcore` board (tasks/claims/reservations) to the
-     candidate catalog and skill layer — add the `SELECT_CANDIDATE_TASK` action
-     that decomposes a claimed task into M3/M4 skills, and surface board snapshots
-     plus drained events in observations/StepResponse.
+5. **M5.3: scripted multi-agent policies.**
+   - Objective: add greedy-utility and fixed-role Python policies that drive the
+     M5.2 task actions, including a measurable helper offer/accept/fulfil flow.
    - Why: turns single scripted skills into coordinated multi-agent behaviour; the
      skill executors and per-agent obs from M3 are the substrate.
    - Acceptance: two agents claim disjoint copper patches and deliver without

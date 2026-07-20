@@ -17,7 +17,7 @@ and what is unverified.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **30 Python
+  client, parallel-env facade, vector collector) is stdlib-only too. **31 Python
   tests pass** via `python -m pytest python/tests -q` (verified 2026-07-20 with
   pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
@@ -284,13 +284,39 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   replay pass. The post-M5.1 1000-reset check has zero hash mismatches, median
   **1.00 ms**, p95 **1.88 ms**, peak **300.0 MiB**, and no leak.
 
+## Milestone 5.2 — board/engine/protocol adapter (DONE, verified 2026-07-20)
+
+- **Episode board:** `CoordinationAdapter` owns and resets the `TaskBoard` on the
+  simulation thread. Candidate selections are proposed, announced, claimed, and
+  started; two-phase bundle handling preserves the board's deterministic
+  same-tick bid/tie-break semantics before any skill is assigned.
+- **Execution/lifecycle:** selected harvest tasks repeat legal 20-item
+  mine/deliver/settle batches until core copper reaches the scenario threshold.
+  Build, supply, rebuild, defend, and wait candidates map to the existing M3/M4
+  skills. Progress/blockage/completion/abandonment and 300-tick heartbeats update
+  board state during the fixed-step loop, including long externally chunked steps.
+- **Protocol/hash:** additive v1 `task_action` supports selection, continue,
+  offer/accept/decline help, abandon, request-help, and wait with typed rejection
+  results. Steps publish structured drained `task_events[]`, a stable maximum-32
+  `task_board[]`, and board-aware action masks. Non-empty board state is now part
+  of the canonical hash; empty-board hashes remain byte-compatible with M4.
+- **Acceptance:** `tools.coordination_check` uses three live agents to prove an
+  invalid index rejection, contested build ownership, help actions, legal
+  schematic completion at tick 250, disjoint turret supply to `[10, 10]`, and
+  wait/abandon. A second fresh JVM produces a byte-identical hash/result/board/
+  event/mask transcript through tick 280. Full smoke includes this check.
+- **Verification:** **100 JUnit**, **31 pytest**, full smoke, and the legacy
+  **79-boundary** determinism replay are green. The post-M5.2 1000-reset run has
+  zero hash mismatches, median **1.00 ms**, p95 **1.97 ms**, peak **298.9 MiB**,
+  and no leak.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
   `CoordinationAct` (13), `SkillStatus` (6), `AgentId` record, the coordination
   board (M2), the **`agentcore.skill`** FSM layer (M3/M4), and the engine-free
-  deterministic M5.1 candidate catalog. No task-board-to-skill wiring (M5.2) or
-  reward logic (M7) yet.
+  deterministic M5.1 candidate catalog. Board-to-skill wiring is live in M5.2;
+  scripted policies (M5.3), real reservations (M5.4), and reward logic (M7) remain.
 - **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
   loadable Mindustry plugin. See `agent-plugin/README.md`.
 - **Python subpackages** `process`, `env`, and `tools` now carry real M1/M2 code
@@ -300,7 +326,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and
   reference schematic). M5.1 turns those objectives plus live world state into
-  scored candidates; board claiming/execution is M5.2 and autonomous policy is
+  scored candidates; M5.2 claims and executes them, while autonomous policy is
   M5.3/M6.
 - **`configs/`**: example YAML stubs marked unused-yet.
 

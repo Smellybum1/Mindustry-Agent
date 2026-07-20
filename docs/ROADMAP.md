@@ -287,6 +287,18 @@ contract); Python sees it only through the protocol.
   masked correctly (validity per agent capability/range).
 
 ### 5.2 Board↔engine adapter + protocol coordination surface
+- **DONE (verified 2026-07-20):** `CoordinationAdapter` owns one sim-thread
+  `TaskBoard` per episode, resets it in-process, resolves same-tick candidate
+  claims before starting any skill, and keeps leases alive during arbitrarily
+  chunked external steps. It maps harvest (mine/deliver/settle until threshold),
+  schematic, turret supply, rebuild, defend, and wait tasks to the legal M3/M4
+  skills. Protocol v1 now accepts typed task actions, returns typed rejections,
+  publishes full structured `task_events[]`, and includes a stable maximum-32
+  `task_board[]`; action masks include board/dependency/ownership legality. The
+  canonical state hash includes non-empty board state. The live coordination
+  check exercises invalid selection, contested claims, continue/request/offer/
+  accept/decline help, real build+supply completion, wait+abandon, and repeats the
+  complete transcript byte-identically in a second JVM through tick 280.
 - Objective: host a `TaskBoard` per episode in rl-server (reset clears it —
   board.reset() exists); map task execution to M3/M4 skills (task type →
   skill sequence per docs/STRATEGY_NOTES.md mapping table); publish

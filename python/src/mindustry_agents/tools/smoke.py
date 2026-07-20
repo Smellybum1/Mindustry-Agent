@@ -292,10 +292,14 @@ def run_schematic_phase(env, seed: int) -> int:
     if sum(task_id.startswith("T4:supply:") for task_id in candidate_ids) != 2:
         print(f"FAIL: empty turrets did not produce two supply candidates: {candidate_ids}", file=sys.stderr)
         return 1
-    if sr.action_masks[0]["candidate_task"] != [
+    candidate_mask = sr.action_masks[0]["candidate_task"]
+    candidate_validity = [
         candidate["valid"] for candidate in sr.observations[0]["task_candidates"]
-    ]:
-        print("FAIL: candidate validity and action mask diverged", file=sys.stderr)
+    ]
+    if len(candidate_mask) != len(candidate_validity) or any(
+        masked and not valid for masked, valid in zip(candidate_mask, candidate_validity)
+    ):
+        print("FAIL: candidate/action-mask alignment invalid", file=sys.stderr)
         return 1
     print("  SCHEMATIC BALANCE OK: 2 Duos + 5 walls completed in data order for 100 copper")
 

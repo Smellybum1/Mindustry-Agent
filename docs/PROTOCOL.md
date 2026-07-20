@@ -134,6 +134,24 @@ Actions are applied on
 the sim thread **before** advancing; each is validated and echoed in
 `action_results[]` — an invalid action is rejected there, never crashes the step.
 
+**M5.2 task actions (additive v1).** An `agent_actions[]` entry may carry exactly
+one `task_action` instead of `command`:
+
+```json
+{"agent_id": 0, "task_action":
+  {"type": "SELECT_CANDIDATE_TASK", "candidate_index": 1}}
+```
+
+Supported types are `SELECT_CANDIDATE_TASK {candidate_index}`,
+`CONTINUE_CURRENT_TASK`, `OFFER_HELP {task_index, contribution, amount?}`,
+`ACCEPT_HELP {offer_index}`, `DECLINE_HELP {offer_index}`,
+`ABANDON {reason?}`, `REQUEST_HELP {helpers_requested?}`, and `WAIT`. Candidate,
+task, and offer indices refer to the immediately preceding boundary. One entry
+per agent is allowed; duplicate, ambiguous, stale/invalid-index, dependency,
+ownership, and unsupported-target failures return `accepted=false` with a typed
+`reason`. Same-tick claims are all resolved by board bid/tie-break order before
+the winner starts a skill, so input bundle order cannot choose the owner.
+
 `StepResponse` (`type = "step_response"`)
 
 | field | type | notes |
@@ -150,6 +168,7 @@ the sim thread **before** advancing; each is validated and echoed in
 | `terminations` | [bool] | per agent |
 | `truncations` | [bool] | per agent |
 | `task_events` | [obj] | coordination/task-board events this step |
+| `task_board` | [obj] | M5.2 bounded board snapshot (maximum 32, insertion order) |
 | `game_events` | [obj] | step-scoped events; M4.6 emits `unit_damage` with tick, target unit/team/health/shield, nominal damage, source unit, and source agent (`-1` when not an agent) |
 | `state_hash` | str | stable hash after advancing |
 | `timing` | obj | `{engine_ms, observation_ms, serialization_ms, io_ms}` |
@@ -183,12 +202,21 @@ M5.1 adds a bounded `task_candidates` array (at most eight) at every reset/step
 boundary. Candidate order is authoritative for the boundary and deterministic:
 fixed rule order, repeated entity targets by ascending engine ID, `WAIT` last.
 `valid=false` carries a typed `invalid_reason` (`missing_capability:<name>` or
-`out_of_range`). The same booleans appear at
-`action_masks[agent_id].candidate_task` in candidate-index order. This mask is
-observational in M5.1; M5.2 adds `SELECT_CANDIDATE_TASK[index]` and board actions.
+`out_of_range`). `action_masks[agent_id].candidate_task` is aligned by candidate
+index and is stricter: it also checks current assignment, board status, and task
+dependencies. Other M5.2 mask keys are `continue_current_task`, `abandon`,
+`request_help`, `wait`, and index-aligned `offer_help`/`accept_help`/`decline_help`.
 The utility is a deterministic `HandTunedUtility` score from the same captured
 engine boundary (priority, deficit/urgency, capability/role fit, distance,
 resource cost, and enemy danger).
+
+`task_board[]` entries contain `{index, task_id, task_type, target, status,
+owner_agent_id, lease_expiry_tick, progress, reason, pending_offer_count,
+helper_count}`. `task_events[]` is the authoritative structured
+`CoordinationEvent` schema: monotonic `message_id`, deterministic numeric
+`episode_id`, tick/agents/act/task identity, target/priority/estimate/cost/
+capabilities/dependencies, lease/progress/reason/status transition, related
+agent, and `announce`. Human text is not authoritative (ADR-0005).
 
 `skill.status` is one of `READY`/`RUNNING`/`SUCCEEDED`/`BLOCKED`/`FAILED`/`CANCELLED`;
 `skill.reason` is a machine-readable code (e.g. `ARRIVED`, `INVALID_TARGET`, `STUCK`,

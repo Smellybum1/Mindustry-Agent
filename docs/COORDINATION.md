@@ -206,14 +206,14 @@ commitments regardless of how the score is produced.
 
 1. The M5.1 **candidate generator** produces a bounded, deterministic list of
    masked `TaskSpec`s from scenario objectives and a sim-thread world snapshot.
-   M5.2 will propose selected candidates to the board.
+   M5.2 proposes selected candidates through `CoordinationAdapter`.
 2. A **policy** (scripted now, learned later) scores candidates via a
    `TaskUtility`, then drives the board: `announceIntent` → `claim` → `start` →
    `reportProgress`/`heartbeat` → `complete`/`abandon`/`release`, plus
    `offerHelp`/`acceptHelp` and `reserve*`.
-3. The existing M3/M4 **skill executors** perform real Mindustry actions; M5.2
-   maps claimed task types to those skills and feeds progress/blocked signals
-   back into the board.
+3. The existing M3/M4 **skill executors** perform real Mindustry actions; the
+   M5.2 adapter maps claimed task types to those skills and feeds progress,
+   blockage, completion, abandonment, and lease heartbeats back into the board.
 4. **Telemetry / protocol** drains `board.events()` each step and serializes the
    structured events; `AnnouncementRenderer` renders the announceable subset for
    humans in demo mode.
