@@ -1,0 +1,639 @@
+package mindustry.rl;
+
+import agentcore.*;
+import agentcore.board.*;
+import agentcore.candidates.*;
+import agentcore.event.*;
+import agentcore.skill.*;
+import agentcore.task.*;
+import arc.util.serialization.*;
+import mindustry.content.*;
+import mindustry.gen.*;
+
+import java.util.*;
+
+import static mindustry.Vars.*;
+
+/** Sim-thread M5.2 adapter joining task actions, the board, and M3/M4 skills. */
+public final class CoordinationAdapter{
+    public static final int MAX_BOARD_TASKS = 32;
+    private static final long HEARTBEAT_INTERVAL = 300L;
+
+    private final Scenario scenario;
+    private final RlAgentRegistry registry;
+    private final TaskBoard board = new TaskBoard();
+    private Assignment[] assignments = new Assignment[0];
+
+    public CoordinationAdapter(Scenario scenario, RlAgentRegistry registry){
+        this.scenario = scenario;
+        this.registry = registry;
+    }
+
+    public TaskBoard board(){ return board; }
+
+    public void reset(long episodeId, int agentCount){
+        board.reset(episodeId);
+        assignments = new Assignment[agentCount];
+    }
+
+    /** Apply one atomic bundle. SELECT claims finalize only after every bid is known. */
+    public Jval applyActions(Jval actionsValue, CandidateSet[] candidates){
+        Jval out = Jval.newArray();
+        if(actionsValue == null || !actionsValue.isArray()) return out;
+
+        var actions = actionsValue.asArray();
+        Jval[] results = new Jval[actions.size];
+        ArrayList<PendingSelection> pending = new ArrayList<>();
+        HashSet<Integer> seenAgents = new HashSet<>();
+        long tick = (long)state.tick;
+
+        for(int i = 0; i < actions.size; i++){
+            Jval action = actions.get(i);
+            int agentIndex = action.getInt("agent_id", -1);
+            RlAgentRegistry.Agent agent = registry.get(agentIndex);
+            if(agent == null){
+                results[i] = result(agentIndex, false, "unknown_agent", "");
+                continue;
+            }
+            if(!seenAgents.add(agentIndex)){
+                results[i] = result(agentIndex, false, "duplicate_agent_action", "");
+                continue;
+            }
+
+            Jval taskAction = action.get("task_action");
+            Jval command = action.get("command");
+            if(taskAction != null && command != null){
+                results[i] = result(agentIndex, false, "ambiguous_action", "");
+            }else if(taskAction == null){
+                if(current(agentIndex) != null){
+                    results[i] = result(agentIndex, false, "task_active", "");
+                }else{
+                    results[i] = ActionDecoder.apply(registry, scenario, action);
+                }
+            }else if(!taskAction.isObject()){
+                results[i] = result(agentIndex, false, "malformed_task_action", "");
+            }else{
+                String type = taskAction.getString("type", "").toUpperCase(Locale.ROOT);
+                if(type.equals("SELECT_CANDIDATE_TASK") || type.equals("WAIT")){
+                    int candidateIndex = type.equals("WAIT")
+                        ? waitIndex(candidatesFor(candidates, agentIndex))
+                        : taskAction.getInt("candidate_index", -1);
+                    prepareSelection(i, agent, candidateIndex, type,
+                        candidatesFor(candidates, agentIndex), pending, results, tick);
+                }else{
+                    results[i] = applyImmediate(agent, taskAction, type, tick);
+                }
+            }
+        }
+
+        //The board resolves same-tick contests by a total order while tasks remain CLAIMED.
+        //Only final owners receive skills and transition to RUNNING.
+        for(PendingSelection selection : pending){
+            TaskState state = board.task(selection.candidate.task().taskId());
+            if(state == null || state.owner() == null
+                || state.owner().index() != selection.agent.index){
+                results[selection.actionIndex] = result(selection.agent.index, false,
+                    "claim_lost", selection.actionType, selection.candidate.task().taskId());
+                continue;
+            }
+            Skill skill = skillFor(selection.agent, selection.candidate.task());
+            if(skill == null){
+                board.release(state.taskId(), AgentId.of(selection.agent.index), tick);
+                results[selection.actionIndex] = result(selection.agent.index, false,
+                    "unsupported_or_missing_target", selection.actionType);
+                continue;
+            }
+            OpResult started = board.start(state.taskId(), AgentId.of(selection.agent.index), tick);
+            if(!started.ok()){
+                results[selection.actionIndex] = result(selection.agent.index, false,
+                    started.reason(), selection.actionType);
+                continue;
+            }
+            selection.agent.controller.setSkill(skill);
+            assignments[selection.agent.index] = new Assignment(
+                state.taskId(), selection.candidate.task(),
+                stageFor(selection.candidate.task()), StateHasher.coreItem(Items.copper), tick);
+            results[selection.actionIndex] = result(selection.agent.index, true,
+                "accepted", selection.actionType, state.taskId());
+        }
+
+        for(Jval result : results) out.add(result == null ? result(-1, false, "internal_error", "") : result);
+        return out;
+    }
+
+    /** Advance lifecycle/leases after each engine tick. */
+    public void tick(long tick){
+        for(int i = 0; i < assignments.length; i++){
+            Assignment assignment = assignments[i];
+            if(assignment == null) continue;
+            RlAgentRegistry.Agent agent = registry.get(i);
+            TaskState task = board.task(assignment.taskId);
+            if(agent == null || task == null || task.owner() == null
+                || task.owner().index() != i){
+                clearAssignment(i, agent);
+                continue;
+            }
+
+            SkillResult skill = agent.controller.lastResult();
+            switch(skill.status()){
+                case RUNNING -> reportRunning(assignment, agent, skill, tick);
+                case SUCCEEDED -> skillSucceeded(assignment, agent, tick);
+                case BLOCKED -> reportBlocked(assignment, agent, skill, tick);
+                case FAILED, CANCELLED -> abandon(assignment, agent,
+                    skill.reason().name().toLowerCase(Locale.ROOT), tick);
+                default -> {
+                    if(tick - assignment.lastHeartbeatTick >= HEARTBEAT_INTERVAL){
+                        board.heartbeat(assignment.taskId, AgentId.of(i), tick);
+                        assignment.lastHeartbeatTick = tick;
+                    }
+                }
+            }
+        }
+
+        List<String> expired = board.expireStale(tick);
+        if(!expired.isEmpty()){
+            for(int i = 0; i < assignments.length; i++){
+                if(assignments[i] != null && expired.contains(assignments[i].taskId)){
+                    clearAssignment(i, registry.get(i));
+                }
+            }
+        }
+    }
+
+    public Jval actionMask(int agentIndex, CandidateSet candidates){
+        Jval out = Jval.newObject();
+        Jval select = Jval.newArray();
+        boolean idle = current(agentIndex) == null;
+        for(TaskCandidate candidate : candidates.candidates()){
+            select.add(idle && candidate.valid() && taskAvailable(candidate.task()));
+        }
+        out.add("candidate_task", select);
+        out.put("continue_current_task", !idle);
+        out.put("abandon", !idle);
+        out.put("request_help", !idle);
+        int waitIndex = waitIndex(candidates);
+        out.put("wait", idle && waitIndex >= 0
+            && taskAvailable(candidates.candidates().get(waitIndex).task()));
+
+        Jval offers = Jval.newArray();
+        AgentId agent = AgentId.of(agentIndex);
+        List<TaskState> tasks = board.tasks();
+        for(int i = 0; i < Math.min(MAX_BOARD_TASKS, tasks.size()); i++){
+            TaskState task = tasks.get(i);
+            boolean allowed = idle && !task.terminal() && task.owner() != null
+                && !task.owner().equals(agent)
+                && task.pendingOffers().stream().noneMatch(o -> o.helper().equals(agent))
+                && task.helpers().stream().noneMatch(h -> h.helper().equals(agent));
+            offers.add(allowed);
+        }
+        out.add("offer_help", offers);
+
+        Jval accept = Jval.newArray();
+        Assignment assignment = current(agentIndex);
+        if(assignment != null){
+            TaskState task = board.task(assignment.taskId);
+            if(task != null) for(int i = 0; i < task.pendingOffers().size(); i++) accept.add(true);
+        }
+        out.add("accept_help", accept);
+        out.add("decline_help", Jval.read(accept.toString(Jval.Jformat.plain)));
+        return out;
+    }
+
+    public Jval boardSnapshot(){
+        Jval out = Jval.newArray();
+        List<TaskState> tasks = board.tasks();
+        int count = Math.min(MAX_BOARD_TASKS, tasks.size());
+        for(int i = 0; i < count; i++){
+            TaskState task = tasks.get(i);
+            Jval item = Jval.newObject();
+            item.put("index", i);
+            item.put("task_id", task.taskId());
+            item.put("task_type", task.spec().type().name());
+            item.put("target", task.spec().target() == null ? "" : task.spec().target().describe());
+            item.put("status", task.status().name());
+            item.put("owner_agent_id", task.owner() == null ? -1 : task.owner().index());
+            item.put("lease_expiry_tick", task.leaseExpiryTick());
+            item.put("progress", task.progress());
+            item.put("reason", task.reasonCode() == null ? "" : task.reasonCode());
+            item.put("pending_offer_count", task.pendingOffers().size());
+            item.put("helper_count", task.helpers().size());
+            out.add(item);
+        }
+        return out;
+    }
+
+    public Jval drainEvents(){
+        Jval out = Jval.newArray();
+        for(CoordinationEvent event : board.events().drain()) out.add(event(event));
+        return out;
+    }
+
+    private void prepareSelection(
+        int actionIndex,
+        RlAgentRegistry.Agent agent,
+        int candidateIndex,
+        String actionType,
+        CandidateSet candidates,
+        List<PendingSelection> pending,
+        Jval[] results,
+        long tick
+    ){
+        if(current(agent.index) != null){
+            results[actionIndex] = result(agent.index, false, "task_active", actionType);
+            return;
+        }
+        if(candidateIndex < 0 || candidateIndex >= candidates.candidates().size()){
+            results[actionIndex] = result(agent.index, false, "candidate_index_out_of_range", actionType);
+            return;
+        }
+        TaskCandidate candidate = candidates.candidates().get(candidateIndex);
+        if(!candidate.valid()){
+            results[actionIndex] = result(agent.index, false, candidate.invalidReason(), actionType);
+            return;
+        }
+        if(!dependenciesComplete(candidate.task())){
+            results[actionIndex] = result(agent.index, false, "dependency_incomplete", actionType);
+            return;
+        }
+        TaskState existing = board.task(candidate.task().taskId());
+        boolean sameTickContest = existing != null && existing.status() == TaskStatus.CLAIMED
+            && existing.leaseExpiryTick() == tick + board.leaseDurationTicks();
+        if(existing != null && existing.status() != TaskStatus.OPEN && !sameTickContest){
+            results[actionIndex] = result(agent.index, false, "task_not_open", actionType);
+            return;
+        }
+        if(existing == null) board.propose(candidate.task(), tick);
+
+        AgentId id = AgentId.of(agent.index);
+        if(!sameTickContest){
+            OpResult intent = board.announceIntent(candidate.task().taskId(), id,
+                candidate.utility(), tick);
+            if(!intent.ok()){
+                results[actionIndex] = result(agent.index, false, intent.reason(), actionType);
+                return;
+            }
+        }
+        ClaimOutcome claim = board.claim(candidate.task().taskId(), id, candidate.utility(), tick);
+        if(!claim.granted()){
+            results[actionIndex] = result(agent.index, false,
+                claim.result().name().toLowerCase(Locale.ROOT), actionType);
+            return;
+        }
+        pending.add(new PendingSelection(actionIndex, agent, candidate, actionType));
+    }
+
+    private Jval applyImmediate(RlAgentRegistry.Agent agent, Jval action, String type, long tick){
+        Assignment assignment = current(agent.index);
+        AgentId id = AgentId.of(agent.index);
+        return switch(type){
+            case "CONTINUE_CURRENT_TASK" -> {
+                if(assignment == null) yield result(agent.index, false, "no_current_task", type);
+                OpResult op = board.heartbeat(assignment.taskId, id, tick);
+                if(op.ok() && board.task(assignment.taskId).status() == TaskStatus.BLOCKED){
+                    board.reportProgress(assignment.taskId, id,
+                        board.task(assignment.taskId).progress(), tick);
+                    assignment.blockedReason = "";
+                }
+                yield result(agent.index, op.ok(), op.reason(), type, assignment.taskId);
+            }
+            case "ABANDON" -> {
+                if(assignment == null) yield result(agent.index, false, "no_current_task", type);
+                String reason = action.getString("reason", "policy_abandon");
+                OpResult op = board.abandon(assignment.taskId, id, reason, tick);
+                if(op.ok()) clearAssignment(agent.index, agent);
+                yield result(agent.index, op.ok(), op.reason(), type, assignment.taskId);
+            }
+            case "REQUEST_HELP" -> {
+                if(assignment == null) yield result(agent.index, false, "no_current_task", type);
+                OpResult op = board.requestHelp(assignment.taskId, id,
+                    Math.max(1, action.getInt("helpers_requested", 1)), tick);
+                yield result(agent.index, op.ok(), op.reason(), type, assignment.taskId);
+            }
+            case "OFFER_HELP" -> offerHelp(agent, action, type, tick);
+            case "ACCEPT_HELP" -> decideHelp(agent, action, type, true, tick);
+            case "DECLINE_HELP" -> decideHelp(agent, action, type, false, tick);
+            default -> result(agent.index, false, "unknown_task_action", type);
+        };
+    }
+
+    private Jval offerHelp(RlAgentRegistry.Agent agent, Jval action, String type, long tick){
+        if(current(agent.index) != null){
+            return result(agent.index, false, "task_active", type);
+        }
+        int taskIndex = action.getInt("task_index", -1);
+        List<TaskState> tasks = board.tasks();
+        if(taskIndex < 0 || taskIndex >= Math.min(MAX_BOARD_TASKS, tasks.size())){
+            return result(agent.index, false, "task_index_out_of_range", type);
+        }
+        TaskState task = tasks.get(taskIndex);
+        OpResult op = board.offerHelp(task.taskId(), AgentId.of(agent.index),
+            action.getString("contribution", "assist"),
+            Math.max(0, action.getInt("amount", 0)), tick);
+        return result(agent.index, op.ok(), op.reason(), type, task.taskId());
+    }
+
+    private Jval decideHelp(
+        RlAgentRegistry.Agent agent,
+        Jval action,
+        String type,
+        boolean accept,
+        long tick
+    ){
+        Assignment assignment = current(agent.index);
+        if(assignment == null) return result(agent.index, false, "no_current_task", type);
+        TaskState task = board.task(assignment.taskId);
+        int offerIndex = action.getInt("offer_index", -1);
+        if(task == null || offerIndex < 0 || offerIndex >= task.pendingOffers().size()){
+            return result(agent.index, false, "offer_index_out_of_range", type);
+        }
+        AgentId helper = task.pendingOffers().get(offerIndex).helper();
+        OpResult op = accept
+            ? board.acceptHelp(task.taskId(), AgentId.of(agent.index), helper, tick)
+            : board.declineHelp(task.taskId(), AgentId.of(agent.index), helper, tick);
+        return result(agent.index, op.ok(), op.reason(), type, task.taskId());
+    }
+
+    private void reportRunning(
+        Assignment assignment,
+        RlAgentRegistry.Agent agent,
+        SkillResult skill,
+        long tick
+    ){
+        double progress = taskProgress(assignment, skill.progress());
+        int bucket = (int)Math.floor(progress * 100.0);
+        if(bucket > assignment.lastProgressBucket){
+            board.reportProgress(assignment.taskId, AgentId.of(agent.index), progress, tick);
+            assignment.lastProgressBucket = bucket;
+            assignment.lastHeartbeatTick = tick;
+        }else if(tick - assignment.lastHeartbeatTick >= HEARTBEAT_INTERVAL){
+            board.heartbeat(assignment.taskId, AgentId.of(agent.index), tick);
+            assignment.lastHeartbeatTick = tick;
+        }
+        assignment.blockedReason = "";
+    }
+
+    private void reportBlocked(
+        Assignment assignment,
+        RlAgentRegistry.Agent agent,
+        SkillResult skill,
+        long tick
+    ){
+        String reason = skill.reason().name().toLowerCase(Locale.ROOT);
+        if(!reason.equals(assignment.blockedReason)){
+            board.reportBlocked(assignment.taskId, AgentId.of(agent.index), reason, tick);
+            assignment.blockedReason = reason;
+        }
+        if(tick - assignment.lastHeartbeatTick >= HEARTBEAT_INTERVAL){
+            board.heartbeat(assignment.taskId, AgentId.of(agent.index), tick);
+            assignment.lastHeartbeatTick = tick;
+        }
+    }
+
+    private void skillSucceeded(Assignment assignment, RlAgentRegistry.Agent agent, long tick){
+        if(assignment.spec.type() == TaskType.HARVEST_RESOURCE){
+            if(assignment.stage.equals("mine")){
+                assignment.stage = "deliver";
+                agent.controller.setSkill(new DeliverToCore());
+                board.reportProgress(assignment.taskId, AgentId.of(agent.index),
+                    taskProgress(assignment, 0f), tick);
+                return;
+            }
+            if(assignment.stage.equals("deliver")){
+                assignment.stage = "settle";
+                agent.controller.setSkill(new Wait(MineResource.DEFAULT_DRAIN_TICKS));
+                board.heartbeat(assignment.taskId, AgentId.of(agent.index), tick);
+                assignment.lastHeartbeatTick = tick;
+                return;
+            }
+            int threshold = scenario.objective(TaskType.HARVEST_RESOURCE).threshold();
+            if(StateHasher.coreItem(Items.copper) < threshold){
+                assignment.stage = "mine";
+                agent.controller.setSkill(mineSkill(agent));
+                board.reportProgress(assignment.taskId, AgentId.of(agent.index),
+                    taskProgress(assignment, 0f), tick);
+                return;
+            }
+        }
+
+        if(assignment.spec.type() == TaskType.WAIT){
+            board.release(assignment.taskId, AgentId.of(agent.index), tick);
+        }else{
+            board.complete(assignment.taskId, AgentId.of(agent.index), tick);
+        }
+        clearAssignment(agent.index, agent);
+    }
+
+    private void abandon(
+        Assignment assignment,
+        RlAgentRegistry.Agent agent,
+        String reason,
+        long tick
+    ){
+        board.abandon(assignment.taskId, AgentId.of(agent.index), reason, tick);
+        clearAssignment(agent.index, agent);
+    }
+
+    private Skill skillFor(RlAgentRegistry.Agent agent, TaskSpec task){
+        return switch(task.type()){
+            case HARVEST_RESOURCE -> mineSkill(agent);
+            case BUILD_SCHEMATIC -> {
+                Scenario.SchematicSpec spec = scenario.schematic(scenario.referenceSchematicId);
+                yield spec == null ? null : new ExecuteSchematic(spec.name(),
+                    scenario.referenceAnchorX, scenario.referenceAnchorY, spec.blocks());
+            }
+            case SUPPLY_TURRET -> supplySkill(task);
+            case REPAIR_REGION -> regionSkill(task, true);
+            case DEFEND_REGION -> regionSkill(task, false);
+            case WAIT -> new Wait(task.estimatedTicks());
+            default -> null;
+        };
+    }
+
+    private Skill mineSkill(RlAgentRegistry.Agent agent){
+        Scenario.ObjectiveSpec objective = scenario.objective(TaskType.HARVEST_RESOURCE);
+        Scenario.OrePatch patch = scenario.orePatch(objective.targetRef());
+        if(patch == null) return null;
+        int bestX = -1, bestY = -1;
+        float bestDistance = -1f;
+        for(int x = patch.x; x < patch.x + patch.w; x++){
+            for(int y = patch.y; y < patch.y + patch.h; y++){
+                float dx = x - scenario.coreX;
+                float dy = y - scenario.coreY;
+                float distance = dx * dx + dy * dy;
+                if(distance > bestDistance){
+                    bestDistance = distance;
+                    bestX = x;
+                    bestY = y;
+                }
+            }
+        }
+        int threshold = objective.threshold();
+        int remaining = Math.max(1, threshold - StateHasher.coreItem(Items.copper));
+        return bestX < 0 ? null : new MineResource(bestX, bestY, Math.min(20, remaining));
+    }
+
+    private Skill supplySkill(TaskSpec task){
+        if(!(task.target() instanceof EntityTarget target)) return null;
+        for(Building building : Groups.build){
+            if(building.id == target.entityId()){
+                int amount = Math.max(1, task.estimatedCost().amount("copper"));
+                return new SupplyBuilding("copper", building.tileX(), building.tileY(), amount);
+            }
+        }
+        return null;
+    }
+
+    private Skill regionSkill(TaskSpec task, boolean rebuild){
+        if(!(task.target() instanceof RegionTarget target)) return null;
+        Scenario.RegionSpec region = scenario.region(target.regionId());
+        if(region == null) return null;
+        if(rebuild){
+            return new RebuildRegion(region.x(), region.y(),
+                region.x() + region.w() - 1, region.y() + region.h() - 1);
+        }
+        float x = center(region.x(), region.w());
+        float y = center(region.y(), region.h());
+        float radius = (float)Math.hypot(region.w() * tilesize, region.h() * tilesize) / 2f;
+        return new DefendRegion(x, y, radius, task.estimatedTicks());
+    }
+
+    private double taskProgress(Assignment assignment, float skillProgress){
+        if(assignment.spec.type() != TaskType.HARVEST_RESOURCE) return skillProgress;
+        int threshold = scenario.objective(TaskType.HARVEST_RESOURCE).threshold();
+        int denominator = Math.max(1, threshold - assignment.startCoreCopper);
+        double delivered = Math.max(0, StateHasher.coreItem(Items.copper) - assignment.startCoreCopper);
+        double base = Math.min(1.0, delivered / denominator);
+        if(assignment.stage.equals("mine")) return Math.min(0.99, base + skillProgress * 0.1);
+        return Math.min(0.99, base + skillProgress * 0.05);
+    }
+
+    private boolean taskAvailable(TaskSpec task){
+        if(!dependenciesComplete(task)) return false;
+        TaskState state = board.task(task.taskId());
+        return state == null || state.status() == TaskStatus.OPEN;
+    }
+
+    private boolean dependenciesComplete(TaskSpec task){
+        for(String dependency : task.dependencyTaskIds()){
+            TaskState state = board.task(dependency);
+            if(state == null || state.status() != TaskStatus.COMPLETED) return false;
+        }
+        return true;
+    }
+
+    private Assignment current(int agentIndex){
+        return agentIndex >= 0 && agentIndex < assignments.length ? assignments[agentIndex] : null;
+    }
+
+    private void clearAssignment(int agentIndex, RlAgentRegistry.Agent agent){
+        if(agent != null) agent.controller.clearSkill();
+        if(agentIndex >= 0 && agentIndex < assignments.length) assignments[agentIndex] = null;
+    }
+
+    private static CandidateSet candidatesFor(CandidateSet[] sets, int agentIndex){
+        return sets != null && agentIndex >= 0 && agentIndex < sets.length && sets[agentIndex] != null
+            ? sets[agentIndex] : new CandidateSet(List.of());
+    }
+
+    private static int waitIndex(CandidateSet candidates){
+        for(int i = 0; i < candidates.candidates().size(); i++){
+            if(candidates.candidates().get(i).task().type() == TaskType.WAIT) return i;
+        }
+        return -1;
+    }
+
+    private static String stageFor(TaskSpec task){
+        return task.type() == TaskType.HARVEST_RESOURCE ? "mine" : "single";
+    }
+
+    private static float center(int start, int size){
+        return (start + (size - 1) / 2f) * tilesize;
+    }
+
+    private static Jval result(int agentId, boolean accepted, String reason, String type){
+        return result(agentId, accepted, reason, type, "");
+    }
+
+    private static Jval result(
+        int agentId,
+        boolean accepted,
+        String reason,
+        String type,
+        String taskId
+    ){
+        Jval out = Jval.newObject();
+        out.put("agent_id", agentId);
+        out.put("accepted", accepted);
+        out.put("reason", reason);
+        out.put("task_action_type", type);
+        out.put("task_id", taskId);
+        return out;
+    }
+
+    private static Jval event(CoordinationEvent event){
+        Jval out = Jval.newObject();
+        out.put("message_id", event.messageId());
+        out.put("episode_id", event.episodeId());
+        out.put("tick", event.tick());
+        out.put("agent_id", event.agent() == null ? -1 : event.agent().index());
+        out.put("act", event.act() == null ? "" : event.act().name());
+        out.put("task_id", event.taskId());
+        out.put("task_type", event.taskType() == null ? "" : event.taskType().name());
+        out.put("target", event.targetDescription() == null ? "" : event.targetDescription());
+        out.put("priority", event.priority());
+        out.put("estimated_ticks", event.estimatedTicks());
+        Jval cost = Jval.newObject();
+        event.estimatedCost().asMap().forEach(cost::put);
+        out.add("estimated_cost", cost);
+        Jval capabilities = Jval.newArray();
+        event.requiredCapabilities().stream().sorted().forEach(capabilities::add);
+        out.add("required_capabilities", capabilities);
+        out.put("helpers_requested", event.helpersRequested());
+        out.put("offered_contribution", event.offeredContribution() == null
+            ? "" : event.offeredContribution());
+        out.put("confidence", event.confidence());
+        out.put("lease_expiry_tick", event.leaseExpiryTick());
+        out.put("parent_task_id", event.parentTaskId() == null ? "" : event.parentTaskId());
+        Jval dependencies = Jval.newArray();
+        event.dependencyTaskIds().forEach(dependencies::add);
+        out.add("dependency_task_ids", dependencies);
+        out.put("reason_code", event.reasonCode() == null ? "" : event.reasonCode());
+        out.put("progress", event.progress());
+        out.put("from_status", event.fromStatus() == null ? "" : event.fromStatus().name());
+        out.put("to_status", event.toStatus() == null ? "" : event.toStatus().name());
+        out.put("related_agent_id", event.relatedAgent() == null ? -1 : event.relatedAgent().index());
+        out.put("announce", event.announce());
+        return out;
+    }
+
+    private record PendingSelection(
+        int actionIndex,
+        RlAgentRegistry.Agent agent,
+        TaskCandidate candidate,
+        String actionType
+    ){}
+
+    private static final class Assignment{
+        final String taskId;
+        final TaskSpec spec;
+        final int startCoreCopper;
+        long lastHeartbeatTick;
+        int lastProgressBucket = -1;
+        String stage;
+        String blockedReason = "";
+
+        Assignment(
+            String taskId,
+            TaskSpec spec,
+            String stage,
+            int startCoreCopper,
+            long tick
+        ){
+            this.taskId = taskId;
+            this.spec = spec;
+            this.stage = stage;
+            this.startCoreCopper = startCoreCopper;
+            this.lastHeartbeatTick = tick;
+        }
+    }
+}

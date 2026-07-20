@@ -54,6 +54,7 @@ public final class RlServer{
     //constructed in boot() after content.init() — the loader resolves Mindustry content ids.
     private Scenario scenario;
     private EngineCandidates engineCandidates;
+    private CoordinationAdapter coordination;
     private final FixedStepApplication app;
     private final RlAgentRegistry registry = new RlAgentRegistry();
 
@@ -128,6 +129,7 @@ public final class RlServer{
         //content is now loaded: parse the scenario spec (resolves block/unit/item ids)
         scenario = new Scenario();
         engineCandidates = new EngineCandidates(scenario, registry);
+        coordination = new CoordinationAdapter(scenario, registry);
 
         //Captured only while the simulation thread advances an external step.
         Events.on(UnitDamageEvent.class, this::recordUnitDamage);
@@ -271,7 +273,11 @@ public final class RlServer{
         r.put("engine_commit", ENGINE_COMMIT);
         r.put("arc_version", ARC_VERSION);
         r.put("scenario_schema_version", SCENARIO_SCHEMA_VERSION);
-        r.add("supported_features", Jval.newArray());
+        Jval features = Jval.newArray();
+        features.add("task_candidates");
+        features.add("task_actions");
+        features.add("task_board");
+        r.add("supported_features", features);
         r.put("process_id", ProcessHandle.current().pid());
         return r;
     }
@@ -294,7 +300,7 @@ public final class RlServer{
         r.put("tick", (long)state.tick);
         r.add("initial_observations", agentObservations());
         r.add("action_masks", candidateMasks());
-        r.put("state_hash", StateHasher.hash(registry));
+        r.put("state_hash", StateHasher.hash(registry, coordination.board()));
         r.put("outcome", "running");
         r.add("metadata", scenario.metadata());
         return r;
@@ -322,6 +328,7 @@ public final class RlServer{
 
         //M3 (D5): decode + apply the per-agent action bundle on the sim thread BEFORE
         //advancing; invalid actions are rejected into action_results, never crash.
+        coordination.tick((long)state.tick);
         Jval actionResults = applyActions(req);
 
         long t0 = System.nanoTime();
@@ -331,13 +338,14 @@ public final class RlServer{
             //deterministic enemy flowfield: converge on the sim thread each tick with the
             //background Pathfinder thread stopped (upstream syncUpdate patch, docs/UPSTREAM_PATCHES.md).
             pathfinder.syncUpdate();
+            coordination.tick((long)state.tick);
         }
         long t1 = System.nanoTime();
         uptimeTicks += ticks;
 
         long o0 = System.nanoTime();
         Jval obs = agentObservations();
-        String hash = StateHasher.hash(registry);
+        String hash = StateHasher.hash(registry, coordination.board());
         long o1 = System.nanoTime();
 
         //termination: win = core alive at winTick; loss = core destroyed; truncate at tick cap.
@@ -377,7 +385,8 @@ public final class RlServer{
         r.add("terminations", boolArray(agentCount, terminated));
         r.add("truncations", boolArray(agentCount, truncated));
         r.put("outcome", outcome);
-        r.add("task_events", Jval.newArray());
+        r.add("task_events", coordination.drainEvents());
+        r.add("task_board", coordination.boardSnapshot());
         r.add("game_events", stepGameEvents);
         r.put("state_hash", hash);
         r.add("timing", timing);
@@ -453,6 +462,7 @@ public final class RlServer{
         //M3 (D1): rebuild the agent registry after play() so the core exists; spawns
         //agent_count alpha units at deterministic offsets and installs SkillControllers
         registry.rebuild(agentCount);
+        coordination.reset(rootSeed, agentCount);
 
         //converge the preloaded enemy flow field once so the first observation is settled
         pathfinder.syncUpdate();
@@ -472,14 +482,7 @@ public final class RlServer{
 
     /** Decode + apply the {@code agent_actions} bundle, returning {@code action_results[]}. */
     private Jval applyActions(Jval req){
-        Jval results = Jval.newArray();
-        Jval actions = req.get("agent_actions");
-        if(actions != null && actions.isArray()){
-            for(Jval action : actions.asArray()){
-                results.add(ActionDecoder.apply(registry, scenario, action));
-            }
-        }
-        return results;
+        return coordination.applyActions(req.get("agent_actions"), boundaryCandidates);
     }
 
     // ------------------------------------------------------------ observation
@@ -515,9 +518,12 @@ public final class RlServer{
         for(int i = 0; i < agentCount; i++){
             Jval agentMask = Jval.newObject();
             CandidateSet candidates = i < boundaryCandidates.length ? boundaryCandidates[i] : null;
-            agentMask.add("candidate_task", candidates == null ? Jval.newArray()
-                : engineCandidates.mask(candidates));
-            out.add(agentMask);
+            if(candidates == null){
+                agentMask.add("candidate_task", Jval.newArray());
+                out.add(agentMask);
+            }else{
+                out.add(coordination.actionMask(i, candidates));
+            }
         }
         return out;
     }

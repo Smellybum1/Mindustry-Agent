@@ -64,6 +64,40 @@ class TestFraming(unittest.TestCase):
         back = p.decode(p.encode(msg))
         self.assertEqual(back.agent_actions, actions)
 
+    def test_m5_task_action_board_and_events_roundtrip(self):
+        actions = [
+            {
+                "agent_id": 0,
+                "task_action": {
+                    "type": "SELECT_CANDIDATE_TASK",
+                    "candidate_index": 1,
+                },
+            }
+        ]
+        request = p.decode(p.encode(p.StepRequest(agent_actions=actions)))
+        self.assertEqual(request.agent_actions, actions)
+
+        board = [
+            {
+                "index": 0,
+                "task_id": "T3:build:east_duo_v1",
+                "status": "RUNNING",
+                "owner_agent_id": 0,
+            }
+        ]
+        events = [
+            {
+                "message_id": 0,
+                "act": "START_TASK",
+                "task_id": "T3:build:east_duo_v1",
+            }
+        ]
+        response = p.decode(
+            p.encode(p.StepResponse(task_board=board, task_events=events))
+        )
+        self.assertEqual(response.task_board, board)
+        self.assertEqual(response.task_events, events)
+
     def test_m4_observation_records_roundtrip_in_step(self):
         plan = p.BuildPlanObservation(
             block="duo", tile_x=32, tile_y=23, rotation=1, progress=0.375

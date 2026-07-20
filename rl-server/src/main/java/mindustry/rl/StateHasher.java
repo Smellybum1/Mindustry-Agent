@@ -1,5 +1,7 @@
 package mindustry.rl;
 
+import agentcore.board.*;
+import agentcore.task.*;
 import arc.struct.*;
 import mindustry.entities.units.*;
 import mindustry.game.*;
@@ -30,8 +32,9 @@ import static mindustry.Vars.*;
  * <p>Inputs: {@code state.tick}, {@code state.wave}, per-core team + item counts, all
  * buildings (sorted by id: block/team/quantized pos/health/turret ammo), all units
  * (sorted by id: type/team/quantized pose/health/cargo/ordered build plans), and
- * active-team broken-block queues in team-id then queue order. Never includes
- * {@code Fx}/render/{@code Time.millis}.
+ * active-team broken-block queues in team-id then queue order, and non-empty M5
+ * task-board lifecycle/helper state in insertion order. Never includes
+ * {@code Fx}/render/{@code Time.millis} or the drained event transport buffer.
  */
 public final class StateHasher{
     private static final long QUANT = 1000L; //1e-3 precision
@@ -39,10 +42,14 @@ public final class StateHasher{
     private StateHasher(){}
 
     public static String hash(){
-        return hash(null);
+        return hash(null, null);
     }
 
     public static String hash(RlAgentRegistry registry){
+        return hash(registry, null);
+    }
+
+    public static String hash(RlAgentRegistry registry, TaskBoard board){
         try{
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             DataOutputStream out = new DataOutputStream(new DigestOutputStream(md));
@@ -167,6 +174,58 @@ public final class StateHasher{
                 out.writeInt(0);
             }
 
+            //M5 coordination state in board insertion order. The pending event buffer is
+            //transport state and excluded, but the next message id affects future telemetry.
+            List<TaskState> boardTasks = board == null ? List.of() : board.tasks();
+            if(!boardTasks.isEmpty()){
+                out.writeInt(0x4d35424f); //"M5BO" section marker; absent preserves pre-M5 empty-board hashes.
+                List<TaskState> tasks = boardTasks;
+                out.writeInt(tasks.size());
+                for(TaskState task : tasks){
+                    TaskSpec spec = task.spec();
+                    writeString(out, spec.taskId());
+                    out.writeInt(spec.type().ordinal());
+                    writeString(out, spec.target() == null ? "" : spec.target().describe());
+                    out.writeLong(Double.doubleToLongBits(spec.priority()));
+                    out.writeLong(spec.estimatedTicks());
+                    out.writeInt(spec.estimatedCost().asMap().size());
+                    for(Map.Entry<String, Integer> cost : spec.estimatedCost().asMap().entrySet()){
+                        writeString(out, cost.getKey());
+                        out.writeInt(cost.getValue());
+                    }
+                    out.writeInt(spec.requiredCapabilities().size());
+                    for(String capability : spec.requiredCapabilities()) writeString(out, capability);
+                    out.writeInt(spec.helpersRequested());
+                    out.writeBoolean(spec.exclusive());
+                    writeString(out, spec.parentTaskId() == null ? "" : spec.parentTaskId());
+                    out.writeInt(spec.dependencyTaskIds().size());
+                    for(String dependency : spec.dependencyTaskIds()) writeString(out, dependency);
+
+                    out.writeInt(task.status().ordinal());
+                    out.writeInt(task.owner() == null ? -1 : task.owner().index());
+                    out.writeLong(task.leaseExpiryTick());
+                    out.writeLong(Math.round(task.progress() * QUANT));
+                    writeString(out, task.reasonCode() == null ? "" : task.reasonCode());
+                    out.writeInt(task.pendingOffers().size());
+                    for(HelperOffer offer : task.pendingOffers()){
+                        out.writeInt(offer.helper().index());
+                        writeString(out, offer.contribution());
+                        out.writeInt(offer.amount());
+                        out.writeLong(offer.offeredTick());
+                    }
+                    out.writeInt(task.helpers().size());
+                    for(HelperContract helper : task.helpers()){
+                        out.writeInt(helper.helper().index());
+                        writeString(out, helper.contribution());
+                        out.writeInt(helper.amount());
+                        out.writeLong(helper.acceptedTick());
+                        out.writeBoolean(helper.fulfilled());
+                        out.writeLong(helper.fulfilledTick());
+                    }
+                }
+                out.writeLong(board.events().peekNextMessageId());
+            }
+
             out.flush();
             return toHex(md.digest());
         }catch(Exception e){
@@ -181,6 +240,12 @@ public final class StateHasher{
         for(Item item : all){
             out.writeInt(items == null ? 0 : items.get(item));
         }
+    }
+
+    private static void writeString(DataOutputStream out, String value) throws IOException{
+        byte[] bytes = value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        out.writeInt(bytes.length);
+        out.write(bytes);
     }
 
     private static long quant(float v){

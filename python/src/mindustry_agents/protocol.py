@@ -145,6 +145,7 @@ class StepResponse:
     # Scenario episode outcome: "running", or terminal "win"/"loss"/"truncated".
     outcome: str = "running"
     task_events: list[dict[str, Any]] = field(default_factory=list)
+    task_board: list[dict[str, Any]] = field(default_factory=list)
     game_events: list[dict[str, Any]] = field(default_factory=list)
     state_hash: str = ""
     timing: dict[str, Any] = field(default_factory=lambda: asdict(Timing()))
