@@ -2,6 +2,7 @@ package mindustry.rl;
 
 import agentcore.TaskType;
 import agentcore.skill.*;
+import arc.math.geom.*;
 import arc.struct.*;
 import arc.util.serialization.*;
 import mindustry.content.*;
@@ -38,12 +39,14 @@ import static mindustry.Vars.*;
 public final class Scenario{
     private static final Map<String, String> RESOURCES = Map.of(
         "bootstrap-defense-v0", "/scenarios/bootstrap-defense-v0/scenario.json",
+        "bootstrap-defense-v1", "/scenarios/bootstrap-defense-v1/scenario.json",
         "bootstrap-defense-adaptive-probe",
         "/scenarios/bootstrap-defense-adaptive-probe/scenario.json"
     );
 
     public final String id;
     public final int version;
+    public final long rootSeed;
 
     public final int width, height;
     public final Block floor;
@@ -93,14 +96,30 @@ public final class Scenario{
     public final List<WaveSpec> waves;
     public final List<ScheduledEvent> scheduledEvents;
 
+    private final Jval variation;
+    private final ObjectMap<String, Point2> oreJitter = new ObjectMap<>();
+    private final int[] waveCountDeltas;
+    private final int waveInitialOffset;
+    private final int waveSpacingOffset;
+    private final boolean secondLaneEnabled;
+    private final int secondLaneWave;
+
     private final Jval raw;
 
     public Scenario(){
-        this("bootstrap-defense-v0");
+        this("bootstrap-defense-v0", 0L);
     }
 
     public Scenario(String requestedId){
+        this(requestedId, 0L);
+    }
+
+    public Scenario(String requestedId, long rootSeed){
         this.raw = readSpec(requestedId);
+        this.rootSeed = rootSeed;
+        Jval configuredVariation = raw.get("variation");
+        this.variation = configuredVariation != null
+            && configuredVariation.getBool("enabled", false) ? configuredVariation : null;
 
         this.id = raw.getString("scenario_id", "bootstrap-defense-v0");
         if(!id.equals(requestedId)){
@@ -126,15 +145,20 @@ public final class Scenario{
             Jval.JsonMap map = load.asObject();
             for(int i = 0; i < map.size; i++){
                 int amount = map.getValueAt(i).asInt();
+                if(map.getKeyAt(i).equals("copper") && variation != null){
+                    amount = variationRange("loadout_copper", variation.get("loadout_copper"), amount);
+                }
                 if(amount > 0) loadout.add(new ItemStack(item(map.getKeyAt(i)), amount));
             }
         }
 
         for(Jval patch : raw.get("ore_patches").asArray()){
             Jval rect = patch.get("rect");
-            OrePatch spec = new OrePatch(patch.getString("id", ""),
+            String patchId = patch.getString("id", "");
+            Point2 jitter = oreVariation(patchId);
+            OrePatch spec = new OrePatch(patchId,
                 block(patch.getString("ore", "ore-copper")),
-                rect.getInt("x", 0), rect.getInt("y", 0),
+                rect.getInt("x", 0) + jitter.x, rect.getInt("y", 0) + jitter.y,
                 rect.getInt("w", 0), rect.getInt("h", 0),
                 patch.getString("role", ""));
             orePatches.add(spec);
@@ -149,11 +173,28 @@ public final class Scenario{
                 rect.getInt("w", 0), rect.getInt("h", 0)));
         }
 
+        ObjectMap<String, SpawnPoint> spawnById = new ObjectMap<>();
         for(Jval spawn : raw.get("enemy_spawns").asArray()){
             Jval tile = spawn.get("tile");
-            spawnPoints.add(new SpawnPoint(
-                tile.asArray().get(0).asInt(), tile.asArray().get(1).asInt()));
+            SpawnPoint point = new SpawnPoint(spawn.getString("id", ""),
+                tile.asArray().get(0).asInt(), tile.asArray().get(1).asInt());
+            spawnPoints.add(point);
+            spawnById.put(point.id, point);
         }
+        Jval secondLane = variation == null ? null : variation.get("second_lane");
+        secondLaneEnabled = secondLane != null && variationChoice("second_lane_enabled",
+            secondLane.getInt("enabled_numerator", 0), secondLane.getInt("enabled_denominator", 1));
+        int parsedSecondLaneWave = 0;
+        if(secondLaneEnabled){
+            Jval spawn = secondLane.get("spawn");
+            Jval tile = spawn.get("tile");
+            SpawnPoint point = new SpawnPoint(spawn.getString("id", "second_lane"),
+                tile.asArray().get(0).asInt(), tile.asArray().get(1).asInt());
+            spawnPoints.add(point);
+            spawnById.put(point.id, point);
+            parsedSecondLaneWave = variationRange("second_lane_wave", secondLane.get("wave_range"), 2);
+        }
+        secondLaneWave = parsedSecondLaneWave;
 
         Jval rules = raw.get("rules");
         this.waveTeam = team(rules.getString("wave_team", "crux"));
@@ -232,41 +273,71 @@ public final class Scenario{
         this.waveCount = waves.size;
         if(waveCount == 0) throw new IllegalStateException("wave_schedule is empty");
 
-        int firstTick = waves.get(0).getInt("tick", 0);
-        int spacing = waveCount > 1 ? waves.get(1).getInt("tick", 0) - firstTick : 0;
+        Jval timingVariation = variation == null ? null : variation.get("wave_timing");
+        waveInitialOffset = timingVariation == null ? 0 : variationRange(
+            "wave_initial_offset", timingVariation.get("initial_offset_ticks"), 0);
+        waveSpacingOffset = timingVariation == null ? 0 : variationRange(
+            "wave_spacing_offset", timingVariation.get("spacing_offset_ticks"), 0);
+        int baseFirstTick = waves.get(0).getInt("tick", 0);
+        int baseSpacing = waveCount > 1
+            ? waves.get(1).getInt("tick", 0) - baseFirstTick : 0;
+        int firstTick = baseFirstTick + waveInitialOffset;
+        int spacing = baseSpacing + waveSpacingOffset;
         //the native timer is uniform-spaced; require the JSON schedule to match so ticks stay exact.
         for(int i = 1; i < waveCount; i++){
             int gap = waves.get(i).getInt("tick", 0) - waves.get(i - 1).getInt("tick", 0);
-            if(gap != spacing){
+            if(gap != baseSpacing){
                 throw new IllegalStateException("wave_schedule is not uniformly spaced (gap " + gap
-                    + " != " + spacing + " at wave " + i + "); drive spawns explicitly instead");
+                    + " != " + baseSpacing + " at wave " + i + "); drive spawns explicitly instead");
             }
         }
+        if(firstTick <= 0 || spacing <= 0){
+            throw new IllegalStateException("varied wave timing must remain positive");
+        }
         this.initialWaveSpacing = firstTick;
-        this.waveSpacing = spacing <= 0 ? Math.max(1, firstTick) : spacing;
+        this.waveSpacing = spacing;
 
         //one SpawnGroup per (wave, unit) — begin==end pins it to a single wave, so any
         //per-wave composition from the JSON is reproduced exactly (no arithmetic scaling).
         ArrayList<WaveSpec> parsedWaves = new ArrayList<>();
+        waveCountDeltas = new int[waveCount];
+        Jval countVariation = variation == null ? null : variation.get("wave_count_delta");
         for(int i = 0; i < waveCount; i++){
             Jval w = waves.get(i);
-            waveTicks.add(w.getInt("tick", 0));
+            int resolvedTick = firstTick + i * spacing;
+            waveTicks.add(resolvedTick);
             int waveIndex = i; //engine wave index consumed by getSpawned(state.wave - 1)
             ArrayList<WaveSpawn> parsedSpawns = new ArrayList<>();
+            int countDelta = countVariation == null ? 0 : variationRange(
+                "wave_count_delta_" + (i + 1), countVariation, 0);
+            waveCountDeltas[i] = countDelta;
+            String spawnId = w.getString("spawn", "");
+            if(secondLaneEnabled && secondLaneWave == i + 1){
+                spawnId = secondLane.get("spawn").getString("id", "second_lane");
+            }
+            SpawnPoint spawnPoint = spawnById.get(spawnId);
+            if(spawnPoint == null){
+                throw new IllegalStateException("wave references unknown spawn: " + spawnId);
+            }
             for(Jval s : w.get("spawns").asArray()){
                 UnitType type = content.unit(s.getString("unit", "dagger"));
-                int count = s.getInt("count", 1);
+                int count = s.getInt("count", 1) + countDelta;
+                if(count <= 0) throw new IllegalStateException("varied wave count must be positive");
                 SpawnGroup group = new SpawnGroup(type);
                 group.begin = waveIndex;
                 group.end = waveIndex;
                 group.unitAmount = count;
                 group.spacing = 1;
-                group.spawn = -1; //all ground spawns (v0 has one)
+                // Preserve v0's historical all-ground-spawns sentinel exactly;
+                // scenario v2 needs an explicit packed tile to route its named
+                // optional lane without changing the fixed golden behavior.
+                group.spawn = variation == null && spawnPoints.size == 1
+                    ? -1 : Point2.pack(spawnPoint.x, spawnPoint.y);
                 group.team = waveTeam;
                 spawnGroups.add(group);
                 parsedSpawns.add(new WaveSpawn(type, count));
             }
-            parsedWaves.add(new WaveSpec(i + 1, w.getInt("tick", 0), parsedSpawns));
+            parsedWaves.add(new WaveSpec(i + 1, resolvedTick, spawnId, parsedSpawns));
         }
         this.waves = List.copyOf(parsedWaves);
 
@@ -289,6 +360,10 @@ public final class Scenario{
         Jval term = raw.get("termination");
         this.winTick = term.get("win").getInt("tick", 8100);
         this.tickCap = term.getInt("tick_cap", 9000);
+        if(waveTicks.peek() >= winTick || winTick >= tickCap){
+            throw new IllegalStateException("wave/win/tick-cap ordering is invalid");
+        }
+        validateGeometry();
     }
 
     /** Build the deterministic ruleset for this scenario (extends the M1 rules). */
@@ -351,6 +426,7 @@ public final class Scenario{
         Jval m = Jval.newObject();
         m.put("scenario_id", id);
         m.put("scenario_version", version);
+        if(variation != null) m.put("root_seed", rootSeed);
         m.put("width", width);
         m.put("height", height);
         m.put("tile_size", tilesize);
@@ -402,7 +478,52 @@ public final class Scenario{
         economy.put("core_inflow_rate_per_s", buildLineInflowRate);
         economy.put("sample_ticks", buildLineInflowSampleTicks);
         m.add("build_line_predicate", economy);
+        m.add("variation", variationMetadata());
         return m;
+    }
+
+    /** Canonical seed-resolved scenario state included in every observation hash. */
+    public byte[] canonicalState(){
+        try{
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            DataOutputStream out = new DataOutputStream(bytes);
+            writeString(out, id);
+            out.writeInt(version);
+            out.writeLong(rootSeed);
+            out.writeInt(loadout.size);
+            for(ItemStack stack : loadout){
+                writeString(out, stack.item.name);
+                out.writeInt(stack.amount);
+            }
+            out.writeInt(orePatches.size);
+            for(OrePatch patch : orePatches){
+                writeString(out, patch.id);
+                out.writeInt(patch.x);
+                out.writeInt(patch.y);
+                out.writeInt(patch.w);
+                out.writeInt(patch.h);
+            }
+            out.writeInt(spawnPoints.size);
+            for(SpawnPoint spawn : spawnPoints){
+                writeString(out, spawn.id);
+                out.writeInt(spawn.x);
+                out.writeInt(spawn.y);
+            }
+            out.writeInt(waves.size());
+            for(WaveSpec wave : waves){
+                out.writeInt(wave.tick());
+                writeString(out, wave.spawnId());
+                out.writeInt(wave.spawns().size());
+                for(WaveSpawn spawn : wave.spawns()){
+                    writeString(out, spawn.type().name);
+                    out.writeInt(spawn.count());
+                }
+            }
+            out.flush();
+            return bytes.toByteArray();
+        }catch(IOException impossible){
+            throw new AssertionError(impossible);
+        }
     }
 
     /** Run the generator against the live world. */
@@ -427,6 +548,120 @@ public final class Scenario{
     }
 
     // ---------------------------------------------------------------- helpers
+
+    private Point2 oreVariation(String patchId){
+        if(variation == null) return new Point2();
+        Jval patches = variation.get("ore_patch_jitter");
+        Jval patch = patches == null ? null : patches.get(patchId);
+        if(patch == null) return new Point2();
+        Point2 jitter = new Point2(
+            variationRange("ore_" + patchId + "_x", patch.get("x"), 0),
+            variationRange("ore_" + patchId + "_y", patch.get("y"), 0));
+        oreJitter.put(patchId, jitter);
+        return jitter;
+    }
+
+    private int variationRange(String axis, Jval range, int fallback){
+        if(range == null || !range.isArray() || range.asArray().size < 2) return fallback;
+        int min = range.asArray().get(0).asInt();
+        int max = range.asArray().get(1).asInt();
+        if(max < min) throw new IllegalStateException("invalid variation range for " + axis);
+        long mixed = mix64(rootSeed ^ stableHash(axis));
+        return min + (int)Math.floorMod(mixed, (long)max - min + 1L);
+    }
+
+    private boolean variationChoice(String axis, int numerator, int denominator){
+        if(denominator <= 0 || numerator < 0 || numerator > denominator){
+            throw new IllegalStateException("invalid variation probability for " + axis);
+        }
+        return Math.floorMod(mix64(rootSeed ^ stableHash(axis)), denominator) < numerator;
+    }
+
+    private Jval variationMetadata(){
+        Jval out = Jval.newObject();
+        out.put("enabled", variation != null);
+        if(variation == null) return out;
+        Jval jitter = Jval.newObject();
+        for(ObjectMap.Entry<String, Point2> entry : oreJitter){
+            Jval offset = Jval.newArray();
+            offset.add(entry.value.x);
+            offset.add(entry.value.y);
+            jitter.add(entry.key, offset);
+        }
+        out.add("ore_patch_jitter", jitter);
+        out.put("wave_initial_offset_ticks", waveInitialOffset);
+        out.put("wave_spacing_offset_ticks", waveSpacingOffset);
+        Jval deltas = Jval.newArray();
+        for(int delta : waveCountDeltas) deltas.add(delta);
+        out.add("wave_count_deltas", deltas);
+        out.put("second_lane_enabled", secondLaneEnabled);
+        out.put("second_lane_wave", secondLaneWave);
+        out.put("resolved_copper_loadout", loadoutAmount(Items.copper));
+        return out;
+    }
+
+    private int loadoutAmount(Item item){
+        for(ItemStack stack : loadout){
+            if(stack.item == item) return stack.amount;
+        }
+        return 0;
+    }
+
+    private void validateGeometry(){
+        int coreMinX = coreX - coreBlock.size / 2;
+        int coreMinY = coreY - coreBlock.size / 2;
+        for(int i = 0; i < orePatches.size; i++){
+            OrePatch patch = orePatches.get(i);
+            if(patch.x < 0 || patch.y < 0 || patch.x + patch.w > width
+                || patch.y + patch.h > height){
+                throw new IllegalStateException("ore patch outside world: " + patch.id);
+            }
+            if(rectsOverlap(patch.x, patch.y, patch.w, patch.h,
+                coreMinX, coreMinY, coreBlock.size, coreBlock.size)){
+                throw new IllegalStateException("ore patch overlaps core: " + patch.id);
+            }
+            for(int j = 0; j < i; j++){
+                OrePatch other = orePatches.get(j);
+                if(rectsOverlap(patch.x, patch.y, patch.w, patch.h,
+                    other.x, other.y, other.w, other.h)){
+                    throw new IllegalStateException("ore patches overlap: "
+                        + other.id + " and " + patch.id);
+                }
+            }
+        }
+        for(SpawnPoint spawn : spawnPoints){
+            if(spawn.x < 0 || spawn.y < 0 || spawn.x >= width || spawn.y >= height){
+                throw new IllegalStateException("spawn outside world: " + spawn.id);
+            }
+        }
+    }
+
+    private static boolean rectsOverlap(
+        int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh
+    ){
+        return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+    }
+
+    private static long stableHash(String value){
+        long hash = 0xcbf29ce484222325L;
+        for(int i = 0; i < value.length(); i++){
+            hash ^= value.charAt(i);
+            hash *= 0x100000001b3L;
+        }
+        return hash;
+    }
+
+    private static long mix64(long value){
+        value = (value ^ (value >>> 30)) * 0xbf58476d1ce4e5b9L;
+        value = (value ^ (value >>> 27)) * 0x94d049bb133111ebL;
+        return value ^ (value >>> 31);
+    }
+
+    private static void writeString(DataOutputStream out, String value) throws IOException{
+        byte[] encoded = value.getBytes(StandardCharsets.UTF_8);
+        out.writeInt(encoded.length);
+        out.write(encoded);
+    }
 
     private void loadSchematic(String path, String expectedName){
         String resource = "/scenarios/" + path;
@@ -570,8 +805,9 @@ public final class Scenario{
 
     /** An enemy ground spawn tile. */
     public static final class SpawnPoint{
+        public final String id;
         public final int x, y;
-        SpawnPoint(int x, int y){ this.x = x; this.y = y; }
+        SpawnPoint(String id, int x, int y){ this.id = id; this.x = x; this.y = y; }
     }
 
     public record SchematicSpec(String name, List<BuildSpec> blocks, int copperCost){}
@@ -583,7 +819,7 @@ public final class Scenario{
             if(count <= 0) throw new IllegalArgumentException("wave spawn count must be positive");
         }
     }
-    public record WaveSpec(int number, int tick, List<WaveSpawn> spawns){
+    public record WaveSpec(int number, int tick, String spawnId, List<WaveSpawn> spawns){
         public WaveSpec{ spawns = List.copyOf(spawns); }
     }
     public record ScheduledEvent(String type, int tick, Item item, int amount, String reason){

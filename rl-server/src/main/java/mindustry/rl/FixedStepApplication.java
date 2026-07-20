@@ -63,6 +63,11 @@ public final class FixedStepApplication implements Application{
         }
     }
 
+    /** Drop callbacks posted by the episode being reset before IDs are reseeded. */
+    public void clearPostedTasks(){
+        runnables.clear();
+    }
+
     @Override public Seq<ApplicationListener> getListeners(){ return listeners; }
     @Override public ApplicationType getType(){ return ApplicationType.headless; }
     @Override public Thread getMainThread(){ return mainThread; }

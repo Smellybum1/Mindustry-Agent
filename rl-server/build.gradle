@@ -40,6 +40,10 @@ processResources{
         include "scenario.json"
         into "scenarios/bootstrap-defense-adaptive-probe"
     }
+    from("../scenarios/bootstrap-defense-v1"){
+        include "scenario.json"
+        into "scenarios/bootstrap-defense-v1"
+    }
     from("../scenarios/schematics"){
         include "*.json"
         into "scenarios/schematics"

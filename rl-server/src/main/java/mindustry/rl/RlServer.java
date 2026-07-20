@@ -289,10 +289,25 @@ public final class RlServer{
         rootSeed = req.getLong("root_seed", 0);
         agentCount = Math.max(1, req.getInt("agent_count", 1));
         String requestedScenario = req.getString("scenario_id", "bootstrap-defense-v0");
+        int requestedScenarioVersion = req.getInt("scenario_version", 0);
         if(!Scenario.supports(requestedScenario)){
             throw new ProtocolReject("unknown_scenario", "unknown scenario_id: " + requestedScenario);
         }
-        if(!scenario.id.equals(requestedScenario)) selectScenario(requestedScenario);
+        // Scenario v2 resolves all bounded variation from root_seed and must be
+        // rebuilt every reset. Fixed scenarios retain their boot-time descriptor
+        // so the legacy v0 reset/golden path remains byte-for-byte unchanged.
+        Scenario nextScenario = requestedScenario.equals("bootstrap-defense-v1")
+            ? new Scenario(requestedScenario, rootSeed)
+            : !scenario.id.equals(requestedScenario)
+                ? new Scenario(requestedScenario, 0L) : null;
+        Scenario resolvedScenario = nextScenario == null ? scenario : nextScenario;
+        if(requestedScenarioVersion > 0
+            && requestedScenarioVersion != resolvedScenario.version){
+            throw new ProtocolReject("scenario_version_mismatch",
+                "scenario " + requestedScenario + " is version " + resolvedScenario.version
+                    + ", requested " + requestedScenarioVersion);
+        }
+        if(nextScenario != null) selectScenario(nextScenario);
         Jval options = req.get("options");
         engineCandidates.setOverlapProbe(options != null && options.isObject()
             && options.getBool("reservation_overlap_probe", false));
@@ -361,6 +376,7 @@ public final class RlServer{
         app.graphics.setDeltaSeconds(1f / 60f);
         int advancedTicks = 0;
         for(int i = 0; i < ticks; i++){
+            prepareWaveEntityIds((int)state.tick + 1);
             app.stepOnce();
             //deterministic enemy flowfield: converge on the sim thread each tick with the
             //background Pathfinder thread stopped (upstream syncUpdate patch, docs/UPSTREAM_PATCHES.md).
@@ -482,6 +498,11 @@ public final class RlServer{
     private void doReset(long seed){
         logic.reset();
 
+        //Callbacks posted by the previous episode can allocate entities on the
+        // next external tick. Drop them before resetting EntityGroup.lastId or
+        // the same reset trace inherits the previous episode's ID history.
+        app.clearPostedTasks();
+
         //RNG: dominant lever — reseed the global generator (never reseeded by reset())
         Mathf.rand.setSeed(seed);
 
@@ -522,6 +543,23 @@ public final class RlServer{
 
         //converge the preloaded enemy flow field once so the first observation is settled
         pathfinder.syncUpdate();
+    }
+
+    private void prepareWaveEntityIds(int nextTick){
+        if(scenario.version < 2) return;
+        for(int i = 0; i < scenario.waveTicks.size; i++){
+            if(scenario.waveTicks.get(i) != nextTick) continue;
+            try{
+                //Engine helpers may lazily allocate transient Entityc objects
+                //between reset and a native wave. Give each varied-scenario
+                //wave a disjoint deterministic ID range so that history cannot
+                //change spawned unit identity or target tie-breaking.
+                entityLastId.setInt(null, 1_000_000 + i * 100_000);
+            }catch(Exception e){
+                throw new RuntimeException("failed to seed wave entity IDs", e);
+            }
+            return;
+        }
     }
 
     /** Stop the two free-running pathfinder threads via their private stop() (no upstream edit). */
@@ -769,7 +807,15 @@ public final class RlServer{
     }
 
     private void selectScenario(String id){
-        scenario = new Scenario(id);
+        selectScenario(id, 0L);
+    }
+
+    private void selectScenario(String id, long seed){
+        selectScenario(new Scenario(id, seed));
+    }
+
+    private void selectScenario(Scenario selected){
+        scenario = selected;
         adaptiveFacts = new AdaptiveWorldFacts(scenario, registry);
         engineCandidates = new EngineCandidates(scenario, registry, adaptiveFacts);
         coordination = new CoordinationAdapter(scenario, registry, adaptiveFacts);
@@ -817,6 +863,11 @@ public final class RlServer{
             byte[] coordinationState = coordination.canonicalAdaptiveState();
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             DataOutputStream out = new DataOutputStream(bytes);
+            if(scenario.version >= 2){
+                byte[] scenarioState = scenario.canonicalState();
+                out.writeInt(scenarioState.length);
+                out.write(scenarioState);
+            }
             out.writeInt(facts.length);
             out.write(facts);
             out.writeInt(coordinationState.length);
