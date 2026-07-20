@@ -3,7 +3,7 @@
 M6 records complete externally stepped action and coordination traces as compact
 JSONL. `tests/golden/bootstrap-defense-v0-scripted-v1.jsonl` is the pinned
 reference: two complete scripted-expert episodes, seeds 12345 and 23456, for
-**16,200 total advanced ticks** and 678 reset/step hash checkpoints.
+**16,200 total advanced ticks** and 672 reset/step hash checkpoints.
 
 The first row is a manifest containing the engine tag/commit, Arc hash, protocol
 and scenario versions, policy name, episode count, and total tick count. Each
