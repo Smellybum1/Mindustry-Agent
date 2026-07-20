@@ -1,25 +1,31 @@
 // rl-server — custom externally-stepped headless launcher (ADR-0002).
 //
 // Replaces the wall-clock server loop with an externally controlled fixed-step
-// simulation loop. Depends on the pinned upstream :core (engine) and :server
-// (headless application/launcher plumbing). See docs/ARCHITECTURE.md.
+// simulation loop. Depends only on the pinned upstream :core (engine); the Arc
+// mock backend (arc.mock.*) is pulled in transitively via :core's api dependency
+// on arc-core, so no :server / backend-headless dependency is needed.
 //
-// Repositories, Java 17 release target, and JavaCompile options are applied by
-// the root build.gradle to all subprojects; keep this file minimal.
+// Repositories, Java 17 release target, and JavaCompile options are applied by the
+// root build.gradle to all subprojects; keep this file minimal.
+//
+// IMPORTANT (see docs/ENGINE_NOTES.md §1, and ServerLauncher working-dir assumptions):
+// Mindustry resolves internal assets (e.g. icons/icons.properties, baseparts) with a
+// plain arc.files.Fi of type `internal`, which reads from the JVM WORKING DIRECTORY.
+// Both the `dist` jar (via the Python launcher) and the `runRl` task therefore MUST be
+// executed with the working directory set to ../core/assets.
 
 apply plugin: "java"
 
 sourceSets.main.java.srcDirs = ["src/main/java"]
 
 project.ext.mainClassName = "mindustry.rl.RlServerMain"
+project.ext.assetsDir = new File("../core/assets")
 
 dependencies{
     implementation project(":core")
-    implementation project(":server")
 }
 
-// Application-style fat jar: a runnable dist mirroring server/build.gradle's
-// `dist` task idiom so the reference runtime launches one JVM per environment.
+// Self-contained fat jar. Runnable via `java -jar` (with cwd = ../core/assets).
 tasks.register('dist', Jar){
     dependsOn configurations.runtimeClasspath
     from files(sourceSets.main.output.classesDirs)
@@ -27,8 +33,9 @@ tasks.register('dist', Jar){
     from{ configurations.runtimeClasspath.collect{ it.isDirectory() ? it : zipTree(it) } }
 
     duplicatesStrategy = 'exclude'
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
 
-    archiveBaseName = 'rl-server'
+    archiveFileName = 'rl-server.jar'
 
     manifest{
         attributes 'Main-Class': project.mainClassName
@@ -37,10 +44,12 @@ tasks.register('dist', Jar){
 
 dist.dependsOn classes
 
-tasks.register('run', JavaExec){
+// Gradle-driven run with the correct working directory for asset resolution.
+tasks.register('runRl', JavaExec){
     dependsOn classes
     mainClass = project.mainClassName
     classpath = sourceSets.main.runtimeClasspath
+    workingDir = project.assetsDir
     standardInput = System.in
     ignoreExitValue = true
     if(project.hasProperty("appArgs")){
