@@ -314,4 +314,40 @@ class SkillsTest{
         assertEquals(30, body.coreItems);
         assertEquals(0, body.cargo);
     }
+
+    @Test void rebuildRegionRestoresQueuedBrokenBlock(){
+        FakeBody body = new FakeBody(4f, 4f);
+        body.broken.add(new RebuildSpec("copper-wall", 8, 8, 0));
+        RebuildRegion rebuild = new RebuildRegion(7, 7, 9, 9);
+        SkillResult result = run(rebuild, body, 200);
+        assertEquals(SkillStatus.SUCCEEDED, result.status());
+        assertEquals(SkillReason.REBUILT, result.reason());
+        assertEquals(1, rebuild.initialCount());
+        assertEquals(1, rebuild.completed());
+        assertTrue(body.broken.isEmpty());
+        assertEquals(BuildTargetState.COMPLETE, body.buildState);
+    }
+
+    @Test void rebuildRegionIgnoresPlansOutsideRect(){
+        FakeBody body = new FakeBody(4f, 4f);
+        body.broken.add(new RebuildSpec("copper-wall", 20, 20, 0));
+        RebuildRegion rebuild = new RebuildRegion(7, 7, 9, 9);
+        SkillResult result = rebuild.tick(body, 0);
+        assertEquals(SkillStatus.SUCCEEDED, result.status());
+        assertEquals(0, rebuild.initialCount());
+        assertEquals(1, body.broken.size());
+        assertFalse(body.buildPlan);
+    }
+
+    @Test void rebuildRegionPropagatesResourceShortage(){
+        FakeBody body = new FakeBody(4f, 4f);
+        body.broken.add(new RebuildSpec("copper-wall", 8, 8, 0));
+        body.buildResources = false;
+        RebuildRegion rebuild = new RebuildRegion(7, 7, 9, 9);
+        SkillResult result = run(rebuild, body, 200);
+        assertEquals(SkillStatus.BLOCKED, result.status());
+        assertEquals(SkillReason.RESOURCES_SHORT, result.reason());
+        assertEquals(0, rebuild.completed());
+        assertEquals(1, body.broken.size());
+    }
 }

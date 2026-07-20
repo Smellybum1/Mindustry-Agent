@@ -104,7 +104,7 @@ Fail fast on incompatible **major** versions.
 ```
 
 `command.type` is one of `NAVIGATE` / `MINE` / `DELIVER_CORE` / `WAIT` / `BUILD` /
-`SCHEMATIC` / `SUPPLY` / `CONTINUE`.
+`SCHEMATIC` / `SUPPLY` / `REBUILD` / `CONTINUE`.
 An absent `command` (or `CONTINUE`) keeps the agent's current skill running.
 Params by type: `NAVIGATE {x, y, tolerance?}` (world coords), `MINE {tile_x, tile_y,
 amount?}` (tile coords), `DELIVER_CORE {}`, `WAIT {ticks?}`,
@@ -117,6 +117,9 @@ rejected. `SUPPLY {item, tile_x, tile_y, amount}` withdraws up to the requested
 item count from the core through the legal engine path, carries it, and deposits
 what the target accepts. Its skill observation adds `requested`, `delivered`,
 `target_stock_before`, and `target_stock`; item-turret stock is native ammo units.
+`REBUILD {x1, y1, x2, y2}` executes queued destroyed-block plans inside the
+inclusive tile rectangle in engine queue order. Its skill observation adds
+`initial_broken` and `completed`; team observation adds `broken_block_count`.
 Actions are applied on
 the sim thread **before** advancing; each is validated and echoed in
 `action_results[]` — an invalid action is rejected there, never crashes the step.

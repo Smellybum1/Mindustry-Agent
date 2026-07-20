@@ -1,5 +1,7 @@
 package agentcore.skill;
 
+import java.util.List;
+
 /**
  * The thin engine port a {@link Skill} steers through (docs/M3_DESIGN.md D2/D3).
  *
@@ -134,4 +136,12 @@ public interface AgentBody{
 
     /** Deposit carried items through the legal unit-to-building path. */
     int transferCargoToBuilding(String item, int tileX, int tileY, int amount);
+
+    // -- broken-block rebuild --------------------------------------------
+
+    /** Stable queue-order snapshot of destroyed team blocks in an inclusive rect. */
+    List<RebuildSpec> brokenBlocksInRegion(int x1, int y1, int x2, int y2);
+
+    /** Enqueue the matching engine broken-block plan, preserving its saved config. */
+    void enqueueRebuild(String block, int tileX, int tileY, int rotation);
 }

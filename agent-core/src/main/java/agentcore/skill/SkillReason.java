@@ -60,5 +60,9 @@ public enum SkillReason{
     /** The team core cannot provide more of the requested item. */
     CORE_SHORT,
     /** Existing unit cargo is a different item and cannot be mixed. */
-    CARGO_MISMATCH
+    CARGO_MISMATCH,
+    /** Reconstructing an engine-recorded destroyed team block. */
+    REBUILDING,
+    /** No destroyed blocks remain in the requested region. */
+    REBUILT
 }

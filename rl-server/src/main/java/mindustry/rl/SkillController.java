@@ -3,11 +3,14 @@ package mindustry.rl;
 import agentcore.skill.*;
 import arc.math.geom.*;
 import mindustry.entities.units.*;
+import mindustry.game.Teams.*;
 import mindustry.gen.*;
 import mindustry.type.*;
 import mindustry.world.*;
 import mindustry.world.blocks.ConstructBlock.*;
 import mindustry.world.blocks.defense.turrets.*;
+
+import java.util.*;
 
 import static mindustry.Vars.*;
 
@@ -297,6 +300,34 @@ public final class SkillController extends AIController implements AgentBody{
             Call.transferItemTo(unit, requested, accepted, unit.x, unit.y, target);
         }
         return accepted;
+    }
+
+    @Override
+    public List<RebuildSpec> brokenBlocksInRegion(int x1, int y1, int x2, int y2){
+        ArrayList<RebuildSpec> result = new ArrayList<>();
+        var plans = unit.team.data().plans;
+        for(int i = 0; i < plans.size; i++){
+            BlockPlan plan = plans.get(i);
+            if(!plan.removed && plan.x >= x1 && plan.x <= x2 && plan.y >= y1 && plan.y <= y2){
+                result.add(new RebuildSpec(plan.block.name, plan.x, plan.y, plan.rotation));
+            }
+        }
+        return List.copyOf(result);
+    }
+
+    @Override
+    public void enqueueRebuild(String block, int tileX, int tileY, int rotation){
+        Block requested = block(block);
+        if(requested == null) return;
+        var plans = unit.team.data().plans;
+        for(int i = 0; i < plans.size; i++){
+            BlockPlan plan = plans.get(i);
+            if(!plan.removed && plan.block == requested && plan.x == tileX && plan.y == tileY
+                && plan.rotation == rotation){
+                unit.addBuild(new BuildPlan(plan.x, plan.y, plan.rotation, plan.block, plan.config));
+                return;
+            }
+        }
     }
 
     private Block block(String name){

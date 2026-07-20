@@ -20,6 +20,7 @@ public final class BuildBlock implements Skill{
     private final int tileX, tileY, rotation;
     private final int approachStuckTicks, resourceStallTicks;
     private final long retryDelay;
+    private final boolean rebuild;
 
     private float bestDistance = Float.MAX_VALUE;
     private float bestProgress = 0f;
@@ -29,11 +30,24 @@ public final class BuildBlock implements Skill{
 
     public BuildBlock(String block, int tileX, int tileY, int rotation){
         this(block, tileX, tileY, rotation, DEFAULT_APPROACH_STUCK_TICKS,
-            DEFAULT_RESOURCE_STALL_TICKS, DEFAULT_RETRY_DELAY);
+            DEFAULT_RESOURCE_STALL_TICKS, DEFAULT_RETRY_DELAY, false);
+    }
+
+    BuildBlock(RebuildSpec spec){
+        this(spec.block(), spec.tileX(), spec.tileY(), spec.rotation(),
+            DEFAULT_APPROACH_STUCK_TICKS, DEFAULT_RESOURCE_STALL_TICKS,
+            DEFAULT_RETRY_DELAY, true);
     }
 
     BuildBlock(String block, int tileX, int tileY, int rotation,
                int approachStuckTicks, int resourceStallTicks, long retryDelay){
+        this(block, tileX, tileY, rotation, approachStuckTicks, resourceStallTicks,
+            retryDelay, false);
+    }
+
+    private BuildBlock(String block, int tileX, int tileY, int rotation,
+               int approachStuckTicks, int resourceStallTicks, long retryDelay,
+               boolean rebuild){
         this.block = block;
         this.tileX = tileX;
         this.tileY = tileY;
@@ -41,6 +55,7 @@ public final class BuildBlock implements Skill{
         this.approachStuckTicks = Math.max(1, approachStuckTicks);
         this.resourceStallTicks = Math.max(1, resourceStallTicks);
         this.retryDelay = Math.max(0L, retryDelay);
+        this.rebuild = rebuild;
     }
 
     @Override public String type(){ return "BUILD"; }
@@ -83,7 +98,11 @@ public final class BuildBlock implements Skill{
 
         body.halt();
         if(!enqueued){
-            body.enqueueBuild(block, tileX, tileY, rotation);
+            if(rebuild){
+                body.enqueueRebuild(block, tileX, tileY, rotation);
+            }else{
+                body.enqueueBuild(block, tileX, tileY, rotation);
+            }
             enqueued = true;
             return SkillResult.running(SkillReason.BUILDING, 0f);
         }

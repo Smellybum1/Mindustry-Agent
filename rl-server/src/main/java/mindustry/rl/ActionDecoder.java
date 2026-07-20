@@ -14,7 +14,7 @@ import static mindustry.Vars.*;
  * <p>Every action is validated; an invalid one yields {@code accepted=false} with a reason
  * code in the {@code action_results[]} entry and <b>never</b> throws. Command types:
  * {@code NAVIGATE}, {@code MINE}, {@code DELIVER_CORE}, {@code WAIT}, {@code BUILD},
- * {@code SCHEMATIC}, {@code SUPPLY}, and {@code CONTINUE} (or an absent command)
+ * {@code SCHEMATIC}, {@code SUPPLY}, {@code REBUILD}, and {@code CONTINUE} (or an absent command)
  * which keeps the current skill running.
  *
  * <p>Well-formedness (finite numbers, in-bounds tiles) is checked here; semantic
@@ -134,6 +134,18 @@ final class ActionDecoder{
                     return result(agentId, false, "malformed", type);
                 }
                 agent.controller.setSkill(new SupplyBuilding(item.name, tx, ty, amount));
+                return result(agentId, true, "accepted", type);
+            }
+
+            case "REBUILD":{
+                int x1 = command.getInt("x1", Integer.MIN_VALUE);
+                int y1 = command.getInt("y1", Integer.MIN_VALUE);
+                int x2 = command.getInt("x2", Integer.MIN_VALUE);
+                int y2 = command.getInt("y2", Integer.MIN_VALUE);
+                if(!inBounds(x1, y1) || !inBounds(x2, y2)){
+                    return result(agentId, false, "out_of_bounds", type);
+                }
+                agent.controller.setSkill(new RebuildRegion(x1, y1, x2, y2));
                 return result(agentId, true, "accepted", type);
             }
 

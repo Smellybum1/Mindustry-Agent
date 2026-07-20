@@ -195,7 +195,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   loss. Observed: core destroyed at tick **~3420–3450** (~12 s after wave 1),
   matching `docs/SCENARIOS.md` arithmetic (c) (travel + ~8.9 s contact kill), well
   under the cap.
-- **Verified 2026-07-20**: `./gradlew rl-server:dist agent-core:test` green (88
+- **Verified 2026-07-20**: `./gradlew rl-server:dist agent-core:test` green (91
   JUnit); `pytest python/tests -q` → 29 pass; `bash scripts/smoke.sh` → exit 0
   (mine/deliver ledger **and** scenario check); `bash scripts/determinism.sh` → exit
   0 (moving enemies + seed sensitivity); `bash scripts/stress-reset.sh` → exit 0
@@ -229,7 +229,13 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   `CARGO_MISMATCH` outcomes. Live smoke supplies 15 copper to each schematic Duo:
   both reach 30 native ammo units, the core loses exactly 30 copper, and both
   cargo stacks end empty. The full build+supply+re-path trace matches 79 hashes.
-- **4.5–4.8 remain unimplemented.**
+- **M4.5 — RebuildRegion is complete.** It consumes `TeamData.plans` in stable
+  newest-first queue order and preserves the native plan config when adding the
+  unit `BuildPlan`; completed engine placement clears the ghost plan. Live smoke
+  proves wave 1 destroys a six-copper spawn-tile wall at tick 2700 and rebuilding
+  it clears the queue while charging exactly six copper again. `broken_block_count`
+  is now visible; true healing of standing damage remains unavailable to alpha.
+- **4.6–4.8 remain unimplemented.**
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -254,8 +260,8 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 88 tests
-  green, including 24 M3/M4 skill tests). `agent-plugin` build still unverified.
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 91 tests
+  green, including 27 M3/M4 skill tests). `agent-plugin` build still unverified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
 

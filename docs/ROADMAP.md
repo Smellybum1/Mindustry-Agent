@@ -184,6 +184,13 @@ below; implement in order — 4.1/4.2 unblock everything else.
 - Depends: 4.2 (needs a turret to exist).
 
 ### 4.5 RebuildRegion (S4)
+- **DONE (verified 2026-07-20):** `RebuildRegion` snapshots `TeamData.plans` by
+  explicit queue index (stable newest-first engine order), re-enqueues the saved
+  block/rotation/config through legal `BuildPlan` construction, and propagates
+  `BuildBlock` failures. Three FSM tests bring the Java total to 91. Live smoke
+  builds a spawn-tile wall for six copper, wave 1 destroys it at tick 2700, then
+  the skill clears that exact ghost plan and charges exactly six copper again.
+  Standing damaged-block healing remains explicitly unsupported for alpha units.
 - Objective: re-enqueue broken-block plans within a rect from the team's
   broken-block queue (resolve open question 3: field + iteration order);
   "repair" of standing damaged blocks is explicitly OUT (alpha cannot heal —

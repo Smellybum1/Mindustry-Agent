@@ -327,6 +327,92 @@ def run_schematic_phase(env, seed: int) -> int:
     return 0
 
 
+def run_rebuild_phase(env, seed: int) -> int:
+    """Let wave 1 destroy a legal wall, then rebuild its engine ghost plan."""
+    print("\n== M4 RebuildRegion phase ==")
+    rr = env.reset(root_seed=seed, agent_count=2)
+    episode = rr.episode_id
+    tick = rr.tick
+    actions = [
+        {
+            "agent_id": 0,
+            "command": {
+                "type": "BUILD",
+                "block": "copper-wall",
+                "tile_x": 46,
+                "tile_y": 24,
+                "rotation": 0,
+            },
+        }
+    ]
+    sr = None
+    for _ in range(20):
+        sr = env.step(
+            episode, expected_tick=tick, ticks_to_advance=30, agent_actions=actions
+        )
+        actions = []
+        tick = sr.tick
+        if _skill(sr, 0)["status"] in {"SUCCEEDED", "BLOCKED", "FAILED"}:
+            break
+    assert sr is not None
+    if _skill(sr, 0)["status"] != "SUCCEEDED" or _core_copper(sr) != 244:
+        print(f"FAIL: setup wall did not complete for six copper: {_skill(sr, 0)}", file=sys.stderr)
+        return 1
+
+    while tick < 3600 and int(sr.observations[0]["team"]["broken_block_count"]) == 0:
+        sr = env.step(episode, expected_tick=tick, ticks_to_advance=30)
+        tick = sr.tick
+        if sr.terminations[0] or sr.truncations[0]:
+            break
+    broken = int(sr.observations[0]["team"]["broken_block_count"])
+    print(f"  wall destroyed @tick / broken queue : {tick} / {broken}")
+    if broken != 1:
+        print(f"FAIL: wave did not produce one broken wall plan: {sr.observations[0]['team']}", file=sys.stderr)
+        return 1
+
+    # Let the just-spawned daggers clear the tile and weapon range; rebuilding
+    # while units overlap destroys the replacement later in the same update.
+    sr = env.step(episode, expected_tick=tick, ticks_to_advance=180)
+    tick = sr.tick
+    if int(sr.observations[0]["team"]["broken_block_count"]) != 1:
+        print("FAIL: broken wall plan disappeared before rebuild", file=sys.stderr)
+        return 1
+    before_rebuild = _core_copper(sr)
+
+    actions = [
+        {
+            "agent_id": 0,
+            "command": {"type": "REBUILD", "x1": 46, "y1": 24, "x2": 46, "y2": 24},
+        }
+    ]
+    for _ in range(300):
+        sr = env.step(
+            episode, expected_tick=tick, ticks_to_advance=1, agent_actions=actions
+        )
+        actions = []
+        tick = sr.tick
+        if _skill(sr, 0)["status"] in {"SUCCEEDED", "BLOCKED", "FAILED"}:
+            break
+
+    rebuilt = _skill(sr, 0)
+    after_rebuild = _core_copper(sr)
+    remaining = int(sr.observations[0]["team"]["broken_block_count"])
+    print(f"  rebuild status / completed          : {rebuilt['status']} / {rebuilt.get('completed')}")
+    print(f"  core copper before/after            : {before_rebuild} -> {after_rebuild}")
+    ok = rebuilt["status"] == "SUCCEEDED" and rebuilt["reason"] == "REBUILT"
+    ok = ok and int(rebuilt.get("completed", -1)) == 1 and remaining == 0
+    ok = ok and before_rebuild - after_rebuild == 6
+    if not ok:
+        print(
+            f"FAIL: rebuild ledger mismatch: skill={rebuilt} broken={remaining} "
+            f"core={before_rebuild}->{after_rebuild}",
+            file=sys.stderr,
+        )
+        return 1
+    print("  REBUILD BALANCE OK: wave-broken wall restored from queue for exactly 6 copper")
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="rl-server M1 smoke test")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
@@ -412,10 +498,15 @@ def main(argv=None) -> int:
             print("SCHEMATIC PHASE FAILED", file=sys.stderr)
             return schematic_rc
 
+        rebuild_rc = run_rebuild_phase(env, args.seed)
+        if rebuild_rc != 0:
+            print("REBUILD PHASE FAILED", file=sys.stderr)
+            return rebuild_rc
+
         h = env.health()
         print(f"health: ok={h.ok} uptime_ticks={h.uptime_ticks} episode={h.episode_id}")
 
-    print("\nSMOKE OK: exact stepping + mine/deliver/build/schematic/supply ledgers balanced")
+    print("\nSMOKE OK: exact stepping + mine/deliver/build/schematic/supply/rebuild ledgers balanced")
     return 0
 
 

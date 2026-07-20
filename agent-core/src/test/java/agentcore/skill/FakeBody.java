@@ -1,7 +1,6 @@
 package agentcore.skill;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A deterministic, engine-free {@link AgentBody} for skill state-machine tests.
@@ -54,6 +53,8 @@ final class FakeBody implements AgentBody{
     float buildRate = 0.02f;
     String buildBlock;
     int buildX, buildY, buildRotation;
+    boolean rebuildPlan;
+    final List<RebuildSpec> broken = new ArrayList<>();
 
     FakeBody(float x, float y){ this.px = x; this.py = y; }
 
@@ -87,6 +88,12 @@ final class FakeBody implements AgentBody{
             if(buildProgress >= 1f){
                 buildPlan = false;
                 buildState = BuildTargetState.COMPLETE;
+                if(rebuildPlan){
+                    broken.removeIf(spec -> spec.block().equals(buildBlock)
+                        && spec.tileX() == buildX && spec.tileY() == buildY
+                        && spec.rotation() == buildRotation);
+                    rebuildPlan = false;
+                }
             }
         }
         steering = false;
@@ -154,7 +161,12 @@ final class FakeBody implements AgentBody{
         return BuildTargetState.PLACEABLE;
     }
     @Override public void enqueueBuild(String block, int tileX, int tileY, int rotation){
+        startBuild(block, tileX, tileY, rotation, false);
+    }
+    private void startBuild(String block, int tileX, int tileY, int rotation, boolean rebuild){
         buildPlan = true;
+        rebuildPlan = rebuild;
+        buildProgress = 0f;
         buildBlock = block;
         buildX = tileX;
         buildY = tileY;
@@ -202,5 +214,25 @@ final class FakeBody implements AgentBody{
         supplyCapacity -= moved;
         supplyStock += moved * supplyMultiplier;
         return moved;
+    }
+
+    @Override public List<RebuildSpec> brokenBlocksInRegion(int x1, int y1, int x2, int y2){
+        List<RebuildSpec> result = new ArrayList<>();
+        for(RebuildSpec spec : broken){
+            if(spec.tileX() >= x1 && spec.tileX() <= x2
+                && spec.tileY() >= y1 && spec.tileY() <= y2){
+                result.add(spec);
+            }
+        }
+        return List.copyOf(result);
+    }
+    @Override public void enqueueRebuild(String block, int tileX, int tileY, int rotation){
+        for(RebuildSpec spec : broken){
+            if(spec.block().equals(block) && spec.tileX() == tileX && spec.tileY() == tileY
+                && spec.rotation() == rotation){
+                startBuild(block, tileX, tileY, rotation, true);
+                return;
+            }
+        }
     }
 }

@@ -1,6 +1,6 @@
 # M4 Design — Build, Supply, Rebuild, Defend Skills
 
-Status: approved design; implementation in progress (M4.1–4.4 completed 2026-07-20).
+Status: approved design; implementation in progress (M4.1–4.5 completed 2026-07-20).
 Author: Fable bootstrap pass, 2026-07-20.
 Prereqs: M3 verified (skill layer + agent units); bootstrap-defense-v0 scenario
 loader with waves (in progress) — Defend/Rebuild need live enemies to be testable.
@@ -117,9 +117,8 @@ board wiring (M5), rewards (M7), multi-unit squads.
 
 ## Open questions for the implementer (resolve against source, record here)
 
-**Questions 1 and 5 resolved during M4.2 implementation and 2 and 4 during M4.4
-(2026-07-20); question 3 remains for its owning roadmap item. Answers cite this
-checkout (v159.7).**
+**Questions 1 and 5 resolved during M4.2 implementation, 2 and 4 during M4.4,
+and 3 during M4.5 (2026-07-20). Answers cite this checkout (v159.7).**
 
 1. **Core resource consumption for unit build plans. RESOLVED.**
    `BuilderComp.updateBuildLogic()` begins a legal placement through
@@ -140,8 +139,17 @@ checkout (v159.7).**
    `min(unit.maxAccepted(item), amount)` from the building, adds exactly that to
    the unit, and creates only transfer effects afterward. `SupplyBuilding` also
    caps withdrawal to target capacity, preventing leftover cargo when a target fills.
-3. Exact field for the broken-block/rebuild queue and its determinism
-   (iteration order) for S4.
+3. **Broken-block queue and order. RESOLVED.** `Teams.TeamData.plans` is an Arc
+   `Queue<BlockPlan>` (`core/src/mindustry/game/Teams.java:284-285`). With
+   `Rules.ghostBlocks=true` (default at `Rules.java:95`), `Logic` handles
+   `BlockDestroyEvent` by calling `tile.build.addPlan(true)` (`Logic.java:41-50`).
+   `BuildingComp.addPlan` removes a prior plan at the same tile, then uses
+   `data.plans.addFirst(...)` with block, rotation, and config
+   (`BuildingComp.java:356-370`), so index 0 is the newest destruction and explicit
+   `get(0..size-1)` is a stable order. `BlockBuildEndEvent` removes overlapping
+   plans through `Logic.checkOverlappingPlans` (`Logic.java:53-55,255-264`). The
+   adapter snapshots that queue order and, when selected, looks the native plan
+   up again so its opaque config is preserved in the unit's legal `BuildPlan`.
 4. **Turret ammo accounting. RESOLVED for S3.** `TurretBuild` stores ordered
    `ammo` entries and integer `totalAmmo` (`Turret.java:282-283`).
    `ItemTurretBuild.acceptStack` caps item count by

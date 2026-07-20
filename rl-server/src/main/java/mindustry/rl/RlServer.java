@@ -526,6 +526,10 @@ public final class RlServer{
             o.put("target_stock_before", supply.targetStockBefore());
             o.put("target_stock", supply.targetStock());
         }
+        if(sc.activeSkill() instanceof RebuildRegion rebuild){
+            o.put("initial_broken", rebuild.initialCount());
+            o.put("completed", rebuild.completed());
+        }
         return o;
     }
 
@@ -538,6 +542,7 @@ public final class RlServer{
         o.put("lead", StateHasher.coreItem(Items.lead));
         o.put("unit_count", Groups.unit.size());
         o.put("building_count", Groups.build.size());
+        o.put("broken_block_count", brokenBlockCount());
         o.put("core_health", core == null ? 0.0 : core.health);
         //wave/enemy telemetry (scenario phase): time to the next spawn and live enemy summary.
         o.put("time_to_next_wave", state.wavetime);
@@ -545,6 +550,15 @@ public final class RlServer{
         o.put("enemy_nearest_core_dist", enemyNearestCoreDist(core));
         o.put("done", state.gameOver);
         return o;
+    }
+
+    private int brokenBlockCount(){
+        int count = 0;
+        var plans = scenario.coreTeam.data().plans;
+        for(int i = 0; i < plans.size; i++){
+            if(!plans.get(i).removed) count++;
+        }
+        return count;
     }
 
     /** Smallest distance (world units) from any wave-team unit to the core, or -1 if none. */
