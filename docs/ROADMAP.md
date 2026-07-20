@@ -354,6 +354,13 @@ contract); Python sees it only through the protocol.
   the documented event.
 
 ### 5.5 Lease expiry / failure recovery (chaos)
+- **DONE (verified 2026-07-20):** validation-only reset options select one agent
+  and deterministic failure tick. At that tick the sim-thread hook cancels its
+  queued build plan, freezes its skill, and suppresses lifecycle reports without
+  releasing board ownership. The live chaos run stops sending agent 0 actions,
+  observes lease expiry at tick 627 with both reservations released, lets agent 1
+  reclaim and complete the partial schematic at tick 893, and reaches a normal
+  terminal loss at tick 3600. A second fresh JVM produces a byte-identical trace.
 - Objective: simulate an agent failure mid-task (stop sending its actions +
   suppress its heartbeats via a test hook); its lease expires; the task reopens;
   another agent claims and completes it.
@@ -375,7 +382,7 @@ Exit criteria (brief, unchanged):
 - [x] Two or more agents announce distinct work
 - [x] A helper contract is accepted and completed
 - [x] Duplicate task claims are resolved
-- [ ] Stale claim expires after a simulated agent failure
+- [x] Stale claim expires after a simulated agent failure
 - [ ] Communication rate limit passes tests
 
 ## Milestone 6: Bootstrap Defense v0

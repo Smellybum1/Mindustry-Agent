@@ -363,19 +363,41 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   reports zero hash mismatches, median **1.20 ms**, p95 **3.80 ms**, peak
   **312.1 MiB**, and no leak.
 
+## Milestone 5.5 — lease expiry and failure recovery (DONE, verified 2026-07-20)
+
+- **Deterministic failure hook:** validation-only reset options name an agent and
+  fixed failure tick. At that tick, on the simulation thread, the adapter clears
+  its active skill, cancels any queued build plan, and suppresses subsequent
+  progress/heartbeat/completion reports while deliberately retaining the board
+  assignment. The hook resets completely between episodes and is disabled by
+  default; no wall-clock or background thread participates.
+- **Acceptance:** `tools.chaos_check` assigns the reference schematic to agent 0,
+  sends it no further actions, and freezes it at tick 30 after measurable partial
+  progress. Its last progress-renewed lease expires at tick 627, reopening the
+  task and releasing both footprint/resource reservations. Agent 1 reclaims the
+  same task, completes it at tick 893, and the otherwise unattended scenario
+  reaches a normal loss outcome at tick 3600. Structured events preserve the
+  `RUNNING → EXPIRED` transition and later claim/completion; the entire trace is
+  byte-identical in a second JVM. Full smoke includes this check.
+- **Verification:** **101 JUnit**, **35 pytest**, full smoke, and the
+  **79-boundary** determinism replay are green. The post-M5.5 1000-reset check
+  reports zero hash mismatches, median **1.15 ms**, p95 **2.46 ms**, peak
+  **298.4 MiB**, and no leak.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
   `CoordinationAct` (13), `SkillStatus` (6), `AgentId` record, the coordination
   board (M2), the **`agentcore.skill`** FSM layer (M3/M4), and the engine-free
   deterministic M5.1 candidate catalog. Board-to-skill wiring and measurable
-  helper fulfilment and live reservations are wired through M5.4; lease-recovery
-  hooks/metrics (M5.5–5.6) and reward logic (M7) remain.
+  helper fulfilment, live reservations, and lease recovery are wired through
+  M5.5; announcement metrics (M5.6) and reward logic (M7) remain.
 - **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
   loadable Mindustry plugin. See `agent-plugin/README.md`.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
-  `tools/{smoke,determinism,stress_reset,benchmark,policy_check,reservation_check}.py`). `training`,
+  `tools/{smoke,determinism,stress_reset,benchmark,policy_check}.py` plus the
+  reservation/chaos checks). `training`,
   `evaluation`, and `telemetry` remain documented skeletons.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and

@@ -78,6 +78,12 @@ build candidate over the reference schematic footprint. It exists for the M5.4
 live property check and is disabled by default; training manifests must leave it
 unset.
 
+M5.5 adds two more validation-only options:
+`lease_failure_agent_id=<index>` and `lease_failure_tick=<tick>`. At that fixed
+tick the selected controller is frozen and its automatic task lifecycle reports
+are suppressed, allowing the ordinary lease-expiry path to be tested. They are
+disabled by default and must remain unset in training manifests.
+
 `ResetResponse` (`type = "reset_response"`)
 
 | field | type | notes |

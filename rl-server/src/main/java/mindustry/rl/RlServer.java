@@ -291,6 +291,11 @@ public final class RlServer{
             && options.getBool("reservation_overlap_probe", false));
 
         doReset(rootSeed);
+        if(options != null && options.isObject()){
+            coordination.configureFailureInjection(
+                options.getInt("lease_failure_agent_id", -1),
+                options.getLong("lease_failure_tick", -1));
+        }
         stepGameEvents = Jval.newArray();
 
         episodeId = "ep-" + rootSeed + "-" + System.nanoTime();

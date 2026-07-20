@@ -26,6 +26,9 @@ public final class CoordinationAdapter{
     private Assignment[] assignments = new Assignment[0];
     private String[] helperDeliveryTasks = new String[0];
     private int[] helperDeliveryCargo = new int[0];
+    private int failureAgent = -1;
+    private long failureTick = -1L;
+    private boolean failureApplied;
 
     public CoordinationAdapter(Scenario scenario, RlAgentRegistry registry){
         this.scenario = scenario;
@@ -40,6 +43,16 @@ public final class CoordinationAdapter{
         assignments = new Assignment[agentCount];
         helperDeliveryTasks = new String[agentCount];
         helperDeliveryCargo = new int[agentCount];
+        failureAgent = -1;
+        failureTick = -1L;
+        failureApplied = false;
+    }
+
+    /** Configure the deterministic M5.5 validation hook after an episode reset. */
+    public void configureFailureInjection(int agentIndex, long tick){
+        if(agentIndex < 0 || agentIndex >= assignments.length || tick < 0) return;
+        failureAgent = agentIndex;
+        failureTick = tick;
     }
 
     /** Apply one atomic bundle. SELECT claims finalize only after every bid is known. */
@@ -150,6 +163,10 @@ public final class CoordinationAdapter{
             syncHelperDelivery(i, agent, tick);
             Assignment assignment = assignments[i];
             if(assignment == null) continue;
+            if(reportsSuppressed(i, tick)){
+                applyInjectedFailure(i, agent);
+                continue;
+            }
             TaskState task = board.task(assignment.taskId);
             if(agent == null || task == null || task.owner() == null
                 || task.owner().index() != i){
@@ -181,6 +198,21 @@ public final class CoordinationAdapter{
                 }
             }
         }
+    }
+
+    private boolean reportsSuppressed(int agentIndex, long tick){
+        return agentIndex == failureAgent && failureTick >= 0 && tick >= failureTick;
+    }
+
+    private void applyInjectedFailure(int agentIndex, RlAgentRegistry.Agent agent){
+        if(failureApplied || agentIndex != failureAgent || agent == null) return;
+        Assignment assignment = current(agentIndex);
+        if(assignment != null && (assignment.spec.type() == TaskType.BUILD_SCHEMATIC
+            || assignment.spec.type() == TaskType.REPAIR_REGION)){
+            agent.controller.cancelBuildPlans();
+        }
+        agent.controller.clearSkill();
+        failureApplied = true;
     }
 
     public Jval actionMask(int agentIndex, CandidateSet candidates){
