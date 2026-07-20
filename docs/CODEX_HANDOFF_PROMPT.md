@@ -20,7 +20,7 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 2. `docs/HANDOFF.md` — verified project state, exact commands with expected
    outputs, architecture map, performance, known risks.
 3. `docs/ROADMAP.md` — Milestones M4–M6 are broken into issue-sized items with
-   acceptance criteria. **Your work queue begins at M6 item 6.1.**
+   acceptance criteria. **Your work queue begins at M6 item 6.2.**
 4. `docs/M4_DESIGN.md` — the approved design you are implementing (it has open
    questions to resolve against engine source and record in place — follow the
    precedent in `docs/M3_DESIGN.md`, which shows the expected resolution style).
@@ -58,6 +58,9 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
   coordination/idle/message metrics, and proves 112 structured events collapse
   to four coherent announcements in the live helper run. The full event/metric
   transcript is byte-identical across fresh JVMs.
+- M6.1 adds the live `copper_line_v1` board task and a three-agent expert. All
+  five evaluation seeds win at tick 8100; the legal insufficient-copper variant
+  emits `resources_short`, replans through mining, and wins too.
 
 ## Invariants (violating these is failure, even if tests pass)
 
@@ -84,8 +87,8 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Your first task
 
-`docs/ROADMAP.md` → **Milestone 6, item 6.1 (scripted expert team)**.
-Milestones 4 and 5 are verified complete: the
+`docs/ROADMAP.md` → **Milestone 6, item 6.2 (evaluation summaries)**.
+Milestones 4–5 and M6.1 are verified complete: the
 thread-less pathfinder refresh is wall-clock-free and the 79-boundary determinism
 trace legally executes and supplies the schematic, then builds a post-wave wall;
 `BuildBlock` uses real engine plans and balances core resources; reset/step now

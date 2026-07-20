@@ -26,8 +26,8 @@ and what is unverified.
   Milestone 1 section above.
 - **M2 scripts** (`stress-reset`, `benchmark`): implemented and passing — see the
   Milestone 2 section below.
-- **Still not-implemented scripts** (`scripted-demo`, `demo-server`): exit 1 with
-  a pointer to `docs/ROADMAP.md`, by design. (`test-java` is implemented.)
+- **`scripted-demo`** is implemented for M6.1. **Still not implemented:**
+  `demo-server` exits 1 with a roadmap pointer. (`test-java` is implemented.)
 
 ## Milestone 1 — external-step spike (DONE, verified 2026-07-20)
 
@@ -405,6 +405,21 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   reports zero hash mismatches, median **1.08 ms**, p95 **2.35 ms**, peak
   **300.1 MiB**, and no leak.
 
+## Milestone 6.1 — scripted expert team (DONE, verified 2026-07-20)
+
+- The live catalog now includes the scenario's `BUILD_LINE` objective, executed
+  through the same `TaskBoard`, reservations, `ExecuteSchematic`, build plans,
+  and structured announcements as the existing schematic task. Its data-backed
+  `copper_line_v1` plan builds two drills and a real conveyor-to-core trunk.
+- A three-agent fixed expert performs the complete economy/build/supply/defend/
+  rebuild loop. The five-seed set 12345/23456/34567/45678/987666666 wins at the
+  exact tick-8100 boundary with final core health 848/884/1001/920/983.
+- The constrained variant legally spends the loadout before committing work,
+  records one `resources_short` block, mines/delivers to recover, and wins with
+  992 core health. No reset hook, free items, teleport, or state poke is used.
+- `make scripted-demo` runs both transcripts noninteractively. **102 JUnit**,
+  **35 pytest**, and the full legacy smoke suite are green after the change.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -412,7 +427,8 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   board (M2), the **`agentcore.skill`** FSM layer (M3/M4), and the engine-free
   deterministic M5.1 candidate catalog. Board-to-skill wiring and measurable
   helper fulfilment, live reservations, lease recovery, announcements, and
-  metrics are wired through M5.6; reward logic (M7) remains.
+  metrics are wired through M5.6; the M6.1 expert uses that surface. Reward
+  logic (M7) remains.
 - **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
   loadable Mindustry plugin. See `agent-plugin/README.md`.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code

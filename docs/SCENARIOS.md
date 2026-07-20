@@ -222,6 +222,12 @@ truth and is validated against the scenario whitelist and engine recipes when
 the scenario loads. Agents may extend with a second wall column at `x=34` and a supply
 router at, e.g., `(30,24)`.
 
+**Reference production plan `copper_line_v1`
+(`scenarios/schematics/copper_line_v1.json`, loaded):** two fully-fed mechanical
+drills at anchors `(28,28)` and `(30,28)` feed a seven-conveyor trunk through
+`(26,25)` into the core. Its exact cost is 31 copper; the M6 expert proves
+sustained live inflow after task completion.
+
 **Expected precedence graph** (mirrors `docs/STRATEGY_NOTES.md` §3):
 
 ```
@@ -239,6 +245,10 @@ Siblings T1/T2/T3 run concurrently across the 2–4 agents (the Copper/Shield/Re
 split, brief §1).
 
 ## Scenario parameters and seeds
+
+The fixed v0 scripted evaluation set is **12345, 23456, 34567, 45678, and
+987666666**. It deliberately includes the determinism harness's distant seed so
+the native spawn-spread variation is represented without changing terrain.
 
 - **`root_seed` derivation** feeds `Mathf.rand` at reset (`docs/ENGINE_NOTES.md`
   §6); with `rules.waves = true`, pathfinding/targeting RNG seed from

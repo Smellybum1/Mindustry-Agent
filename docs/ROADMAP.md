@@ -404,6 +404,15 @@ win/loss/truncate termination, seed sensitivity. Remaining M6 = the team
 actually winning it, and humans watching it happen.
 
 ### 6.1 Scripted expert team
+- **DONE (verified 2026-07-20):** `BUILD_LINE` is now a live, reserved board
+  task backed by the checked-in `copper_line_v1` two-drill/seven-conveyor plan.
+  The three-agent expert builds the line and `east_duo_v1`, legally mines its
+  remaining budget, constructs a protected four-Duo defense, supplies/rebuilds
+  between waves, and wins at tick 8100 on seeds 12345, 23456, 34567, 45678,
+  and 987666666 (core health 848/884/1001/920/983). `make scripted-demo`
+  prints the structured announcement/outcome transcript plus a legal
+  insufficient-copper variant that emits `BLOCKED(resources_short)`, replans
+  through mining, and also wins.
 - Objective: a fixed policy (2 agents minimum, 3 preferred to exercise helping)
   that wins bootstrap-defense-v0: mine → build drill line per SCENARIOS.md →
   build+supply east_duo_v1 → rebuild between waves → survive wave 3. Built on

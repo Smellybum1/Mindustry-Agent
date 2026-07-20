@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M5 complete, verified 2026-07-20): the
+- **What currently works** (M0–M5 and M6.1 complete, verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
@@ -61,6 +61,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   keeps routine traffic silent. Its live helper episode emits 112 structured
   events but only four announcements, suppresses the same-tick accept line, and
   repeats the entire event/metric transcript byte-identically across fresh JVMs.
+  M6.1 adds the real two-drill copper line and a three-agent expert that wins
+  all three waves on the five-seed set. Final core health is
+  848/884/1001/920/983; the legal insufficient-copper variant emits a structured
+  block, replans through mining, and also wins.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
   a scripted full three-wave *win* path and evaluation/golden replay work remain
   in M6; rewards are empty until M7;
@@ -88,7 +92,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary, including ordered schematic build+supply, deterministic agent combat, and **post-wave wall placement with moving/re-pathing enemies** (79 hashes); reset purity and seed sensitivity also pass. Ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
 | `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.6 run: median 1.08 ms, p95 2.35 ms, peak 300.1 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
-| `make scripted-demo` | **Exits 1** — not implemented (M6). |
+| `make scripted-demo` | Runs the primary three-wave expert and the legal insufficient-copper replan variant; both end at tick 8100 with `outcome=win`. Verified 2026-07-20. |
 | `make demo-server` | **Exits 1** — not implemented (M6/M10). |
 
 (If `make` is unavailable on Windows, run `bash scripts/<name>.sh` directly.)
@@ -198,21 +202,20 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M6 item 6.1 (then the remaining M6
+**Authoritative work queue: `docs/ROADMAP.md` M6 item 6.2 (then the remaining M6
 items in order). Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M6.1: scripted expert team.** Build on M5 policies to survive all three
-   scenario waves across the defined seed set and wire `make scripted-demo`.
-2. **M6.2: evaluation summaries.** Emit per-episode JSONL metrics and aggregate
+1. **M6.2: evaluation summaries.** Emit per-episode JSONL metrics and aggregate
    scripted evaluation results into `docs/BENCHMARKS.md`.
-3. **M6.3: replay and golden traces.** Record complete coordination/action traces
+2. **M6.3: replay and golden traces.** Record complete coordination/action traces
    and verify a checked-in ≥10,000-tick replay in `make determinism`.
-4. **M6.4: agent-plugin demo server.** Run the same board/skills/policy in an
+3. **M6.4: agent-plugin demo server.** Run the same board/skills/policy in an
    ordinary human-joinable v159.7 dedicated server with emergency-stop commands.
-5. **M6.5: milestone closure.** Run the full acceptance matrix, update truthful
+4. **M6.5: milestone closure.** Run the full acceptance matrix, update truthful
    docs/benchmarks, and close M6 only when every exit criterion passes.
+5. **M7.1: learned selector baseline contract.** Begin only after M6 closure.
 
 ## Decisions
 
