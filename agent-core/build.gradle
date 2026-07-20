@@ -1,0 +1,23 @@
+// agent-core — agent identity, tasks, skills, coordination, observations,
+// reward accounting, and human-readable announcement templates (ADR-0005/0006).
+//
+// This module must NOT depend on any Python training library. It depends only on
+// the pinned upstream :core engine. See docs/ARCHITECTURE.md.
+//
+// Repositories and Java 17 release target come from the root build.gradle.
+
+sourceSets.main.java.srcDirs = ["src/main/java"]
+sourceSets.test.java.srcDirs = ["src/test/java"]
+
+dependencies{
+    implementation project(":core")
+
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.7.1"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:5.7.1"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.7.1"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+test{
+    useJUnitPlatform()
+}

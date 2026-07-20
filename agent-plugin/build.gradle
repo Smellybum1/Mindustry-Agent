@@ -1,0 +1,16 @@
+// agent-plugin — real-time dedicated-server adapter for the human demonstration
+// mode (brief §6.2). Loads into an ordinary Mindustry dedicated server, spawns or
+// registers server-controlled agent units, connects to a policy process (or a
+// scripted fallback), and reuses :agent-core for tasks, skills, and announcements.
+//
+// Stub module: no plugin.json / Mod entry point is wired yet (roadmap M6/M10).
+// See agent-plugin/README.md and docs/ARCHITECTURE.md.
+//
+// Repositories and Java 17 release target come from the root build.gradle.
+
+sourceSets.main.java.srcDirs = ["src/main/java"]
+
+dependencies{
+    implementation project(":core")
+    implementation project(":agent-core")
+}

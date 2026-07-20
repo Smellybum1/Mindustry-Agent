@@ -1,0 +1,47 @@
+// rl-server — custom externally-stepped headless launcher (ADR-0002).
+//
+// Replaces the wall-clock server loop with an externally controlled fixed-step
+// simulation loop. Depends on the pinned upstream :core (engine) and :server
+// (headless application/launcher plumbing). See docs/ARCHITECTURE.md.
+//
+// Repositories, Java 17 release target, and JavaCompile options are applied by
+// the root build.gradle to all subprojects; keep this file minimal.
+
+sourceSets.main.java.srcDirs = ["src/main/java"]
+
+project.ext.mainClassName = "mindustry.rl.RlServerMain"
+
+dependencies{
+    implementation project(":core")
+    implementation project(":server")
+}
+
+// Application-style fat jar: a runnable dist mirroring server/build.gradle's
+// `dist` task idiom so the reference runtime launches one JVM per environment.
+tasks.register('dist', Jar){
+    dependsOn configurations.runtimeClasspath
+    from files(sourceSets.main.output.classesDirs)
+    from files(sourceSets.main.output.resourcesDir)
+    from{ configurations.runtimeClasspath.collect{ it.isDirectory() ? it : zipTree(it) } }
+
+    duplicatesStrategy = 'exclude'
+
+    archiveBaseName = 'rl-server'
+
+    manifest{
+        attributes 'Main-Class': project.mainClassName
+    }
+}
+
+dist.dependsOn classes
+
+tasks.register('run', JavaExec){
+    dependsOn classes
+    mainClass = project.mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    ignoreExitValue = true
+    if(project.hasProperty("appArgs")){
+        args Eval.me(appArgs)
+    }
+}
