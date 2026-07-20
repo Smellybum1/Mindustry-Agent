@@ -165,12 +165,30 @@ the sim thread **before** advancing; each is validated and echoed in
             "dead": false, "build_queue_depth": 0, "build_plan_progress": 0.0},
   "skill": {"type": "MINE", "status": "SUCCEEDED", "reason": "TARGET_REACHED",
             "progress": 1.0, "next_retry_tick": -1},
+  "task_candidates": [
+    {"index": 0, "task_id": "T1:harvest:copper",
+     "task_type": "HARVEST_RESOURCE", "target": "50 copper",
+     "priority": 0.7, "estimated_ticks": 300, "estimated_cost": {},
+     "required_capabilities": ["carry", "mine"],
+     "valid": true, "invalid_reason": "", "utility": 2.41}
+  ],
   "team":  {"tick": 860, "wave": 1, "copper": 100, "lead": 0, "unit_count": 2,
             "building_count": 1, "broken_block_count": 0, "core_health": 1100.0,
             "enemy_count": 0, "enemy_total_health": 0.0, "turrets": [],
             "done": false}
 }
 ```
+
+M5.1 adds a bounded `task_candidates` array (at most eight) at every reset/step
+boundary. Candidate order is authoritative for the boundary and deterministic:
+fixed rule order, repeated entity targets by ascending engine ID, `WAIT` last.
+`valid=false` carries a typed `invalid_reason` (`missing_capability:<name>` or
+`out_of_range`). The same booleans appear at
+`action_masks[agent_id].candidate_task` in candidate-index order. This mask is
+observational in M5.1; M5.2 adds `SELECT_CANDIDATE_TASK[index]` and board actions.
+The utility is a deterministic `HandTunedUtility` score from the same captured
+engine boundary (priority, deficit/urgency, capability/role fit, distance,
+resource cost, and enemy danger).
 
 `skill.status` is one of `READY`/`RUNNING`/`SUCCEEDED`/`BLOCKED`/`FAILED`/`CANCELLED`;
 `skill.reason` is a machine-readable code (e.g. `ARRIVED`, `INVALID_TARGET`, `STUCK`,

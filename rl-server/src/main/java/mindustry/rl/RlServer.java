@@ -1,5 +1,6 @@
 package mindustry.rl;
 
+import agentcore.candidates.*;
 import agentcore.skill.*;
 import arc.*;
 import arc.math.*;
@@ -52,6 +53,7 @@ public final class RlServer{
     private final int port;
     //constructed in boot() after content.init() — the loader resolves Mindustry content ids.
     private Scenario scenario;
+    private EngineCandidates engineCandidates;
     private final FixedStepApplication app;
     private final RlAgentRegistry registry = new RlAgentRegistry();
 
@@ -68,6 +70,7 @@ public final class RlServer{
     private long uptimeTicks;
     private final AtomicBoolean stop = new AtomicBoolean(false);
     private Jval stepGameEvents = Jval.newArray();
+    private CandidateSet[] boundaryCandidates = new CandidateSet[0];
 
     private Method pathfinderStop;
     private Method controlPathStop;
@@ -124,6 +127,7 @@ public final class RlServer{
 
         //content is now loaded: parse the scenario spec (resolves block/unit/item ids)
         scenario = new Scenario();
+        engineCandidates = new EngineCandidates(scenario, registry);
 
         //Captured only while the simulation thread advances an external step.
         Events.on(UnitDamageEvent.class, this::recordUnitDamage);
@@ -289,7 +293,7 @@ public final class RlServer{
         r.put("episode_id", episodeId);
         r.put("tick", (long)state.tick);
         r.add("initial_observations", agentObservations());
-        r.add("action_masks", replicate(Jval.newObject(), agentCount));
+        r.add("action_masks", candidateMasks());
         r.put("state_hash", StateHasher.hash(registry));
         r.put("outcome", "running");
         r.add("metadata", scenario.metadata());
@@ -366,7 +370,7 @@ public final class RlServer{
         r.put("previous_tick", previousTick);
         r.put("tick", (long)state.tick);
         r.add("observations", obs);
-        r.add("action_masks", replicate(Jval.newObject(), agentCount));
+        r.add("action_masks", candidateMasks());
         r.add("action_results", actionResults);
         r.add("team_state", teamState());
         r.add("reward_breakdowns", replicate(Jval.newObject(), agentCount));
@@ -484,12 +488,17 @@ public final class RlServer{
     private Jval agentObservations(){
         Jval arr = Jval.newArray();
         Jval world = worldObs();
+        CandidateWorldSnapshot candidateWorld = engineCandidates.snapshot();
+        boundaryCandidates = new CandidateSet[agentCount];
         for(RlAgentRegistry.Agent agent : registry.agents()){
+            CandidateSet candidates = engineCandidates.generate(agent, candidateWorld);
+            boundaryCandidates[agent.index] = candidates;
             Jval o = Jval.newObject();
             o.put("agent_id", agent.index);
             o.add("unit", unitObs(agent));
             o.add("skill", skillObs(agent));
             o.add("team", Jval.read(world.toString(Jval.Jformat.plain)));
+            o.add("task_candidates", engineCandidates.observation(candidates));
             arr.add(o);
         }
         //fallback: if there are no agents (agent_count 0), still emit the world view
@@ -499,6 +508,18 @@ public final class RlServer{
             }
         }
         return arr;
+    }
+
+    private Jval candidateMasks(){
+        Jval out = Jval.newArray();
+        for(int i = 0; i < agentCount; i++){
+            Jval agentMask = Jval.newObject();
+            CandidateSet candidates = i < boundaryCandidates.length ? boundaryCandidates[i] : null;
+            agentMask.add("candidate_task", candidates == null ? Jval.newArray()
+                : engineCandidates.mask(candidates));
+            out.add(agentMask);
+        }
+        return out;
     }
 
     private Jval unitObs(RlAgentRegistry.Agent agent){

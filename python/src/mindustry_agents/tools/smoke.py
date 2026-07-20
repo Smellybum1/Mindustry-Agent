@@ -5,8 +5,9 @@ Launches one JVM, handshakes, resets with a fixed seed, steps 600 ticks in
 ``agent_0`` mines copper and delivers it to the core while ``agent_1`` targets a
 non-ore tile. It prints the acceptance transcript and — the core honesty check —
 asserts the core copper increases by **exactly** the amount delivered, sourced
-from real engine observations, with the full ledger printed. Exits 0 iff both the
-600-tick advance, mine/deliver ledger, and legal build ledger balance.
+from real engine observations, with the full ledger printed. M5.1 checks the
+candidate catalog at reset, after schematic/supply transitions, and during a
+wave. Exits 0 iff the stepping, ledgers, and candidate transitions all hold.
 
 Run: ``python -m mindustry_agents.tools.smoke [--port N] [--seed S]``
 """
@@ -40,6 +41,10 @@ def _skill(step, index):
 
 def _cargo(step, index):
     return int(step.observations[index]["unit"]["item_amount"])
+
+
+def _candidate_ids(observation):
+    return [candidate["task_id"] for candidate in observation["task_candidates"]]
 
 
 def run_skill_phase(env, episode_id: str, start_tick: int) -> int:
@@ -280,6 +285,18 @@ def run_schematic_phase(env, seed: int) -> int:
     if len(turrets_before) != 2 or [int(t["total_ammo"]) for t in turrets_before] != [0, 0]:
         print(f"FAIL: pre-supply turret summary mismatch: {turrets_before}", file=sys.stderr)
         return 1
+    candidate_ids = _candidate_ids(sr.observations[0])
+    if any(task_id.startswith("T3:build:") for task_id in candidate_ids):
+        print(f"FAIL: completed schematic remained a candidate: {candidate_ids}", file=sys.stderr)
+        return 1
+    if sum(task_id.startswith("T4:supply:") for task_id in candidate_ids) != 2:
+        print(f"FAIL: empty turrets did not produce two supply candidates: {candidate_ids}", file=sys.stderr)
+        return 1
+    if sr.action_masks[0]["candidate_task"] != [
+        candidate["valid"] for candidate in sr.observations[0]["task_candidates"]
+    ]:
+        print("FAIL: candidate validity and action mask diverged", file=sys.stderr)
+        return 1
     print("  SCHEMATIC BALANCE OK: 2 Duos + 5 walls completed in data order for 100 copper")
 
     print("\n== M4 SupplyBuilding phase ==")
@@ -327,6 +344,10 @@ def run_schematic_phase(env, seed: int) -> int:
         ok = ok and int(supplied.get("target_stock", -1)) == 30
     ok = ok and len(turrets_after) == 2
     ok = ok and [int(t["total_ammo"]) for t in turrets_after] == [30, 30]
+    ok = ok and not any(
+        task_id.startswith("T4:supply:")
+        for task_id in _candidate_ids(sr.observations[0])
+    )
     if not ok:
         print(
             f"FAIL: supply ledger mismatch: skills={skills} cargo={cargo} "
@@ -380,13 +401,16 @@ def run_rebuild_phase(env, seed: int) -> int:
     if broken != 1:
         print(f"FAIL: wave did not produce one broken wall plan: {sr.observations[0]['team']}", file=sys.stderr)
         return 1
-
     # Let the just-spawned daggers clear the tile and weapon range; rebuilding
     # while units overlap destroys the replacement later in the same update.
     sr = env.step(episode, expected_tick=tick, ticks_to_advance=180)
     tick = sr.tick
     if int(sr.observations[0]["team"]["broken_block_count"]) != 1:
         print("FAIL: broken wall plan disappeared before rebuild", file=sys.stderr)
+        return 1
+    candidate_ids = _candidate_ids(sr.observations[0])
+    if "T5:defend:east_lane" not in candidate_ids:
+        print(f"FAIL: active wave did not produce a defend candidate: {candidate_ids}", file=sys.stderr)
         return 1
     before_rebuild = _core_copper(sr)
 
@@ -454,6 +478,17 @@ def main(argv=None) -> int:
         print(f"        initial_obs={rr.initial_observations[0]}")
         if rr.tick != 0:
             print(f"FAIL: reset tick is {rr.tick}, expected 0", file=sys.stderr)
+            return 1
+        initial_candidates = _candidate_ids(rr.initial_observations[0])
+        if initial_candidates != [
+            "T1:harvest:copper",
+            "T3:build:east_duo_v1",
+            "runtime:wait",
+        ]:
+            print(f"FAIL: initial candidate catalog mismatch: {initial_candidates}", file=sys.stderr)
+            return 1
+        if rr.action_masks[0].get("candidate_task") != [True, True, True]:
+            print(f"FAIL: initial candidate mask mismatch: {rr.action_masks[0]}", file=sys.stderr)
             return 1
 
         tick = rr.tick

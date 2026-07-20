@@ -4,10 +4,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M4 complete, all verified 2026-07-20): the
+- **What currently works** (M0–M4 and M5.1 complete, all verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
-  board **and the M3/M4 `agentcore.skill` FSM layer** (95 JUnit tests), agent
+  board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
+  layer** (100 JUnit tests), agent
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
@@ -32,10 +33,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   plan/progress/turret observations and hashes ordered build plans, broken queues,
   and turret ammo. M4.8 proves the one-agent defended wave-1 path with an untouched
   core and retains the matched omitted-defense loss regression.
+  M5.1 parses the scored scenario objectives into a bounded, byte-stable per-agent
+  candidate catalog; engine-backed utility features and aligned capability/range
+  masks are live in reset/step observations. Smoke covers build/supply/defend
+  candidate transitions.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
-  the scenario now loads fully, but its scored `objectives[]` (M5 task-board
-  wiring) and a scripted full three-wave *win* path are still to come (M5–M6); `action_masks`
-  are empty placeholders; rewards are empty until M7;
+  task-board claiming/execution and a scripted full three-wave *win* path are
+  still to come (M5.2–M6); candidate masks are live but other action masks remain
+  pending; rewards are empty until M7;
   training/evaluation Python subpackages. See `docs/STATUS.md`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
@@ -55,10 +60,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make build` | Builds `rl-server:dist` + `agent-core`/`agent-plugin` classes, then validates the Python package import; ends `build: OK`, exit 0. |
 | `make test` | Runs the Python suite (30 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
-| `make test-java` | `gradlew agent-core:test` (95 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
+| `make test-java` | `gradlew agent-core:test` (100 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
 | `make smoke` | Runs exact stepping + M3/M4 resource ledgers, rebuild, RETREAT/DEFEND checks, the single-agent M4 acceptance (wave 1 clear at tick 3271, core 1100 HP), and both omitted-defense loss checks (tick 3450). Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
 | `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary, including ordered schematic build+supply, deterministic agent combat, and **post-wave wall placement with moving/re-pathing enemies** (79 hashes); reset purity and seed sensitivity also pass. Ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
-| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M4 run: median 0.94 ms, p95 1.87 ms, peak 297.2 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
+| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.1 run: median 1.00 ms, p95 1.88 ms, peak 300.0 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
 | `make demo-server` | **Exits 1** — not implemented (M6/M10). |
@@ -172,7 +177,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M5 item 5.1 (then M5/M6,
+**Authoritative work queue: `docs/ROADMAP.md` M5 item 5.2 (then M5/M6,
 also broken down there). Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
@@ -209,11 +214,11 @@ promotes the remainder and adds the M4 follow-ons it unblocks.)*
      `AgentBody` impl over the live server unit), announces via chat using
      `agentcore.announce`.
    - Acceptance: human can join locally (`make demo-server`) and watch it mine.
-5. **M5: task-board → skill wiring (candidate generation + selection).**
+5. **M5.2: task-board → skill wiring and protocol selection.**
    - Objective: connect the `agentcore` board (tasks/claims/reservations) to the
-     new skill layer — generate candidate tasks from scenario objectives, add the
-     `SELECT_CANDIDATE_TASK` action (D5 forward-ref) that decomposes a claimed task
-     into the M3 skills, and surface the task-board snapshot in observations (D6).
+     candidate catalog and skill layer — add the `SELECT_CANDIDATE_TASK` action
+     that decomposes a claimed task into M3/M4 skills, and surface board snapshots
+     plus drained events in observations/StepResponse.
    - Why: turns single scripted skills into coordinated multi-agent behaviour; the
      skill executors and per-agent obs from M3 are the substrate.
    - Acceptance: two agents claim disjoint copper patches and deliver without

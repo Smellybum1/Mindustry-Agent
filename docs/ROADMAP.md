@@ -264,6 +264,17 @@ The board lives on the sim thread inside rl-server (single-threaded by
 contract); Python sees it only through the protocol.
 
 ### 5.1 Candidate task generator
+- **DONE (verified 2026-07-20):** `agentcore.candidates` expands a fixed-order,
+  maximum-eight catalog from immutable boundary snapshots, sorts repeated turret
+  targets by engine ID, preserves `WAIT` as the final fallback, and emits typed
+  capability/range masks. Scenario parsing now exposes objective IDs and
+  thresholds, named regions, ore-patch IDs, and the reference schematic anchor;
+  the sim-thread `EngineCandidates` adapter supplies live core, footprint, ammo,
+  rebuild, wave, and enemy facts. `EngineFeatureSource` feeds deterministic
+  distance/deficit/danger values to `HandTunedUtility`. Five synthetic JUnit
+  tests prove byte stability, ordering, bounds, and both mask types. Live smoke
+  proves initial harvest/build/wait, post-build turret supply, post-supply removal,
+  aligned masks, and wave-time defense candidates.
 - Objective: deterministic generator producing a bounded list of valid
   `TaskSpec`s per agent per decision boundary, driven by scenario objectives +
   world state (brief §10.4): mine-when-core-below-threshold, build east_duo_v1

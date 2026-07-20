@@ -1,5 +1,6 @@
 package mindustry.rl;
 
+import agentcore.TaskType;
 import agentcore.skill.*;
 import arc.struct.*;
 import arc.util.serialization.*;
@@ -52,6 +53,11 @@ public final class Scenario{
 
     /** Ore patches: overlay ore floors placed on top of {@link #floor}. */
     public final Seq<OrePatch> orePatches = new Seq<>();
+    public final ObjectMap<String, OrePatch> orePatchesById = new ObjectMap<>();
+
+    /** Named objective regions and typed scenario objectives used by M5 candidates. */
+    public final ObjectMap<String, RegionSpec> regions = new ObjectMap<>();
+    public final ObjectMap<TaskType, ObjectiveSpec> objectives = new ObjectMap<>();
 
     /** Enemy ground spawn tiles ({@code Blocks.spawn} overlays); v0 has one, east. */
     public final Seq<SpawnPoint> spawnPoints = new Seq<>();
@@ -74,6 +80,8 @@ public final class Scenario{
     public final Seq<UnlockableContent> allowedContent = new Seq<>();
     /** Data-backed schematic catalog, keyed by wire/action name. */
     public final ObjectMap<String, SchematicSpec> schematics = new ObjectMap<>();
+    public final String referenceSchematicId;
+    public final int referenceAnchorX, referenceAnchorY;
 
     private final Jval raw;
 
@@ -106,8 +114,18 @@ public final class Scenario{
 
         for(Jval patch : raw.get("ore_patches").asArray()){
             Jval rect = patch.get("rect");
-            orePatches.add(new OrePatch(
+            OrePatch spec = new OrePatch(patch.getString("id", ""),
                 block(patch.getString("ore", "ore-copper")),
+                rect.getInt("x", 0), rect.getInt("y", 0),
+                rect.getInt("w", 0), rect.getInt("h", 0));
+            orePatches.add(spec);
+            orePatchesById.put(spec.id, spec);
+        }
+
+        Jval.JsonMap regionMap = raw.get("regions").asObject();
+        for(int i = 0; i < regionMap.size; i++){
+            Jval rect = regionMap.getValueAt(i).get("rect");
+            regions.put(regionMap.getKeyAt(i), new RegionSpec(regionMap.getKeyAt(i),
                 rect.getInt("x", 0), rect.getInt("y", 0),
                 rect.getInt("w", 0), rect.getInt("h", 0)));
         }
@@ -134,7 +152,31 @@ public final class Scenario{
 
         Jval reference = raw.get("reference_schematic");
         if(reference != null){
-            loadSchematic(reference.getString("path", ""), reference.getString("id", ""));
+            referenceSchematicId = reference.getString("id", "");
+            Jval anchor = reference.get("anchor");
+            referenceAnchorX = anchor.asArray().get(0).asInt();
+            referenceAnchorY = anchor.asArray().get(1).asInt();
+            loadSchematic(reference.getString("path", ""), referenceSchematicId);
+        }else{
+            referenceSchematicId = "";
+            referenceAnchorX = referenceAnchorY = 0;
+        }
+
+        for(Jval objective : raw.get("objectives").asArray()){
+            TaskType type = TaskType.valueOf(objective.getString("task_type", ""));
+            Jval target = objective.get("target");
+            Jval predicate = objective.get("predicate");
+            String targetRef = target == null ? "" : target.getString("ref", "");
+            int threshold = switch(type){
+                case HARVEST_RESOURCE -> predicate.getInt("amount", 0);
+                case SUPPLY_TURRET -> predicate.getInt("total_ammo", 0);
+                default -> 0;
+            };
+            ObjectiveSpec spec = new ObjectiveSpec(objective.getString("id", ""), type,
+                targetRef, threshold);
+            if(objectives.put(type, spec) != null){
+                throw new IllegalStateException("duplicate scenario objective type: " + type);
+            }
         }
 
         //--- wave schedule -> native wave timer + per-wave SpawnGroups -----------------
@@ -261,6 +303,18 @@ public final class Scenario{
         return schematics.get(name);
     }
 
+    public ObjectiveSpec objective(TaskType type){
+        return objectives.get(type);
+    }
+
+    public RegionSpec region(String id){
+        return regions.get(id);
+    }
+
+    public OrePatch orePatch(String id){
+        return orePatchesById.get(id);
+    }
+
     // ---------------------------------------------------------------- helpers
 
     private void loadSchematic(String path, String expectedName){
@@ -337,10 +391,11 @@ public final class Scenario{
 
     /** An ore overlay rectangle (inclusive tiles), SW corner + extents. */
     public static final class OrePatch{
+        public final String id;
         public final Block ore;
         public final int x, y, w, h;
-        OrePatch(Block ore, int x, int y, int w, int h){
-            this.ore = ore; this.x = x; this.y = y; this.w = w; this.h = h;
+        OrePatch(String id, Block ore, int x, int y, int w, int h){
+            this.id = id; this.ore = ore; this.x = x; this.y = y; this.w = w; this.h = h;
         }
         boolean contains(int tx, int ty){
             return tx >= x && tx < x + w && ty >= y && ty < y + h;
@@ -354,4 +409,6 @@ public final class Scenario{
     }
 
     public record SchematicSpec(String name, List<BuildSpec> blocks, int copperCost){}
+    public record RegionSpec(String id, int x, int y, int w, int h){}
+    public record ObjectiveSpec(String id, TaskType taskType, String targetRef, int threshold){}
 }

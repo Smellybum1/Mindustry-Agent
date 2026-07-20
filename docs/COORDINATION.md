@@ -204,14 +204,16 @@ commitments regardless of how the score is produced.
 
 ## How a future policy / skill layer plugs in
 
-1. A **candidate generator** (not here yet) produces a bounded list of legal
-   `TaskSpec`s and calls `board.propose(...)`.
+1. The M5.1 **candidate generator** produces a bounded, deterministic list of
+   masked `TaskSpec`s from scenario objectives and a sim-thread world snapshot.
+   M5.2 will propose selected candidates to the board.
 2. A **policy** (scripted now, learned later) scores candidates via a
    `TaskUtility`, then drives the board: `announceIntent` → `claim` → `start` →
    `reportProgress`/`heartbeat` → `complete`/`abandon`/`release`, plus
    `offerHelp`/`acceptHelp` and `reserve*`.
-3. A **skill executor** (not here yet) performs the real Mindustry actions for the
-   claimed task and feeds progress/blocked signals back into the board.
+3. The existing M3/M4 **skill executors** perform real Mindustry actions; M5.2
+   maps claimed task types to those skills and feeds progress/blocked signals
+   back into the board.
 4. **Telemetry / protocol** drains `board.events()` each step and serializes the
    structured events; `AnnouncementRenderer` renders the announceable subset for
    humans in demo mode.
@@ -224,8 +226,8 @@ a crash.
 
 - **Skills / engine adapter.** No mindustry `:core` types, no unit control, no
   build-plan execution, no real item transfer. Task *execution* comes later.
-- **Candidate generation.** The board stores and arbitrates tasks; it does not
-  invent them.
+- **Candidate generation ownership.** The board stores and arbitrates tasks; the
+  separate `agentcore.candidates` catalog invents them and remains engine-free.
 - **Capability enforcement on claim.** The board records `required_capabilities`
   but does not check the claiming agent against them — the candidate generator
   filters by capability upstream.

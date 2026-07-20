@@ -260,30 +260,55 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   was not claimed sufficient after this live test. The post-M4 1000-reset run
   reports zero hash mismatches, median 0.94 ms / p95 1.87 ms, and no leak.
 
+## Milestone 5.1 — candidate task generator (DONE, verified 2026-07-20)
+
+- **Engine-free catalog:** `agentcore.candidates` produces at most eight
+  fixed-order `TaskSpec` candidates per agent and boundary: low-core copper
+  harvest, absent reference schematic, ID-sorted under-ammo turret supply,
+  broken-block rebuild in `defense_block`, near/active-wave defense, and final
+  `WAIT`. Required capabilities and assignment range produce typed masks.
+- **Engine adapter:** `Scenario` exposes typed objective IDs/thresholds and named
+  targets from the checked-in JSON. `EngineCandidates` captures all mutable game
+  facts on the sim thread, while `EngineFeatureSource` turns the immutable
+  boundary into distance, deficit, resource-cost, and danger features for
+  `HandTunedUtility`.
+- **Protocol:** each agent observation adds bounded `task_candidates`; aligned
+  booleans are exposed at `action_masks[].candidate_task`. Selection/claiming is
+  intentionally not accepted until the M5.2 board adapter.
+- **Acceptance:** five synthetic JUnit tests repeat canonical bytes 100 times and
+  cover stable entity expansion, bounds, capability masks, range masks, and the
+  safe-only fallback. Live smoke verifies candidate transitions around schematic
+  build, turret supply, and wave defense.
+- **Verification:** `agent-core:test rl-server:dist` is green at **100 JUnit**;
+  pytest remains **30 passed**; full smoke and the **79-boundary** determinism
+  replay pass. The post-M5.1 1000-reset check has zero hash mismatches, median
+  **1.00 ms**, p95 **1.88 ms**, peak **300.0 MiB**, and no leak.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
   `CoordinationAct` (13), `SkillStatus` (6), `AgentId` record, the coordination
-  board (M2), and now the **`agentcore.skill`** FSM layer (M3, above). No task-board
-  wiring to skills (M5) or reward logic (M7) yet.
+  board (M2), the **`agentcore.skill`** FSM layer (M3/M4), and the engine-free
+  deterministic M5.1 candidate catalog. No task-board-to-skill wiring (M5.2) or
+  reward logic (M7) yet.
 - **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
   loadable Mindustry plugin. See `agent-plugin/README.md`.
 - **Python subpackages** `process`, `env`, and `tools` now carry real M1/M2 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark}.py`). `policies`, `training`,
   `evaluation`, `telemetry`: still documented skeletons.
-- **`scenarios/bootstrap-defense-v0/`**: **now fully loaded** by `rl-server` (world,
-  ore, waves, termination) — see the Scenario section above. Remaining spec-only
-  piece: the scored `objectives[]` (task-board wiring is M5). The
-  `reference_schematic` data and direct `SCHEMATIC` action are now live; the
-  autonomous scripted policy that selects it remains M5/M6 work.
+- **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
+  ore, waves, termination, objective IDs/targets/thresholds, named regions, and
+  reference schematic). M5.1 turns those objectives plus live world state into
+  scored candidates; board claiming/execution is M5.2 and autonomous policy is
+  M5.3/M6.
 - **`configs/`**: example YAML stubs marked unused-yet.
 
 ## What is unverified
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 95 tests
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 100 tests
   green, including 31 M3/M4 skill tests). `agent-plugin` build still unverified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
