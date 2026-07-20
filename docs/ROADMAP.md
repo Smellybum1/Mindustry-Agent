@@ -694,6 +694,15 @@ CI-beats greedy-utility on held-out variants. Everything else stays scripted.
 Not the destination — the proof that learning plugs into the seam.
 
 ### 8.1 M8_DESIGN.md before any code
+- **DONE (verified 2026-07-21):** `docs/M8_DESIGN.md` pins a single learned
+  selector seat, the ordinary 10-way masked task-action surface, exact
+  `8×37` candidate and 56-scalar schemas, deterministic forced lifecycle
+  actions, event-boundary cadence, feed-forward actor/critic, run manifests,
+  matched/permanent comparators, and the one-way held-out promotion protocol.
+  `docs/REWARD_AUDIT.md` drafts all five v1 components with 15 component-specific
+  exploit hypotheses plus an eight-case cross-component adversarial matrix.
+  Every row remains `drafted-not-implemented`: no reward, torch dependency,
+  model, trainer, spatial grid, or held-out execution was added.
 - Featurization: fixed-size candidate table (≤8 rows × feature vector from
   the existing UtilityFeatures + task-type one-hot + board context), scalar
   team/self features; NO spatial grids yet. Exact tensor shapes + masks.

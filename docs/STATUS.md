@@ -702,8 +702,24 @@ repository-evidence mapping used for the M6 audit is:
   pure greedy is 5/5 fixed and 9/10 dev. No intervals or dev outcomes authorize
   promotion. ADR-0012 now requires strict held-out win-rate CI separation.
 - No held-out episode was run. No reward, dependency, engine pin, upstream
-  file, or `docs/ENGINE_NOTES.md` changed. Next: M8.1 design and reward exploit
-  audit before any learned-policy code.
+  file, or `docs/ENGINE_NOTES.md` changed. M8.1 then completed the design and
+  reward exploit audit before any learned-policy code.
+
+## Milestone 8.1 â€” learned-selector design + reward audit (DONE, verified 2026-07-21)
+
+- `docs/M8_DESIGN.md` fixes the scope at one learned selector seat over the
+  existing typed board protocol. It specifies the 10-way action/mask contract,
+  `8×37` candidate tensor, 56 scalar/context features, forced lifecycle action
+  handling, event-driven cadence, feed-forward model, manifest, matched
+  ablation, and held-out promotion rules.
+- `selector_reward_v1-draft` contains only milestone high-water, terminal,
+  unresolved-tick, invalid-action, and abandonment-liability components.
+  `docs/REWARD_AUDIT.md` gives each component three exploit hypotheses and
+  concrete adversarial cases, plus an eight-case cross-component matrix.
+- All reward rows remain `drafted-not-implemented`. No component influences an
+  environment or policy, and no torch/model/trainer/lockfile, spatial grid,
+  engine change, or held-out run was added. Next: M8.2 ADR-0011, exact RL
+  dependency boundary, lockfile, and WSL2 bring-up/reverification.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

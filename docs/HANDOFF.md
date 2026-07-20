@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M6 and M7.1–M7.6 complete, verified
+- **What currently works** (M0–M6, M7.1–M7.6, and M8.1 complete, verified
   2026-07-21): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
@@ -143,13 +143,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   Adaptive-v1 is 5/5 fixed and 8/10 dev; pure
   greedy is 5/5 fixed and 9/10 dev. These are descriptive only: ADR-0012 now
   requires strict held-out win-rate CI separation, and held-out remains sealed.
+  M8.1 is design-only and complete: `docs/M8_DESIGN.md` pins the one-seat
+  selector tensors/masks/model/cadence/manifests/promotion protocol, while
+  `docs/REWARD_AUDIT.md` drafts five hard-gated components with 15 exploit
+  hypotheses and eight cross-component adversaries. No reward or RL dependency
+  is implemented.
 - **What is stubbed**: training rewards remain empty pending the M8 reward-audit
   gate; learned training code and the
   M10 human goal/override/study surface remain future work.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
-- **Next roadmap item**: M8.1, write `docs/M8_DESIGN.md` and complete the reward
-  exploit audit before any training code.
+- **Next roadmap item**: M8.2, accept ADR-0011 and establish the exact RL-only
+  dependency/lockfile boundary with WSL2 re-verification.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -302,18 +307,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M8 item 8.1.
+**Authoritative work queue: `docs/ROADMAP.md` M8 item 8.2.
 Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M8.1: M8_DESIGN + reward exploit audit.** Specify the selector boundary,
-   features, masks, rewards, anti-exploit checks, and promotion protocol first.
-2. **M8.2: ADR-0011 RL dependency boundary.** Keep env/protocol dependency-free.
-3. **M8.3: throughput bring-up.** Prove the WSL2 training gate before training.
-4. **M8.4: one learned selector seat.** Use the same public task-action seam.
-5. **M8.5: ablations + held-out promotion gate.** Run held-out only once the
+1. **M8.2: ADR-0011 RL dependency boundary.** Keep env/protocol dependency-free.
+2. **M8.3: throughput bring-up.** Prove the WSL2 training gate before training.
+3. **M8.4: one learned selector seat.** Use the same public task-action seam.
+4. **M8.5: ablations + held-out promotion gate.** Run held-out only once the
    policy and code are frozen.
+5. **M9.1: M9 design gate.** Begin only after the single learned seat promotes.
 
 ## Decisions
 
