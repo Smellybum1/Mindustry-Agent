@@ -290,6 +290,8 @@ public final class RlServer{
         Jval options = req.get("options");
         engineCandidates.setOverlapProbe(options != null && options.isObject()
             && options.getBool("reservation_overlap_probe", false));
+        coordination.setSharedExpertEnabled(options != null && options.isObject()
+            && options.getBool("shared_expert_policy", false));
 
         doReset(rootSeed);
         if(options != null && options.isObject()){

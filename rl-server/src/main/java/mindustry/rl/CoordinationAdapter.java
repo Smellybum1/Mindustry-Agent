@@ -4,6 +4,7 @@ import agentcore.*;
 import agentcore.announce.*;
 import agentcore.board.*;
 import agentcore.candidates.*;
+import agentcore.coordination.*;
 import agentcore.event.*;
 import agentcore.reservation.*;
 import agentcore.skill.*;
@@ -25,6 +26,8 @@ public final class CoordinationAdapter{
     private final RlAgentRegistry registry;
     private final TaskBoard board = new TaskBoard();
     private final AnnouncementRenderer announcementRenderer = new AnnouncementRenderer();
+    private boolean sharedExpertEnabled;
+    private ExpertCoordinationDriver sharedExpert;
     private Assignment[] assignments = new Assignment[0];
     private String[] helperDeliveryTasks = new String[0];
     private int[] helperDeliveryCargo = new int[0];
@@ -44,7 +47,12 @@ public final class CoordinationAdapter{
         this.registry = registry;
     }
 
-    public TaskBoard board(){ return board; }
+    public TaskBoard board(){ return sharedExpert == null ? board : sharedExpert.board(); }
+
+    /** Opt-in scripted policy used by the M7.2 fixed-step/demo parity acceptance path. */
+    public void setSharedExpertEnabled(boolean enabled){
+        sharedExpertEnabled = enabled;
+    }
 
     public void reset(long episodeId, int agentCount){
         board.reset(episodeId);
@@ -62,6 +70,14 @@ public final class CoordinationAdapter{
         tasksAbandoned = 0;
         structuredMessages = 0;
         announcedMessages = 0;
+        if(sharedExpertEnabled){
+            sharedExpert = new ExpertCoordinationDriver(
+                ExpertCoordinationPlans.fromScenario(scenario), new SharedExpertPort());
+            sharedExpert.reset(episodeId);
+            sharedExpert.startOpening((long)state.tick);
+        }else{
+            sharedExpert = null;
+        }
     }
 
     /** Configure the deterministic M5.5 validation hook after an episode reset. */
@@ -75,6 +91,14 @@ public final class CoordinationAdapter{
     public Jval applyActions(Jval actionsValue, CandidateSet[] candidates){
         Jval out = Jval.newArray();
         if(actionsValue == null || !actionsValue.isArray()) return out;
+
+        if(sharedExpert != null){
+            for(Jval action : actionsValue.asArray()){
+                out.add(result(action.getInt("agent_id", -1), false,
+                    "shared_policy_owned", ""));
+            }
+            return out;
+        }
 
         var actions = actionsValue.asArray();
         Jval[] results = new Jval[actions.size];
@@ -176,6 +200,15 @@ public final class CoordinationAdapter{
 
     /** Advance lifecycle/leases after each engine tick. */
     public void tick(long tick){
+        if(sharedExpert != null){
+            int enemies = 0;
+            for(Unit unit : Groups.unit){
+                if(unit.team == scenario.waveTeam && !unit.dead()) enemies++;
+            }
+            Building core = scenario.coreTeam.core();
+            sharedExpert.update(tick, enemies, core == null ? 0 : Math.round(core.health));
+            return;
+        }
         for(int i = 0; i < assignments.length; i++){
             RlAgentRegistry.Agent agent = registry.get(i);
             syncHelperDelivery(i, agent, tick);
@@ -244,6 +277,18 @@ public final class CoordinationAdapter{
     public Jval actionMask(int agentIndex, CandidateSet candidates){
         Jval out = Jval.newObject();
         Jval select = Jval.newArray();
+        if(sharedExpert != null){
+            for(int i = 0; i < candidates.candidates().size(); i++) select.add(false);
+            out.add("candidate_task", select);
+            out.put("continue_current_task", false);
+            out.put("abandon", false);
+            out.put("request_help", false);
+            out.put("wait", false);
+            out.add("offer_help", Jval.newArray());
+            out.add("accept_help", Jval.newArray());
+            out.add("decline_help", Jval.newArray());
+            return out;
+        }
         boolean idle = current(agentIndex) == null;
         for(TaskCandidate candidate : candidates.candidates()){
             select.add(idle && candidate.valid() && taskAvailable(candidate.task()));
@@ -282,7 +327,8 @@ public final class CoordinationAdapter{
 
     public Jval boardSnapshot(){
         Jval out = Jval.newArray();
-        List<TaskState> tasks = board.tasks();
+        TaskBoard activeBoard = board();
+        List<TaskState> tasks = activeBoard.tasks();
         int count = Math.min(MAX_BOARD_TASKS, tasks.size());
         for(int i = 0; i < count; i++){
             TaskState task = tasks.get(i);
@@ -298,14 +344,14 @@ public final class CoordinationAdapter{
             item.put("reason", task.reasonCode() == null ? "" : task.reasonCode());
             item.put("pending_offer_count", task.pendingOffers().size());
             item.put("helper_count", task.helpers().size());
-            item.put("reservation_count", board.reservations().countForTask(task.taskId()));
+            item.put("reservation_count", activeBoard.reservations().countForTask(task.taskId()));
             int tileReservations = 0;
-            for(TileReservation reservation : board.reservations().tileReservations()){
+            for(TileReservation reservation : activeBoard.reservations().tileReservations()){
                 if(reservation.taskId().equals(task.taskId())) tileReservations++;
             }
             item.put("tile_reservation_count", tileReservations);
             Jval resources = Jval.newObject();
-            for(ResourceReservation reservation : board.reservations().resourceReservations()){
+            for(ResourceReservation reservation : activeBoard.reservations().resourceReservations()){
                 if(!reservation.taskId().equals(task.taskId())) continue;
                 resources.put(reservation.item(), resources.getInt(reservation.item(), 0)
                     + reservation.amount());
@@ -328,12 +374,17 @@ public final class CoordinationAdapter{
             : idleAgentTicks / (double)agentTicks);
         out.put("structured_messages", structuredMessages);
         out.put("announced_messages", announcedMessages);
+        if(sharedExpert != null){
+            out.put("shared_decision_count", sharedExpert.selectionCount());
+            out.put("shared_decision_digest", sharedExpert.selectionDigest());
+            out.put("shared_policy_phase", sharedExpert.phase());
+        }
         return out;
     }
 
     public Jval drainEvents(){
         Jval out = Jval.newArray();
-        for(CoordinationEvent event : board.events().drain()){
+        for(CoordinationEvent event : board().events().drain()){
             structuredMessages++;
             if(event.announce()) announcedMessages++;
             out.add(event(event));
@@ -833,6 +884,46 @@ public final class CoordinationAdapter{
         out.put("announce", event.announce());
         out.put("announcement", event.announce() ? announcementRenderer.render(event) : "");
         return out;
+    }
+
+    private final class SharedExpertPort implements ExpertCoordinationDriver.Port{
+        @Override
+        public SkillResult lastResult(int agentIndex){
+            RlAgentRegistry.Agent agent = registry.get(agentIndex);
+            return agent == null ? SkillResult.ready() : agent.controller.lastResult();
+        }
+
+        @Override
+        public Skill activeSkill(int agentIndex){
+            RlAgentRegistry.Agent agent = registry.get(agentIndex);
+            return agent == null ? null : agent.controller.activeSkill();
+        }
+
+        @Override
+        public void setSkill(int agentIndex, Skill skill){
+            RlAgentRegistry.Agent agent = registry.get(agentIndex);
+            if(agent != null) agent.controller.setSkill(skill);
+        }
+
+        @Override
+        public void cancelWork(int agentIndex){
+            RlAgentRegistry.Agent agent = registry.get(agentIndex);
+            if(agent == null) return;
+            agent.controller.cancelBuildPlans();
+            agent.controller.clearSkill();
+        }
+
+        @Override
+        public void ensureAgent(int agentIndex){
+            //The externally stepped registry remains fixed for an episode. The shared
+            //policy can continue with surviving slots; demo mode owns explicit rebinding.
+        }
+
+        @Override
+        public boolean buildingMatches(ExpertCoordinationDriver.BuildPlacement placement){
+            Building building = world.build(placement.x(), placement.y());
+            return building != null && building.block.name.equals(placement.block());
+        }
     }
 
     private record PendingSelection(

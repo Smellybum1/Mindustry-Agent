@@ -13,7 +13,7 @@ SCRIPTS := scripts
 
 .PHONY: help codex-status bootstrap build test test-java test-python smoke \
         determinism stress-reset benchmark scripted-demo evaluate-scripted \
-        demo-server
+        coordination-parity demo-server
 
 help: ## List available targets
 	@echo "mindustry-coop-agents — make targets:"
@@ -29,6 +29,7 @@ help: ## List available targets
 	@echo "  benchmark     scaling + timing report (M2)"
 	@echo "  scripted-demo headless scripted team (M6)"
 	@echo "  evaluate-scripted five-seed episode summaries (M6)"
+	@echo "  coordination-parity shared policy decision parity (M7.2)"
 	@echo "  demo-server   human-joinable real-time server (M6/M10)"
 
 codex-status: ## Print compact read-only takeover status
@@ -66,6 +67,9 @@ scripted-demo: ## Headless scripted team (M6)
 
 evaluate-scripted: ## Evaluate the scripted M6 expert
 	@bash $(SCRIPTS)/evaluate-scripted.sh
+
+coordination-parity: ## Shared fixed-step/demo decision parity (M7.2)
+	@bash $(SCRIPTS)/coordination-parity.sh
 
 demo-server: ## Human-joinable real-time server (M6/M10)
 	@bash $(SCRIPTS)/demo-server.sh
