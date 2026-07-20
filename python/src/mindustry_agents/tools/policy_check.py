@@ -47,10 +47,12 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
             events.extend(response.task_events)
             transcript.append(
                 {
+                    "tick": response.tick,
                     "hash": response.state_hash,
                     "results": response.action_results,
                     "board": response.task_board,
                     "events": response.task_events,
+                    "metrics": response.coordination_metrics,
                 }
             )
             return response
@@ -210,6 +212,7 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
             "delivered": mined_amount,
             "core_before_delivery": core_before_delivery,
             "core_final": int(observations[0]["team"]["copper"]),
+            "metrics": complete.coordination_metrics,
         }
         if verbose:
             print(

@@ -369,6 +369,16 @@ contract); Python sees it only through the protocol.
   "failure" is part of the action trace).
 
 ### 5.6 Announcements end-to-end + metrics
+- **DONE (verified 2026-07-20):** every task event now carries an
+  `announcement` rendered solely from its structured fields when the board's
+  rate limiter sets `announce=true`; routine progress/heartbeats carry an empty
+  string. Step infos expose cumulative duplicate-work, completion/abandonment,
+  agent/idle tick, idle-fraction, and structured/announced message counters.
+  The live runner prints four coherent lines (intent, resources-short block,
+  helper offer, completion), verifies structured request/accept/fulfilment and
+  progress ordering, proves same-tick accept suppression and no routine text,
+  bounds the trace at 112 structured/four announced messages, and repeats all
+  events/metrics byte-identically in a second JVM.
 - Objective: rendered announcement strings (templates exist) surfaced in
   StepResponse `task_events[]` and printed by the python runner exactly at
   meaningful transitions (rate limits enforced by the board; heartbeats never
@@ -383,7 +393,7 @@ Exit criteria (brief, unchanged):
 - [x] A helper contract is accepted and completed
 - [x] Duplicate task claims are resolved
 - [x] Stale claim expires after a simulated agent failure
-- [ ] Communication rate limit passes tests
+- [x] Communication rate limit passes tests
 
 ## Milestone 6: Bootstrap Defense v0
 

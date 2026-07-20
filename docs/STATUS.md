@@ -17,7 +17,7 @@ and what is unverified.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **31 Python
+  client, parallel-env facade, vector collector) is stdlib-only too. **35 Python
   tests pass** via `python -m pytest python/tests -q` (verified 2026-07-20 with
   pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
@@ -384,20 +384,41 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   reports zero hash mismatches, median **1.15 ms**, p95 **2.46 ms**, peak
   **298.4 MiB**, and no leak.
 
+## Milestone 5.6 — announcements and coordination metrics (DONE, verified 2026-07-20)
+
+- **Structured-first announcements:** each `task_events[]` entry now carries an
+  `announcement` rendered only from its structured `CoordinationEvent` fields.
+  It is non-empty exactly when the deterministic board rate limiter sets
+  `announce=true`; progress, heartbeats, and internal transitions remain silent.
+- **Episode metrics:** every step reports cumulative duplicate-work incidents,
+  completed/abandoned tasks, agent/idle ticks, idle fraction, and structured/
+  announced message counts. Python copies the object into each step `info` and
+  no metric contributes to reward or simulation state.
+- **Acceptance:** `tools.announcement_check` isolates the live M5.3 helper run,
+  verifies intent/progress/block/request/offer/accept/fulfil/complete ordering,
+  same-tick accept suppression, silent routine traffic, and bounds of 112
+  structured/four announced messages. It prints four coherent lines (intent,
+  resources-short block, helper offer, completion); the complete event/metric
+  transcript is byte-identical across two fresh JVMs.
+- **Verification:** **101 JUnit**, **35 pytest**, full smoke, and the
+  **79-boundary** determinism replay are green. The post-M5.6 1000-reset check
+  reports zero hash mismatches, median **1.08 ms**, p95 **2.35 ms**, peak
+  **300.1 MiB**, and no leak.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
   `CoordinationAct` (13), `SkillStatus` (6), `AgentId` record, the coordination
   board (M2), the **`agentcore.skill`** FSM layer (M3/M4), and the engine-free
   deterministic M5.1 candidate catalog. Board-to-skill wiring and measurable
-  helper fulfilment, live reservations, and lease recovery are wired through
-  M5.5; announcement metrics (M5.6) and reward logic (M7) remain.
+  helper fulfilment, live reservations, lease recovery, announcements, and
+  metrics are wired through M5.6; reward logic (M7) remains.
 - **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
   loadable Mindustry plugin. See `agent-plugin/README.md`.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check}.py` plus the
-  reservation/chaos checks). `training`,
+  reservation/chaos/announcement checks). `training`,
   `evaluation`, and `telemetry` remain documented skeletons.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and

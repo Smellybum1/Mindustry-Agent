@@ -52,6 +52,7 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
                     "results": response.action_results,
                     "board": response.task_board,
                     "events": response.task_events,
+                    "metrics": response.coordination_metrics,
                     "outcome": response.outcome,
                     "terminations": response.terminations,
                 }

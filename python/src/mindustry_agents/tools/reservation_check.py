@@ -52,6 +52,7 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
                     "results": response.action_results,
                     "board": response.task_board,
                     "events": response.task_events,
+                    "metrics": response.coordination_metrics,
                 }
             )
             return response
@@ -93,6 +94,7 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
         )
         assert conflict["agent_id"] == loser
         assert conflict["related_agent_id"] == expected_winner
+        assert contested.coordination_metrics["duplicate_work_incidents"] == 1
 
         planned = step(30)
         assert observations[expected_winner]["unit"]["build_queue_depth"] > 0
@@ -192,6 +194,7 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
                 and event["act"] == "COMPLETE"
             ),
             "final_tick": tick,
+            "metrics": supplied.coordination_metrics,
         }
         if verbose:
             print(

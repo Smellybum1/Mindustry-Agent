@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M4 and M5.1–5.5 complete, verified 2026-07-20): the
+- **What currently works** (M0–M5 complete, verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
@@ -56,9 +56,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   run freezes agent 0 mid-build, expires its lease and reservations at tick 627,
   lets agent 1 reclaim/complete at tick 893, reaches a normal terminal outcome,
   and repeats byte-identically through tick 3600.
+  M5.6 renders human-readable announcements exclusively from structured events,
+  exposes cumulative duplicate/completion/abandonment/idle/message metrics, and
+  keeps routine traffic silent. Its live helper episode emits 112 structured
+  events but only four announcements, suppresses the same-tick accept line, and
+  repeats the entire event/metric transcript byte-identically across fresh JVMs.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
-  coordination metrics and a scripted full three-wave *win* path are still to
-  come (M5.6–M6); rewards are empty until M7;
+  a scripted full three-wave *win* path and evaluation/golden replay work remain
+  in M6; rewards are empty until M7;
   training/evaluation Python subpackages. See `docs/STATUS.md`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
@@ -79,9 +84,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make test` | Runs the Python suite (35 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (101 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
-| `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.5 coordination/policy/reservation/chaos checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
+| `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
 | `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary, including ordered schematic build+supply, deterministic agent combat, and **post-wave wall placement with moving/re-pathing enemies** (79 hashes); reset purity and seed sensitivity also pass. Ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
-| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.5 run: median 1.15 ms, p95 2.46 ms, peak 298.4 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
+| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.6 run: median 1.08 ms, p95 2.35 ms, peak 300.1 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
 | `make demo-server` | **Exits 1** — not implemented (M6/M10). |
@@ -154,13 +159,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 31 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M5
+- **Passing**: 35 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M5
   action/board/event roundtrips, `test_supervisor.py`, `test_env.py`; fake-server
-  subprocess, no JVM, fast) and 100 Java JUnit tests (`agent-core`, incl.
+  subprocess, no JVM, fast) and 101 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
-  the shell scripts (smoke/determinism/stress-reset/benchmark) — smoke now includes
-  the coordination replay and determinism the scripted skill trace; all verified
-  green 2026-07-20.
+  the shell scripts (smoke/determinism/stress-reset/benchmark) — smoke includes
+  the M5.2–M5.6 live coordination checks and determinism the scripted skill
+  trace; all verified green 2026-07-20.
 - **Skipped**: none.
 - **Flaky**: the stress-reset *leak* check was flaky under the original
   growth-trend methodology (passed for the author, failed on re-verification);
@@ -193,21 +198,21 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M5 item 5.6 (then M6,
-also broken down there). Handoff prompt for the next agent:
+**Authoritative work queue: `docs/ROADMAP.md` M6 item 6.1 (then the remaining M6
+items in order). Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M5.6: announcements and coordination metrics.** Surface rendered messages
-   and bounded task/idle/duplicate counters; prove rate limits in a live run.
-2. **M6.1: scripted expert team.** Build on M5 policies to survive all three
+1. **M6.1: scripted expert team.** Build on M5 policies to survive all three
    scenario waves across the defined seed set and wire `make scripted-demo`.
-3. **M6.2: evaluation summaries.** Emit per-episode JSONL metrics and aggregate
+2. **M6.2: evaluation summaries.** Emit per-episode JSONL metrics and aggregate
    scripted evaluation results into `docs/BENCHMARKS.md`.
-4. **M6.3: replay and golden traces.** Record complete coordination/action traces
+3. **M6.3: replay and golden traces.** Record complete coordination/action traces
    and verify a checked-in ≥10,000-tick replay in `make determinism`.
-5. **M6.4: agent-plugin demo server.** Run the same board/skills/policy in an
+4. **M6.4: agent-plugin demo server.** Run the same board/skills/policy in an
    ordinary human-joinable v159.7 dedicated server with emergency-stop commands.
+5. **M6.5: milestone closure.** Run the full acceptance matrix, update truthful
+   docs/benchmarks, and close M6 only when every exit criterion passes.
 
 ## Decisions
 
