@@ -276,6 +276,10 @@ def run_schematic_phase(env, seed: int) -> int:
     if before - after != 100:
         print(f"FAIL: east_duo_v1 cost {before - after} != 100", file=sys.stderr)
         return 1
+    turrets_before = sr.observations[0]["team"].get("turrets", [])
+    if len(turrets_before) != 2 or [int(t["total_ammo"]) for t in turrets_before] != [0, 0]:
+        print(f"FAIL: pre-supply turret summary mismatch: {turrets_before}", file=sys.stderr)
+        return 1
     print("  SCHEMATIC BALANCE OK: 2 Duos + 5 walls completed in data order for 100 copper")
 
     print("\n== M4 SupplyBuilding phase ==")
@@ -308,6 +312,7 @@ def run_schematic_phase(env, seed: int) -> int:
     supply_after = _core_copper(sr)
     skills = [_skill(sr, 0), _skill(sr, 1)]
     cargo = [int(sr.observations[i]["unit"]["item_amount"]) for i in range(2)]
+    turrets_after = sr.observations[0]["team"].get("turrets", [])
     print(f"  core copper before/after          : {supply_before} -> {supply_after}")
     for i, supplied in enumerate(skills):
         print(
@@ -320,8 +325,14 @@ def run_schematic_phase(env, seed: int) -> int:
         ok = ok and int(supplied.get("delivered", -1)) == 15
         ok = ok and int(supplied.get("target_stock_before", -1)) == 0
         ok = ok and int(supplied.get("target_stock", -1)) == 30
+    ok = ok and len(turrets_after) == 2
+    ok = ok and [int(t["total_ammo"]) for t in turrets_after] == [30, 30]
     if not ok:
-        print(f"FAIL: supply ledger mismatch: skills={skills} cargo={cargo}", file=sys.stderr)
+        print(
+            f"FAIL: supply ledger mismatch: skills={skills} cargo={cargo} "
+            f"turrets={turrets_after}",
+            file=sys.stderr,
+        )
         return 1
     print("  SUPPLY BALANCE OK: two Duos accepted 15 copper each as 30 ammo; core spent exactly 30")
     return 0

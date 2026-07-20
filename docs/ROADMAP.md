@@ -220,6 +220,15 @@ below; implement in order — 4.1/4.2 unblock everything else.
 - Depends: 4.1; scenario waves (done).
 
 ### 4.7 Protocol/observation/hash closure
+- **DONE (verified 2026-07-20):** agent observations expose ordered queue depth,
+  current first-plan identity, and live progress; team observations expose the
+  broken-block count and an ID-sorted turret summary with native `totalAmmo`.
+  The canonical hash now includes every unit's build plans in queue order, every
+  active team's broken-block plans in queue order (including removal markers),
+  and turret ammo. Python adds typed plan/turret observation records and a
+  round-trip test (30 pytest total). Live checks observe plan progress 0.000 ->
+  0.056 before retreat and both supplied Duos at 30 ammo; deterministic replay
+  remains the cross-process proof for the expanded hash.
 - Objective: per-agent build-queue depth + plan progress in observations; team
   broken-block count; turret ammo in team/building summary; hash gains ordered
   build plans, broken-block queue, turret ammo (M4_DESIGN §Hash).

@@ -3,6 +3,7 @@
 import json
 import struct
 import unittest
+from dataclasses import asdict
 
 from mindustry_agents import protocol as p
 
@@ -62,6 +63,27 @@ class TestFraming(unittest.TestCase):
         msg = p.StepRequest(request_id=1, episode_id="e", agent_actions=actions)
         back = p.decode(p.encode(msg))
         self.assertEqual(back.agent_actions, actions)
+
+    def test_m4_observation_records_roundtrip_in_step(self):
+        plan = p.BuildPlanObservation(
+            block="duo", tile_x=32, tile_y=23, rotation=1, progress=0.375
+        )
+        turret = p.TurretAmmoObservation(
+            id=12, block="duo", tile_x=32, tile_y=23, total_ammo=30
+        )
+        observations = [
+            {
+                "agent_id": 0,
+                "unit": {
+                    "build_queue_depth": 1,
+                    "build_plan_progress": plan.progress,
+                    "build_plan": asdict(plan),
+                },
+                "team": {"broken_block_count": 2, "turrets": [asdict(turret)]},
+            }
+        ]
+        back = p.decode(p.encode(p.StepResponse(observations=observations)))
+        self.assertEqual(back.observations, observations)
 
     def test_unknown_type_rejected(self):
         with self.assertRaises(p.ProtocolError):

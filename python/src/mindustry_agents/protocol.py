@@ -46,6 +46,29 @@ class Timing:
     io_ms: float = 0.0
 
 
+@dataclass(frozen=True)
+class BuildPlanObservation:
+    """Current first engine build plan in ordered queue execution order (M4.7)."""
+
+    breaking: bool = False
+    block: str = ""
+    tile_x: int = 0
+    tile_y: int = 0
+    rotation: int = 0
+    progress: float = 0.0
+
+
+@dataclass(frozen=True)
+class TurretAmmoObservation:
+    """One ID-ordered team turret summary using native ammo units (M4.7)."""
+
+    id: int = 0
+    block: str = ""
+    tile_x: int = 0
+    tile_y: int = 0
+    total_ammo: int = 0
+
+
 @dataclass
 class HandshakeRequest:
     TYPE: ClassVar[str] = "handshake_request"

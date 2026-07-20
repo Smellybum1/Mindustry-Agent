@@ -17,7 +17,7 @@ and what is unverified.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **29 Python
+  client, parallel-env facade, vector collector) is stdlib-only too. **30 Python
   tests pass** via `python -m pytest python/tests -q` (verified 2026-07-20 with
   pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
@@ -151,7 +151,7 @@ All M3 exit criteria met on this machine; **zero upstream engine edits**.
   (agent units respawned identically). Stress-reset (1000 in-JVM resets) stays
   green with the registry rebuild: 0 hash mismatches, no leak.
 - **Verified**: `./gradlew agent-core:test` (77) + `rl-server:dist` green;
-  `pytest python/tests -q` → 29 pass; `bash scripts/smoke.sh` → exit 0 (600-tick
+  `pytest python/tests -q` → 30 pass; `bash scripts/smoke.sh` → exit 0 (600-tick
   advance + balanced ledger); `bash scripts/determinism.sh` → exit 0;
   `bash scripts/stress-reset.sh` → exit 0.
 
@@ -196,7 +196,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   matching `docs/SCENARIOS.md` arithmetic (c) (travel + ~8.9 s contact kill), well
   under the cap.
 - **Verified 2026-07-20**: `./gradlew rl-server:dist agent-core:test` green (91
-  JUnit); `pytest python/tests -q` → 29 pass; `bash scripts/smoke.sh` → exit 0
+  JUnit); `pytest python/tests -q` → 30 pass; `bash scripts/smoke.sh` → exit 0
   (mine/deliver ledger **and** scenario check); `bash scripts/determinism.sh` → exit
   0 (moving enemies + seed sensitivity); `bash scripts/stress-reset.sh` → exit 0
   (1000 resets, 0 mismatches, reset latency median **1.07 ms** / p95 2.11 ms /
@@ -206,7 +206,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 
 - **4.1 dynamic re-path determinism is done (verified 2026-07-20).** The minimal
   upstream amendment is catalogued in `docs/UPSTREAM_PATCHES.md`. Validation:
-  `./gradlew agent-core:test rl-server:dist` green; 29 pytest green; smoke and
+  `./gradlew agent-core:test rl-server:dist` green; 30 pytest green; smoke and
   scenario loss path green; determinism green at all 73 boundaries across two
   fresh JVMs, including a wall placed after wave 1 and live enemy re-pathing.
 - **4.2 BuildBlock is done (verified 2026-07-20).** The engine-free FSM extends
@@ -244,8 +244,14 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   duration telemetry. Live acceptance observed dagger aggregate HP 450 -> 443.
   Four new FSM tests bring the Java total to 95; the combat-bearing 79-boundary
   replay matches across fresh JVMs.
-- **4.7–4.8 remain unimplemented.** M4.6 added build-queue depth early, but plan
-  progress, turret summaries, and canonical-hash closure remain owned by 4.7.
+- **M4.7 — protocol/observation/hash closure is complete.** Unit observations
+  now include queue depth plus the current ordered plan and progress; team
+  observations include ID-sorted turret ammo summaries. The canonical hash adds
+  ordered unit build plans, ordered per-team broken-block plans (including
+  removal markers), and native turret `totalAmmo`. Live checks observe plan
+  progress 0.000 -> 0.056 and supplied Duo summaries `[30, 30]`; Python protocol
+  records/round-trip coverage bring pytest to 30.
+- **4.8 remains unimplemented.**
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

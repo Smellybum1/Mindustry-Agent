@@ -1,9 +1,12 @@
 package mindustry.rl;
 
 import arc.struct.*;
+import mindustry.entities.units.*;
 import mindustry.game.*;
+import mindustry.game.Teams.*;
 import mindustry.gen.*;
 import mindustry.type.*;
+import mindustry.world.blocks.defense.turrets.Turret.*;
 import mindustry.world.blocks.storage.CoreBlock.*;
 
 import java.io.*;
@@ -25,8 +28,10 @@ import static mindustry.Vars.*;
  * scenarios across episodes/JVMs produce identical hashes.
  *
  * <p>Inputs: {@code state.tick}, {@code state.wave}, per-core team + item counts, all
- * buildings (sorted by id: block/team/quantized pos/health), all units (sorted by id:
- * type/team/quantized pos/health). Never includes {@code Fx}/render/{@code Time.millis}.
+ * buildings (sorted by id: block/team/quantized pos/health/turret ammo), all units
+ * (sorted by id: type/team/quantized pose/health/cargo/ordered build plans), and
+ * active-team broken-block queues in team-id then queue order. Never includes
+ * {@code Fx}/render/{@code Time.millis}.
  */
 public final class StateHasher{
     private static final long QUANT = 1000L; //1e-3 precision
@@ -77,6 +82,12 @@ public final class StateHasher{
                 out.writeLong(quant(b.x));
                 out.writeLong(quant(b.y));
                 out.writeLong(quant(b.health));
+                if(b instanceof TurretBuild turret){
+                    out.writeBoolean(true);
+                    out.writeInt(turret.totalAmmo);
+                }else{
+                    out.writeBoolean(false);
+                }
             }
 
             //units, sorted by id (none in M1, but future-proof and part of the canon)
@@ -103,6 +114,36 @@ public final class StateHasher{
                 }else{
                     out.writeInt(-1);
                     out.writeInt(0);
+                }
+
+                //BuilderComp owns an ordered Seq; index order is the execution order.
+                out.writeInt(u.plans().size);
+                for(BuildPlan plan : u.plans()){
+                    out.writeBoolean(plan.breaking);
+                    out.writeInt(plan.block == null ? -1 : plan.block.id);
+                    out.writeInt(plan.x);
+                    out.writeInt(plan.y);
+                    out.writeInt(plan.rotation);
+                    out.writeLong(quant(plan.progress));
+                }
+            }
+
+            //Ghost rebuild plans are an ordered Queue per active team. Include removed
+            //markers because they affect the next stable snapshot/removal pass.
+            Seq<TeamData> teamData = new Seq<>();
+            teamData.addAll(state.teams.getActive());
+            teamData.sort(Comparator.comparingInt(td -> td.team.id));
+            out.writeInt(teamData.size);
+            for(TeamData data : teamData){
+                out.writeInt(data.team.id);
+                out.writeInt(data.plans.size);
+                for(int i = 0; i < data.plans.size; i++){
+                    BlockPlan plan = data.plans.get(i);
+                    out.writeInt(plan.block == null ? -1 : plan.block.id);
+                    out.writeInt(plan.x);
+                    out.writeInt(plan.y);
+                    out.writeInt(plan.rotation);
+                    out.writeBoolean(plan.removed);
                 }
             }
 

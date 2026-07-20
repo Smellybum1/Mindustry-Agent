@@ -17,6 +17,8 @@ import mindustry.gen.*;
 import mindustry.mod.*;
 import mindustry.mod.Mods.*;
 import mindustry.net.Net;
+import mindustry.entities.units.*;
+import mindustry.world.blocks.defense.turrets.Turret.*;
 
 import java.io.*;
 import java.net.*;
@@ -515,6 +517,18 @@ public final class RlServer{
         o.put("flag", u.flag);
         o.put("dead", u.dead());
         o.put("build_queue_depth", u.plans().size);
+        BuildPlan plan = u.plans().isEmpty() ? null : u.plans().first();
+        o.put("build_plan_progress", plan == null ? 0f : plan.progress);
+        if(plan != null){
+            Jval current = Jval.newObject();
+            current.put("breaking", plan.breaking);
+            current.put("block", plan.block == null ? "" : plan.block.name);
+            current.put("tile_x", plan.x);
+            current.put("tile_y", plan.y);
+            current.put("rotation", plan.rotation);
+            current.put("progress", plan.progress);
+            o.add("build_plan", current);
+        }
         return o;
     }
 
@@ -561,6 +575,7 @@ public final class RlServer{
         o.put("enemy_count", state.enemies);
         o.put("enemy_total_health", enemyTotalHealth());
         o.put("enemy_nearest_core_dist", enemyNearestCoreDist(core));
+        o.add("turrets", turretSummary());
         o.put("done", state.gameOver);
         return o;
     }
@@ -593,6 +608,29 @@ public final class RlServer{
             if(u.team() == scenario.waveTeam && !u.dead()) total += u.health;
         }
         return total;
+    }
+
+    private Jval turretSummary(){
+        arc.struct.Seq<Building> turrets = new arc.struct.Seq<>();
+        for(Building building : Groups.build){
+            if(building.team == scenario.coreTeam && building instanceof TurretBuild){
+                turrets.add(building);
+            }
+        }
+        turrets.sort(java.util.Comparator.comparingInt(Building::id));
+
+        Jval out = Jval.newArray();
+        for(Building building : turrets){
+            TurretBuild turret = (TurretBuild)building;
+            Jval item = Jval.newObject();
+            item.put("id", building.id);
+            item.put("block", building.block.name);
+            item.put("tile_x", building.tileX());
+            item.put("tile_y", building.tileY());
+            item.put("total_ammo", turret.totalAmmo);
+            out.add(item);
+        }
+        return out;
     }
 
     private void recordUnitDamage(UnitDamageEvent event){

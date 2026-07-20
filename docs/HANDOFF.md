@@ -4,14 +4,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M3 + M4.1–4.6 complete, all verified 2026-07-20): the
+- **What currently works** (M0–M3 + M4.1–4.7 complete, all verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board **and the M3/M4 `agentcore.skill` FSM layer** (95 JUnit tests), agent
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 29 pytest
+  crash-replacement, PettingZoo-shaped facade, vector collector; 30 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
   `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
   east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
@@ -28,7 +28,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   units each; the full trace matches 79 boundaries. M4.5 rebuilds an engine-recorded
   wave-destroyed wall for an exact second six-copper charge. M4.6 adds deterministic
   alpha defense, agent-attributed damage events, and plan-cancelling core retreat
-  (95 JUnit tests total); combat is present in the 79-boundary replay.
+  (95 JUnit tests total); combat is present in the 79-boundary replay. M4.7 closes
+  plan/progress/turret observations and hashes ordered build plans, broken queues,
+  and turret ammo.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
   the scenario now loads fully, but its scored `objectives[]` (M5 task-board
   wiring) and a scripted *win* path are still to come (M4–M6); `action_masks`
@@ -50,7 +52,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + `agent-core`/`agent-plugin` classes, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (29 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (30 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (95 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
 | `make smoke` | Runs exact stepping + M3/M4 resource ledgers, rebuild, live RETREAT queue cancellation, agent-attributed DEFEND damage (enemy HP 450 -> 443), and the undefended scenario loss path. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
@@ -130,7 +132,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 29 Python tests (`test_import.py`, `test_protocol.py` incl. the M3
+- **Passing**: 30 Python tests (`test_import.py`, `test_protocol.py` incl. the M3/M4
   `action_results`/`agent_actions` roundtrips, `test_supervisor.py`, `test_env.py`;
   fake-server subprocess, no JVM, fast) and 95 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
@@ -169,7 +171,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M4 items 4.7–4.8 (then M5/M6,
+**Authoritative work queue: `docs/ROADMAP.md` M4 item 4.8 (then M5/M6,
 also broken down there). Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.

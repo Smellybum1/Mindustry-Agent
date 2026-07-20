@@ -125,6 +125,11 @@ selects the nearest targetable enemy (lowest unit id breaks exact distance ties)
 while the engine owns aim/range/fire legality. Its skill observation adds
 `target_id`, `duration_ticks`, and `elapsed_ticks`. `RETREAT {}` cancels the
 unit's engine build queue, ceases fire, preserves cargo, and returns to its core.
+The unit observation always includes `build_queue_depth` and
+`build_plan_progress`; when the queue is non-empty it also includes `build_plan`
+as `{breaking, block, tile_x, tile_y, rotation, progress}` for the first engine
+queue entry. The team observation includes `turrets[]`, sorted by building id,
+with `{id, block, tile_x, tile_y, total_ammo}` in native ammo units.
 Actions are applied on
 the sim thread **before** advancing; each is validated and echoed in
 `action_results[]` — an invalid action is rejected there, never crashes the step.
@@ -157,20 +162,24 @@ the sim thread **before** advancing; each is validated and echoed in
   "agent_id": 0,
   "unit":  {"x": 216.0, "y": 192.0, "vx": 0.0, "vy": 0.0, "health": 150.0,
             "item": "copper", "item_amount": 21, "mining": false, "flag": 0.0,
-            "dead": false, "build_queue_depth": 0},
+            "dead": false, "build_queue_depth": 0, "build_plan_progress": 0.0},
   "skill": {"type": "MINE", "status": "SUCCEEDED", "reason": "TARGET_REACHED",
             "progress": 1.0, "next_retry_tick": -1},
   "team":  {"tick": 860, "wave": 1, "copper": 100, "lead": 0, "unit_count": 2,
             "building_count": 1, "broken_block_count": 0, "core_health": 1100.0,
-            "enemy_count": 0, "enemy_total_health": 0.0, "done": false}
+            "enemy_count": 0, "enemy_total_health": 0.0, "turrets": [],
+            "done": false}
 }
 ```
 
 `skill.status` is one of `READY`/`RUNNING`/`SUCCEEDED`/`BLOCKED`/`FAILED`/`CANCELLED`;
 `skill.reason` is a machine-readable code (e.g. `ARRIVED`, `INVALID_TARGET`, `STUCK`,
 `DELIVERED`, `BUILT`, `RESOURCES_SHORT`, `OCCUPIED`, `OUT_OF_RANGE`,
-`PLAN_REMOVED`). Raw floats are reported here; the state hash quantizes positions/velocity
-to 1e-3 (docs/M3_DESIGN.md D6/D7).
+`PLAN_REMOVED`). Raw floats are reported here; the state hash quantizes positions,
+velocity, health, skill progress, and build-plan progress to 1e-3. In addition to
+sorted entities and inventories it includes each unit's build queue in engine order,
+each active team's broken-block queue in engine order, and native turret ammo
+(docs/M3_DESIGN.md D6/D7; docs/M4_DESIGN.md Hash).
 
 ### 2.4 Health and control
 

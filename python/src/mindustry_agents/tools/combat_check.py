@@ -47,12 +47,29 @@ def main(argv=None) -> int:
             ],
         )
         queued = int(sr.observations[0]["unit"]["build_queue_depth"])
+        plan = sr.observations[0]["unit"].get("build_plan", {})
+        progress_before = float(sr.observations[0]["unit"]["build_plan_progress"])
+        plan_hash = sr.state_hash
         cargo_before = int(sr.observations[0]["unit"]["item_amount"])
         if queued <= 0:
             print("FAIL: live build plan was not queued before retreat", file=sys.stderr)
             return 1
+        if plan.get("block") != "copper-wall" or plan.get("tile_x") != 30:
+            print(f"FAIL: current build-plan observation is wrong: {plan}", file=sys.stderr)
+            return 1
 
         tick = sr.tick
+        sr = env.step(episode, expected_tick=tick, ticks_to_advance=1)
+        tick = sr.tick
+        progress_after = float(sr.observations[0]["unit"]["build_plan_progress"])
+        if progress_after <= progress_before or sr.state_hash == plan_hash:
+            print(
+                f"FAIL: build plan/hash did not advance: progress "
+                f"{progress_before} -> {progress_after}",
+                file=sys.stderr,
+            )
+            return 1
+
         sr = env.step(
             episode,
             expected_tick=tick,
@@ -74,7 +91,10 @@ def main(argv=None) -> int:
         if cargo_after != cargo_before:
             print(f"FAIL: RETREAT changed cargo {cargo_before} -> {cargo_after}", file=sys.stderr)
             return 1
-        print(f"retreat: cancelled queue={queued} cargo={cargo_after} tick={tick}")
+        print(
+            f"retreat: cancelled queue={queued} plan_progress="
+            f"{progress_before:.3f}->{progress_after:.3f} cargo={cargo_after} tick={tick}"
+        )
 
         # DEFEND positions before wave 1, then uses engine aim/fire against daggers.
         rr = env.reset(root_seed=args.seed, agent_count=1)
