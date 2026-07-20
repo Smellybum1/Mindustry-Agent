@@ -17,7 +17,7 @@ and what is unverified.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **26 Python
+  client, parallel-env facade, vector collector) is stdlib-only too. **29 Python
   tests pass** via `python -m pytest python/tests -q` (verified 2026-07-20 with
   pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
@@ -155,6 +155,47 @@ All M3 exit criteria met on this machine; **zero upstream engine edits**.
   advance + balanced ledger); `bash scripts/determinism.sh` → exit 0;
   `bash scripts/stress-reset.sh` → exit 0.
 
+## Scenario — full `bootstrap-defense-v0` world + deterministic waves (DONE, verified 2026-07-20)
+
+The minimal M1 world is replaced by the full scenario, driven from
+`scenarios/bootstrap-defense-v0/scenario.json` (bundled onto the classpath at
+build time — the JSON is the single source of truth, nothing hardcoded).
+
+- **World**: 48×48 flat stone; three ore patches (copper A `27..32,27..32`, copper
+  B `28..31,18..21`, lead C `16..19,27..30`); one `coreShard` (sharded) at (24,24);
+  one east enemy spawn (`Blocks.spawn` overlay) at (46,24); loadout **250 copper**.
+- **Waves**: 3 / 4 / 5 daggers at ticks **2700 / 4500 / 6300**, from the east
+  spawn, via the engine's **native** `WaveSpawner` — tick-exact under the fixed
+  step (`state.wavetime` decrements by `Time.delta == 1.0`/tick; verified). Wave
+  spawn spread is seeded from `root_seed`. `dropZoneRadius` shrunk to 24 u so the
+  per-wave shockwave does not nuke the nearby core (`docs/SCENARIOS.md` impl notes).
+- **Deterministic enemy pathing**: the flow-field `Pathfinder` thread stays stopped;
+  the field is preloaded at world load and converged each tick on the sim thread via
+  the new **`Pathfinder.syncUpdate()` upstream patch** (`docs/UPSTREAM_PATCHES.md`
+  entry 2 — the one sanctioned engine edit, with a full determinism audit).
+  `randomWaveAI = false` keeps the `hashCode()`-seeded RNG branch out of play.
+- **Termination**: step response now carries honest `terminations`/`truncations`
+  and an `outcome` field (`running`/`win`/`loss`/`truncated`): win = core alive at
+  tick 8100, loss = core destroyed, truncate at the 9000-tick cap. Observations gain
+  `time_to_next_wave`, `enemy_count`, and `enemy_nearest_core_dist`. State hash gains
+  `state.wavetime` + `state.enemies`.
+- **Seed lever is now real**: same seed → identical hashes across processes/resets;
+  **different seeds diverge** once enemies spawn (spawn spread). Both asserted by
+  `tools/determinism.py` (now steps past wave 1 with moving enemies; **65** hash
+  boundaries) — this is the first genuine seed-sensitivity evidence.
+- **Undefended loss**: `tools/scenario_check.py` (wired into `scripts/smoke.sh`)
+  fast-forwards past wave 1, asserts daggers spawned (`enemy_count > 0`) and **move**
+  toward the core (nearest-core distance strictly decreases), then runs on to the
+  loss. Observed: core destroyed at tick **~3420–3450** (~12 s after wave 1),
+  matching `docs/SCENARIOS.md` arithmetic (c) (travel + ~8.9 s contact kill), well
+  under the cap.
+- **Verified 2026-07-20**: `./gradlew rl-server:dist agent-core:test` green (77
+  JUnit); `pytest python/tests -q` → 29 pass; `bash scripts/smoke.sh` → exit 0
+  (mine/deliver ledger **and** scenario check); `bash scripts/determinism.sh` → exit
+  0 (moving enemies + seed sensitivity); `bash scripts/stress-reset.sh` → exit 0
+  (1000 resets, 0 mismatches, reset latency median **1.07 ms** / p95 2.11 ms /
+  max 44.94 ms warmup — comfortably under the 250 ms gate even with the bigger world).
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -167,7 +208,10 @@ All M3 exit criteria met on this machine; **zero upstream engine edits**.
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark}.py`). `policies`, `training`,
   `evaluation`, `telemetry`: still documented skeletons.
-- **`scenarios/bootstrap-defense-v0/`**: spec stub only.
+- **`scenarios/bootstrap-defense-v0/`**: **now fully loaded** by `rl-server` (world,
+  ore, waves, termination) — see the Scenario section above. Remaining spec-only
+  pieces: the scored `objectives[]` (task-board wiring is M5) and the
+  `reference_schematic` build (a scripted-agent target for M6).
 - **`configs/`**: example YAML stubs marked unused-yet.
 
 ## What is unverified

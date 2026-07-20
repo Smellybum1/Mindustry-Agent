@@ -122,9 +122,19 @@ The defensive line (built by agents, not part of the terrain):
   | 2 | 4500 | 75 s | 4 × dagger |
   | 3 | 6300 | 105 s | 5 × dagger |
 
-  Total 12 daggers. No spawn-position jitter in v0 (see §Parameters/seeds); all
-  spawn at the single point. Ground units, so `Pathfinder` seeds from
-  `state.wave` deterministically (`docs/ENGINE_NOTES.md` §6).
+  Total 12 daggers, all from the single east spawn point. Ground units, so
+  `Pathfinder` seeds from `state.wave` deterministically (`docs/ENGINE_NOTES.md` §6).
+
+  > **Implementation deviation (loader):** the loader drives waves with the
+  > engine's **native** `WaveSpawner` (tick-exact under the fixed step; see
+  > §Implementation notes). That spawner applies a deterministic **±2-tile ground
+  > spawn spread** (`Mathf.range`, seeded from `root_seed`), so unit spawn
+  > *positions* within the spawn tile **do vary with `root_seed`** — contrary to
+  > the "no spawn-position jitter" wording originally in this section. The *map*
+  > (ore/core/spawn tile) is still identical across seeds; only the wave unit
+  > positions differ. This was kept on purpose: it is the engine's own deterministic
+  > wave path, and it makes the seed lever observable (post-wave state hashes are
+  > now seed-sensitive), which the milestone required.
 - **Win condition:** the core is alive (`health > 0`) at **tick 8100** (30 s
   after wave-3 spawn — ample to clear 5 daggers, see arithmetic). Reaching that
   tick with the core intact = episode success.
@@ -221,11 +231,16 @@ split, brief §1).
 - **`root_seed` derivation** feeds `Mathf.rand` at reset (`docs/ENGINE_NOTES.md`
   §6); with `rules.waves = true`, pathfinding/targeting RNG seed from
   `state.wave` and are deterministic regardless of `root_seed`.
-- **v0: nothing varies with `root_seed`.** Ore patches, spawn point, wave ticks,
-  wave composition, and loadout are all fixed constants of `scenario_version = 1`.
-  `root_seed` still flows through for replay-manifest completeness and to exercise
-  the seeding path, but two different seeds produce identical maps in v0. This is
-  intentional (brief §12: prove the stack before adding variation).
+- **v0: the *map* does not vary with `root_seed`.** Ore patches, spawn point, wave
+  ticks, wave composition, and loadout are all fixed constants of
+  `scenario_version = 1`, so two different seeds produce identical **terrain**.
+  **Deviation from the original wording ("nothing varies"):** the native
+  `WaveSpawner`'s ±2-tile ground spawn spread is seeded from `root_seed`, so **enemy
+  wave unit spawn positions do vary with `root_seed`** (see the wave-schedule note
+  above). Consequently post-wave `state_hash`es are seed-sensitive: same seed →
+  identical, different seed → different (asserted by `tools/determinism.py`
+  check 4). This does **not** bump `scenario_version` (the observable *map/schedule*
+  contract is unchanged; spawn spread is not in the version-pinned list).
 - **Planned variation axes (v1+, each bumps `scenario_version`; brief §13 Stage G):**
   1. Ore patch positions jitter (patch A/B/C origin offset within bounded boxes,
      seeded from `root_seed`).
@@ -263,6 +278,42 @@ post-hoc narration (brief §1, §11.7):
    state hashes at checkpoint ticks (brief §7.6, Gate 1).
 9. The demo server lets a human join and observe the same announcements in real
    time (human-demonstration mode, brief §1).
+
+## Implementation notes (loader)
+
+The loader (`rl-server/.../Scenario.java`) reads this scenario's machine-readable
+spec directly from `scenarios/bootstrap-defense-v0/scenario.json` (copied onto the
+classpath at build time by `rl-server/build.gradle` `processResources`), so the
+JSON is the single source of truth — no scenario constant is hardcoded. Three
+engine-level choices are worth recording:
+
+1. **Native wave timer (tick-exact under the fixed step).** Waves are configured
+   on `state.rules` (`waves = true`, `waveTimer = true`, `initialWaveSpacing =
+   2700`, `waveSpacing = 1800`, one `SpawnGroup` per wave pinned to a single wave
+   index via `begin == end`) and fired by the engine's own timer. Because
+   `state.wavetime` decrements by `Time.delta == 1.0` every tick under the fixed
+   `1/60` step, `runWave()` fires at exactly ticks **2700 / 4500 / 6300** with no
+   wall-clock dependency (verified). `winWave = 0` and `waitEnemies = false` so the
+   timer never pauses and the engine never declares its own win — the stepper owns
+   termination. No explicit spawn-driving was needed.
+
+2. **Drop-zone shockwave radius.** Each wave, `WaveSpawner` fires a spawn-clearing
+   shockwave of radius `rules.dropZoneRadius` (engine default **300 u**) that deals
+   effectively infinite damage. The east spawn (46,24) sits only ~172 u from the
+   core (24,24), so the default would **destroy the core on wave 1**. The loader
+   sets `dropZoneRadius = tilesize * 3 = 24 u` — enough to clear the spawn tile and
+   its ±2-tile spread, but far short of the core. This is an engine-default
+   override, not a change to any value this spec pins; it is invisible to the
+   observable contract.
+
+3. **Deterministic enemy pathing.** Enemy ground units use the flow-field
+   `Pathfinder`, whose background thread is stopped for determinism; the field is
+   preloaded synchronously at world load and converged each tick on the sim thread
+   via a minimal upstream `Pathfinder.syncUpdate()` patch (`docs/UPSTREAM_PATCHES.md`).
+   `randomWaveAI = false` keeps the `hashCode()`-seeded target `Rand` branch out of
+   play. Result: daggers march the lane toward the core deterministically; an
+   **undefended** core is destroyed ~12 s after wave 1 spawns (travel + the ~8.9 s
+   contact-kill of arithmetic (c)), well before the 9000-tick cap.
 
 ## Versioning
 

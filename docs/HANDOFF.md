@@ -12,12 +12,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
   crash-replacement, PettingZoo-shaped facade, vector collector; 29 pytest
-  green), benchmarks recorded in `docs/BENCHMARKS.md`, and the full
-  `bootstrap-defense-v0` scenario spec (`docs/SCENARIOS.md`, `scenario.json`).
+  green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
+  `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
+  east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
+  2700/4500/6300 with moving enemies, win/loss/truncate termination). Enemy pathing
+  is deterministic via the one sanctioned upstream patch, `Pathfinder.syncUpdate()`
+  (`docs/UPSTREAM_PATCHES.md`). The **seed lever is now real**: different seeds
+  diverge once enemies spawn, same seed stays identical.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
-  the scenario *loader* still builds the minimal M1 world, not the full
-  bootstrap-defense-v0 spec (no waves yet — so the seed lever is still trivial);
-  `action_masks` are empty placeholders; rewards are empty until M7;
+  the scenario now loads fully, but its scored `objectives[]` (M5 task-board
+  wiring), the reference-schematic build, and a scripted *win* path are still to
+  come (M4–M6); `action_masks` are empty placeholders; rewards are empty until M7;
   training/evaluation Python subpackages. See `docs/STATUS.md`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
@@ -35,11 +40,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + `agent-core`/`agent-plugin` classes, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (26 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (29 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (64 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
-| `make smoke` | Builds `rl-server.jar` if missing, launches one JVM, handshake + `reset(seed=12345)` + 10×60 plain ticks, **then the M3 scripted skill phase** (`agent_0` mines copper → delivers; `agent_1` mines a non-ore tile → `BLOCKED(INVALID_TARGET)`); asserts the core-copper ledger balances exactly (100 → 121, delta == delivered); ends `SMOKE OK: 600-tick advance + mine/deliver ledger balanced`, exit 0. Verified 2026-07-20. |
-| `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary (reset + 10 plain chunks + **24 scripted skill steps** = 35 hashes), so the skill state machines are covered; in-JVM reset purity check (agent units respawned identically); ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
+| `make smoke` | Builds `rl-server.jar` if missing, launches one JVM, handshake + `reset(seed=12345)` + 10×60 plain ticks, **then the M3 scripted skill phase** (`agent_0` mines copper → delivers; `agent_1` mines a non-ore tile → `BLOCKED(INVALID_TARGET)`); asserts the core-copper ledger balances exactly (250 → 271, delta == delivered); **then the scenario check** (`tools/scenario_check.py`): waves spawn, daggers path to the core, undefended core lost before the cap; ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
+| `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary (reset + 10 plain chunks + 24 scripted skill steps + **the post-wave phase with moving enemies** = 65 hashes); in-JVM reset purity; **plus check 4 — seed sensitivity: a different seed diverges post-wave** while the same seed stays identical; ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
 | `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling (within-cap growth is heap ergonomics, informational only — trend thresholds proved flaky); ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20 (twice, incl. after the methodology fix). |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
@@ -64,7 +69,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `python/tests/fake_server.py` (a subprocess speaking the real protocol).
 - **Important classes/functions**: `mindustry.rl.RlServer` (fixed-step launcher +
   control loop; see `FixedStepApplication`, `FixedStepGraphics`, `StateHasher`,
-  `ScenarioLoader` in `rl-server/src/main/java/mindustry/rl/`);
+  and `Scenario` — the JSON-driven world/waves/termination loader — in
+  `rl-server/src/main/java/mindustry/rl/`);
   `agentcore.board.TaskBoard` + `agentcore.{task,reservation,event,announce,utility}`
   (see `docs/COORDINATION.md`);
   `mindustry_agents.protocol.{encode,decode,decode_stream,read_message}`;
@@ -96,8 +102,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   Temurin 21.0.11, Python 3.12.5.
 - **Single-environment ticks/sec**: ~76,000 engine-only (~1,270× real-time);
   ~54,000 end-to-end through the Python client.
-- **Reset latency**: median ~0.8 ms over 1000 resets (p95 ~1.5 ms) — Gate 2
-  (<250 ms) passes comfortably; no JVM restart, no stale state.
+- **Reset latency**: median ~0.8 ms over 1000 resets (p95 ~1.5 ms) for the M1/M2
+  minimal world; **~1.07 ms median (p95 2.11 ms, max 44.94 ms warmup) for the full
+  bootstrap-defense-v0 world** (bigger map + wave/flowfield preload) — Gate 2
+  (<250 ms) still passes with a huge margin; no JVM restart, no stale state.
 - **Memory per JVM**: peak working set ~285 MiB over 1000 resets with `-Xmx350m`
   (well under the 650 MiB leak ceiling); no per-reset leak. Within-cap RSS growth
   is lazy heap sizing, not a leak — run-to-run growth varies (+0.2% to +24%),
@@ -130,11 +138,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Known risks and bugs
 
-- **The seed lever is unexercised**: the M1/M2 scenario has no stochastic
-  content, so different seeds produce identical hashes. Determinism of
-  stepping/reset is proven; seed-sensitivity must be re-proven when waves/RNG
-  arrive with the full scenario loader (M3+). Reproduction: pass different
-  `root_seed`s and compare hashes — they currently match by design.
+- **The seed lever is now exercised (resolved)**: with enemy waves live, different
+  `root_seed`s diverge once wave 1 spawns (the native `WaveSpawner` spread is seeded
+  from `root_seed`), while the same seed stays bit-identical across processes and
+  resets. Proven by `tools/determinism.py` check 4. Pre-wave state is still
+  seed-independent (nothing consumes `root_seed` before tick 2700) — expected.
+- **Dynamic re-path determinism is not yet proven**: enemy flow fields converge
+  deterministically for a *static* map (the current traces never change a
+  pathfinding tile). When agents build walls under fire (M4 defended play), the
+  `Pathfinder` `afterGameUpdate` refresh gate reads `Time.millis()` (wall clock);
+  that gate must be neutralized for determinism before defended episodes are hashed.
+  Tracked in `docs/UPSTREAM_PATCHES.md` (patch 2 audit) and the next-issues list.
 - **4-JVM scaling is Python-bound** (~53% efficiency): GIL-bound JSON in the
   collector, not the engine. Fine for now; revisit before large-scale training
   (larger tick chunks or process-based collection).
@@ -145,34 +159,38 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-*(M3 — agent entities + first skills — landed 2026-07-20; see the M3 section of
-`docs/STATUS.md` and the resolved open questions in `docs/M3_DESIGN.md`.)*
+*(The full bootstrap-defense-v0 scenario loader — world + deterministic waves +
+termination + seed-sensitivity + the `Pathfinder.syncUpdate()` patch — **landed
+2026-07-20**; see the Scenario section of `docs/STATUS.md` and
+`docs/UPSTREAM_PATCHES.md`. That was the previous next-issue 1; the rotation below
+promotes the remainder and adds the M4 follow-ons it unblocks.)*
 
-1. **Full bootstrap-defense-v0 scenario loader.**
-   - Objective: extend the in-code generator to the spec in
-     `scenarios/bootstrap-defense-v0/scenario.json` (patches, lead, east lane,
-     spawn point, deterministic 3-wave schedule).
-   - Acceptance: waves spawn at exact ticks; hashes reproduce across processes;
-     losing (build nothing) and winning (per SCENARIOS.md arithmetic) both
-     reachable; seed-sensitivity finally demonstrable. Now unblocked: with M3's
-     skill layer, "winning" becomes drivable by scripted skills, and the seed
-     lever finally has stochastic content (waves) to influence.
-2. **Golden replay files + `tests/golden/`.**
+1. **M4: defend/repair + a scripted win path.**
+   - Objective: script the reference `east_duo_line` build (2 Duos + wall column),
+     supply copper, and survive all 3 waves with the core alive at tick 8100 →
+     `outcome == "win"`. Adds the `BuildSchematic`/`SupplyBuilding`/`Repair` skills.
+   - Blocks on: **dynamic re-path determinism** (below) — daggers must re-route
+     around freshly built walls deterministically.
+   - Acceptance: a scripted trace reaches `outcome == "win"` before the cap; hashes
+     reproduce across processes; `scenario_check` gains a defended-win phase.
+2. **Dynamic re-path determinism (wall building under fire).**
+   - Objective: neutralize the `Pathfinder` `afterGameUpdate` `Time.millis()` refresh
+     gate (docs/UPSTREAM_PATCHES.md patch 2 audit) so flow-field refresh after a
+     `TileChangeEvent` is deterministic under the fixed step, not wall-clock-timed.
+   - Acceptance: build a wall mid-episode in two fresh JVMs (same seed) → identical
+     hashes while daggers re-route around it.
+3. **Golden replay files + `tests/golden/`.**
    - Objective: check in seed + action trace + expected hashes; wire
      `make determinism` to also verify against the stored trace (≥10k ticks,
      Gate 1). The M3 scripted trace (`tools/skill_trace.py`) is a natural
      starting trace to freeze.
    - Acceptance: byte-identical hashes vs the checked-in trace; CI-runnable.
-3. **agent-plugin demo-server skeleton (M6 prep).**
+4. **agent-plugin demo-server skeleton (M6 prep).**
    - Objective: plugin loads in the ordinary dedicated server, spawns one
      server-controlled unit driven by the same `agentcore.skill` code (its own
      `AgentBody` impl over the live server unit), announces via chat using
      `agentcore.announce`.
    - Acceptance: human can join locally (`make demo-server`) and watch it mine.
-4. **Collector scaling fix (only if training start nears).**
-   - Objective: raise 4-JVM efficiency above ~80% (larger tick chunks per
-     request and/or process-based collector).
-   - Acceptance: updated `docs/BENCHMARKS.md` scaling table.
 5. **M5: task-board → skill wiring (candidate generation + selection).**
    - Objective: connect the `agentcore` board (tasks/claims/reservations) to the
      new skill layer — generate candidate tasks from scenario objectives, add the

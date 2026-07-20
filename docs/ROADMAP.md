@@ -46,9 +46,10 @@ Exit criteria:
       (`bash scripts/smoke.sh` → exit 0)
 - [x] Tick count is exact (verified 0→600 in 10×60 chunks)
 - [x] Same seed/action trace produces matching hash (two fresh JVMs + two
-      in-JVM resets identical; `bash scripts/determinism.sh` → exit 0). NB: the
-      M1 scenario has no RNG/time-driven state, so the *seed* lever is not yet
-      exercised (see `docs/STATUS.md`); the stepping/clock/reset determinism is.
+      in-JVM resets identical; `bash scripts/determinism.sh` → exit 0). NB (M1):
+      no RNG/time-driven state, so the *seed* lever was not yet exercised — **now
+      resolved** by the bootstrap-defense-v0 loader: enemy waves make different
+      seeds diverge post-wave while same-seed stays identical (determinism check 4).
 - [x] Timing report is emitted (`{engine_ms, observation_ms, ...}` per step)
 
 **First major go/no-go gate — PASSED (2026-07-20).**
@@ -141,7 +142,12 @@ Exit criteria:
 ## Milestone 6: Bootstrap Defense v0
 
 Deliverables:
-- [ ] Complete scenario (`scenarios/bootstrap-defense-v0/`, spec only today)
+- [~] Complete scenario (`scenarios/bootstrap-defense-v0/`) — **loader done**: the
+      full 48×48 world, ore patches, east spawn, 250-copper loadout, and the
+      deterministic 3-wave dagger schedule (2700/4500/6300) all load from
+      `scenario.json` with moving enemies and win/loss/truncate termination
+      (verified 2026-07-20). Remaining: scored `objectives[]` (M5 board wiring),
+      the reference-schematic build, and the scripted win path (below).
 - [ ] Scripted expert
 - [ ] Evaluation metrics
 - [ ] Replay
