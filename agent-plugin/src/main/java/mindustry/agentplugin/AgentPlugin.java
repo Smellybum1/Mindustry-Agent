@@ -23,7 +23,7 @@ public final class AgentPlugin extends Plugin{
     public void init(){
         Events.on(ServerLoadEvent.class, event -> {
             String mode = System.getProperty(modeProperty, "manual").trim().toLowerCase();
-            if(mode.equals("probe") || mode.equals("join")){
+            if(mode.equals("probe") || mode.equals("join") || mode.equals("survival")){
                 Core.app.post(() -> startDemo(mode.equals("join"), mode.equals("probe")));
             }else{
                 Log.info("[agents] plugin loaded; run 'agents start' or use DEMO_JOIN=1.");
@@ -31,6 +31,12 @@ public final class AgentPlugin extends Plugin{
         });
         Events.on(PlayerConnect.class, event -> {
             if(coordinator != null) coordinator.playerJoined(event.player);
+        });
+        Events.on(GameOverEvent.class, event -> {
+            if(System.getProperty(modeProperty, "").equalsIgnoreCase("survival")){
+                Log.err("AGENT-DEMO SURVIVAL FAIL core destroyed before tick @", (long)state.tick);
+                Core.app.exit();
+            }
         });
         Events.run(Trigger.update, () -> {
             if(coordinator != null) coordinator.update();
@@ -86,6 +92,9 @@ public final class AgentPlugin extends Plugin{
         coordinator.spawn();
 
         if(openServer){
+            //Hold the scenario clock as well as the controllers. Otherwise the
+            //unattended wave timer can destroy the core while the client loads.
+            state.set(State.paused);
             int port = parsePort(System.getProperty(portProperty, "6567"));
             Config.port.set(port);
             netServer.openServer();

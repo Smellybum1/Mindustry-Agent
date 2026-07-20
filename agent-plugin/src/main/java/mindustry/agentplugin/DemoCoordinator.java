@@ -10,6 +10,7 @@ import arc.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.content.*;
+import mindustry.core.GameState.*;
 import mindustry.entities.*;
 import mindustry.gen.*;
 import mindustry.rl.*;
@@ -21,21 +22,29 @@ import static mindustry.Vars.*;
 /** Simulation-thread board/policy adapter for the ordinary real-time server. */
 final class DemoCoordinator{
     private enum Stage{
-        IDLE, BUILD_LINE, BUILD_DEFENSE, MINE, DELIVER, SUPPLY_A, SUPPLY_B, DEFEND
+        IDLE, BUILD_LINE, BUILD_DEFENSE, MINE, DELIVER,
+        ECONOMY_MINE, ECONOMY_DELIVER, FORTIFY, SUPPLY, DEFEND,
+        REBUILD, MAINTENANCE_MINE, MAINTENANCE_DELIVER,
+        RESERVE_MINE, RESERVE_DELIVER
     }
 
     private static final String[] names = {"agent-copper", "agent-shield", "agent-relay"};
-    private static final int mineX = 28, mineY = 18;
+    private static final int[][] mineTiles = {{28, 18}, {31, 18}, {28, 21}};
+
+    private record BuildPlacement(String block, int x, int y, int rotation){}
 
     private static final class Agent{
         final int index;
         final AgentId id;
-        final Unit unit;
+        Unit unit;
         final DemoAgentController controller;
         Stage stage = Stage.IDLE;
         String taskId;
         boolean blocked;
         int recordedBlocks;
+        int economyRounds;
+        int maintenanceRounds;
+        boolean maintenanceDone;
 
         Agent(int index, Unit unit, DemoAgentController controller){
             this.index = index;
@@ -48,23 +57,46 @@ final class DemoCoordinator{
     private final Scenario scenario;
     private final boolean probe;
     private final boolean waitForPlayer;
+    private final boolean survivalProbe;
     private final TaskBoard board = new TaskBoard();
     private final AnnouncementRenderer renderer = new AnnouncementRenderer();
     private final Seq<Agent> agents = new Seq<>();
     private final List<String> lineOrder = new ArrayList<>();
     private final List<String> defenseOrder = new ArrayList<>();
+    private final ArrayDeque<BuildPlacement> fortifications = new ArrayDeque<>();
+    private final ArrayDeque<TileTarget> supplyTargets = new ArrayDeque<>();
 
     private boolean started;
     private boolean paused;
     private boolean stopped;
     private boolean probeReported;
+    private boolean survivalReported;
+    private boolean lineComplete;
+    private boolean baseDefenseComplete;
+    private boolean economyStarted;
+    private boolean fortificationStarted;
+    private boolean supplyStarted;
+    private boolean preparationComplete;
+    private boolean defenseStarted;
+    private boolean maintenance;
+    private boolean maintenanceSupplyStarted;
+    private boolean rebuildDone;
     private long lastHeartbeat;
     private int announcements;
+    private int buildsInFlight;
+    private int suppliesInFlight;
+    private int taskSequence;
+    private int previousEnemies;
+    private int waveClears;
+    private long maintenanceStartTick;
+    private long maintenanceSupplyStartTick;
 
     DemoCoordinator(Scenario scenario, boolean probe, boolean waitForPlayer){
         this.scenario = scenario;
         this.probe = probe;
         this.waitForPlayer = waitForPlayer;
+        this.survivalProbe = System.getProperty(AgentPlugin.modeProperty, "")
+            .equalsIgnoreCase("survival");
         board.reset(1L);
     }
 
@@ -110,7 +142,7 @@ final class DemoCoordinator{
                 scenario.referenceAnchorY, defense.blocks()), Stage.BUILD_DEFENSE);
         begin(agents.get(2), "demo-harvest", TaskType.HARVEST_RESOURCE,
             new ResourceTarget("copper", 300), ResourceCost.empty(),
-            new MineResource(mineX, mineY, 20), Stage.MINE);
+            new MineResource(mineTiles[2][0], mineTiles[2][1], 20), Stage.MINE);
         drainAnnouncements();
     }
 
@@ -139,9 +171,21 @@ final class DemoCoordinator{
                 abandon(agent, result.reason().name().toLowerCase(), tick);
             }
         }
+        trackWaves(tick);
         if(tick - lastHeartbeat >= 120) lastHeartbeat = tick;
         board.expireStale(tick);
+        dispatchPolicy(tick);
         drainAnnouncements();
+        if(survivalProbe && !survivalReported && tick >= scenario.winTick){
+            Building core = scenario.coreTeam.core();
+            if(core == null || core.health <= 0f){
+                throw new IllegalStateException("demo core did not survive to win tick");
+            }
+            survivalReported = true;
+            Log.info("AGENT-DEMO SURVIVAL OK tick=@ core_health=@", tick, Math.round(core.health));
+            Core.app.exit();
+            return;
+        }
         finishProbeIfReady();
     }
 
@@ -154,7 +198,10 @@ final class DemoCoordinator{
 
     String resume(){
         if(stopped) return "agents: stopped (start a new demo world to resume)";
-        if(!started) startOpening();
+        if(!started){
+            startOpening();
+            if(waitForPlayer && state.isPaused()) state.set(State.playing);
+        }
         paused = false;
         for(Agent agent : agents) agent.controller.resumeNow();
         return "agents: running at tick " + (long)state.tick;
@@ -182,7 +229,7 @@ final class DemoCoordinator{
         for(Agent agent : agents) if(agent.controller.activeSkill() != null) active++;
         return "agents: " + mode + " tick=" + (long)state.tick + " active=" + active
             + "/" + agents.size + " tasks=" + board.tasks().size()
-            + " announcements=" + announcements;
+            + " announcements=" + announcements + " phase=" + phase();
     }
 
     private void begin(Agent agent, String taskId, TaskType type, Target target,
@@ -210,25 +257,13 @@ final class DemoCoordinator{
         switch(agent.stage){
             case BUILD_LINE -> {
                 complete(agent, tick);
-                agent.stage = Stage.DEFEND;
-                agent.controller.setSkill(new DefendRegion(244f, 196f, 220f, Long.MAX_VALUE));
+                lineComplete = true;
+                idle(agent);
             }
             case BUILD_DEFENSE -> {
                 complete(agent, tick);
-                begin(agent, "demo-supply-a", TaskType.SUPPLY_TURRET,
-                    new TileTarget(32, 23), ResourceCost.of("copper", 15),
-                    new SupplyBuilding("copper", 32, 23, 15), Stage.SUPPLY_A);
-            }
-            case SUPPLY_A -> {
-                complete(agent, tick);
-                begin(agent, "demo-supply-b", TaskType.SUPPLY_TURRET,
-                    new TileTarget(32, 25), ResourceCost.of("copper", 15),
-                    new SupplyBuilding("copper", 32, 25, 15), Stage.SUPPLY_B);
-            }
-            case SUPPLY_B -> {
-                complete(agent, tick);
-                agent.stage = Stage.DEFEND;
-                agent.controller.setSkill(new DefendRegion(260f, 196f, 220f, Long.MAX_VALUE));
+                baseDefenseComplete = true;
+                idle(agent);
             }
             case MINE -> {
                 agent.stage = Stage.DELIVER;
@@ -237,11 +272,332 @@ final class DemoCoordinator{
             case DELIVER -> {
                 if(agent.taskId != null) board.reportProgress(agent.taskId, agent.id, 0.5, tick);
                 agent.stage = Stage.MINE;
-                agent.controller.setSkill(new MineResource(mineX, mineY, 20));
+                int[] tile = mineTiles[agent.index];
+                agent.controller.setSkill(new MineResource(tile[0], tile[1], 20));
+            }
+            case ECONOMY_MINE -> {
+                agent.stage = Stage.ECONOMY_DELIVER;
+                agent.controller.setSkill(new DeliverToCore());
+            }
+            case ECONOMY_DELIVER -> {
+                agent.economyRounds++;
+                if(agent.economyRounds < 2){
+                    agent.stage = Stage.ECONOMY_MINE;
+                    int[] tile = mineTiles[agent.index];
+                    agent.controller.setSkill(new MineResource(tile[0], tile[1], 20));
+                }else{
+                    complete(agent, tick);
+                    idle(agent);
+                }
+            }
+            case FORTIFY -> {
+                complete(agent, tick);
+                buildsInFlight--;
+                idle(agent);
+            }
+            case SUPPLY -> {
+                complete(agent, tick);
+                suppliesInFlight--;
+                idle(agent);
+            }
+            case REBUILD -> {
+                complete(agent, tick);
+                rebuildDone = true;
+                agent.maintenanceDone = true;
+                idle(agent);
+            }
+            case MAINTENANCE_MINE -> {
+                agent.stage = Stage.MAINTENANCE_DELIVER;
+                agent.controller.setSkill(new DeliverToCore());
+            }
+            case MAINTENANCE_DELIVER -> {
+                agent.maintenanceRounds++;
+                if(agent.maintenanceRounds < 1){
+                    int[] tile = mineTiles[agent.index];
+                    agent.stage = Stage.MAINTENANCE_MINE;
+                    agent.controller.setSkill(new MineResource(tile[0], tile[1], 20));
+                }else{
+                    complete(agent, tick);
+                    agent.maintenanceDone = true;
+                    idle(agent);
+                }
+            }
+            case RESERVE_MINE -> {
+                agent.stage = Stage.RESERVE_DELIVER;
+                agent.controller.setSkill(new DeliverToCore());
+            }
+            case RESERVE_DELIVER -> {
+                if(agent.taskId != null) board.reportProgress(agent.taskId, agent.id, 0.05, tick);
+                int[] tile = mineTiles[agent.index];
+                agent.stage = Stage.RESERVE_MINE;
+                agent.controller.setSkill(new MineResource(tile[0], tile[1], 20));
             }
             case DEFEND -> agent.controller.setSkill(new DefendRegion(244f, 196f, 220f, Long.MAX_VALUE));
             case IDLE -> { }
         }
+    }
+
+    private void dispatchPolicy(long tick){
+        if(maintenance){
+            dispatchMaintenance();
+            return;
+        }
+        if(!economyStarted && lineComplete && baseDefenseComplete){
+            startEconomy(tick);
+            return;
+        }
+        if(economyStarted && !fortificationStarted && allEconomyReady()){
+            prepareFortifications();
+            fortificationStarted = true;
+        }
+        if(fortificationStarted && !supplyStarted){
+            dispatchFortifications();
+            if(fortifications.isEmpty() && buildsInFlight == 0){
+                prepareSupply();
+                supplyStarted = true;
+            }
+        }
+        if(supplyStarted && !preparationComplete){
+            dispatchSupply();
+            if(supplyTargets.isEmpty() && suppliesInFlight == 0){
+                preparationComplete = true;
+                Log.info("AGENT-DEMO EXPERT READY tick=@ fortifications=20 turrets=4", (long)state.tick);
+                startReserveMining(tick, "opening_complete");
+            }
+        }
+    }
+
+    private void startEconomy(long tick){
+        economyStarted = true;
+        for(Agent agent : agents){
+            if(agent.taskId != null){
+                board.abandon(agent.taskId, agent.id, "opening_economy_transition", tick);
+            }
+            cancelControllerWork(agent);
+            agent.taskId = null;
+            agent.economyRounds = 0;
+            int[] tile = mineTiles[agent.index];
+            begin(agent, "demo-economy-" + agent.index, TaskType.HARVEST_RESOURCE,
+                new ResourceTarget("copper", 40), ResourceCost.empty(),
+                new MineResource(tile[0], tile[1], 20), Stage.ECONOMY_MINE);
+        }
+    }
+
+    private boolean allEconomyReady(){
+        for(Agent agent : agents){
+            if(agent.economyRounds < 2 || agent.stage != Stage.IDLE) return false;
+        }
+        return true;
+    }
+
+    private void prepareFortifications(){
+        for(int y = 22; y <= 26; y++) fortifications.add(new BuildPlacement("copper-wall", 22, y, 0));
+        for(int y = 22; y <= 24; y++) fortifications.add(new BuildPlacement("copper-wall", 26, y, 0));
+        for(int x = 23; x <= 25; x++) fortifications.add(new BuildPlacement("copper-wall", x, 22, 0));
+        for(int x = 23; x <= 24; x++) fortifications.add(new BuildPlacement("copper-wall", x, 26, 0));
+        for(int y = 21; y <= 25; y++) fortifications.add(new BuildPlacement("copper-wall", 27, y, 0));
+        fortifications.add(new BuildPlacement("duo", 29, 23, 1));
+        fortifications.add(new BuildPlacement("duo", 29, 25, 1));
+    }
+
+    private void dispatchFortifications(){
+        for(Agent agent : agents){
+            if(agent.stage != Stage.IDLE || fortifications.isEmpty()) continue;
+            BuildPlacement build = fortifications.removeFirst();
+            buildsInFlight++;
+            begin(agent, "demo-fortify-" + taskSequence++, TaskType.BUILD_SCHEMATIC,
+                new TileTarget(build.x(), build.y()), ResourceCost.of("copper", copperCost(build.block())),
+                new BuildBlock(build.block(), build.x(), build.y(), build.rotation()), Stage.FORTIFY);
+        }
+    }
+
+    private void prepareSupply(){
+        supplyTargets.add(new TileTarget(29, 23));
+        supplyTargets.add(new TileTarget(29, 25));
+        supplyTargets.add(new TileTarget(32, 23));
+        supplyTargets.add(new TileTarget(32, 25));
+    }
+
+    private void dispatchSupply(){
+        for(Agent agent : agents){
+            if(agent.stage != Stage.IDLE || supplyTargets.isEmpty()) continue;
+            TileTarget target = supplyTargets.removeFirst();
+            suppliesInFlight++;
+            begin(agent, "demo-supply-" + taskSequence++, TaskType.SUPPLY_TURRET,
+                target, ResourceCost.of("copper", 15),
+                new SupplyBuilding("copper", target.x(), target.y(), 15), Stage.SUPPLY);
+        }
+    }
+
+    private void startDefense(long tick){
+        maintenance = false;
+        maintenanceSupplyStarted = false;
+        supplyTargets.clear();
+        suppliesInFlight = 0;
+        defenseStarted = true;
+        for(Agent agent : agents){
+            if(agent.taskId != null){
+                board.abandon(agent.taskId, agent.id, "enemy_wave", tick);
+            }
+            cancelControllerWork(agent);
+            agent.taskId = null;
+            ensureAgentBody(agent);
+            begin(agent, "demo-defend-" + taskSequence++, TaskType.DEFEND_REGION,
+                new RegionTarget("east_lane"), ResourceCost.empty(),
+                new DefendRegion(244f + agent.index * 8f, 196f, 220f, Long.MAX_VALUE), Stage.DEFEND);
+        }
+    }
+
+    private void startReserveMining(long tick, String reason){
+        defenseStarted = false;
+        for(Agent agent : agents){
+            if(agent.taskId != null){
+                board.abandon(agent.taskId, agent.id, reason, tick);
+            }
+            cancelControllerWork(agent);
+            agent.taskId = null;
+            ensureAgentBody(agent);
+            int[] tile = mineTiles[agent.index];
+            begin(agent, "demo-reserve-" + taskSequence++, TaskType.HARVEST_RESOURCE,
+                new ResourceTarget("copper", 300), ResourceCost.empty(),
+                new MineResource(tile[0], tile[1], 20), Stage.RESERVE_MINE);
+        }
+        Log.info("AGENT-DEMO RESERVE MINING tick=@ reason=@", tick, reason);
+    }
+
+    private int copperCost(String blockName){
+        int total = 0;
+        var block = content.block(blockName);
+        if(block == null) throw new IllegalStateException("unknown demo block: " + blockName);
+        for(var requirement : block.requirements){
+            if(requirement.item == Items.copper) total += requirement.amount;
+        }
+        return total;
+    }
+
+    private void cancelControllerWork(Agent agent){
+        agent.controller.pauseNow();
+        agent.controller.clearSkill();
+        agent.controller.resumeNow();
+        agent.stage = Stage.IDLE;
+    }
+
+    private void trackWaves(long tick){
+        int enemies = 0;
+        for(Unit unit : Groups.unit){
+            if(unit.team == scenario.waveTeam && !unit.dead()) enemies++;
+        }
+        if(previousEnemies == 0 && enemies > 0){
+            Building core = scenario.coreTeam.core();
+            Log.info("AGENT-DEMO WAVE START tick=@ enemies=@ core_health=@", tick, enemies,
+                core == null ? 0 : Math.round(core.health));
+            startDefense(tick);
+        }else if(previousEnemies > 0 && enemies == 0 && defenseStarted && !maintenance){
+            waveClears++;
+            Building core = scenario.coreTeam.core();
+            Log.info("AGENT-DEMO WAVE CLEAR tick=@ wave=@ core_health=@", tick, waveClears,
+                core == null ? 0 : Math.round(core.health));
+            if(waveClears < 3){
+                startMaintenance(tick);
+            }else{
+                startReserveMining(tick, "wave_clear");
+            }
+        }
+        previousEnemies = enemies;
+    }
+
+    private void startMaintenance(long tick){
+        maintenance = true;
+        maintenanceStartTick = tick;
+        maintenanceSupplyStarted = false;
+        rebuildDone = false;
+        defenseStarted = false;
+        supplyTargets.clear();
+        suppliesInFlight = 0;
+
+        for(Agent agent : agents){
+            if(agent.taskId != null){
+                board.abandon(agent.taskId, agent.id, "wave_clear_maintenance", tick);
+            }
+            cancelControllerWork(agent);
+            agent.taskId = null;
+            agent.maintenanceDone = false;
+            agent.maintenanceRounds = 0;
+            ensureAgentBody(agent);
+        }
+
+        Agent rebuilder = agents.get(0);
+        begin(rebuilder, "demo-rebuild-" + taskSequence++, TaskType.REPAIR_REGION,
+            new RegionTarget("defense_block"), ResourceCost.empty(),
+            new RebuildRegion(20, 18, 36, 30), Stage.REBUILD);
+        for(int i = 1; i < agents.size; i++){
+            Agent miner = agents.get(i);
+            int[] tile = mineTiles[miner.index];
+            begin(miner, "demo-maintenance-mine-" + taskSequence++, TaskType.HARVEST_RESOURCE,
+                new ResourceTarget("copper", 60), ResourceCost.empty(),
+                new MineResource(tile[0], tile[1], 20), Stage.MAINTENANCE_MINE);
+        }
+        drainAnnouncements();
+    }
+
+    private void dispatchMaintenance(){
+        long tick = (long)state.tick;
+        boolean workReady = rebuildDone && agents.get(1).maintenanceDone && agents.get(2).maintenanceDone;
+        if(!workReady && tick - maintenanceStartTick < 900) return;
+        if(!workReady){
+            Log.warn("AGENT-DEMO MAINTENANCE DEADLINE tick=@; resuming defense safely", tick);
+            for(Agent agent : agents){
+                if(agent.stage == Stage.IDLE) continue;
+                if(agent.taskId != null){
+                    board.abandon(agent.taskId, agent.id, "maintenance_deadline", tick);
+                    agent.taskId = null;
+                }
+                cancelControllerWork(agent);
+            }
+        }
+        if(!maintenanceSupplyStarted){
+            prepareSupply();
+            maintenanceSupplyStarted = true;
+            maintenanceSupplyStartTick = tick;
+        }
+        dispatchSupply();
+        if(suppliesInFlight > 0 && tick - maintenanceSupplyStartTick >= 300){
+            Log.warn("AGENT-DEMO SUPPLY DEADLINE tick=@; resuming defense safely", tick);
+            supplyTargets.clear();
+            suppliesInFlight = 0;
+            for(Agent agent : agents){
+                if(agent.stage != Stage.SUPPLY) continue;
+                if(agent.taskId != null){
+                    board.abandon(agent.taskId, agent.id, "supply_deadline", tick);
+                    agent.taskId = null;
+                }
+                cancelControllerWork(agent);
+            }
+        }
+        if(supplyTargets.isEmpty() && suppliesInFlight == 0){
+            maintenance = false;
+            maintenanceSupplyStarted = false;
+            startReserveMining(tick, "maintenance_complete");
+            Log.info("AGENT-DEMO MAINTENANCE COMPLETE tick=@ wave=@", (long)state.tick, waveClears);
+        }
+    }
+
+    private void ensureAgentBody(Agent agent){
+        if(agent.unit != null && agent.unit.isValid() && !agent.unit.dead()) return;
+        Building core = scenario.coreTeam.core();
+        if(core == null) throw new IllegalStateException("cannot rebind agent without a core");
+        Unit replacement = UnitTypes.alpha.spawn(scenario.coreTeam,
+            core.x + (3 + agent.index) * tilesize, core.y);
+        replacement.controller(agent.controller);
+        Units.notifyUnitSpawn(replacement);
+        agent.unit = replacement;
+        agent.controller.resumeNow();
+        Log.warn("AGENT-DEMO REBOUND agent=@ replacement_unit=@", agent.index, replacement.id);
+    }
+
+    private void idle(Agent agent){
+        agent.stage = Stage.IDLE;
+        agent.controller.clearSkill();
     }
 
     private void complete(Agent agent, long tick){
@@ -283,14 +639,23 @@ final class DemoCoordinator{
 
     private void finishProbeIfReady(){
         if(!probe || probeReported) return;
-        Agent shield = agents.get(1);
-        if(shield.stage != Stage.DEFEND) return;
+        if(!preparationComplete) return;
 
         List<String> expectedLine = blockNames(scenario.schematic(scenario.buildLineId));
         List<String> expectedDefense = blockNames(scenario.schematic(scenario.referenceSchematicId));
         if(!lineOrder.equals(expectedLine) || !defenseOrder.equals(expectedDefense)){
             throw new IllegalStateException("demo opening order drift: line=" + lineOrder
                 + " defense=" + defenseOrder);
+        }
+        for(TileTarget target : List.of(new TileTarget(29, 23), new TileTarget(29, 25),
+                                        new TileTarget(32, 23), new TileTarget(32, 25))){
+            Building building = world.build(target.x(), target.y());
+            if(building == null || building.block != Blocks.duo){
+                throw new IllegalStateException("expert turret missing at " + target.describe());
+            }
+        }
+        if(!status().contains("phase=reserve-mining")){
+            throw new IllegalStateException("agents did not enter productive reserve mining");
         }
         probeReported = true;
         Log.info("AGENT-DEMO PARITY OK line=@ defense=@", String.join(",", lineOrder),
@@ -322,5 +687,19 @@ final class DemoCoordinator{
         ArrayList<String> result = new ArrayList<>();
         for(BuildSpec block : spec.blocks()) result.add(block.block());
         return List.copyOf(result);
+    }
+
+    private String phase(){
+        if(defenseStarted) return "defend";
+        if(maintenance) return "maintenance";
+        for(Agent agent : agents){
+            if(agent.stage == Stage.RESERVE_MINE || agent.stage == Stage.RESERVE_DELIVER){
+                return "reserve-mining";
+            }
+        }
+        if(supplyStarted) return "supply";
+        if(fortificationStarted) return "fortify";
+        if(economyStarted) return "economy";
+        return started ? "opening" : "waiting";
     }
 }

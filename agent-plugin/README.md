@@ -10,7 +10,11 @@ The demo uses the exact checked-in scenario and schematic JSON as training mode.
 It spawns three Alpha units and runs the shared `TaskBoard`, low-level skill FSMs,
 and `AnnouncementRenderer` on the vanilla simulation thread. The only pacing
 difference is that the stock server advances in real time and keeps its normal
-pathfinder threads.
+pathfinder threads. Its fallback policy builds the full four-Duo expert defense,
+keeps every available agent mining and delivering copper between waves, switches
+to defense when enemies appear, then repairs and resupplies before mining again.
+A lost agent slot is rebound to a replacement Alpha at the core and reported in
+the server log; tasks and controllers remain attached to the same stable slot.
 
 ## Commands
 
@@ -31,14 +35,17 @@ manual mode.
 # Automated real-server acceptance probe. Does not open a network port.
 bash scripts/demo-server.sh
 
+# Full real-time three-wave survival probe. Also opens no network port.
+DEMO_SURVIVAL=1 bash scripts/demo-server.sh
+
 # Explicit human-join mode. This is the only path that opens the game socket.
 DEMO_JOIN=1 bash scripts/demo-server.sh
 ```
 
 Join `localhost:6567` with a stock v159.7 client. The policy waits until the
-player types `/agents resume`, so map loading cannot hide the opening or its
-concise team-chat announcements. `DEMO_PORT=<port>` may be used when 6567 is
-occupied.
+player types `/agents resume`; the scenario clock is paused too, so map loading
+cannot hide the opening or let waves advance unattended. `DEMO_PORT=<port>` may
+be used when 6567 is occupied.
 
 Every run uses an isolated temporary server data directory under `runs/`; it
 does not install into the user's real Mindustry mod folder. The stock ArcNet

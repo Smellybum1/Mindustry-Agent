@@ -44,6 +44,31 @@ cp "$PLUGIN_JAR" \
 JAVA_BIN="${JAVA_BIN:-java}"
 DEMO_PORT="${DEMO_PORT:-6567}"
 
+if [[ "${DEMO_SURVIVAL:-0}" == "1" ]]; then
+    LOG="$ROOT/runs/demo-server-survival.log"
+    echo "demo-server: real-time three-wave survival probe (no network port)"
+    cd "$RUNTIME"
+    set +e
+    "$JAVA_BIN" -Dmindustry.agents.demo.mode=survival -jar server.jar 2>&1 | tee "$LOG"
+    server_status=${PIPESTATUS[0]}
+    set -e
+    cd "$ROOT"
+    [[ $server_status -eq 0 ]] || exit "$server_status"
+    grep -F "AGENT-DEMO SURVIVAL OK" "$LOG" >/dev/null
+    grep -F "AGENT-DEMO RESERVE MINING" "$LOG" >/dev/null
+    grep -F "AGENT-DEMO MAINTENANCE COMPLETE" "$LOG" | grep -F "wave=1" >/dev/null
+    grep -F "AGENT-DEMO MAINTENANCE COMPLETE" "$LOG" | grep -F "wave=2" >/dev/null
+    grep -F "AGENT-DEMO WAVE CLEAR" "$LOG" | grep -F "wave=1" >/dev/null
+    grep -F "AGENT-DEMO WAVE CLEAR" "$LOG" | grep -F "wave=2" >/dev/null
+    grep -F "AGENT-DEMO WAVE CLEAR" "$LOG" | grep -F "wave=3" >/dev/null
+    if grep -F "AGENT-DEMO SURVIVAL FAIL" "$LOG" >/dev/null; then
+        echo "demo-server: expert did not survive" >&2
+        exit 1
+    fi
+    echo "demo-server: SURVIVAL OK"
+    exit 0
+fi
+
 if [[ "${DEMO_JOIN:-0}" == "1" ]]; then
     python - "$DEMO_PORT" <<'PY'
 import socket
@@ -85,6 +110,8 @@ if [[ $server_status -ne 0 ]]; then
     exit "$server_status"
 fi
 grep -F "AGENT-DEMO PARITY OK" "$LOG" >/dev/null
+grep -F "AGENT-DEMO EXPERT READY" "$LOG" >/dev/null
+grep -F "AGENT-DEMO RESERVE MINING" "$LOG" >/dev/null
 grep -F "AGENT-DEMO CONTROLS OK" "$LOG" >/dev/null
 grep -F "AGENT-DEMO PROBE OK" "$LOG" >/dev/null
 if grep -F "Opened a server on port" "$LOG" >/dev/null; then

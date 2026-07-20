@@ -163,12 +163,20 @@ Command: `make demo-server` (equivalently `bash scripts/demo-server.sh`). This i
 an acceptance probe, not a throughput benchmark. It builds `server:dist` and the
 official-layout plugin, boots them from an isolated data directory, and opens no
 network port. The verified run loaded one plugin, spawned three agents, completed
-the copper-line and east-Duo plans plus both supply actions by real-time server
-tick 312, emitted five rate-limited announcements, matched both checked-in block
-orders, and proved pause/resume/emergency-stop before exiting 0. Wall time was
-about 10 seconds including the incremental Gradle build and about 4 seconds in
-the server process.
+the copper-line and east-Duo plans, expanded them to 20 fortifications/four
+Duos, supplied all four, entered continuous reserve mining at approximately
+real-time server tick 1060, matched both checked-in block orders, and proved
+pause/resume/emergency-stop before exiting 0. Wall time was about 22 seconds
+including the incremental Gradle build and about 16 seconds in the server.
+
+`DEMO_SURVIVAL=1 make demo-server` is the no-port real-time survival acceptance.
+The 2026-07-20 run entered reserve mining at tick 1054, cleared waves at ticks
+3036/4969/6830, returned to maintenance/mining after each clear, and reached
+tick 8100 with **956/1100** core health. Stable slots lost in combat were
+rebound with explicit `AGENT-DEMO REBOUND` telemetry.
 
 The human path is intentionally separate: `DEMO_JOIN=1 make demo-server` opens
 port 6567 only after an explicit request and waits for a stock v159.7 client.
-That visual join/control check is not represented by the automated numbers.
+A stock client joined locally, resumed the policy, and visually observed the
+mining/building/supplying/chat behavior. The client-side `/agents stop` manual
+check remains pending; only that command is still outside the automated proof.
