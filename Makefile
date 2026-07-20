@@ -11,11 +11,13 @@ SCRIPTS := scripts
 
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap build test test-java test-python smoke determinism \
-        stress-reset benchmark scripted-demo evaluate-scripted demo-server
+.PHONY: help codex-status bootstrap build test test-java test-python smoke \
+        determinism stress-reset benchmark scripted-demo evaluate-scripted \
+        demo-server
 
 help: ## List available targets
 	@echo "mindustry-coop-agents — make targets:"
+	@echo "  codex-status  compact read-only takeover status"
 	@echo "  bootstrap     verify toolchain versions and print them"
 	@echo "  build         build Java modules + Python package"
 	@echo "  test          all fast tests (Java + Python)"
@@ -28,6 +30,9 @@ help: ## List available targets
 	@echo "  scripted-demo headless scripted team (M6)"
 	@echo "  evaluate-scripted five-seed episode summaries (M6)"
 	@echo "  demo-server   human-joinable real-time server (M6/M10)"
+
+codex-status: ## Print compact read-only takeover status
+	@bash $(SCRIPTS)/codex-status.sh
 
 bootstrap: ## Verify/print toolchain versions (works today)
 	@bash $(SCRIPTS)/bootstrap.sh
