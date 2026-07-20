@@ -26,6 +26,7 @@ public final class EngineCandidates{
     private final RlAgentRegistry registry;
     private final CandidateGenerator generator = new CandidateGenerator();
     private final Scenario.ObjectiveSpec harvest;
+    private final Scenario.ObjectiveSpec buildLine;
     private final Scenario.ObjectiveSpec schematic;
     private final Scenario.ObjectiveSpec supply;
     private final Scenario.ObjectiveSpec rebuild;
@@ -39,6 +40,7 @@ public final class EngineCandidates{
         this.scenario = scenario;
         this.registry = registry;
         harvest = requireObjective(TaskType.HARVEST_RESOURCE);
+        buildLine = requireObjective(TaskType.BUILD_LINE);
         schematic = requireObjective(TaskType.BUILD_SCHEMATIC);
         supply = requireObjective(TaskType.SUPPLY_TURRET);
         rebuild = requireObjective(TaskType.REPAIR_REGION);
@@ -54,6 +56,9 @@ public final class EngineCandidates{
             || scenario.schematic(scenario.referenceSchematicId) == null){
             throw new IllegalStateException("schematic objective/reference mismatch");
         }
+        if(scenario.buildLineId.isBlank() || scenario.schematic(scenario.buildLineId) == null){
+            throw new IllegalStateException("build-line reference mismatch");
+        }
         harvestPatch = requirePatch(harvest.targetRef());
         rebuildRegion = requireRegion(rebuild.targetRef());
         defendRegion = requireRegion(defend.targetRef());
@@ -62,6 +67,7 @@ public final class EngineCandidates{
     /** Capture all mutable state once at the observation boundary. */
     public CandidateWorldSnapshot snapshot(){
         Scenario.SchematicSpec schematicSpec = scenario.schematic(scenario.referenceSchematicId);
+        Scenario.SchematicSpec lineSpec = scenario.schematic(scenario.buildLineId);
         ArrayList<TurretSnapshot> turrets = new ArrayList<>();
         for(Building building : Groups.build){
             if(building.team == scenario.coreTeam && building instanceof TurretBuild turret){
@@ -71,12 +77,15 @@ public final class EngineCandidates{
         }
 
         return new CandidateWorldSnapshot(
-            (long)state.tick,
-            tilesize,
-            harvest.id(), schematic.id(), supply.id(), rebuild.id(), defend.id(),
+            (long)state.tick, tilesize,
+            harvest.id(), buildLine.id(), schematic.id(), supply.id(), rebuild.id(), defend.id(),
             StateHasher.coreItem(Items.copper), harvest.threshold(),
+            schematicComplete(lineSpec, scenario.buildLineAnchorX, scenario.buildLineAnchorY),
+            lineSpec.copperCost(),
             schematicComplete(schematicSpec), schematicSpec.copperCost(),
             center(harvestPatch.x, harvestPatch.w), center(harvestPatch.y, harvestPatch.h),
+            scenario.buildLineAnchorX * tilesize, scenario.buildLineAnchorY * tilesize,
+            scenario.buildLineId,
             scenario.referenceAnchorX * tilesize, scenario.referenceAnchorY * tilesize,
             scenario.referenceSchematicId,
             turrets, supply.threshold(),
@@ -138,9 +147,12 @@ public final class EngineCandidates{
     }
 
     private boolean schematicComplete(Scenario.SchematicSpec spec){
+        return schematicComplete(spec, scenario.referenceAnchorX, scenario.referenceAnchorY);
+    }
+
+    private boolean schematicComplete(Scenario.SchematicSpec spec, int anchorX, int anchorY){
         for(BuildSpec block : spec.blocks()){
-            Tile tile = world.tile(scenario.referenceAnchorX + block.offsetX(),
-                scenario.referenceAnchorY + block.offsetY());
+            Tile tile = world.tile(anchorX + block.offsetX(), anchorY + block.offsetY());
             if(tile == null || tile.build == null || !tile.block().name.equals(block.block())
                 || tile.build.rotation != block.rotation()) return false;
         }

@@ -82,6 +82,8 @@ public final class Scenario{
     public final ObjectMap<String, SchematicSpec> schematics = new ObjectMap<>();
     public final String referenceSchematicId;
     public final int referenceAnchorX, referenceAnchorY;
+    public final String buildLineId;
+    public final int buildLineAnchorX, buildLineAnchorY;
 
     private final Jval raw;
 
@@ -160,6 +162,18 @@ public final class Scenario{
         }else{
             referenceSchematicId = "";
             referenceAnchorX = referenceAnchorY = 0;
+        }
+
+        Jval line = raw.get("build_line");
+        if(line != null){
+            buildLineId = line.getString("id", "");
+            Jval anchor = line.get("anchor");
+            buildLineAnchorX = anchor.asArray().get(0).asInt();
+            buildLineAnchorY = anchor.asArray().get(1).asInt();
+            loadSchematic(line.getString("path", ""), buildLineId);
+        }else{
+            buildLineId = "";
+            buildLineAnchorX = buildLineAnchorY = 0;
         }
 
         for(Jval objective : raw.get("objectives").asArray()){

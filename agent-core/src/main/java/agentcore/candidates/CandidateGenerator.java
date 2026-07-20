@@ -51,6 +51,16 @@ public final class CandidateGenerator{
                 .build(), world.harvestWorldX(), world.harvestWorldY()));
         }
 
+        if(!world.buildLineComplete()){
+            pending.add(new Pending(TaskSpec.builder(world.buildLineTaskId()
+                + ":build:" + world.buildLineId(), TaskType.BUILD_LINE)
+                .target(new RegionTarget(world.buildLineId()))
+                .priority(0.88).estimatedTicks(600)
+                .estimatedCost(ResourceCost.of("copper", world.buildLineCopperCost()))
+                .requiredCapabilities(BUILD_CAPS).build(),
+                world.buildLineWorldX(), world.buildLineWorldY()));
+        }
+
         if(!world.schematicComplete()){
             pending.add(new Pending(TaskSpec.builder(world.schematicTaskId() + ":build:" + world.schematicId(), TaskType.BUILD_SCHEMATIC)
                 .target(new RegionTarget(world.schematicId()))
@@ -71,7 +81,8 @@ public final class CandidateGenerator{
                 .priority(0.85).estimatedTicks(180)
                 .estimatedCost(ResourceCost.of("copper", copper))
                 .requiredCapabilities(SUPPLY_CAPS)
-                .dependencyTaskIds(List.of(world.schematicTaskId() + ":build:" + world.schematicId())).build(),
+                .dependencyTaskIds(List.of(
+                    world.schematicTaskId() + ":build:" + world.schematicId())).build(),
                 tileWorld(turret.tileX(), world.tileSize()),
                 tileWorld(turret.tileY(), world.tileSize())));
         }

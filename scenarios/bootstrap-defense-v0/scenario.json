@@ -90,6 +90,13 @@
     "notes": "The referenced JSON is the single source of truth for block order and offsets."
   },
 
+  "build_line": {
+    "id": "copper_line_v1",
+    "path": "schematics/copper_line_v1.json",
+    "anchor": [28, 28],
+    "notes": "Two drills on patch A feed a five-conveyor trunk into the north-east edge of the core."
+  },
+
   "objectives": [
     {
       "id": "T1", "task_type": "HARVEST_RESOURCE",

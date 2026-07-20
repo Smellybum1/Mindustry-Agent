@@ -486,13 +486,14 @@ public final class CoordinationAdapter{
     }
 
     private String acquireReservations(TaskSpec task, AgentId agent, long tick){
-        if(task.type() == TaskType.BUILD_SCHEMATIC){
-            Rect footprint = schematicFootprint();
+        if(task.type() == TaskType.BUILD_SCHEMATIC || task.type() == TaskType.BUILD_LINE){
+            Rect footprint = schematicFootprint(task);
             ReservationOutcome tiles = board.reserveTile(task.taskId(), agent,
                 footprint, false, tick);
             if(!tiles.granted()) return reservationReason(tiles);
         }
-        if(task.type() == TaskType.BUILD_SCHEMATIC || task.type() == TaskType.SUPPLY_TURRET){
+        if(task.type() == TaskType.BUILD_SCHEMATIC || task.type() == TaskType.BUILD_LINE
+            || task.type() == TaskType.SUPPLY_TURRET){
             for(Map.Entry<String, Integer> cost : task.estimatedCost().asMap().entrySet()){
                 ReservationOutcome resource = board.reserveResource(task.taskId(), agent,
                     cost.getKey(), cost.getValue(), false, tick);
@@ -505,14 +506,18 @@ public final class CoordinationAdapter{
         return null;
     }
 
-    private Rect schematicFootprint(){
-        Scenario.SchematicSpec spec = scenario.schematic(scenario.referenceSchematicId);
+    private Rect schematicFootprint(TaskSpec task){
+        boolean line = task.type() == TaskType.BUILD_LINE;
+        String id = line ? scenario.buildLineId : scenario.referenceSchematicId;
+        int anchorX = line ? scenario.buildLineAnchorX : scenario.referenceAnchorX;
+        int anchorY = line ? scenario.buildLineAnchorY : scenario.referenceAnchorY;
+        Scenario.SchematicSpec spec = scenario.schematic(id);
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
         for(BuildSpec build : spec.blocks()){
             mindustry.world.Block block = content.block(build.block());
-            int x = scenario.referenceAnchorX + build.offsetX() + block.sizeOffset;
-            int y = scenario.referenceAnchorY + build.offsetY() + block.sizeOffset;
+            int x = anchorX + build.offsetX() + block.sizeOffset;
+            int y = anchorY + build.offsetY() + block.sizeOffset;
             minX = Math.min(minX, x);
             minY = Math.min(minY, y);
             maxX = Math.max(maxX, x + block.size);
@@ -647,6 +652,11 @@ public final class CoordinationAdapter{
     private Skill skillFor(RlAgentRegistry.Agent agent, TaskSpec task){
         return switch(task.type()){
             case HARVEST_RESOURCE -> mineSkill(agent);
+            case BUILD_LINE -> {
+                Scenario.SchematicSpec spec = scenario.schematic(scenario.buildLineId);
+                yield spec == null ? null : new ExecuteSchematic(spec.name(),
+                    scenario.buildLineAnchorX, scenario.buildLineAnchorY, spec.blocks());
+            }
             case BUILD_SCHEMATIC -> {
                 Scenario.SchematicSpec spec = scenario.schematic(scenario.referenceSchematicId);
                 yield spec == null ? null : new ExecuteSchematic(spec.name(),
@@ -740,6 +750,7 @@ public final class CoordinationAdapter{
         Assignment assignment = current(agentIndex);
         if(agent != null && assignment != null
             && (assignment.spec.type() == TaskType.BUILD_SCHEMATIC
+                || assignment.spec.type() == TaskType.BUILD_LINE
                 || assignment.spec.type() == TaskType.REPAIR_REGION)){
             agent.controller.cancelBuildPlans();
         }

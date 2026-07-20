@@ -49,6 +49,7 @@ public final class EngineFeatureSource implements FeatureSource{
         return switch(task.type()){
             case HARVEST_RESOURCE -> clamp((world.harvestCopperThreshold() - world.coreCopper())
                 / (double)Math.max(1, world.harvestCopperThreshold()));
+            case BUILD_LINE -> world.buildLineComplete() ? 0.0 : 1.0;
             case BUILD_SCHEMATIC -> world.schematicComplete() ? 0.0 : 1.0;
             case SUPPLY_TURRET -> turretUrgency(task);
             case REPAIR_REGION -> clamp(world.brokenBlockCount() / 5.0);
@@ -78,6 +79,9 @@ public final class EngineFeatureSource implements FeatureSource{
                 }
             }
         }else if(task.target() instanceof RegionTarget region){
+            if(region.regionId().equals(world.buildLineId())){
+                return new float[]{world.buildLineWorldX(), world.buildLineWorldY()};
+            }
             if(region.regionId().equals(world.schematicId())){
                 return new float[]{world.schematicWorldX(), world.schematicWorldY()};
             }

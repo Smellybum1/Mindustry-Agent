@@ -1,6 +1,7 @@
 package agentcore.candidates;
 
 import agentcore.AgentId;
+import agentcore.TaskType;
 import agentcore.utility.HandTunedUtility;
 import agentcore.utility.UtilityFeatures;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,7 @@ class CandidateGeneratorTest{
             .map(candidate -> candidate.task().taskId()).toList();
         assertEquals(List.of(
             "T1:harvest:copper",
+            "T2:build:copper_line_v1",
             "T3:build:east_duo_v1",
             "T4:supply:7",
             "T4:supply:19",
@@ -51,8 +53,9 @@ class CandidateGeneratorTest{
         assertEquals("missing_capability:carry", candidates.candidates().get(0).invalidReason());
         assertEquals("missing_capability:build", candidates.candidates().get(1).invalidReason());
         assertEquals("missing_capability:build", candidates.candidates().get(2).invalidReason());
-        assertEquals("missing_capability:combat", candidates.candidates().get(3).invalidReason());
-        assertTrue(candidates.candidates().get(4).valid());
+        assertEquals("missing_capability:build", candidates.candidates().get(3).invalidReason());
+        assertEquals("missing_capability:combat", candidates.candidates().get(4).invalidReason());
+        assertTrue(candidates.candidates().get(5).valid());
     }
 
     @Test void masksTargetsOutsideAssignmentRange(){
@@ -63,7 +66,8 @@ class CandidateGeneratorTest{
         assertEquals("out_of_range", candidates.candidates().get(1).invalidReason());
         assertEquals("out_of_range", candidates.candidates().get(2).invalidReason());
         assertEquals("out_of_range", candidates.candidates().get(3).invalidReason());
-        assertTrue(candidates.candidates().get(4).valid(), "WAIT is always local to the agent");
+        assertEquals("out_of_range", candidates.candidates().get(4).invalidReason());
+        assertTrue(candidates.candidates().get(5).valid(), "WAIT is always local to the agent");
     }
 
     @Test void boundedCatalogRetainsWaitAsFinalFallback(){
@@ -75,13 +79,15 @@ class CandidateGeneratorTest{
         CandidateSet candidates = new CandidateGenerator(8).generate(AGENT, activeWorld(turrets), UTILITY);
         assertEquals(8, candidates.candidates().size());
         assertEquals("runtime:wait", candidates.candidates().get(7).task().taskId());
-        assertEquals("T4:supply:4", candidates.candidates().get(6).task().taskId());
+        assertEquals("T4:supply:3", candidates.candidates().get(6).task().taskId());
     }
 
     @Test void satisfiedAndSafeWorldProducesOnlyWait(){
         CandidateWorldSnapshot world = new CandidateWorldSnapshot(
-            50, 8, "T1", "T3", "T4", "T6", "T5", 400, 300, true, 120,
-            84f, 84f, 260f, 196f, "east_duo_v1",
+            50, 8, "T1", "T2", "T3", "T4", "T6", "T5", 400, 300,
+            true, 31, true, 120,
+            84f, 84f, 224f, 224f, "copper_line_v1",
+            260f, 196f, "east_duo_v1",
             List.of(new TurretSnapshot(7, 30, 24, 10)), 10,
             0, 260f, 196f, "defense_block",
             0, 1200f, 600, 300f, 196f, "east_lane"
@@ -93,10 +99,28 @@ class CandidateGeneratorTest{
         assertTrue(candidates.candidates().get(0).valid());
     }
 
+    @Test void completedBuildLineIsRemovedWhileOtherWorkRemains(){
+        CandidateWorldSnapshot world = new CandidateWorldSnapshot(
+            50, 8, "T1", "T2", "T3", "T4", "T6", "T5", 200, 300,
+            true, 31, false, 120,
+            84f, 84f, 224f, 224f, "copper_line_v1",
+            260f, 196f, "east_duo_v1", List.of(), 10,
+            0, 260f, 196f, "defense_block",
+            0, 1200f, 600, 300f, 196f, "east_lane"
+        );
+
+        List<TaskType> types = new CandidateGenerator().generate(AGENT, world, UTILITY)
+            .candidates().stream().map(candidate -> candidate.task().type()).toList();
+        assertFalse(types.contains(TaskType.BUILD_LINE));
+        assertTrue(types.contains(TaskType.BUILD_SCHEMATIC));
+    }
+
     private static CandidateWorldSnapshot activeWorld(List<TurretSnapshot> turrets){
         return new CandidateWorldSnapshot(
-            50, 8, "T1", "T3", "T4", "T6", "T5", 200, 300, false, 120,
-            84f, 84f, 260f, 196f, "east_duo_v1",
+            50, 8, "T1", "T2", "T3", "T4", "T6", "T5", 200, 300,
+            false, 31, false, 120,
+            84f, 84f, 224f, 224f, "copper_line_v1",
+            260f, 196f, "east_duo_v1",
             turrets, 10,
             3, 260f, 196f, "defense_block",
             2, 400f, 600, 300f, 196f, "east_lane"

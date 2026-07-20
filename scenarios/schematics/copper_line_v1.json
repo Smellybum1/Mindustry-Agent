@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "name": "copper_line_v1",
+  "anchor": "tile",
+  "description": "Two fully-fed mechanical drills merged into a westbound conveyor trunk that empties into the core.",
+  "expected_copper_cost": 31,
+  "blocks": [
+    { "block": "mechanical-drill", "offset": [ 0,  0], "rotation": 0 },
+    { "block": "mechanical-drill", "offset": [ 2,  0], "rotation": 0 },
+    { "block": "conveyor",        "offset": [ 2, -1], "rotation": 2 },
+    { "block": "conveyor",        "offset": [ 1, -1], "rotation": 2 },
+    { "block": "conveyor",        "offset": [ 0, -1], "rotation": 2 },
+    { "block": "conveyor",        "offset": [-1, -1], "rotation": 2 },
+    { "block": "conveyor",        "offset": [-2, -1], "rotation": 3 },
+    { "block": "conveyor",        "offset": [-2, -2], "rotation": 3 },
+    { "block": "conveyor",        "offset": [-2, -3], "rotation": 2 }
+  ]
+}

@@ -486,12 +486,13 @@ def main(argv=None) -> int:
         initial_candidates = _candidate_ids(rr.initial_observations[0])
         if initial_candidates != [
             "T1:harvest:copper",
+            "T2:build:copper_line_v1",
             "T3:build:east_duo_v1",
             "runtime:wait",
         ]:
             print(f"FAIL: initial candidate catalog mismatch: {initial_candidates}", file=sys.stderr)
             return 1
-        if rr.action_masks[0].get("candidate_task") != [True, True, True]:
+        if rr.action_masks[0].get("candidate_task") != [True, True, True, True]:
             print(f"FAIL: initial candidate mask mismatch: {rr.action_masks[0]}", file=sys.stderr)
             return 1
 
