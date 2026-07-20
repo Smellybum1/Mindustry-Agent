@@ -19,11 +19,13 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
    truth for how to work here.
 2. `docs/HANDOFF.md` — verified project state, exact commands with expected
    outputs, architecture map, performance, known risks.
-3. `docs/ROADMAP.md` — Milestones M4–M6 are broken into issue-sized items with
-   acceptance criteria. **M6 is complete; your work queue begins with M7.1.**
-4. `docs/M4_DESIGN.md` — the approved design you are implementing (it has open
-   questions to resolve against engine source and record in place — follow the
-   precedent in `docs/M3_DESIGN.md`, which shows the expected resolution style).
+3. `docs/ROADMAP.md` — **"Phase 2: The Teammate Roadmap" (M7–M10, restructured
+   2026-07-27) is your work queue, beginning at M7.1.** The north star: agents
+   that cooperate at a level top players would want on their team. M7 comes
+   before any learning on purpose — read the section preamble.
+4. `docs/REVIEW_M6.md` — the independent review of the milestone-6 work. Its
+   findings ARE items M7.1/M7.2; its planning-primitiveness inventory is the
+   design rationale for M7.3–M7.5. Do not skip it.
 5. Before touching engine-adjacent code: `docs/ENGINE_NOTES.md` (source-verified
    engine facts) and `docs/UPSTREAM_PATCHES.md` (the only 2 upstream edits).
 6. Context when needed: `docs/ARCHITECTURE.md`, `docs/PROTOCOL.md`,
@@ -96,19 +98,28 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Your first task
 
-`docs/ROADMAP.md` → **Milestone 7, item 7.1 learned selector baseline
-contract**. Milestones 4–6 are verified complete. The
-thread-less pathfinder refresh is wall-clock-free and the 79-boundary determinism
-trace legally executes and supplies the schematic, then builds a post-wave wall;
-`BuildBlock` uses real engine plans and balances core resources; reset/step now
-emit bounded scenario-driven task candidates and aligned validity masks; the
-scripted policies demonstrate distinct work and measurable helper fulfilment;
-rendered announcements and cumulative coordination metrics are live and
-rate-limited. Each item lists objective, files,
-acceptance, and dependencies. Before starting, run
-`bash scripts/smoke.sh && bash scripts/determinism.sh` to confirm the baseline
-is green on your session; if it is not, diagnose that first — do not build on a
-red baseline.
+`docs/ROADMAP.md` → **Milestone 7, item 7.1 (review-findings consolidation)**,
+then 7.2 → 7.6 strictly in order. Milestones 4–6 are verified complete and
+independently re-verified 2026-07-27 (all suites green; evaluation 5/5
+reproduced exactly; golden replay 678/678 checkpoints). Do NOT start learned-
+selector work (M8) until every M7 exit criterion is met — M7 exists because
+the M6 expert is a hand-authored macro (see REVIEW_M6.md) and a learned policy
+must have adaptive baselines worth beating and an evaluation ladder to be
+judged by.
+
+Special notes for M7:
+- 7.1 will change the golden replay (constants unify → hashes move). Regenerate
+  the golden trace deliberately in its own commit, showing before/after outcome
+  equivalence (wins stay wins, ledger still balances).
+- 7.2 (one coordination brain) is the parity backbone for everything that
+  follows; treat any training/demo behaviour divergence found while unifying
+  as a bug to surface, not to paper over.
+- 7.3's `docs/CANDIDATE_GAPS.md` is a required deliverable even if the list is
+  short — M8's design consumes it.
+
+Before starting, run `bash scripts/smoke.sh && bash scripts/determinism.sh` to
+confirm the baseline is green on your session; if it is not, diagnose that
+first — do not build on a red baseline.
 
 ## Verification you must run before declaring any item done
 

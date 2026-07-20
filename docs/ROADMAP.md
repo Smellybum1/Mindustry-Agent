@@ -500,57 +500,236 @@ Exit criteria (brief, unchanged):
 - [x] Training and demo mode share the same skills and task board
 - [x] Deterministic replay matches training results
 
-## Milestone 7: Learned single-agent selector
+# Phase 2: The Teammate Roadmap (M7–M10, restructured 2026-07-27)
 
-Deliverables:
-- [ ] Random and heuristic baselines
-- [ ] PPO task selector
-- [ ] Training configuration
-- [ ] Checkpoint/evaluation pipeline
-- [ ] Reward audit (`docs/REWARD_AUDIT.md` template exists)
+**North star (project owner's explicit goal): agents that cooperate at a level
+top players would want on their team.** The success metric is a skilled human
+*choosing* these agents as teammates — not raw completion speed. This
+restructures the original M7–M10: adaptive planning and the evaluation ladder
+are pulled BEFORE learning (a learned selector inherits the candidate
+catalog's ceiling and must beat baselines worth beating); human cooperation is
+the destination milestone, with its metrics threaded through everything
+earlier. Review findings that motivate this ordering: `docs/REVIEW_M6.md`.
+
+---
+
+## Milestone 7: Consolidation, adaptive planning, evaluation ladder
+
+Objective: fix the M6 review findings, make the SCRIPTED team genuinely
+adaptive (the "primitive planning" complaint), and build the evaluation
+machinery every later milestone is judged by. No learning yet; no new
+dependencies.
+
+### 7.1 Review-findings consolidation
+- Objective: resolve `docs/REVIEW_M6.md` findings 1, 3, 4, 6, 8, 9, 10, 11, 12
+  (mechanical fixes: regenerate the UPSTREAM_PATCHES diff, delete dead
+  DemoCoordinator branches, derive probe-asserted counts from placement loops,
+  data-drive all coordinates/constants from scenario/schematic JSON, truncate
+  candidates by utility not generation order, replace nanoTime episode_id with
+  rootSeed+counter, single-source duplicated constants, resolve SupplyBuilding
+  stock fields).
+- Files: per-finding citations in REVIEW_M6.md.
+- Acceptance: full verification suite green (smoke/determinism/stress/golden
+  replay/evaluate-scripted — golden trace WILL change if behaviour-adjacent
+  constants unify; regenerate it deliberately in its own commit with
+  before/after outcome equivalence shown); no literal coordinate remains in
+  scripted_demo.py or DemoCoordinator that exists in scenario/schematic JSON.
+
+### 7.2 One coordination brain (training/demo parity for real)
+- Objective: extract the shared task-lifecycle driver so `CoordinationAdapter`
+  (fixed-step) and the demo plugin consume ONE implementation of staging, wave
+  response, expansion policy, and task lifecycle (REVIEW_M6 finding 5).
+  DemoCoordinator shrinks to pacing/IO adaptation. Widen the parity probe from
+  build-order equality to policy-decision equality (same snapshot → same task
+  selections) on a recorded scenario trace.
+- Why first: every capability after this must reach the human demo unchanged —
+  the north star is meaningless if the demo brain forks from the training brain.
+- Acceptance: parity probe compares decision sequences, not just build order;
+  demo survival probe still passes; no coordination logic left in agent-plugin
+  beyond adaptation.
+
+### 7.3 The utility layer becomes the expert
+- Objective: retire the hand-authored `ExpertEpisode` macro as the primary
+  policy (REVIEW_M6 finding 2). The greedy-utility policy over the candidate
+  catalog must win bootstrap-defense-v0 5/5 (+ blocked variant) end to end.
+  Enrich the candidate catalog/utility features only as needed to win — every
+  gap found is recorded (it is the concrete list of what the catalog cannot
+  express). ExpertEpisode is demoted to a frozen baseline for the ladder.
+- Acceptance: `evaluate-scripted` runs the utility-driven policy: 5/5 wins;
+  the win no longer produces identical milestone ticks across seeds only if
+  behaviour genuinely varies (do not fake variation); a
+  `docs/CANDIDATE_GAPS.md` list of expressiveness gaps found.
+
+### 7.4 Adaptive planning v1 (de-primitive the catalog)
+- Objective: upgrade the four rigidity layers (REVIEW_M6 inventory) within
+  the scripted regime:
+  (a) wave-clock awareness: candidate priorities/leads computed from the wave
+  schedule and current defense readiness (ammo coverage vs incoming wave DPS
+  per STRATEGY_NOTES arithmetic), replacing the fixed 600-tick lead and magic
+  priorities with derived quantities;
+  (b) economy predicates implemented for real: conveyor connectivity +
+  core-inflow rate (finding 7) so "line complete" means the line WORKS;
+  (c) spatial gating: real assignmentRange + travel-cost from actual distance;
+  (d) event-driven decision boundaries: decision on task-terminal, BLOCKED,
+  wave-spawn, wave-clear, core-damage events (the protocol already carries
+  them) instead of fixed polling quanta;
+  (e) replanning: BLOCKED tasks trigger candidate regeneration + reselection
+  (not just retry), bounded by the existing switching-cost mechanics.
+- Acceptance: on the FIXED scenario, milestone ticks/messages now vary by seed
+  where behaviour legitimately differs; a new `adaptive-probe` scenario variant
+  (e.g. pre-damaged line, delayed loadout) that the linear macro cannot win but
+  the adaptive policy does; idle fraction and time-to-defense-ready improve vs
+  the frozen ExpertEpisode baseline on the variant set.
+
+### 7.5 Scenario variation v1 + seed governance (ADR-0012)
+- Objective: procedural jitter driven by root_seed within scenario_version 2:
+  copper/lead patch positions (bounded), wave composition/timing jitter
+  (bounded), starting loadout range, optional second approach lane variant.
+  Train/dev/held-out seed-set governance: named frozen seed sets in
+  `configs/evaluation/`, held-out sets never used during development. ADR-0012
+  records variation axes + governance + scenario_version discipline.
+- Acceptance: determinism per seed unchanged (same seed → same world+hashes);
+  scenario_check validates variants; the 7.3 utility policy wins ≥80% on the
+  dev variant set (record honestly; gaps feed 7.4 iteration).
+
+### 7.6 Evaluation ladder + teammate scorecard v0
+- Objective: the permanent judgment machinery: baselines = random-valid,
+  greedy-utility, role-assignment, frozen ExpertEpisode (fixed scenario only),
+  adaptive-v1. Evaluation harness runs N episodes × policy × seed set with
+  bootstrap confidence intervals and a promotion rule (a policy is only
+  "better" if CI-separated on held-out seeds). Teammate scorecard v0 computed
+  per episode from existing metrics: idle fraction, duplicate-work incidents,
+  time-to-help (request→fulfilment ticks), announcement precision (rendered
+  messages per meaningful transition), task-abandonment rate, recovery time
+  after agent loss. `make evaluate-ladder` produces the table;
+  docs/BENCHMARKS.md gains the section.
+- Acceptance: ladder runs reproducibly on Windows (4-JVM cap); scorecard
+  appears in episode JSONL + aggregate table; promotion rule documented in
+  ADR-0012.
 
 Exit criteria:
-- [ ] Learned policy beats random valid
-- [ ] Behavioural videos/logs show real task progress
-- [ ] No known trivial reward exploit remains
+- [ ] All REVIEW_M6 findings resolved or explicitly waived with rationale
+- [ ] One coordination brain; decision-level parity probe green
+- [ ] Utility-driven policy wins fixed 5/5 + ≥80% dev variants; macro retired
+- [ ] Seed-varied behaviour demonstrably adaptive (variant probe + metrics)
+- [ ] Ladder + scorecard v0 reproducible; held-out governance in force
 
-## Milestone 8: IPPO multi-agent baseline
+## Milestone 8: Learned task selector (single seat)
 
-Deliverables:
-- [ ] Parameter-shared actor
-- [ ] Per-agent hidden state or history
-- [ ] Structured communication observation
-- [ ] Communication/no-communication comparison
+Objective: replace ONE seat's utility scoring with a learned policy that
+CI-beats greedy-utility on held-out variants. Everything else stays scripted.
+Not the destination — the proof that learning plugs into the seam.
+
+### 8.1 M8_DESIGN.md before any code
+- Featurization: fixed-size candidate table (≤8 rows × feature vector from
+  the existing UtilityFeatures + task-type one-hot + board context), scalar
+  team/self features; NO spatial grids yet. Exact tensor shapes + masks.
+- Single-learned-seat semantics: the learned agent submits
+  SELECT_CANDIDATE_TASK[k]/CONTINUE/WAIT through the SAME task_action protocol
+  and board claim resolution as scripted seats (no privileged path).
+- Invalid action = masked out; if selected anyway (should be impossible),
+  penalty + WAIT, never a crash. Decision cadence = 7.4's event boundaries.
+- Reward v1 DRAFTED here with docs/REWARD_AUDIT.md entries (team milestone
+  high-water marks + terminal outcome + small per-tick time cost + small
+  invalid/abandon penalties; each component: 3 exploit hypotheses + an
+  adversarial script). No reward influences training until its audit row is
+  complete — the audit gate is hard.
+### 8.2 ADR-0011: RL dependency boundary
+- PyTorch (pinned exact version) permitted ONLY under `python[rl]` extra,
+  imported ONLY in `mindustry_agents/training/`; env/protocol/process stay
+  stdlib (ADR-0007 intact). Lockfile for the rl extra. WSL2 becomes the
+  training runtime (bring-up + re-verification there is part of this item);
+  Windows remains the dev/demo runtime.
+### 8.3 Throughput bring-up for training
+- Larger step chunks at decision boundaries (event-driven cadence makes steps
+  long), process-based or chunk-batched collector if needed; Gate 5 overnight
+  run (≥10k resets); record honest scaling on WSL2. Do not train until ≥50×
+  aggregate real-time at 4 JVMs with inference in the loop.
+### 8.4 PPO selector + run manifests
+- Feed-forward first, recent-history features; run manifest per brief §21.1;
+  checkpoints reproduce evaluation bit-exactly (eval mode deterministic).
+### 8.5 Promotion gate
+- Beats random-valid AND greedy-utility with CI separation on HELD-OUT variant
+  seeds; scorecard v0 not worse than greedy-utility (a selector that wins
+  faster but teams worse fails); anti-exploit scripts show no reward farming;
+  behavioural traces (task Gantt from event log) reviewed and archived.
 
 Exit criteria:
-- [ ] Multi-agent policy beats fixed-role baseline on ≥1 randomized scenario family
-- [ ] Task duplication and idle time are measured
-- [ ] Checkpoints reproduce evaluation results
+- [ ] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
+- [ ] Training runs reproducible (manifest + seeds + lockfile)
+- [ ] Learned seat CI-beats greedy-utility on held-out; scorecard non-regressing
+- [ ] No known reward exploit; adversarial scripts in CI-runnable form
 
-## Milestone 9: MAPPO and partner diversity
+## Milestone 9: Multi-agent learning + partner robustness
 
-Deliverables:
-- [ ] Centralized critic
-- [ ] Population of partner policies/scripts
-- [ ] Held-out partner evaluation
-- [ ] Failure/dropout curriculum
+Objective: all seats learned (parameter-shared IPPO → MAPPO), trained and
+evaluated against a PARTNER POPULATION so coordination does not overfit to
+clones. This is where "teammate" starts being trained for directly.
+
+- 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
+  reward with small individual shaping (audited per component, as 8.1).
+- 9.2 Partner population: scripted variants (greedy, role, adaptive-v1,
+  delayed, noisy, occasionally-declines-help, drops-mid-episode), frozen old
+  checkpoints; every training batch mixes partners; evaluation matrix includes
+  unseen-partner cells.
+- 9.3 Communication value ablation: board-visible vs board-hidden actors —
+  announcements must provide measurable coordination benefit, else the
+  observation/featurization of board state needs rework (result recorded
+  either way).
+- 9.4 MAPPO centralized critic (training-only global state; ADR if the critic
+  needs new privileged observation channels).
+- 9.5 Robustness curriculum: agent dropout mid-episode, lease-expiry recovery,
+  helper-decline tolerance — scorecard's recovery metrics become training
+  distribution, not just evaluation.
 
 Exit criteria:
-- [ ] Policy works with unseen partner checkpoints
-- [ ] Performance degrades gracefully if one teammate fails
-- [ ] Coordination communication provides measurable benefit
+- [ ] Multi-agent learned team CI-beats the best scripted team on held-out variants
+- [ ] Graceful degradation with one seat dropped (quantified vs scripted)
+- [ ] Communication ablation shows positive value of the structured board
+- [ ] Performance holds with unseen partner checkpoints + scripted partners
 
-## Milestone 10: Human-agent study and polished demo
+## Milestone 10: The human-teammate milestone (north star)
 
-Deliverables:
-- [ ] Human goal/override commands
-- [ ] Announcement UI
-- [ ] Session logging
-- [ ] Human evaluation protocol
-- [ ] Video/replay tooling
+Objective: a skilled human plays bootstrap-defense (and variants) WITH the
+agents and rates them teammates worth keeping. Human-cooperation capability is
+built, measured, and iterated here — on the SAME brain that trains (7.2).
+
+- 10.1 Human command surface v2: `/agents goal <task> <region>`,
+  `/agents assign <agent> <task>`, `/agents release <agent>`,
+  `/agents autonomy low|normal|high`, `/agents quiet on|off` — human-created
+  goals become high-priority board tasks entering the SAME candidate stream
+  (human_priority weight already exists); validated, confirmable, revocable.
+- 10.2 Human-presence adaptation: detect human build plans/recent construction
+  zones in the demo (plugin observes player plans), register them as
+  human-priority reservations (board rule exists — wire the detection), agents
+  yield + announce the conflict exactly once; never deconstruct human work;
+  never consume the human's reserved resource budget below a floor.
+- 10.3 Human session capture (local, opt-in): demo sessions record the same
+  event/trajectory JSONL as training episodes + human actions; from these,
+  (a) partner-style statistics (pace, role preference, plan-changes) and
+  (b) scripted human-partner models (fast-expert / slow-beginner / cautious /
+  plan-changer / help-requester) join the M9 partner population.
+- 10.4 Teammate scorecard v1 (human terms): human intervention rate, plan
+  conflicts per session, yield latency, goal-compliance rate, time-to-help on
+  human requests, announcement usefulness rating, post-session preference
+  ("keep this team?" + comparative rating vs scripted team). Session protocol
+  documented; results logged per session in runs/.
+- 10.5 Learned policy in the demo seat: latency budget (decision within one
+  real-time tick), safety invariants live (stop/pause instant, autonomy
+  levels honored), fallback to scripted brain on policy-process failure.
+- 10.6 Iterate to the bar: fine-tune against the human-partner population;
+  exit when scorecard targets hold across ≥3 distinct human sessions and the
+  human prefers playing WITH agents vs without on the same scenario.
 
 Exit criteria:
-- [ ] Human can play a complete scenario with agents
-- [ ] Emergency stop and override work
-- [ ] Agents do not repeatedly fight human plans
-- [ ] Human feedback and intervention metrics are captured
+- [ ] Human goals/overrides work end to end; agents never fight human plans
+- [ ] Human sessions captured; human-partner models in the training population
+- [ ] Learned team scores ≥ scripted team on scorecard v1 WITH a human present
+- [ ] The project owner, playing seriously, prefers the agent team present
+      (recorded sessions + ratings) — the north-star acceptance
+
+---
+
+Cross-cutting (any milestone): protobuf migration only if profiling crosses
+the ADR-0004 trigger; engine pin frozen; every new reward component blocked on
+its REWARD_AUDIT row; docs/STATUS.md + HANDOFF.md updated per change, as ever.
