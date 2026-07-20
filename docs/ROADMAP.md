@@ -153,6 +153,11 @@ below; implement in order — 4.1/4.2 unblock everything else.
 - Depends: 4.1 (hash stability once blocks change pathing).
 
 ### 4.3 ExecuteSchematic (S2) + east_duo_v1 data
+- **DONE (verified 2026-07-20):** `ExecuteSchematic` sequences the data-backed
+  seven-block layout through legal `BuildBlock` plans, reports monotone aggregate
+  progress, and propagates typed inner failures. The live smoke completes two
+  Duos plus five walls for exactly 100 copper; the cross-process trace reproduces
+  all 78 hash boundaries. One new FSM test brings the Java total to 83.
 - Objective: ordered BuildBlock list from
   `scenarios/schematics/east_duo_v1.json` (new; single source of truth; layout
   per docs/SCENARIOS.md east defence: 2 Duos + copper walls, turrets first).

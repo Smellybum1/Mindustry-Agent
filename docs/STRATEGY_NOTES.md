@@ -175,7 +175,7 @@ concurrently (and across agents). Coordinates/predicates are made concrete in
         ┌────────────────────────┼───────────────────────────┐
         ▼                        ▼                            ▼
  [HARVEST copper]        [BUILD_LINE copper]          [BUILD_SCHEMATIC
-  hand-mine to a          drills on patch →            east_duo_line]
+  hand-mine to a          drills on patch →            east_duo_v1]
   core threshold          conveyor trunk → core        2 Duos + wall choke
   (bootstraps if          (sustained economy)          (uses loadout copper)
    loadout is thin)                │                            │
@@ -195,7 +195,7 @@ concurrently (and across agents). Coordinates/predicates are made concrete in
 Hard precedences:
 
 - **Build the Duos before you can supply them.** `SUPPLY_TURRET` targets must
-  exist (`BUILD_SCHEMATIC east_duo_line` completes first).
+  exist (`BUILD_SCHEMATIC east_duo_v1` completes first).
 - **Have copper before you build.** Either the starting loadout or `HARVEST`
   must provide the ~160 copper the reference build costs before/while building.
 - **Economy (BUILD_LINE) unblocks sustained supply.** Ammo for wave 3 exceeds
@@ -291,7 +291,7 @@ catalog entries reserved for later stages.
 | Retreat under threat | (no TaskType; skill-level) | `EmergencyRetreat` | ✅ (reactive) | unit out of danger |
 
 Reward hooks (brief §17.4, high-water-mark / first-achievement): reward the
-*first* completion of `BUILD_SCHEMATIC east_duo_line`, each *new* wave survived,
+*first* completion of `BUILD_SCHEMATIC east_duo_v1`, each *new* wave survived,
 net copper delivered to the turret sink (not raw mined — anti-exploit §17.5), and
 core/turret health preserved. Never reward raw mining, raw repair, or message
 count (§17.5).

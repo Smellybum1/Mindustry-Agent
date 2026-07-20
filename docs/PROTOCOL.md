@@ -104,14 +104,16 @@ Fail fast on incompatible **major** versions.
 ```
 
 `command.type` is one of `NAVIGATE` / `MINE` / `DELIVER_CORE` / `WAIT` / `BUILD` /
-`CONTINUE`.
+`SCHEMATIC` / `CONTINUE`.
 An absent `command` (or `CONTINUE`) keeps the agent's current skill running.
 Params by type: `NAVIGATE {x, y, tolerance?}` (world coords), `MINE {tile_x, tile_y,
 amount?}` (tile coords), `DELIVER_CORE {}`, `WAIT {ticks?}`,
 `BUILD {block, tile_x, tile_y, rotation}` (scenario-whitelisted block id and tile
 coords; rotation 0..3). `BUILD` enqueues the unit's real engine `BuildPlan`; the
 engine consumes core resources incrementally and construction is never placed
-directly. Actions are applied on
+directly. `SCHEMATIC {name, tile_x, tile_y}` executes a checked-in, ordered list
+of anchor-relative `BUILD` entries; unknown names and out-of-bounds footprints are
+rejected. Actions are applied on
 the sim thread **before** advancing; each is validated and echoed in
 `action_results[]` — an invalid action is rejected there, never crashes the step.
 

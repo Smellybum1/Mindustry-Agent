@@ -198,16 +198,18 @@ coords.
 |---|---|---|---|---|---|
 | T1 | Hand-mine copper to bootstrap | `HARVEST_RESOURCE` | patch A `(27..32,27..32)` | `core.items[copper]` reaches ≥ 300 cumulative delivered (net, source=ore) | T4 (softly), T5 |
 | T2 | Lay drill+conveyor copper line | `BUILD_LINE` | drills on patch A → conveyor trunk → core `(24,24)` | ≥ 2 `mechanicalDrill` complete on ore **and** ≥ 1 conveyor path connects a drill to the core; sustained core copper inflow ≥ 0.6/s | T5 |
-| T3 | Build east defensive schematic | `BUILD_SCHEMATIC` (`east_duo_line`) | Duos @ `(32,23)`,`(32,25)`; walls @ `x=33, y∈{22..26}` | all 7 footprint blocks (2 Duo + 5 wall) `state == ready` (built) | T5, T6 |
+| T3 | Build east defensive schematic | `BUILD_SCHEMATIC` (`east_duo_v1`) | Duos @ `(32,23)`,`(32,25)`; walls @ `x=33, y∈{22..26}` | all 7 footprint blocks (2 Duo + 5 wall) `state == ready` (built) | T5, T6 |
 | T4 | Supply the east Duos | `SUPPLY_TURRET` | Duos @ `(32,23)`,`(32,25)` | both Duos `totalAmmo ≥ 10` (≥5 copper) held, refreshed each wave | T6 |
 | T5 | Hold the east lane | `DEFEND_REGION` | region `x∈[26,46], y∈[21,27]` | region enemy (`crux` unit) count returns to 0 after each wave | win |
 | T6 | Repair the line between waves | `REPAIR_REGION` | region `x∈[30,35], y∈[20,28]` | all owned blocks in region health fraction ≥ 0.9 before next spawn tick | (recurring) |
 | T7 | Assist a stalled builder | `ASSIST_BUILD` | any agent's incomplete `BuildPlan` | target plan reaches `ready` | (opportunistic) |
 
-**Reference schematic `east_duo_line` (`scenarios/bootstrap-defense-v0/schematics/east-duo-v1`, planned):**
+**Reference schematic `east_duo_v1` (`scenarios/schematics/east_duo_v1.json`, loaded):**
 `copperWall` at `(33,22),(33,23),(33,24),(33,25),(33,26)`; `duo` at `(32,23)` and
 `(32,25)`, both facing **east (rotation 1 / +x)**. Cost 5×6 + 2×35 = **100
-copper**. Agents may extend with a second wall column at `x=34` and a supply
+copper**. The JSON's anchor-relative ordered block list is the single source of
+truth and is validated against the scenario whitelist and engine recipes when
+the scenario loads. Agents may extend with a second wall column at `x=34` and a supply
 router at, e.g., `(30,24)`.
 
 **Expected precedence graph** (mirrors `docs/STRATEGY_NOTES.md` §3):
@@ -262,7 +264,7 @@ post-hoc narration (brief §1, §11.7):
 1. **[Agent Copper] Starting: establish copper line to the core.** — claims T2
    (`BUILD_LINE`), begins placing drills on patch A + conveyor trunk.
 2. **[Agent Shield] Starting: build east defence. Requesting 1 helper.** — claims
-   T3 (`BUILD_SCHEMATIC east_duo_line`), emits `REQUEST_HELP`.
+   T3 (`BUILD_SCHEMATIC east_duo_v1`), emits `REQUEST_HELP`.
 3. **[Agent Relay] Helping Shield: deliver copper to the east Duos.** — `OFFER_HELP`
    accepted; claims T4 (`SUPPLY_TURRET`) as Shield's helper contract.
 4. The task board records Shield's claim + Relay's accepted helper contract

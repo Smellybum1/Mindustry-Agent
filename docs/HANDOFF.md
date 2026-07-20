@@ -4,10 +4,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M3 + M4.1–4.2 complete, all verified 2026-07-20): the
+- **What currently works** (M0–M3 + M4.1–4.3 complete, all verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
-  board **and the M3/M4 `agentcore.skill` FSM layer** (82 JUnit tests), agent
+  board **and the M3/M4 `agentcore.skill` FSM layer** (83 JUnit tests), agent
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
@@ -22,11 +22,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   the tile-change `Time.millis()` refresh gate in thread-less mode; a wall placed
   after wave 1 produces identical re-pathing hashes across fresh JVMs. M4.2 adds
   legal `BUILD`: real `BuildPlan` execution, exact core resource consumption,
-  and typed failure telemetry (82 JUnit tests total).
+  and typed failure telemetry. M4.3 adds data-backed `SCHEMATIC`: the ordered
+  `east_duo_v1` build completes through those legal plans for exactly 100 copper
+  and is covered by the expanded 78-boundary replay (83 JUnit tests total).
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
   the scenario now loads fully, but its scored `objectives[]` (M5 task-board
-  wiring), the reference-schematic build, and a scripted *win* path are still to
-  come (M4–M6); `action_masks` are empty placeholders; rewards are empty until M7;
+  wiring) and a scripted *win* path are still to come (M4–M6); `action_masks`
+  are empty placeholders; rewards are empty until M7;
   training/evaluation Python subpackages. See `docs/STATUS.md`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
@@ -46,9 +48,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make build` | Builds `rl-server:dist` + `agent-core`/`agent-plugin` classes, then validates the Python package import; ends `build: OK`, exit 0. |
 | `make test` | Runs the Python suite (29 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
-| `make test-java` | `gradlew agent-core:test` (82 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
-| `make smoke` | Runs exact stepping + M3 mine/deliver ledger, then resets for M4.2: first Duo costs exactly 35 copper; after legal builds leave 34, an underfunded Duo consumes only that stock and reports `BLOCKED(RESOURCES_SHORT)` at zero. The scenario check still proves the undefended loss path. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
-| `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary (reset + 10 plain chunks + 24 scripted skill steps + **post-wave wall placement and moving/re-pathing enemies** = 73 hashes); in-JVM reset purity; **plus check 4 — seed sensitivity: a different seed diverges post-wave** while the same seed stays identical; ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
+| `make test-java` | `gradlew agent-core:test` (83 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
+| `make smoke` | Runs exact stepping + M3 mine/deliver ledger, then M4 ledgers: one Duo costs exactly 35 copper, an underfunded Duo reports `BLOCKED(RESOURCES_SHORT)`, and `east_duo_v1` completes two Duos plus five walls for exactly 100 copper. The scenario check still proves the undefended loss path. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
+| `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary, including the ordered seven-block schematic and **post-wave wall placement with moving/re-pathing enemies** (78 hashes); in-JVM reset purity; **plus check 4 — seed sensitivity: a different seed diverges post-wave** while the same seed stays identical; ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
 | `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling (within-cap growth is heap ergonomics, informational only — trend thresholds proved flaky); ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20 (twice, incl. after the methodology fix). |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
@@ -126,8 +128,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 - **Passing**: 29 Python tests (`test_import.py`, `test_protocol.py` incl. the M3
   `action_results`/`agent_actions` roundtrips, `test_supervisor.py`, `test_env.py`;
-  fake-server subprocess, no JVM, fast) and 82 Java JUnit tests (`agent-core`, incl.
-  18 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
+  fake-server subprocess, no JVM, fast) and 83 Java JUnit tests (`agent-core`, incl.
+  19 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
   the shell scripts (smoke/determinism/stress-reset/benchmark) — smoke now includes
   the mine/deliver ledger and determinism the scripted skill trace; all verified
   green 2026-07-20.
@@ -150,7 +152,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 - **Dynamic re-path determinism is resolved (M4.1)**: the thread-less
   `Pathfinder.syncUpdate()` path consumes pending tile changes immediately without
   the normal-mode wall-clock gate. `tools/determinism.py` places a copper wall at
-  tick 2880 and matches all 73 hashes across fresh JVMs while daggers continue
+  tick 2760 and matches all 78 hashes across fresh JVMs while daggers continue
   around it. M4.2 removed the temporary hook; the trace now uses legal `BUILD`
   and verifies the six-copper wall ledger.
 - **4-JVM scaling is Python-bound** (~53% efficiency): GIL-bound JSON in the
@@ -163,7 +165,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M4 items 4.3–4.8 (then M5/M6,
+**Authoritative work queue: `docs/ROADMAP.md` M4 items 4.4–4.8 (then M5/M6,
 also broken down there). Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
@@ -175,7 +177,7 @@ termination + seed-sensitivity + the `Pathfinder.syncUpdate()` patch — **lande
 promotes the remainder and adds the M4 follow-ons it unblocks.)*
 
 1. **M4: defend/repair + a scripted win path.**
-   - Objective: script the reference `east_duo_line` build (2 Duos + wall column),
+   - Objective: script the reference `east_duo_v1` build (2 Duos + wall column),
      supply copper, and survive all 3 waves with the core alive at tick 8100 →
      `outcome == "win"`. Adds the `BuildSchematic`/`SupplyBuilding`/`Repair` skills.
    - Blocks on: **dynamic re-path determinism** (below) — daggers must re-route

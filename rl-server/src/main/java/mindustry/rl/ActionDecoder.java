@@ -27,7 +27,7 @@ final class ActionDecoder{
     private ActionDecoder(){}
 
     /** Apply one {@code {agent_id, command}} action, returning its result object. */
-    static Jval apply(RlAgentRegistry registry, Jval action){
+    static Jval apply(RlAgentRegistry registry, Scenario scenario, Jval action){
         int agentId = action.getInt("agent_id", -1);
         RlAgentRegistry.Agent agent = registry.get(agentId);
         if(agent == null){
@@ -99,6 +99,23 @@ final class ActionDecoder{
                     return result(agentId, false, "block_not_allowed", type);
                 }
                 agent.controller.setSkill(new BuildBlock(block.name, tx, ty, rotation));
+                return result(agentId, true, "accepted", type);
+            }
+
+            case "SCHEMATIC":{
+                String name = command.getString("name", "");
+                int anchorX = command.getInt("tile_x", Integer.MIN_VALUE);
+                int anchorY = command.getInt("tile_y", Integer.MIN_VALUE);
+                Scenario.SchematicSpec spec = scenario.schematic(name);
+                if(spec == null){
+                    return result(agentId, false, "unknown_schematic", type);
+                }
+                for(BuildSpec block : spec.blocks()){
+                    if(!inBounds(anchorX + block.offsetX(), anchorY + block.offsetY())){
+                        return result(agentId, false, "out_of_bounds", type);
+                    }
+                }
+                agent.controller.setSkill(new ExecuteSchematic(name, anchorX, anchorY, spec.blocks()));
                 return result(agentId, true, "accepted", type);
             }
 

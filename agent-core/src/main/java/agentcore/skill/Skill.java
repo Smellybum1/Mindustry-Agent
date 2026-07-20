@@ -8,8 +8,9 @@ package agentcore.skill;
  * Skills never read wall-clock time and never iterate unordered collections, so a fixed
  * body trajectory yields a fixed result sequence (determinism, docs/ENGINE_NOTES.md §6).
  *
- * <p>The M3 set is {@link NavigateTo}, {@link MineResource}, {@link DeliverToCore},
- * {@link Wait}. Higher-level task actions (M5) compose these unchanged.
+ * <p>The M3/M4 set includes {@link NavigateTo}, {@link MineResource},
+ * {@link DeliverToCore}, {@link Wait}, {@link BuildBlock}, and
+ * {@link ExecuteSchematic}. Higher-level task actions (M5) compose these unchanged.
  */
 public interface Skill{
 

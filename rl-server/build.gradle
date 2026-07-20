@@ -36,6 +36,10 @@ processResources{
         include "scenario.json"
         into "scenarios/bootstrap-defense-v0"
     }
+    from("../scenarios/schematics"){
+        include "*.json"
+        into "scenarios/schematics"
+    }
 }
 
 // Self-contained fat jar. Runnable via `java -jar` (with cwd = ../core/assets).

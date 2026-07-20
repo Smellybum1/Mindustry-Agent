@@ -1,7 +1,7 @@
-# bootstrap-defense-v0 (spec complete — loader lands in M6)
+# bootstrap-defense-v0 (loaded procedural scenario)
 
-Target first scenario. **This directory holds the full spec**; the loadable
-map/definition (engine wiring) lands in roadmap M6. Full human-readable spec:
+Target first scenario. **This directory holds the full spec** and `rl-server`
+loads its procedural world, waves, termination, and reference schematic. Full human-readable spec:
 `docs/SCENARIOS.md`; strategy/balance rationale: `docs/STRATEGY_NOTES.md`;
 machine-readable definition: `scenario.json` (schema:
 `../schemas/README.md`).
@@ -22,13 +22,13 @@ machine-readable definition: `scenario.json` (schema:
   seed policy, block/unit whitelist, wave schedule, spawn/objective markers,
   engine-verified balance numbers).
 
-## Planned files (not yet present)
+## Referenced files
 
 - `map.msav` — not used; v0 is fully **procedural** (generated in code, matching
   `rl-server/.../Scenario.java`), so there is no map file to read.
-- `schematics/east-duo-v1.msch` — the defensive schematic agents build (2 Duos +
-  5 copper walls; its block list is inlined in `scenario.json` →
-  `reference_schematic` until the `.msch` is authored).
+- `../schematics/east_duo_v1.json` — the single authoritative ordered block list
+  for the defensive schematic agents build (2 Duos + 5 copper walls). The
+  scenario references it by id, path, and anchor; no binary `.msch` is needed.
 
 Everything stochastic must seed from `root_seed`; in v0 nothing varies with the
 seed. Changing the wave schedule, spawns, patches, whitelist, loadout, or

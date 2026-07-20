@@ -464,7 +464,7 @@ public final class RlServer{
         Jval actions = req.get("agent_actions");
         if(actions != null && actions.isArray()){
             for(Jval action : actions.asArray()){
-                results.add(ActionDecoder.apply(registry, action));
+                results.add(ActionDecoder.apply(registry, scenario, action));
             }
         }
         return results;

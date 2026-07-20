@@ -139,7 +139,10 @@ final class FakeBody implements AgentBody{
     @Override public float buildTargetX(String block, int tileX){ return tileCenterX(tileX); }
     @Override public float buildTargetY(String block, int tileY){ return tileCenterY(tileY); }
     @Override public BuildTargetState buildTargetState(String block, int tileX, int tileY, int rotation){
-        return buildState;
+        if(buildState == BuildTargetState.OCCUPIED) return buildState;
+        if(buildBlock != null && block.equals(buildBlock) && tileX == buildX && tileY == buildY
+            && rotation == buildRotation) return buildState;
+        return BuildTargetState.PLACEABLE;
     }
     @Override public void enqueueBuild(String block, int tileX, int tileY, int rotation){
         buildPlan = true;

@@ -20,7 +20,7 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 2. `docs/HANDOFF.md` — verified project state, exact commands with expected
    outputs, architecture map, performance, known risks.
 3. `docs/ROADMAP.md` — Milestones M4–M6 are broken into issue-sized items with
-   acceptance criteria. **Your work queue is M4 items 4.3 → 4.8, in order.**
+   acceptance criteria. **Your work queue is M4 items 4.4 → 4.8, in order.**
 4. `docs/M4_DESIGN.md` — the approved design you are implementing (it has open
    questions to resolve against engine source and record in place — follow the
    precedent in `docs/M3_DESIGN.md`, which shows the expected resolution style).
@@ -31,12 +31,12 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Verified state you can rely on (all re-verified 2026-07-20)
 
-- M0–M3 and M4.1–4.2 complete + the bootstrap-defense-v0 scenario loader with deterministic
+- M0–M3 and M4.1–4.3 complete + the bootstrap-defense-v0 scenario loader with deterministic
   enemy waves. `bash scripts/{bootstrap,build,test-java,test-python,smoke,
-  determinism,stress-reset,benchmark}.sh` all exit 0. 82 JUnit + 29 pytest.
+  determinism,stress-reset,benchmark}.sh` all exit 0. 83 JUnit + 29 pytest.
 - The fixed-step headless env: ~76k engine ticks/sec, ~1 ms resets, determinism
-  proven across processes at 73 hash boundaries including a post-wave wall
-  placement and moving/re-pathing enemies;
+  proven across processes at 78 hash boundaries including the ordered
+  `east_duo_v1` schematic, a post-wave wall placement, and moving/re-pathing enemies;
   different seeds diverge (wave spawn spread), same seed never does.
 - Agent units mine and deliver with an exactly-balanced resource ledger;
   skills are engine-free FSMs (`agentcore.skill`) behind an `AgentBody` port,
@@ -69,11 +69,11 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Your first task
 
-`docs/ROADMAP.md` → **Milestone 4, item 4.3 (ExecuteSchematic)**,
-then proceed through 4.4–4.8 in order. Items 4.1–4.2 are verified complete: the
-thread-less pathfinder refresh is wall-clock-free and the 73-boundary determinism
-trace legally builds a post-wave wall; `BuildBlock` uses real engine plans and
-balances core resources. Each item lists objective, files,
+`docs/ROADMAP.md` → **Milestone 4, item 4.4 (SupplyBuilding)**,
+then proceed through 4.5–4.8 in order. Items 4.1–4.3 are verified complete: the
+thread-less pathfinder refresh is wall-clock-free and the 78-boundary determinism
+trace legally executes the 100-copper schematic and builds a post-wave wall;
+`BuildBlock` uses real engine plans and balances core resources. Each item lists objective, files,
 acceptance, and dependencies. Before starting, run
 `bash scripts/smoke.sh && bash scripts/determinism.sh` to confirm the baseline
 is green on your session; if it is not, diagnose that first — do not build on a

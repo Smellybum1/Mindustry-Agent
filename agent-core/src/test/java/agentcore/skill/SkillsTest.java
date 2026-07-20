@@ -228,4 +228,25 @@ class SkillsTest{
         assertEquals(SkillStatus.FAILED, r.status());
         assertEquals(SkillReason.PLAN_REMOVED, r.reason());
     }
+
+    @Test void schematicExecutesAuthoritativeOrderAndReportsProgress(){
+        FakeBody body = new FakeBody(4f, 4f);
+        ExecuteSchematic schematic = new ExecuteSchematic("two_blocks", 10, 10, java.util.List.of(
+            new BuildSpec("duo", 0, -1, 1),
+            new BuildSpec("copper-wall", 1, 0, 0)
+        ));
+        float last = 0f;
+        SkillResult result = SkillResult.ready();
+        for(int tick = 0; tick < 500; tick++){
+            result = schematic.tick(body, tick);
+            assertTrue(result.progress() >= last - 1e-5f, "schematic progress regressed");
+            last = result.progress();
+            if(result.terminal()) break;
+            body.advance();
+        }
+        assertEquals(SkillStatus.SUCCEEDED, result.status());
+        assertEquals(2, schematic.completed());
+        assertEquals(2, schematic.total());
+        assertEquals("copper-wall", body.buildBlock, "second authoritative entry ran last");
+    }
 }

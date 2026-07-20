@@ -1,5 +1,6 @@
 package mindustry.rl;
 
+import agentcore.skill.*;
 import arc.struct.*;
 import arc.util.serialization.*;
 import mindustry.content.*;
@@ -10,6 +11,7 @@ import mindustry.world.*;
 
 import java.io.*;
 import java.nio.charset.*;
+import java.util.*;
 
 import static mindustry.Vars.*;
 
@@ -70,6 +72,8 @@ public final class Scenario{
 
     /** Allowed content ids (whitelist); pre-unlocked so there is no tech tree. */
     public final Seq<UnlockableContent> allowedContent = new Seq<>();
+    /** Data-backed schematic catalog, keyed by wire/action name. */
+    public final ObjectMap<String, SchematicSpec> schematics = new ObjectMap<>();
 
     private final Jval raw;
 
@@ -126,6 +130,11 @@ public final class Scenario{
             if(blocks != null) for(Jval b : blocks.asArray()) allowedContent.add(block(b.asString()));
             Jval units = allowed.get("units");
             if(units != null) for(Jval u : units.asArray()) allowedContent.add((UnlockableContent)content.unit(u.asString()));
+        }
+
+        Jval reference = raw.get("reference_schematic");
+        if(reference != null){
+            loadSchematic(reference.getString("path", ""), reference.getString("id", ""));
         }
 
         //--- wave schedule -> native wave timer + per-wave SpawnGroups -----------------
@@ -248,18 +257,58 @@ public final class Scenario{
         world.loadGenerator(width, height, this::generate);
     }
 
+    public SchematicSpec schematic(String name){
+        return schematics.get(name);
+    }
+
     // ---------------------------------------------------------------- helpers
 
+    private void loadSchematic(String path, String expectedName){
+        String resource = "/scenarios/" + path;
+        Jval spec = readResource(resource);
+        String name = spec.getString("name", "");
+        if(name.isEmpty() || !name.equals(expectedName)){
+            throw new IllegalStateException("schematic name " + name + " does not match reference " + expectedName);
+        }
+
+        ArrayList<BuildSpec> blocks = new ArrayList<>();
+        int copperCost = 0;
+        for(Jval entry : spec.get("blocks").asArray()){
+            Block block = block(entry.getString("block", ""));
+            if(!allowedContent.contains(block, true)){
+                throw new IllegalStateException("schematic block is not scenario-whitelisted: " + block.name);
+            }
+            Jval offset = entry.get("offset");
+            blocks.add(new BuildSpec(block.name, offset.asArray().get(0).asInt(),
+                offset.asArray().get(1).asInt(), entry.getInt("rotation", 0)));
+            for(ItemStack requirement : block.requirements){
+                if(requirement.item != Items.copper){
+                    throw new IllegalStateException("v0 schematic has non-copper cost: " + block.name);
+                }
+                copperCost += requirement.amount;
+            }
+        }
+        int expectedCost = spec.getInt("expected_copper_cost", -1);
+        if(copperCost != expectedCost){
+            throw new IllegalStateException("schematic copper cost " + copperCost + " != expected " + expectedCost);
+        }
+        schematics.put(name, new SchematicSpec(name, List.copyOf(blocks), copperCost));
+    }
+
     private static Jval readSpec(){
-        try(InputStream in = Scenario.class.getResourceAsStream(RESOURCE)){
+        return readResource(RESOURCE);
+    }
+
+    private static Jval readResource(String resource){
+        try(InputStream in = Scenario.class.getResourceAsStream(resource)){
             if(in == null){
-                throw new IllegalStateException("scenario spec not on classpath: " + RESOURCE
-                    + " (rl-server processResources must copy scenarios/bootstrap-defense-v0/scenario.json)");
+                throw new IllegalStateException("scenario resource not on classpath: " + resource
+                    + " (rl-server processResources must copy scenarios/ JSON files)");
             }
             byte[] bytes = in.readAllBytes();
             return Jval.read(new String(bytes, StandardCharsets.UTF_8));
         }catch(IOException e){
-            throw new RuntimeException("failed to read scenario spec " + RESOURCE, e);
+            throw new RuntimeException("failed to read scenario resource " + resource, e);
         }
     }
 
@@ -303,4 +352,6 @@ public final class Scenario{
         public final int x, y;
         SpawnPoint(int x, int y){ this.x = x; this.y = y; }
     }
+
+    public record SchematicSpec(String name, List<BuildSpec> blocks, int copperCost){}
 }

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "name": "east_duo_v1",
+  "anchor": "tile",
+  "description": "Two east-facing Duos behind a five-wall copper column; turrets first.",
+  "expected_copper_cost": 100,
+  "blocks": [
+    { "block": "duo",        "offset": [0, -1], "rotation": 1 },
+    { "block": "duo",        "offset": [0,  1], "rotation": 1 },
+    { "block": "copper-wall", "offset": [1, -2], "rotation": 0 },
+    { "block": "copper-wall", "offset": [1, -1], "rotation": 0 },
+    { "block": "copper-wall", "offset": [1,  0], "rotation": 0 },
+    { "block": "copper-wall", "offset": [1,  1], "rotation": 0 },
+    { "block": "copper-wall", "offset": [1,  2], "rotation": 0 }
+  ]
+}

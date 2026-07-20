@@ -84,19 +84,10 @@
   },
 
   "reference_schematic": {
-    "id": "east_duo_line",
-    "path": "schematics/east-duo-v1.msch",
-    "blocks": [
-      { "block": "copper-wall", "tile": [33, 22] },
-      { "block": "copper-wall", "tile": [33, 23] },
-      { "block": "copper-wall", "tile": [33, 24] },
-      { "block": "copper-wall", "tile": [33, 25] },
-      { "block": "copper-wall", "tile": [33, 26] },
-      { "block": "duo", "tile": [32, 23], "rotation": 1 },
-      { "block": "duo", "tile": [32, 25], "rotation": 1 }
-    ],
-    "copper_cost": 100,
-    "notes": "Duos face east (+x). Agents may add a 2nd wall column at x=34 and a supply router near (30,24)."
+    "id": "east_duo_v1",
+    "path": "schematics/east_duo_v1.json",
+    "anchor": [32, 24],
+    "notes": "The referenced JSON is the single source of truth for block order and offsets."
   },
 
   "objectives": [
@@ -118,8 +109,8 @@
     },
     {
       "id": "T3", "task_type": "BUILD_SCHEMATIC",
-      "target": { "kind": "schematic", "ref": "east_duo_line" },
-      "predicate": { "type": "all_footprint_blocks_ready", "schematic": "east_duo_line" },
+      "target": { "kind": "schematic", "ref": "east_duo_v1" },
+      "predicate": { "type": "all_footprint_blocks_ready", "schematic": "east_duo_v1" },
       "precedes": ["T4", "T5"]
     },
     {

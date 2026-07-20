@@ -1,6 +1,6 @@
 # M4 Design — Build, Supply, Rebuild, Defend Skills
 
-Status: approved design; implementation in progress (M4.1–4.2 completed 2026-07-20).
+Status: approved design; implementation in progress (M4.1–4.3 completed 2026-07-20).
 Author: Fable bootstrap pass, 2026-07-20.
 Prereqs: M3 verified (skill layer + agent units); bootstrap-defense-v0 scenario
 loader with waves (in progress) — Defend/Rebuild need live enemies to be testable.

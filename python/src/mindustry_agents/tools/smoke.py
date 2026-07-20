@@ -230,6 +230,56 @@ def run_build_phase(env, seed: int) -> int:
     return 0 if ok else 1
 
 
+def run_schematic_phase(env, seed: int) -> int:
+    """Execute east_duo_v1 from data and prove its seven-block 100-copper ledger."""
+    print("\n== M4 ExecuteSchematic phase ==")
+    rr = env.reset(root_seed=seed, agent_count=2)
+    episode = rr.episode_id
+    tick = rr.tick
+    before = int(rr.initial_observations[0]["team"]["copper"])
+    actions = [
+        {
+            "agent_id": 0,
+            "command": {
+                "type": "SCHEMATIC",
+                "name": "east_duo_v1",
+                "tile_x": 32,
+                "tile_y": 24,
+            },
+        }
+    ]
+    last_progress = 0.0
+    sr = None
+    for _ in range(30):
+        sr = env.step(
+            episode, expected_tick=tick, ticks_to_advance=30, agent_actions=actions
+        )
+        actions = []
+        tick = sr.tick
+        skill = _skill(sr, 0)
+        if float(skill["progress"]) < last_progress - 1e-6:
+            print(f"FAIL: schematic progress regressed: {last_progress} -> {skill['progress']}", file=sys.stderr)
+            return 1
+        last_progress = float(skill["progress"])
+        if skill["status"] in {"SUCCEEDED", "BLOCKED", "FAILED"}:
+            break
+
+    assert sr is not None
+    skill = _skill(sr, 0)
+    after = _core_copper(sr)
+    print(f"  east_duo_v1 status/progress       : {skill['status']} / {skill['progress']:.2f}")
+    print(f"  core copper before/after          : {before} -> {after}")
+    print(f"  schematic cost                    : {before - after}")
+    if skill["status"] != "SUCCEEDED" or skill["reason"] != "BUILT":
+        print(f"FAIL: east_duo_v1 did not complete: {skill}", file=sys.stderr)
+        return 1
+    if before - after != 100:
+        print(f"FAIL: east_duo_v1 cost {before - after} != 100", file=sys.stderr)
+        return 1
+    print("  SCHEMATIC BALANCE OK: 2 Duos + 5 walls completed in data order for 100 copper")
+    return 0
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="rl-server M1 smoke test")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
@@ -310,10 +360,15 @@ def main(argv=None) -> int:
             print("BUILD PHASE FAILED", file=sys.stderr)
             return build_rc
 
+        schematic_rc = run_schematic_phase(env, args.seed)
+        if schematic_rc != 0:
+            print("SCHEMATIC PHASE FAILED", file=sys.stderr)
+            return schematic_rc
+
         h = env.health()
         print(f"health: ok={h.ok} uptime_ticks={h.uptime_ticks} episode={h.episode_id}")
 
-    print("\nSMOKE OK: exact stepping + mine/deliver/build ledgers balanced")
+    print("\nSMOKE OK: exact stepping + mine/deliver/build/schematic ledgers balanced")
     return 0
 
 

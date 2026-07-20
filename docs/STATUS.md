@@ -186,7 +186,8 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 - **Seed lever is now real**: same seed → identical hashes across processes/resets;
   **different seeds diverge** once enemies spawn (spawn spread). Both asserted by
   `tools/determinism.py` (now steps past wave 1, places a copper wall in the lane,
-  and follows the re-pathing enemies; **73** hash boundaries) — this is the first
+  and follows the re-pathing enemies; the M4.3 trace also executes the ordered
+  seven-block schematic; **78** hash boundaries) — this is the first
   genuine seed-sensitivity and dynamic-tile-change evidence.
 - **Undefended loss**: `tools/scenario_check.py` (wired into `scripts/smoke.sh`)
   fast-forwards past wave 1, asserts daggers spawned (`enemy_count > 0`) and **move**
@@ -194,7 +195,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   loss. Observed: core destroyed at tick **~3420–3450** (~12 s after wave 1),
   matching `docs/SCENARIOS.md` arithmetic (c) (travel + ~8.9 s contact kill), well
   under the cap.
-- **Verified 2026-07-20**: `./gradlew rl-server:dist agent-core:test` green (82
+- **Verified 2026-07-20**: `./gradlew rl-server:dist agent-core:test` green (83
   JUnit); `pytest python/tests -q` → 29 pass; `bash scripts/smoke.sh` → exit 0
   (mine/deliver ledger **and** scenario check); `bash scripts/determinism.sh` → exit
   0 (moving enemies + seed sensitivity); `bash scripts/stress-reset.sh` → exit 0
@@ -216,7 +217,13 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   34 copper, a final Duo consumes only that stock and reports
   `BLOCKED(RESOURCES_SHORT)` at zero. The M4.1 direct-placement test hook is gone;
   determinism now builds its wall legally for six copper.
-- **4.3–4.8 remain unimplemented.**
+- **M4.3 — ExecuteSchematic is complete.** `east_duo_v1` is an ordered,
+  anchor-relative JSON block list loaded and validated by the scenario. The
+  engine-free `ExecuteSchematic` FSM sequences legal `BuildBlock` skills,
+  reports monotone aggregate progress, and propagates inner typed failures.
+  Live smoke completes two Duos plus five walls for exactly 100 core copper;
+  two fresh JVMs reproduce every one of the expanded trace's 78 hashes.
+- **4.4–4.8 remain unimplemented.**
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -232,16 +239,17 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   `evaluation`, `telemetry`: still documented skeletons.
 - **`scenarios/bootstrap-defense-v0/`**: **now fully loaded** by `rl-server` (world,
   ore, waves, termination) — see the Scenario section above. Remaining spec-only
-  pieces: the scored `objectives[]` (task-board wiring is M5) and the
-  `reference_schematic` build (a scripted-agent target for M6).
+  piece: the scored `objectives[]` (task-board wiring is M5). The
+  `reference_schematic` data and direct `SCHEMATIC` action are now live; the
+  autonomous scripted policy that selects it remains M5/M6 work.
 - **`configs/`**: example YAML stubs marked unused-yet.
 
 ## What is unverified
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 82 tests
-  green, including 18 M3/M4 skill tests). `agent-plugin` build still unverified.
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 83 tests
+  green, including 19 M3/M4 skill tests). `agent-plugin` build still unverified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
 

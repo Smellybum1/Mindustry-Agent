@@ -77,6 +77,42 @@ def run_schedule(env: RlServerProcess, seed: int) -> list[tuple[str, str]]:
         tick = sr.tick
         hashes.append((f"{label}@{tick}", sr.state_hash))
 
+    # M4.3: execute the full data-backed seven-block schematic beside, but clear
+    # of, the approach lane. Keeping the builder near the later dynamic wall
+    # makes that trace exercise re-pathing rather than long-distance navigation.
+    schematic_before = int(sr.observations[0]["team"]["copper"])
+    schematic_actions = [
+        {
+            "agent_id": 0,
+            "command": {
+                "type": "SCHEMATIC",
+                "name": "east_duo_v1",
+                "tile_x": 28,
+                "tile_y": 18,
+            },
+        }
+    ]
+    for _ in range(30):
+        sr = env.step(
+            rr.episode_id,
+            expected_tick=tick,
+            ticks_to_advance=30,
+            agent_actions=schematic_actions,
+        )
+        schematic_actions = []
+        tick = sr.tick
+        hashes.append((f"schematic@{tick}", sr.state_hash))
+        if sr.observations[0]["skill"]["status"] in {"SUCCEEDED", "BLOCKED", "FAILED"}:
+            break
+    schematic_skill = sr.observations[0]["skill"]
+    schematic_after = int(sr.observations[0]["team"]["copper"])
+    if schematic_skill["status"] != "SUCCEEDED" or schematic_skill["reason"] != "BUILT":
+        raise AssertionError(f"schematic did not complete: {schematic_skill}")
+    if schematic_before - schematic_after != 100:
+        raise AssertionError(
+            f"schematic ledger did not consume 100 copper: {schematic_before} -> {schematic_after}"
+        )
+
     # Scenario phase 1: idle until the daggers are moving toward the lane wall.
     while tick < WALL_TICK:
         step = min(CHUNK, WALL_TICK - tick)

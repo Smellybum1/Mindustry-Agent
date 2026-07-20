@@ -46,7 +46,7 @@ scenario contract and maps to the protocol `scenario_schema_version` field
 | `rules` | object | ruleset flags applied to `state.rules` (mirrors `Scenario.buildRules`) |
 | `wave_schedule` | array | deterministic waves (see below) |
 | `termination` | object | `win`, `lose[]`, `tick_cap` |
-| `reference_schematic` | object | the `east_duo_line` build: `blocks[]`, `copper_cost`, `path` |
+| `reference_schematic` | object | `{id, path, anchor}` reference to the `east_duo_v1` build data |
 | `objectives` | array | scored task instances (see below) |
 | `seed_policy` | object | what varies with `root_seed` now vs planned |
 | `balance_check` | object | engine-verified numbers + derived survivability results |
@@ -59,6 +59,15 @@ play start (tick 0). Waves are Dagger-only in v0. The stepper spawns `count`
 units of `unit` at the referenced spawn tile when `state.tick == tick`. Because
 `rules.waves = true`, ground-unit pathfinding/targeting RNG seed deterministically
 from `state.wave` (`docs/ENGINE_NOTES.md` §6).
+
+## `reference_schematic`
+
+`scenario.json` names one data file with `{ "id", "path", "anchor": [x, y] }`.
+The referenced JSON is the single source of truth for its ordered footprint:
+`schema_version`, `name`, `expected_copper_cost`, and `blocks[]`, where each block
+is `{ "block", "offset": [dx, dy], "rotation" }`. The loader rejects a name/path
+mismatch, non-whitelisted blocks, unsupported recipe items, or a derived recipe
+cost that differs from `expected_copper_cost`.
 
 ## `objectives[]`
 
@@ -99,7 +108,7 @@ bump `scenario_version` unless they change what an existing scenario requires.
 - `lose[]`: `core_destroyed` and `tick_cap_reached_without_win`.
 - `tick_cap`: hard truncation tick for the episode.
 
-## Validation notes for the loader (M6)
+## Validation notes for the loader
 
 - Reject any `blocks`/`units` not in `allowed_content`.
 - Assert ore-patch rects and the core footprint do not overlap.
