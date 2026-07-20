@@ -7,7 +7,7 @@ cd "$ROOT"
 PY="${PYTHON:-python}"
 
 echo "== Java modules =="
-./gradlew rl-server:dist agent-core:classes agent-plugin:classes --console=plain
+./gradlew rl-server:dist agent-core:classes agent-plugin:dist --console=plain
 
 echo
 echo "== Python package sanity =="

@@ -53,7 +53,7 @@ brief §7.3).
 |---|---|---|---|
 | `rl-server` | `mindustry.rl` | `:core`, `:server` | Headless externally-stepped launcher: init content once, fixed-step loop, load scenario, reset in-process, apply atomic action bundle at decision boundary, advance exact ticks, extract observations/rewards, return deterministic state hash, serve health/handshake/reset/step/close. Disables ordinary networking unless testing parity. |
 | `agent-core` | `agentcore` | `:core` | Agent identity, task catalog + validation, shared task board, intention/offer/claim/lease protocol, skill executors, candidate task generation, action masks, observation construction, reward accounting, metrics, announcement templates, structured event log. **No Python/RL dependency.** |
-| `agent-plugin` | `mindustry.agentplugin` | `:core`, `:agent-core` | Real-time dedicated-server adapter for demo mode. Spawns/register server-controlled agent units, connects to policy process or scripted fallback, surfaces announcements, exposes human controls (pause/stop/goal/status), enforces rate limits and human overrides. Currently a stub. |
+| `agent-plugin` | `mindustry.agentplugin` | `:core`, `:agent-core`, selected project-owned `:rl-server` adapters | Real-time dedicated-server adapter for demo mode. A loadable stock-server plugin that starts the exact scenario, spawns three controlled Alphas, runs the scripted fallback through the shared task board/skills/announcement templates, and exposes status/pause/resume/emergency-stop controls. |
 
 Upstream modules (`core`, `server`, `desktop`, `annotations`, `tools`, `tests`)
 are unmodified except for the `settings.gradle` registration edit
@@ -83,7 +83,10 @@ content, entity groups) is not thread-safe. Requests arrive on I/O threads, are
 validated and queued, and are drained by the single simulation thread at a
 decision boundary. Every deviation must be documented here.
 
-_No documented exceptions yet._
+_No documented exceptions._ The plugin registers callbacks and commands from
+the server lifecycle, but every game-state read/mutation and board transition is
+executed by the stock simulation thread. Client/network threads only enqueue
+their command callbacks through Mindustry's existing command path.
 
 ## Determinism and reset paths
 

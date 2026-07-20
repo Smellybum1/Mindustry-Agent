@@ -26,8 +26,10 @@ and what is unverified.
   Milestone 1 section above.
 - **M2 scripts** (`stress-reset`, `benchmark`): implemented and passing — see the
   Milestone 2 section below.
-- **`scripted-demo`** is implemented for M6.1. **Still not implemented:**
-  `demo-server` exits 1 with a roadmap pointer. (`test-java` is implemented.)
+- **M6 entry points are implemented:** `scripted-demo`, `evaluate-scripted`,
+  golden replay through `determinism`, and the real-server `demo-server` probe.
+  Human join mode remains deliberately opt-in (`DEMO_JOIN=1`) so no game port is
+  grabbed silently.
 
 ## Milestone 1 — external-step spike (DONE, verified 2026-07-20)
 
@@ -446,6 +448,28 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   mismatch. It passed; no mutated trace is written. Parser/mutation unit tests
   bring pytest to **38 passed**. Format and commands are in `docs/REPLAY.md`.
 
+## Milestone 6.4 — real-time dedicated-server plugin (IMPLEMENTED; manual join pending)
+
+- `agent-plugin:dist` builds `mindustry-coop-agents-plugin.jar` with a real
+  `plugin.json`/`Plugin` entry point, shared `agentcore` classes, exact scenario
+  resources, and no bundled upstream engine classes.
+- The stock `server:dist` path creates Bootstrap Defense v0, spawns three
+  controlled Alphas, and runs the scripted opening through the same `TaskBoard`,
+  skill FSMs, live engine mapping, and `AnnouncementRenderer` used by training
+  mode. A demo-specific controller subclass adds immediate pause and
+  emergency-stop semantics.
+- Server and client commands cover `agents status|pause|resume|stop`; stop clears
+  velocity, mining, build plans, firing, and active skills on the simulation
+  thread. Team chat receives only rate-limiter-approved structured events.
+- `make demo-server` is a non-networked isolated acceptance probe. Verified:
+  plugin load, three spawns, both real schematic completions, both turret supply
+  actions, exact per-plan block-order parity, five concise announcements, and
+  pause/resume/stop by tick 312. `DEMO_JOIN=1 make demo-server` is the only path
+  that opens the private game port (6567 by default).
+- **Still unverified:** a human stock v159.7 client has not yet performed the
+  final local visual join and `/agents stop` check. M6.4 and M6 closure remain
+  open until that manual acceptance is recorded.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -455,8 +479,8 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   helper fulfilment, live reservations, lease recovery, announcements, and
   metrics are wired through M5.6; the M6.1 expert uses that surface. Reward
   logic (M7) remains.
-- **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
-  loadable Mindustry plugin. See `agent-plugin/README.md`.
+- **`agent-plugin`** is no longer a stub. Its scripted M6 path is implemented;
+  future M10 human goals/overrides and study instrumentation remain outside M6.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check}.py` plus the
@@ -474,9 +498,12 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
   build + JUnit suite are now verified** (`./gradlew agent-core:test` → 101 tests
-  green, including 31 M3/M4 skill tests). `agent-plugin` build still unverified.
+  green, including 31 M3/M4 skill tests). `agent-plugin:dist` and its isolated
+  real-server acceptance probe are verified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).
+- **Human demo acceptance:** stock v159.7 local join/visual/control check pending
+  as described in M6.4 above.
 
 ## Known deviations from the brief
 

@@ -156,3 +156,19 @@ Aggregate: **5/5 wins**, minimum final core health **848**, mean **927.2**,
 two agent losses, 790 structured messages and 25 rendered announcements. The
 primary seed reports boundary-observed copper 250 start / 21 final / 272 peak /
 1 minimum, with 219 total positive and 448 total negative boundary deltas.
+
+## M6 real-server demo acceptance (2026-07-20)
+
+Command: `make demo-server` (equivalently `bash scripts/demo-server.sh`). This is
+an acceptance probe, not a throughput benchmark. It builds `server:dist` and the
+official-layout plugin, boots them from an isolated data directory, and opens no
+network port. The verified run loaded one plugin, spawned three agents, completed
+the copper-line and east-Duo plans plus both supply actions by real-time server
+tick 312, emitted five rate-limited announcements, matched both checked-in block
+orders, and proved pause/resume/emergency-stop before exiting 0. Wall time was
+about 10 seconds including the incremental Gradle build and about 4 seconds in
+the server process.
+
+The human path is intentionally separate: `DEMO_JOIN=1 make demo-server` opens
+port 6567 only after an explicit request and waits for a stock v159.7 client.
+That visual join/control check is not represented by the automated numbers.

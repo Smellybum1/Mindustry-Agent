@@ -1,18 +1,40 @@
-// agent-plugin — real-time dedicated-server adapter for the human demonstration
-// mode (brief §6.2). Loads into an ordinary Mindustry dedicated server, spawns or
-// registers server-controlled agent units, connects to a policy process (or a
-// scripted fallback), and reuses :agent-core for tasks, skills, and announcements.
-//
-// Stub module: no plugin.json / Mod entry point is wired yet (roadmap M6/M10).
-// See agent-plugin/README.md and docs/ARCHITECTURE.md.
-//
-// Repositories and Java 17 release target come from the root build.gradle.
+// Real-time dedicated-server adapter for the human demonstration mode.
+// Mindustry itself is supplied by server-release.jar; the plugin jar contains only
+// our plugin, shared agent-core, and the two rl-server engine adapters it reuses.
 
 apply plugin: "java"
 
 sourceSets.main.java.srcDirs = ["src/main/java"]
 
 dependencies{
-    implementation project(":core")
+    compileOnly project(":core")
     implementation project(":agent-core")
+    compileOnly project(":rl-server")
+}
+
+processResources{
+    from("../scenarios/bootstrap-defense-v0"){
+        include "scenario.json"
+        into "scenarios/bootstrap-defense-v0"
+    }
+    from("../scenarios/schematics"){
+        include "*.json"
+        into "scenarios/schematics"
+    }
+}
+
+tasks.register('dist', Jar){
+    dependsOn classes, project(":agent-core").tasks.named("classes"),
+        project(":rl-server").tasks.named("classes")
+
+    from sourceSets.main.output
+    from project(":agent-core").sourceSets.main.output
+    from(project(":rl-server").sourceSets.main.output){
+        include "mindustry/rl/Scenario*.class"
+        include "mindustry/rl/SkillController*.class"
+    }
+
+    duplicatesStrategy = 'exclude'
+    exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
+    archiveFileName = 'mindustry-coop-agents-plugin.jar'
 }

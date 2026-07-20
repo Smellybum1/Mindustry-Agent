@@ -1,33 +1,46 @@
 # agent-plugin
 
-**Status: stub (roadmap M6/M10). Not yet a loadable Mindustry plugin.**
+`agent-plugin` is the real-time, human-joinable adapter for Bootstrap Defense
+v0. It is a normal Mindustry server plugin: the distribution jar contains
+`plugin.json`, this module, the shared `agentcore` classes, and only the two
+project-owned `mindustry.rl` adapters it needs. It deliberately does not bundle
+upstream engine classes.
 
-This module is the **real-time demonstration adapter**. In *training mode* the
-engine is driven headless and externally stepped by `rl-server`. In *human
-demonstration mode* the same agent behaviours must run inside an ordinary
-Mindustry dedicated server at real-time pacing so a human can join and cooperate.
+The demo uses the exact checked-in scenario and schematic JSON as training mode.
+It spawns three Alpha units and runs the shared `TaskBoard`, low-level skill FSMs,
+and `AnnouncementRenderer` on the vanilla simulation thread. The only pacing
+difference is that the stock server advances in real time and keeps its normal
+pathfinder threads.
 
-`agent-plugin` is that bridge. Its eventual responsibilities (brief §6.2):
+## Commands
 
-- Load into an ordinary dedicated server as a Mindustry server plugin.
-- Spawn or register server-controlled agent units.
-- Connect to a policy process, or use an in-process scripted fallback.
-- **Reuse `agent-core`** for tasks, skills, coordination, and announcements — the
-  demo path must not fork behaviour from the training path (ADR-0006, brief
-  §7.3). Training and demo share the same task board, skills, observations,
-  action schema, and announcement templates.
-- Surface announcements through team chat, labels, pings, or commands.
-- Expose human controls: pause, stop, goal assignment, status.
-- Enforce communication rate limits and honour human build-zone/resource
-  overrides (human priority, brief §20.2).
+Both the server console and an ordinary client can use the agent controls:
 
-Mindustry's official plugin model is server-side; ordinary clients should not
-need a client mod for the first demonstration.
+- `/agents status`
+- `/agents pause`
+- `/agents resume`
+- `/agents stop` — immediate emergency stop; clears mining, build plans,
+  movement, firing, and active skills.
 
-## Why a stub now
+The server console also supports `agents start` when the plugin was loaded in
+manual mode.
 
-The vertical slice is proven in headless training mode first (M1–M6). The demo
-server is only wired once the scripted team and scenario exist, so that the demo
-genuinely shares `agent-core` rather than reimplementing it. The current
-placeholder class exists solely to keep the module compiling and its dependency
-edges (`:core`, `:agent-core`) honest.
+## Run safely
+
+```bash
+# Automated real-server acceptance probe. Does not open a network port.
+bash scripts/demo-server.sh
+
+# Explicit human-join mode. This is the only path that opens the game socket.
+DEMO_JOIN=1 bash scripts/demo-server.sh
+```
+
+Join `localhost:6567` with a stock v159.7 client. The policy waits for the first
+Sharded player before beginning, so the opening and concise team-chat
+announcements are visible. `DEMO_PORT=<port>` may be used when 6567 is occupied.
+
+Every run uses an isolated temporary server data directory under `runs/`; it
+does not install into the user's real Mindustry mod folder. The stock ArcNet
+provider binds the selected game port on available interfaces, so join mode is
+for a trusted private LAN/loopback environment and must never be exposed through
+port forwarding.

@@ -1,7 +1,94 @@
 #!/usr/bin/env bash
-# demo-server.sh — human-joinable real-time server.
-# Not implemented yet. Exits nonzero by design (see AGENTS.md §1).
+# Real v159.7 dedicated-server + loadable agent-plugin demonstration.
 set -euo pipefail
-echo "not implemented: see docs/ROADMAP.md#milestone-6-bootstrap-defense-v0" >&2
-echo "(human-joinable real-time server)" >&2
-exit 1
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+./gradlew agent-plugin:dist server:dist --console=plain
+
+PLUGIN_JAR="$ROOT/agent-plugin/build/libs/mindustry-coop-agents-plugin.jar"
+PLUGIN_ENTRIES="$(jar tf "$PLUGIN_JAR")"
+for required in \
+    plugin.json \
+    mindustry/agentplugin/AgentPlugin.class \
+    mindustry/agentplugin/DemoAgentController.class \
+    agentcore/board/TaskBoard.class \
+    agentcore/skill/ExecuteSchematic.class \
+    scenarios/bootstrap-defense-v0/scenario.json; do
+    grep -Fx "$required" <<<"$PLUGIN_ENTRIES" >/dev/null || {
+        echo "demo-server: plugin jar missing $required" >&2
+        exit 1
+    }
+done
+if grep -E '^mindustry/(gen|content|core)/' <<<"$PLUGIN_ENTRIES" >/dev/null; then
+    echo "demo-server: plugin jar incorrectly bundles upstream engine classes" >&2
+    exit 1
+fi
+
+mkdir -p "$ROOT/runs"
+RUNTIME="$(mktemp -d "$ROOT/runs/demo-server.XXXXXX")"
+cleanup(){
+    case "$RUNTIME" in
+        "$ROOT"/runs/demo-server.*) rm -rf -- "$RUNTIME" ;;
+        *) echo "refusing to remove unexpected demo runtime: $RUNTIME" >&2 ;;
+    esac
+}
+trap cleanup EXIT
+
+mkdir -p "$RUNTIME/config/mods"
+cp "$ROOT/server/build/libs/server-release.jar" "$RUNTIME/server.jar"
+cp "$PLUGIN_JAR" \
+    "$RUNTIME/config/mods/mindustry-coop-agents-plugin.jar"
+
+JAVA_BIN="${JAVA_BIN:-java}"
+DEMO_PORT="${DEMO_PORT:-6567}"
+
+if [[ "${DEMO_JOIN:-0}" == "1" ]]; then
+    python - "$DEMO_PORT" <<'PY'
+import socket
+import sys
+
+port = int(sys.argv[1])
+if not 1 <= port <= 65535:
+    raise SystemExit(f"invalid DEMO_PORT: {port}")
+for kind in (socket.SOCK_STREAM, socket.SOCK_DGRAM):
+    sock = socket.socket(socket.AF_INET, kind)
+    try:
+        sock.bind(("0.0.0.0", port))
+    except OSError as exc:
+        raise SystemExit(f"DEMO_PORT {port} is unavailable: {exc}") from exc
+    finally:
+        sock.close()
+PY
+    echo "demo-server: explicit join mode; opening private game port $DEMO_PORT"
+    echo "demo-server: connect a stock v159.7 client to localhost:$DEMO_PORT"
+    cd "$RUNTIME"
+    "$JAVA_BIN" \
+        -Dmindustry.agents.demo.mode=join \
+        -Dmindustry.agents.demo.port="$DEMO_PORT" \
+        -jar server.jar
+    exit $?
+fi
+
+LOG="$ROOT/runs/demo-server-probe.log"
+echo "demo-server: isolated acceptance probe (no network port will be opened)"
+cd "$RUNTIME"
+set +e
+"$JAVA_BIN" -Dmindustry.agents.demo.mode=probe -jar server.jar 2>&1 | tee "$LOG"
+server_status=${PIPESTATUS[0]}
+set -e
+cd "$ROOT"
+
+if [[ $server_status -ne 0 ]]; then
+    echo "demo-server: server exited $server_status" >&2
+    exit "$server_status"
+fi
+grep -F "AGENT-DEMO PARITY OK" "$LOG" >/dev/null
+grep -F "AGENT-DEMO CONTROLS OK" "$LOG" >/dev/null
+grep -F "AGENT-DEMO PROBE OK" "$LOG" >/dev/null
+if grep -F "Opened a server on port" "$LOG" >/dev/null; then
+    echo "demo-server: probe unexpectedly opened a network port" >&2
+    exit 1
+fi
+echo "demo-server: OK (real server/plugin, build order parity, mining/building/supply, no port)"

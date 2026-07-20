@@ -31,7 +31,7 @@ import static mindustry.Vars.*;
  * through {@code Call.transferItemTo}, and core withdrawal through {@code Call.takeItems}
  * (docs/M3_DESIGN.md D4; docs/M4_DESIGN.md S3).
  */
-public final class SkillController extends AIController implements AgentBody{
+public class SkillController extends AIController implements AgentBody{
     private static final Vec2 steer = new Vec2();
 
     private final int agentIndex;

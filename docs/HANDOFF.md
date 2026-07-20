@@ -69,10 +69,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   5/5 wins, minimum/mean core health 848/927.2, with full figures in BENCHMARKS.
   M6.3 checks in a complete two-episode/16,200-tick action+coordination golden;
   fresh-JVM replay matches 678 checkpoints and the negative mutation test flips one.
-- **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
-  a scripted full three-wave *win* path and evaluation/golden replay work remain
-  in M6; rewards are empty until M7;
-  training/evaluation Python subpackages. See `docs/STATUS.md`.
+  M6.4 now builds a loadable stock-server plugin. Its isolated real-server probe
+  legally completes the shared copper-line/east-Duo opening and supply actions,
+  matches both build orders, emits five rate-limited announcements, and verifies
+  pause/resume/emergency-stop without opening a port.
+- **What is stubbed**: rewards are empty until M7; learned training code and the
+  M10 human goal/override/study surface remain future work.
+- **What remains for M6**: one manual stock-v159.7 local join/visual/control
+  acceptance, then the full M6.5 closure matrix and tag. See `docs/STATUS.md`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -88,7 +92,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | Command | Expected output |
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
-| `make build` | Builds `rl-server:dist` + `agent-core`/`agent-plugin` classes, then validates the Python package import; ends `build: OK`, exit 0. |
+| `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
 | `make test` | Runs the Python suite (38 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (101 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
@@ -98,14 +102,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | Runs the primary three-wave expert and the legal insufficient-copper replan variant; both end at tick 8100 with `outcome=win`. Verified 2026-07-20. |
 | `make evaluate-scripted` | Runs five pinned seeds, writes `runs/scripted-evaluation.jsonl`, and prints the M6 aggregate table; 5/5 wins. Verified 2026-07-20. |
-| `make demo-server` | **Exits 1** — not implemented (M6/M10). |
+| `make demo-server` | Builds/boots the real server+plugin in an isolated no-port probe; verifies layout, opening parity, supply, announcements, and controls; exits 0. Use `DEMO_JOIN=1 make demo-server` only for an explicit private port-6567 human session. |
 
 (If `make` is unavailable on Windows, run `bash scripts/<name>.sh` directly.)
 
 ## Architecture map
 
 - **Key modules**: `rl-server` (headless fixed-step launcher, `mindustry.rl`),
-  `agent-core` (`agentcore`), `agent-plugin` (`mindustry.agentplugin`); Python
+  `agent-core` (`agentcore`), `agent-plugin` (loadable real-time server adapter,
+  `mindustry.agentplugin`); Python
   `mindustry_agents` package. See `docs/ARCHITECTURE.md`.
 - **Python env/process layer (M2)** — the request path top to bottom:
   `env.parallel_env.MindustryParallelEnv` (per-agent dict PettingZoo surface,
@@ -212,8 +217,9 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M6.4: agent-plugin demo server.** Run the same board/skills/policy in an
-   ordinary human-joinable v159.7 dedicated server with emergency-stop commands.
+1. **M6.4 manual acceptance.** Join the explicit private server with a stock
+   v159.7 client, visually confirm mining/building/supplying and team chat, then
+   prove `/agents stop` halts all three agents.
 2. **M6.5: milestone closure.** Run the full acceptance matrix, update truthful
    docs/benchmarks, and close M6 only when every exit criterion passes.
 3. **M7.1: learned selector baseline contract.** Begin only after M6 closure.

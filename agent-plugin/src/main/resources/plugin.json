@@ -1,0 +1,10 @@
+{
+  "name": "mindustry-coop-agents",
+  "displayName": "Mindustry Cooperative Agents",
+  "author": "mindustry-coop-agents contributors",
+  "description": "Private real-time Bootstrap Defense v0 demonstration server.",
+  "version": "0.6.0",
+  "minGameVersion": "159.7",
+  "main": "mindustry.agentplugin.AgentPlugin",
+  "java": true
+}
