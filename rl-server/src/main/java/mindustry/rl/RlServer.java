@@ -286,6 +286,9 @@ public final class RlServer{
         long requestId = req.getLong("request_id", 0);
         rootSeed = req.getLong("root_seed", 0);
         agentCount = Math.max(1, req.getInt("agent_count", 1));
+        Jval options = req.get("options");
+        engineCandidates.setOverlapProbe(options != null && options.isObject()
+            && options.getBool("reservation_overlap_probe", false));
 
         doReset(rootSeed);
         stepGameEvents = Jval.newArray();

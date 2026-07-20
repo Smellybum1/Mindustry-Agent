@@ -3,6 +3,7 @@ package mindustry.rl;
 import agentcore.*;
 import agentcore.candidates.*;
 import agentcore.skill.*;
+import agentcore.task.*;
 import agentcore.utility.*;
 import arc.util.serialization.*;
 import mindustry.content.*;
@@ -32,6 +33,7 @@ public final class EngineCandidates{
     private final Scenario.OrePatch harvestPatch;
     private final Scenario.RegionSpec rebuildRegion;
     private final Scenario.RegionSpec defendRegion;
+    private boolean overlapProbe;
 
     public EngineCandidates(Scenario scenario, RlAgentRegistry registry){
         this.scenario = scenario;
@@ -94,7 +96,13 @@ public final class EngineCandidates{
             agent.unit.y, assignmentRange, ALPHA_CAPABILITIES);
         HandTunedUtility utility = new HandTunedUtility(
             new EngineFeatureSource(scenario, registry, world));
-        return generator.generate(snapshot, world, utility);
+        CandidateSet generated = generator.generate(snapshot, world, utility);
+        return overlapProbe ? withOverlapProbe(generated) : generated;
+    }
+
+    /** Validation-only scenario option: expose a second task over the same footprint. */
+    public void setOverlapProbe(boolean enabled){
+        overlapProbe = enabled;
     }
 
     public Jval observation(CandidateSet set){
@@ -137,6 +145,33 @@ public final class EngineCandidates{
                 || tile.build.rotation != block.rotation()) return false;
         }
         return true;
+    }
+
+    private CandidateSet withOverlapProbe(CandidateSet generated){
+        if(generated.candidates().size() >= CandidateGenerator.DEFAULT_MAX_CANDIDATES){
+            return generated;
+        }
+        ArrayList<TaskCandidate> candidates = new ArrayList<>(generated.candidates());
+        for(int i = 0; i < candidates.size(); i++){
+            TaskCandidate original = candidates.get(i);
+            TaskSpec task = original.task();
+            if(task.type() != TaskType.BUILD_SCHEMATIC) continue;
+            TaskSpec probe = TaskSpec.builder(task.taskId() + ":overlap-probe", task.type())
+                .target(task.target())
+                .priority(task.priority())
+                .estimatedTicks(task.estimatedTicks())
+                .estimatedCost(task.estimatedCost())
+                .requiredCapabilities(task.requiredCapabilities())
+                .helpersRequested(task.helpersRequested())
+                .exclusive(task.exclusive())
+                .parentTaskId(task.parentTaskId())
+                .dependencyTaskIds(task.dependencyTaskIds())
+                .build();
+            candidates.add(i + 1, new TaskCandidate(probe, original.valid(),
+                original.invalidReason(), original.utility()));
+            break;
+        }
+        return new CandidateSet(candidates);
     }
 
     private int brokenBlocksIn(Scenario.RegionSpec region){

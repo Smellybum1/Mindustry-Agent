@@ -4,11 +4,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M4 and M5.1–5.3 complete, verified 2026-07-20): the
+- **What currently works** (M0–M4 and M5.1–5.4 complete, verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
-  layer** (100 JUnit tests), agent
+  layer** (101 JUnit tests), agent
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
@@ -46,9 +46,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   real resources-short block, an accepted 20-copper helper contract fulfilled by
   21 legally mined/delivered copper, and one schematic completion; the full trace
   repeats byte-identically across fresh JVMs through tick 912.
+  M5.4 acquires exact schematic-footprint and copper reservations before skill
+  start, hashes and publishes them, cancels interrupted build queues, and releases
+  on every lifecycle exit. Its live overlap trace gives the higher-utility second
+  bidder the only build plan, emits `reservation_overlap` for the loser, proves
+  abandon/reclaim/completion and supply budgets, and repeats byte-identically
+  through tick 280.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
-  live reservations/recovery/metrics and a scripted full three-wave *win* path
-  are still to come (M5.4–M6); rewards are empty until M7;
+  lease recovery/metrics and a scripted full three-wave *win* path are still to
+  come (M5.5–M6); rewards are empty until M7;
   training/evaluation Python subpackages. See `docs/STATUS.md`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
@@ -68,10 +74,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make build` | Builds `rl-server:dist` + `agent-core`/`agent-plugin` classes, then validates the Python package import; ends `build: OK`, exit 0. |
 | `make test` | Runs the Python suite (35 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
-| `make test-java` | `gradlew agent-core:test` (100 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
-| `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance, M5.2 coordination, and the M5.3 policy/helper check twice across fresh JVMs (through tick 912), plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
+| `make test-java` | `gradlew agent-core:test` (101 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
+| `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance, M5.2 coordination, M5.3 policy/helper, and M5.4 reservation checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
 | `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary, including ordered schematic build+supply, deterministic agent combat, and **post-wave wall placement with moving/re-pathing enemies** (79 hashes); reset purity and seed sensitivity also pass. Ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
-| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.3 run: median 1.07 ms, p95 2.24 ms, peak 300.3 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
+| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M5.4 run: median 1.20 ms, p95 3.80 ms, peak 312.1 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
 | `make demo-server` | **Exits 1** — not implemented (M6/M10). |
@@ -183,22 +189,21 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M5 item 5.4 (then M5/M6,
+**Authoritative work queue: `docs/ROADMAP.md` M5 item 5.5 (then M5/M6,
 also broken down there). Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M5.4: reservations wired to real targets.** Reserve schematic footprints
-   and resource budgets during claims; prove overlapping builders cannot create
-   conflicting plans and emit a structured reservation-conflict event.
-2. **M5.5: lease expiry/failure recovery.** Add a deterministic heartbeat
+1. **M5.5: lease expiry/failure recovery.** Add a deterministic heartbeat
    suppression hook; prove expiry, reclaim, completion, and normal termination.
-3. **M5.6: announcements and coordination metrics.** Surface rendered messages
+2. **M5.6: announcements and coordination metrics.** Surface rendered messages
    and bounded task/idle/duplicate counters; prove rate limits in a live run.
-4. **M6.1: scripted expert team.** Build on M5 policies to survive all three
+3. **M6.1: scripted expert team.** Build on M5 policies to survive all three
    scenario waves across the defined seed set and wire `make scripted-demo`.
-5. **M6.2: evaluation summaries.** Emit per-episode JSONL metrics and aggregate
+4. **M6.2: evaluation summaries.** Emit per-episode JSONL metrics and aggregate
    scripted evaluation results into `docs/BENCHMARKS.md`.
+5. **M6.3: replay and golden traces.** Record complete coordination/action traces
+   and verify a checked-in ≥10,000-tick replay in `make determinism`.
 
 ## Decisions
 

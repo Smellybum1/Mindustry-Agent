@@ -336,6 +336,16 @@ contract); Python sees it only through the protocol.
 - Depends: 5.1, 5.2; M4 skills for build/supply tasks.
 
 ### 5.4 Reservations wired to real targets
+- **DONE (verified 2026-07-20):** candidate claims are ordered by utility and
+  stable agent/task identity before reservation acquisition and skill start.
+  Schematic tasks reserve their exact multiblock bounding footprint plus
+  estimated copper; supply tasks reserve their copper budget. Reservation state
+  is exposed per task and included in the canonical hash. A live overlap probe
+  proves the later, higher-utility bidder wins independent of bundle order, the
+  loser receives a structured `reservation_overlap` event and never gets a
+  build plan, abandonment clears the winner's plan/reservations, and a released
+  builder then completes. Two supply tasks hold and release disjoint five-copper
+  budgets. The full trace repeats byte-identically through tick 280.
 - Objective: claiming a build task reserves the schematic footprint (tiles) and
   estimated copper; supply tasks reserve resource budget; abandonment/expiry
   releases (board semantics exist — wire acquire/release into the adapter).

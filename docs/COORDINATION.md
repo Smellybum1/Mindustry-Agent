@@ -130,6 +130,14 @@ Acquired on demand and released with the task (`complete`/`abandon`/`release`/
   are never driven negative — releasing only ever removes existing reservations
   (safety property, brief §23.5).
 
+The M5.4 simulation adapter acquires reservations after deterministic
+utility/agent/task ordering and before assigning an engine skill. The reference
+schematic reserves its exact multiblock bounding rectangle and estimated copper;
+turret supply reserves estimated copper. The soft copper capacity is the
+scenario's declared starting loadout, so a temporarily short task may still
+start, block, and request the M5.3 helper contribution. Active reservations are
+part of the canonical hash and summarized per task in `task_board[]`.
+
 ## Event schema (brief §11.3)
 
 `CoordinationEvent` carries the §11.3 message fields (`message_id`, `episode_id`,

@@ -20,7 +20,7 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 2. `docs/HANDOFF.md` — verified project state, exact commands with expected
    outputs, architecture map, performance, known risks.
 3. `docs/ROADMAP.md` — Milestones M4–M6 are broken into issue-sized items with
-   acceptance criteria. **Your work queue begins at M5 item 5.4.**
+   acceptance criteria. **Your work queue begins at M5 item 5.5.**
 4. `docs/M4_DESIGN.md` — the approved design you are implementing (it has open
    questions to resolve against engine source and record in place — follow the
    precedent in `docs/M3_DESIGN.md`, which shows the expected resolution style).
@@ -31,9 +31,9 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Verified state you can rely on (all re-verified 2026-07-20)
 
-- M0–M4 and M5.1–5.3 complete + the bootstrap-defense-v0 scenario loader with deterministic
+- M0–M4 and M5.1–5.4 complete + the bootstrap-defense-v0 scenario loader with deterministic
   enemy waves. `bash scripts/{bootstrap,build,test-java,test-python,smoke,
-  determinism,stress-reset,benchmark}.sh` all exit 0. 100 JUnit + 35 pytest.
+  determinism,stress-reset,benchmark}.sh` all exit 0. 101 JUnit + 35 pytest.
 - The fixed-step headless env: ~76k engine ticks/sec, ~1 ms resets, determinism
   proven across processes at 79 hash boundaries including ordered
   `east_duo_v1` build+supply, a post-wave wall placement, and moving/re-pathing enemies;
@@ -48,6 +48,9 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
   helper trace records a real resources-short block, request/offer/accept, 21
   legally mined/delivered copper fulfilling a 20-copper contract, and one build
   completion; the complete transcript is byte-identical across fresh JVMs.
+- M5.4 reserves exact schematic footprints and task copper before skill start,
+  exposes and hashes reservation state, and cancels interrupted build plans. Its
+  live overlap/release/resource-budget trace is byte-identical across JVMs.
 
 ## Invariants (violating these is failure, even if tests pass)
 
@@ -74,8 +77,8 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Your first task
 
-`docs/ROADMAP.md` → **Milestone 5, item 5.4 (reservations wired to real targets)**.
-Milestone 4 and items 5.1–5.3 are verified complete: the
+`docs/ROADMAP.md` → **Milestone 5, item 5.5 (lease expiry/failure recovery)**.
+Milestone 4 and items 5.1–5.4 are verified complete: the
 thread-less pathfinder refresh is wall-clock-free and the 79-boundary determinism
 trace legally executes and supplies the schematic, then builds a post-wave wall;
 `BuildBlock` uses real engine plans and balances core resources; reset/step now

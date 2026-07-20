@@ -1,6 +1,7 @@
 package mindustry.rl;
 
 import agentcore.board.*;
+import agentcore.reservation.*;
 import agentcore.task.*;
 import arc.struct.*;
 import mindustry.entities.units.*;
@@ -222,6 +223,35 @@ public final class StateHasher{
                         out.writeBoolean(helper.fulfilled());
                         out.writeLong(helper.fulfilledTick());
                     }
+                }
+                List<TileReservation> tileReservations = board.reservations().tileReservations();
+                out.writeInt(tileReservations.size());
+                for(TileReservation reservation : tileReservations){
+                    writeString(out, reservation.taskId());
+                    out.writeInt(reservation.agent().index());
+                    out.writeInt(reservation.area().x());
+                    out.writeInt(reservation.area().y());
+                    out.writeInt(reservation.area().w());
+                    out.writeInt(reservation.area().h());
+                    out.writeBoolean(reservation.human());
+                }
+                List<ResourceReservation> resourceReservations =
+                    board.reservations().resourceReservations();
+                out.writeInt(resourceReservations.size());
+                for(ResourceReservation reservation : resourceReservations){
+                    writeString(out, reservation.taskId());
+                    out.writeInt(reservation.agent().index());
+                    writeString(out, reservation.item());
+                    out.writeInt(reservation.amount());
+                    out.writeBoolean(reservation.human());
+                }
+                List<RegionReservation> regionReservations = board.reservations().regionReservations();
+                out.writeInt(regionReservations.size());
+                for(RegionReservation reservation : regionReservations){
+                    writeString(out, reservation.taskId());
+                    out.writeInt(reservation.agent().index());
+                    writeString(out, reservation.regionId());
+                    out.writeBoolean(reservation.human());
                 }
                 out.writeLong(board.events().peekNextMessageId());
             }

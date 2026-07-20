@@ -73,6 +73,11 @@ Fail fast on incompatible **major** versions.
 | `deterministic` | bool | must be `true` in training |
 | `options` | obj | scenario-specific overrides |
 
+The validation-only reset option `reservation_overlap_probe=true` adds a second
+build candidate over the reference schematic footprint. It exists for the M5.4
+live property check and is disabled by default; training manifests must leave it
+unset.
+
 `ResetResponse` (`type = "reset_response"`)
 
 | field | type | notes |
@@ -212,7 +217,9 @@ resource cost, and enemy danger).
 
 `task_board[]` entries contain `{index, task_id, task_type, target, status,
 owner_agent_id, lease_expiry_tick, progress, reason, pending_offer_count,
-helper_count}`. `task_events[]` is the authoritative structured
+helper_count, reservation_count, tile_reservation_count, reserved_resources}`.
+Reservation counts and resource amounts drop to zero on completion, abandonment,
+release, or expiry. `task_events[]` is the authoritative structured
 `CoordinationEvent` schema: monotonic `message_id`, deterministic numeric
 `episode_id`, tick/agents/act/task identity, target/priority/estimate/cost/
 capabilities/dependencies, lease/progress/reason/status transition, related

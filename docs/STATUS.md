@@ -335,19 +335,47 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   reports zero hash mismatches, median **1.07 ms**, p95 **2.24 ms**, peak
   **300.3 MiB**, and no leak.
 
+## Milestone 5.4 — live target/resource reservations (DONE, verified 2026-07-20)
+
+- **Acquisition:** after all candidate claims in an atomic bundle are known,
+  pending starts are sorted by utility descending, then agent index and task ID.
+  Before a skill is assigned, schematic tasks reserve the exact bounding tile
+  rectangle derived from live block sizes plus their estimated copper; turret
+  supply tasks reserve estimated copper against the scenario's declared
+  250-copper soft budget. Rejection reopens the task and returns a typed reason.
+- **Lifecycle/telemetry:** completion, abandonment, release, expiry, and failed
+  starts release reservations. Clearing an interrupted build assignment also
+  cancels its engine build queue. Board snapshots expose reservation counts and
+  per-item amounts; ordered tile/resource/region reservations are included in
+  the canonical state hash. Engine-free registry views remain read-only and a
+  new test covers their deterministic order and per-task counts.
+- **Acceptance:** validation-only reset option `reservation_overlap_probe`
+  exposes two distinct candidates for the same real schematic. In the live
+  two-agent trace, agent 1's higher utility wins despite appearing second in the
+  action bundle; agent 0 receives `reservation_overlap`, a structured conflict
+  event names both agents, and only the winner gets an engine build plan.
+  Abandonment clears two reservations and the queued plan; the released builder
+  subsequently completes at tick 243. Both turret supply tasks then hold and
+  release five-copper reservations. A second JVM repeats the transcript
+  byte-identically through tick 280. Full smoke includes the check.
+- **Verification:** **101 JUnit**, **35 pytest**, full smoke, and the
+  **79-boundary** determinism replay are green. The post-M5.4 1000-reset check
+  reports zero hash mismatches, median **1.20 ms**, p95 **3.80 ms**, peak
+  **312.1 MiB**, and no leak.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
   `CoordinationAct` (13), `SkillStatus` (6), `AgentId` record, the coordination
   board (M2), the **`agentcore.skill`** FSM layer (M3/M4), and the engine-free
   deterministic M5.1 candidate catalog. Board-to-skill wiring and measurable
-  helper fulfilment are live through M5.3; real reservations (M5.4) and reward
-  logic (M7) remain.
+  helper fulfilment and live reservations are wired through M5.4; lease-recovery
+  hooks/metrics (M5.5–5.6) and reward logic (M7) remain.
 - **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
   loadable Mindustry plugin. See `agent-plugin/README.md`.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
-  `tools/{smoke,determinism,stress_reset,benchmark,policy_check}.py`). `training`,
+  `tools/{smoke,determinism,stress_reset,benchmark,policy_check,reservation_check}.py`). `training`,
   `evaluation`, and `telemetry` remain documented skeletons.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and
@@ -360,7 +388,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 100 tests
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 101 tests
   green, including 31 M3/M4 skill tests). `agent-plugin` build still unverified.
 - **No CI** configured yet.
 - **No lockfile** for Python yet (pinned deps are trivial/none for the core).

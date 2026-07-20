@@ -4,6 +4,7 @@ import agentcore.*;
 import agentcore.board.*;
 import agentcore.candidates.*;
 import agentcore.event.*;
+import agentcore.reservation.*;
 import agentcore.skill.*;
 import agentcore.task.*;
 import arc.util.serialization.*;
@@ -35,6 +36,7 @@ public final class CoordinationAdapter{
 
     public void reset(long episodeId, int agentCount){
         board.reset(episodeId);
+        board.reservations().setCapacity("copper", initialCopperBudget());
         assignments = new Assignment[agentCount];
         helperDeliveryTasks = new String[agentCount];
         helperDeliveryCargo = new int[agentCount];
@@ -93,6 +95,10 @@ public final class CoordinationAdapter{
 
         //The board resolves same-tick contests by a total order while tasks remain CLAIMED.
         //Only final owners receive skills and transition to RUNNING.
+        pending.sort(Comparator
+            .comparingDouble((PendingSelection selection) -> selection.candidate.utility()).reversed()
+            .thenComparingInt(selection -> selection.agent.index)
+            .thenComparing(selection -> selection.candidate.task().taskId()));
         for(PendingSelection selection : pending){
             TaskState state = board.task(selection.candidate.task().taskId());
             if(state == null || state.owner() == null
@@ -108,8 +114,19 @@ public final class CoordinationAdapter{
                     "unsupported_or_missing_target", selection.actionType);
                 continue;
             }
+            String reservationFailure = acquireReservations(
+                selection.candidate.task(), AgentId.of(selection.agent.index), tick);
+            if(reservationFailure != null){
+                board.release(state.taskId(), AgentId.of(selection.agent.index), tick);
+                results[selection.actionIndex] = result(selection.agent.index, false,
+                    reservationFailure, selection.actionType, state.taskId());
+                continue;
+            }
             OpResult started = board.start(state.taskId(), AgentId.of(selection.agent.index), tick);
             if(!started.ok()){
+                OpResult released = board.release(state.taskId(),
+                    AgentId.of(selection.agent.index), tick);
+                if(!released.ok()) board.reservations().releaseAll(state.taskId());
                 results[selection.actionIndex] = result(selection.agent.index, false,
                     started.reason(), selection.actionType);
                 continue;
@@ -223,6 +240,19 @@ public final class CoordinationAdapter{
             item.put("reason", task.reasonCode() == null ? "" : task.reasonCode());
             item.put("pending_offer_count", task.pendingOffers().size());
             item.put("helper_count", task.helpers().size());
+            item.put("reservation_count", board.reservations().countForTask(task.taskId()));
+            int tileReservations = 0;
+            for(TileReservation reservation : board.reservations().tileReservations()){
+                if(reservation.taskId().equals(task.taskId())) tileReservations++;
+            }
+            item.put("tile_reservation_count", tileReservations);
+            Jval resources = Jval.newObject();
+            for(ResourceReservation reservation : board.reservations().resourceReservations()){
+                if(!reservation.taskId().equals(task.taskId())) continue;
+                resources.put(reservation.item(), resources.getInt(reservation.item(), 0)
+                    + reservation.amount());
+            }
+            item.add("reserved_resources", resources);
             out.add(item);
         }
         return out;
@@ -373,6 +403,58 @@ public final class CoordinationAdapter{
                 }
             }
         }
+    }
+
+    private String acquireReservations(TaskSpec task, AgentId agent, long tick){
+        if(task.type() == TaskType.BUILD_SCHEMATIC){
+            Rect footprint = schematicFootprint();
+            ReservationOutcome tiles = board.reserveTile(task.taskId(), agent,
+                footprint, false, tick);
+            if(!tiles.granted()) return reservationReason(tiles);
+        }
+        if(task.type() == TaskType.BUILD_SCHEMATIC || task.type() == TaskType.SUPPLY_TURRET){
+            for(Map.Entry<String, Integer> cost : task.estimatedCost().asMap().entrySet()){
+                ReservationOutcome resource = board.reserveResource(task.taskId(), agent,
+                    cost.getKey(), cost.getValue(), false, tick);
+                if(!resource.granted()){
+                    board.reservations().releaseAll(task.taskId());
+                    return reservationReason(resource);
+                }
+            }
+        }
+        return null;
+    }
+
+    private Rect schematicFootprint(){
+        Scenario.SchematicSpec spec = scenario.schematic(scenario.referenceSchematicId);
+        int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+        int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+        for(BuildSpec build : spec.blocks()){
+            mindustry.world.Block block = content.block(build.block());
+            int x = scenario.referenceAnchorX + build.offsetX() + block.sizeOffset;
+            int y = scenario.referenceAnchorY + build.offsetY() + block.sizeOffset;
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + block.size);
+            maxY = Math.max(maxY, y + block.size);
+        }
+        return new Rect(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    private int initialCopperBudget(){
+        for(mindustry.type.ItemStack stack : scenario.loadout){
+            if(stack.item == Items.copper) return stack.amount;
+        }
+        return 0;
+    }
+
+    private static String reservationReason(ReservationOutcome outcome){
+        return switch(outcome.result()){
+            case REJECTED_OVERLAP -> "reservation_overlap";
+            case REJECTED_HUMAN_PRIORITY -> "reservation_human_priority";
+            case REJECTED_CAPACITY -> "reservation_capacity";
+            default -> "reservation_rejected";
+        };
     }
 
     private void syncHelperDelivery(int agentIndex, RlAgentRegistry.Agent agent, long tick){
@@ -571,6 +653,12 @@ public final class CoordinationAdapter{
     }
 
     private void clearAssignment(int agentIndex, RlAgentRegistry.Agent agent){
+        Assignment assignment = current(agentIndex);
+        if(agent != null && assignment != null
+            && (assignment.spec.type() == TaskType.BUILD_SCHEMATIC
+                || assignment.spec.type() == TaskType.REPAIR_REGION)){
+            agent.controller.cancelBuildPlans();
+        }
         if(agent != null) agent.controller.clearSkill();
         if(agentIndex >= 0 && agentIndex < assignments.length) assignments[agentIndex] = null;
     }
