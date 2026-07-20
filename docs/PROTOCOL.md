@@ -84,6 +84,13 @@ tick the selected controller is frozen and its automatic task lifecycle reports
 are suppressed, allowing the ordinary lease-expiry path to be tested. They are
 disabled by default and must remain unset in training manifests.
 
+M7.2 adds `shared_expert_policy=true` as a validation-only option. It installs
+the same `ExpertCoordinationDriver` used by the real-time plugin and lets the
+driver select and advance tasks on fixed-step boundaries. It is disabled by
+default so the externally supplied action contract remains unchanged; training
+manifests must leave it unset unless they are explicitly evaluating that
+scripted baseline.
+
 `ResetResponse` (`type = "reset_response"`)
 
 | field | type | notes |
@@ -236,8 +243,11 @@ Human text is not authoritative (ADR-0005).
 
 `coordination_metrics` contains `{duplicate_work_incidents, tasks_completed,
 tasks_abandoned, agent_ticks, idle_agent_ticks, idle_fraction,
-structured_messages, announced_messages}`. It is cumulative from reset and is
-copied into every agent's Python `info`; it never contributes to reward.
+structured_messages, announced_messages}`. When the validation-only shared
+expert is enabled it additionally contains `shared_decision_count`,
+`shared_decision_digest`, and `shared_policy_phase`. Metrics are cumulative from
+reset and copied into every agent's Python `info`; they never contribute to
+reward.
 
 An accepted `deliver copper` helper contract is fulfilled only after that
 helper issues a legal `DELIVER_CORE` skill carrying copper and the observed

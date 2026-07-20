@@ -1,6 +1,6 @@
 # Status
 
-**Date:** 2026-07-20
+**Date:** 2026-07-21
 **Branch:** `coop-agent/v159.7`
 **Engine pin:** tag `v159.7`, commit `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`, Arc `208a754044`
 
@@ -17,8 +17,8 @@ and what is unverified.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **38 Python
-  tests pass** via `python -m pytest python/tests -q` (verified 2026-07-20 with
+  client, parallel-env facade, vector collector) is stdlib-only too. **40 Python
+  tests pass** via `python -m pytest python/tests -q` (verified 2026-07-21 with
   pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
   machine (JDK 21 Temurin, Python 3.12.5, Git 2.46). Verified working in Git Bash.
@@ -552,8 +552,36 @@ repository-evidence mapping used for the M6 audit is:
   and blocked wins, and 5/5 evaluation wins (core health min/mean 749/840.8,
   two unit losses). The plugin probe and real-time three-wave survival probe are
   green; the latter reaches tick 8100 with 1100 core health.
-- Next: M7.2, the single shared coordination brain and decision-sequence parity
-  probe. Findings 2/5/7 remain deliberately open for M7.2–M7.4.
+- At the M7.1 checkpoint, findings 2/5/7 remained deliberately open for
+  M7.2–M7.4; M7.2 resolves finding 5 below.
+
+## Milestone 7.2 — one coordination brain (DONE, verified 2026-07-21)
+
+- `agentcore.coordination.ExpertCoordinationDriver` is now the single scripted
+  coordination policy for fixed-step validation and the real-time demo. It owns
+  stage transitions, board/task lifecycle, opening economy and fortification,
+  supply, wave response, repair/rebuild, post-wave expansion, and reserve
+  mining. Immutable `ExpertCoordinationPlan` data is derived from the
+  authoritative scenario by `ExpertCoordinationPlans`.
+- `CoordinationAdapter` can enable that driver with the validation-only reset
+  option `shared_expert_policy=true`; the normal externally supplied action
+  path is unchanged. `DemoCoordinator` is reduced from 848 to 312 lines and now
+  owns only pacing, engine/IO adaptation, agent rebinding, controls, chat, and
+  telemetry.
+- `make coordination-parity` proves decision-level parity twice: a recorded
+  90-snapshot trace produces 366 decisions and 89 selections spanning harvest,
+  schematic, line, supply, repair, and defend; the actual fixed-step and no-port
+  plugin openings both produce 33 selections with normalized digest
+  `f335f6b950ac1b58857ca84b40e7151f966d5d53408fd0e643fbc54a39671385`.
+- The no-port demo survival acceptance remains green after extraction: both
+  nine-block/two-turret expansions complete, waves clear at ticks
+  3102/4865/6655, and tick 8100 is reached with **1091/1100** core health.
+- Closure validation: **104 JUnit**, **40 pytest**, `agent-core:test`,
+  `rl-server:dist`, `agent-plugin:dist`, full smoke, legacy 79-boundary replay,
+  and the 672-checkpoint/16,200-tick golden replay are green. No reward component,
+  engine pin, accepted ADR, or upstream file changed.
+- Next: M7.3, make the utility layer the primary expert. REVIEW_M6 finding 5 is
+  resolved; findings 2 and 7 remain assigned to M7.3/M7.4.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -562,14 +590,15 @@ repository-evidence mapping used for the M6 audit is:
   board (M2), the **`agentcore.skill`** FSM layer (M3/M4), and the engine-free
   deterministic M5.1 candidate catalog. Board-to-skill wiring and measurable
   helper fulfilment, live reservations, lease recovery, announcements, and
-  metrics are wired through M5.6; the M6.1 expert uses that surface. Reward
-  logic (M7) remains.
+  metrics are wired through M5.6; the shared M7.2 expert uses that surface.
+  Training reward design remains gated behind M8.
 - **`agent-plugin`** is no longer a stub. Its scripted M6 path is implemented;
   future M10 human goals/overrides and study instrumentation remain outside M6.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
-  `tools/{smoke,determinism,stress_reset,benchmark,policy_check}.py` plus the
-  reservation/chaos/announcement checks). `training`,
+  `tools/{smoke,determinism,stress_reset,benchmark,policy_check,
+  shared_policy_check}.py` plus the reservation/chaos/announcement checks).
+  `training`,
   `evaluation`, and `telemetry` remain documented skeletons.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and
@@ -582,7 +611,7 @@ repository-evidence mapping used for the M6 audit is:
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 103 tests
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 104 tests
   green, including 31 M3/M4 skill tests). `agent-plugin:dist` and its isolated
   real-server acceptance probe are verified.
 - **No CI** configured yet.

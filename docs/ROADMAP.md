@@ -545,6 +545,19 @@ dependencies.
   scripted_demo.py or DemoCoordinator that exists in scenario/schematic JSON.
 
 ### 7.2 One coordination brain (training/demo parity for real)
+- **DONE (verified 2026-07-21):** `ExpertCoordinationDriver` now owns the
+  complete scripted staging, task lifecycle, wave response, repair/resupply,
+  expansion, and reserve-mining policy. Both the fixed-step
+  `CoordinationAdapter` and real-time plugin use that same engine-neutral
+  driver and scenario-derived `ExpertCoordinationPlan`; `DemoCoordinator` is
+  reduced to pacing, engine/IO adaptation, controls, rebinding, and telemetry.
+  `make coordination-parity` compares a 366-decision/89-selection recorded
+  trace across two driver instances (all six exercised task types), then
+  compares the actual fixed-step and no-port plugin openings: both emit 33
+  selections with digest
+  `f335f6b950ac1b58857ca84b40e7151f966d5d53408fd0e643fbc54a39671385`.
+  The no-port survival acceptance still clears all three waves and reaches tick
+  8100 with 1091/1100 core health.
 - Objective: extract the shared task-lifecycle driver so `CoordinationAdapter`
   (fixed-step) and the demo plugin consume ONE implementation of staging, wave
   response, expansion policy, and task lifecycle (REVIEW_M6 finding 5).
@@ -618,7 +631,7 @@ dependencies.
 
 Exit criteria:
 - [ ] All REVIEW_M6 findings resolved or explicitly waived with rationale
-- [ ] One coordination brain; decision-level parity probe green
+- [x] One coordination brain; decision-level parity probe green
 - [ ] Utility-driven policy wins fixed 5/5 + ≥80% dev variants; macro retired
 - [ ] Seed-varied behaviour demonstrably adaptive (variant probe + metrics)
 - [ ] Ladder + scorecard v0 reproducible; held-out governance in force

@@ -5,9 +5,9 @@ to our accepted decisions (`docs/decisions/ADR-0001..0010`).
 
 ## Two modes, one behaviour core
 
-The same task board, skills, observations, action schema, and announcement
-templates drive both modes. Only the *pacing and entry point* differ (ADR-0006,
-brief §7.3).
+The same coordination driver, task board, skills, observations, action schema,
+and announcement templates drive both modes. Only the *pacing and entry point*
+differ (ADR-0006, brief §7.3).
 
 ```text
                         TRAINING MODE
@@ -40,7 +40,7 @@ brief §7.3).
       normal server network (private, loopback/LAN)
               |
    dedicated server + agent-plugin      [agent-plugin]  real-time pacing
-   reuses agent-core tasks/skills/announcements
+   reuses agent-core coordination/tasks/skills/announcements
               |
    policy process OR in-process scripted fallback
 ```
@@ -52,8 +52,8 @@ brief §7.3).
 | Module | Package | Depends on | Responsibility |
 |---|---|---|---|
 | `rl-server` | `mindustry.rl` | `:core`, `:server` | Headless externally-stepped launcher: init content once, fixed-step loop, load scenario, reset in-process, apply atomic action bundle at decision boundary, advance exact ticks, extract observations/rewards, return deterministic state hash, serve health/handshake/reset/step/close. Disables ordinary networking unless testing parity. |
-| `agent-core` | `agentcore` | `:core` | Agent identity, task catalog + validation, shared task board, intention/offer/claim/lease protocol, skill executors, candidate task generation, action masks, observation construction, reward accounting, metrics, announcement templates, structured event log. **No Python/RL dependency.** |
-| `agent-plugin` | `mindustry.agentplugin` | `:core`, `:agent-core`, selected project-owned `:rl-server` adapters | Real-time dedicated-server adapter for demo mode. A loadable stock-server plugin that starts the exact scenario, spawns three controlled Alphas, runs the scripted fallback through the shared task board/skills/announcement templates, and exposes status/pause/resume/emergency-stop controls. Its real-time policy builds/supplies the expert defense, mines between waves, reacts to enemy presence, adds deterministic two-Duo/seven-wall layers after waves 1–2, performs repair/resupply maintenance, and rebinds a lost stable agent slot to a replacement Alpha at the core with explicit telemetry. |
+| `agent-core` | `agentcore` | `:core` | Agent identity, task catalog + validation, shared scripted coordination driver and scenario plan, task board, intention/offer/claim/lease protocol, skill executors, candidate task generation, action masks, observation construction, reward accounting, metrics, announcement templates, structured event log. **No Python/RL dependency.** |
+| `agent-plugin` | `mindustry.agentplugin` | `:core`, `:agent-core`, selected project-owned `:rl-server` adapters | Real-time dedicated-server adapter for demo mode. A loadable stock-server plugin that starts the exact scenario, spawns/rebinds three controlled Alphas, adapts the shared coordination driver to legal engine skills, renders approved announcements, and exposes status/pause/resume/emergency-stop controls. It owns pacing, engine/IO adaptation, controls, and telemetry—not a separate coordination policy. |
 
 Upstream modules (`core`, `server`, `desktop`, `annotations`, `tools`, `tests`)
 are unmodified except for the `settings.gradle` registration edit

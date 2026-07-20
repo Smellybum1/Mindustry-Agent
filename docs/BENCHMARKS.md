@@ -214,3 +214,24 @@ The reset-path revalidation completed 1,000 resets with zero hash mismatches,
 real-server no-port probe reported the dynamic opening counts (20 blocks/four
 turrets); its survival variant reported 9 blocks/two turrets for each expansion,
 cleared all three waves, and reached tick 8100 with **1100/1100** core health.
+
+## M7.2 decision-parity and survival acceptance (2026-07-21)
+
+Command: `make coordination-parity` (equivalently
+`bash scripts/coordination-parity.sh`). This is a behavioral acceptance gate,
+not a throughput benchmark.
+
+| Check | Observed result |
+|---|---|
+| Recorded snapshot parity | 90 snapshots, 366 decisions, 89 selections; two independent shared-driver runs matched exactly |
+| Selected task coverage | `HARVEST_RESOURCE`, `BUILD_SCHEMATIC`, `BUILD_LINE`, `SUPPLY_TURRET`, `REPAIR_REGION`, `DEFEND_REGION` |
+| Fixed-step live opening | 33 selections through tick 990 |
+| No-port plugin live opening | 33 selections; expert ready/reserve mining at tick 1062 |
+| Cross-runtime normalized digest | `f335f6b950ac1b58857ca84b40e7151f966d5d53408fd0e643fbc54a39671385` — exact match |
+
+The normalized digest intentionally excludes tick values because fixed-step and
+real-time pacing observe the same policy milestones at different engine ticks;
+it includes decision kind, agent, task type, and target. The separate no-port
+`DEMO_SURVIVAL=1 make demo-server` run after extraction built both nine-block/
+two-turret expansion layers, cleared waves at ticks 3102/4865/6655, and reached
+tick 8100 with **1091/1100** core health. No game port was opened.

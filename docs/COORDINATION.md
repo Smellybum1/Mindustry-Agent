@@ -37,6 +37,7 @@ headless, deterministic, and fast to unit-test.
 | `agentcore.event` | `CoordinationEvent` (immutable, §11.3 schema), `EventLog` (drainable, message-id counter), `RateLimiter`. |
 | `agentcore.announce` | `AnnouncementRenderer` (deterministic §20.3 templates). |
 | `agentcore.utility` | `TaskUtility`, `HandTunedUtility`, `FeatureSource`, `UtilityFeatures`, `UtilityWeights`, `UtilityBreakdown`. |
+| `agentcore.coordination` | `ExpertCoordinationDriver` (shared scripted staging, task lifecycle, wave response, maintenance, expansion, reserve mining) and immutable `ExpertCoordinationPlan`. |
 
 ## Task status state machine
 
@@ -200,6 +201,24 @@ ticks, idle fraction, and structured/announced message counts. Occupancy is
 sampled exactly once per externally advanced engine tick on the simulation
 thread; these metrics are telemetry only and never affect reward or state.
 
+## Shared expert coordination driver (M7.2)
+
+`ExpertCoordinationDriver` is the single scripted coordination brain used by
+both runtime modes. It owns stage transitions, board proposals/claims/starts,
+completion and abandonment, opening economy/fortification/supply work, enemy
+response, repair/resupply maintenance, post-wave expansion, and reserve mining.
+It depends only on an engine-neutral `Port`; each runtime captures authoritative
+simulation-thread facts and maps selected tasks to its existing legal skill
+controllers. `ExpertCoordinationPlan` contains the scenario-derived geometry,
+block order, wave schedule, and resource thresholds.
+
+The fixed-step adapter remains externally controlled by default. The
+validation-only `shared_expert_policy` reset option enables the shared driver so
+its decisions can be compared directly with the no-port plugin. A normalized
+SHA-256 digest covers decision kind, agent, task type, and target while excluding
+runtime tick/pacing differences. `make coordination-parity` checks both a
+recorded snapshot sequence and the two live runtime openings.
+
 ## Utility scaffold (brief §11.1)
 
 `HandTunedUtility` implements the additive utility:
@@ -241,8 +260,9 @@ a crash.
 
 ## Intentionally NOT in this layer yet
 
-- **Skills / engine adapter.** No mindustry `:core` types, no unit control, no
-  build-plan execution, no real item transfer. Task *execution* comes later.
+- **Engine adapter.** No mindustry `:core` types, unit control, build-plan
+  execution, or real item transfer live in the shared driver. Its runtime ports
+  map decisions to the existing legal skills.
 - **Candidate generation ownership.** The board stores and arbitrates tasks; the
   separate `agentcore.candidates` catalog invents them and remains engine-free.
 - **Capability enforcement on claim.** The board records `required_capabilities`

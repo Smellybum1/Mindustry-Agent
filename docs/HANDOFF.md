@@ -4,11 +4,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M6 and M7.1 complete, verified 2026-07-20): the
+- **What currently works** (M0–M6 and M7.1–M7.2 complete, verified
+  2026-07-21): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board, deterministic candidate catalog, **and the M3/M4 `agentcore.skill` FSM
-  layer** (103 JUnit tests), agent
+  layer** (104 JUnit tests), agent
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
@@ -84,23 +85,33 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   demo branches are removed, supply stock telemetry has explicit consumers, and
   the upstream patch catalogue is exact. The current no-port survival probe
   reaches tick 8100 with 1100 core health after dynamic 9-block/2-turret
-  expansions following waves 1 and 2.
+  expansions following waves 1 and 2. M7.2 replaces the two scripted policy
+  implementations with one engine-neutral `ExpertCoordinationDriver` and
+  scenario-derived plan. The fixed-step adapter and plugin now share staging,
+  lifecycle, wave response, maintenance, expansion, and reserve-mining
+  decisions; the plugin retains only real-time/engine/IO adaptation and
+  controls. The recorded parity probe covers 366 decisions/89 selections and
+  all six task types, while the two live openings both emit 33 selections with
+  digest `f335f6b950ac1b58857ca84b40e7151f966d5d53408fd0e643fbc54a39671385`.
+  The post-extraction survival run clears waves at ticks 3102/4865/6655 and
+  reaches tick 8100 with 1091/1100 core health.
 - **What is stubbed**: training rewards remain empty pending the M8 reward-audit
   gate; learned training code and the
   M10 human goal/override/study surface remain future work.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
-- **Next roadmap item**: M7.2, one coordination brain. M7.3 and later must not
-  start until its decision-sequence parity acceptance is green.
+- **Next roadmap item**: M7.3, make the utility layer the primary expert and
+  demote the hand-authored macro to a frozen ladder baseline.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
-- **Uncommitted changes**: aim for none. Note: the background Gradle build
-  touched `annotations/src/main/resources/classids.properties` (a generated
-  file); that change is **not** part of this scaffold and was left unstaged.
+- **Uncommitted changes intentionally preserved**: the user's modified
+  `AGENTS.md` and generated
+  `annotations/src/main/resources/classids.properties`. Neither belongs to the
+  M7.2 commits; never stage the generated file.
 
 ## Exact commands
 
@@ -110,9 +121,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
 | `make test` | Runs the Python suite (40 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
-| `make test-java` | `gradlew agent-core:test` (103 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
-| `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
-| `make determinism` | Runs the legacy 79-boundary cross-process replay, reset purity with deterministic unique episode IDs, seed sensitivity, then the checked-in golden (672 checkpoints / 16,200 ticks / two wins). Exit 0. Verified 2026-07-20. |
+| `make test-java` | `gradlew agent-core:test` (104 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-21. |
+| `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-21. |
+| `make determinism` | Runs the legacy 79-boundary cross-process replay, reset purity with deterministic unique episode IDs, seed sensitivity, then the checked-in golden (672 checkpoints / 16,200 ticks / two wins). Exit 0. Verified 2026-07-21. |
+| `make coordination-parity` | Compares two complete recorded decision sequences, runs the fixed-step shared expert, then boots the no-port plugin and requires identical live-opening digest/count. Current result: 366 recorded decisions; live digest `f335…1385`, 33 selections. Verified 2026-07-21. |
 | `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; latest M7.1 run: zero hash mismatches, median 1.31 ms, p95 2.60 ms, peak 298.3 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | Runs the primary three-wave expert and the legal insufficient-copper replan variant; both end at tick 8100 with `outcome=win`. Re-verified for M7.1 on 2026-07-20. |
@@ -159,10 +171,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 - **Observation path**: built on the sim thread at the step boundary (M1 minimal:
   tick/wave/core items/counts/health; per-agent observations are M3).
 - **Task/skill path**: `agentcore` owns the board and engine-free skills;
-  `mindustry.rl.CoordinationAdapter` owns the per-episode board, validates task
-  actions, resolves bundle-wide claims, maps task types to M3/M4 skills, and
-  reports lifecycle/events/snapshots. `SkillController` and `RlAgentRegistry`
-  remain the engine ports; `ActionDecoder` retains the legacy direct-command path.
+  `agentcore.coordination.ExpertCoordinationDriver` owns the shared scripted
+  policy and lifecycle. `mindustry.rl.CoordinationAdapter` owns the per-episode
+  board, validates external task actions, optionally adapts that driver for
+  parity evaluation, maps task types to M3/M4 skills, and reports lifecycle/
+  events/snapshots. `SkillController` and `RlAgentRegistry` remain the engine
+  ports; `ActionDecoder` retains the legacy direct-command path.
 
 ## Current performance
 
@@ -188,21 +202,22 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 38 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M5
+- **Passing**: 40 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M5
   action/board/event roundtrips, `test_supervisor.py`, `test_env.py`; fake-server
-  subprocess, no JVM, fast) and 102 Java JUnit tests (`agent-core`, incl.
+  subprocess, no JVM, fast) and 104 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
   the shell scripts (smoke/determinism/stress-reset/benchmark) — smoke includes
   the M5.2–M5.6 live coordination checks and determinism the scripted skill
-  trace; all verified green 2026-07-20.
+  trace; all verified green 2026-07-21. M7.2 additionally has the recorded and
+  live-runtime `coordination-parity` gate.
 - **Skipped**: none.
 - **Flaky**: the stress-reset *leak* check was flaky under the original
   growth-trend methodology (passed for the author, failed on re-verification);
   fixed by switching to a capped-heap absolute-ceiling check. Hash stability was
   never flaky.
 - **Failing**: none.
-- **Golden hashes**: determinism harness compares live runs; checked-in golden
-  trace files are still TODO (see next issues).
+- **Golden hashes**: the live harness and checked-in two-episode golden both
+  pass; 672 checkpoints cover 16,200 ticks and two wins.
 
 ## Known risks and bugs
 
@@ -227,17 +242,20 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M7 item 7.1.
+**Authoritative work queue: `docs/ROADMAP.md` M7 item 7.3.
 Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M7.1: learned selector baseline contract.** Define the random-valid and
-   heuristic evaluation contract against the completed M6 scenario.
-2. **M7.2: PPO selector implementation.** Remains unauthorized until M7 begins.
-3. **M7.3: checkpoint/evaluation pipeline.** Remains unauthorized until M7.
-4. **M7.4: reward audit and exploit review.** Remains future work.
-5. **M8.1: IPPO baseline contract.** Begin only after M7 closes.
+1. **M7.3: the utility layer becomes the expert.** Make greedy utility win the
+   fixed scenario 5/5 and record candidate expressiveness gaps.
+2. **M7.4: adaptive planning v1.** Replace fixed polling and rigid predicates
+   with wave-aware, spatial, event-driven replanning.
+3. **M7.5: scenario variation + seed governance.** Add bounded deterministic
+   variants and ADR-0012.
+4. **M7.6: evaluation ladder + teammate scorecard.** Compare scripted
+   baselines under frozen seed governance.
+5. **M8.1: reward vector and exploit audit.** Begin only after M7 closes.
 
 ## Decisions
 

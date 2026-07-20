@@ -69,6 +69,17 @@ determinism consume both sides of the supply ledger, and the scripted expert
 uses current target stock to decide whether a `CORE_SHORT` supply block needs
 recovery. Findings 2, 5, and 7 remain assigned to M7.2–M7.4.
 
+## M7.2 resolution (verified 2026-07-21)
+
+Finding 5 is resolved by `488b76bf2`. `ExpertCoordinationDriver` now owns the
+shared staging, task lifecycle, wave response, maintenance, expansion, and
+reserve-mining policy; `CoordinationAdapter` and `DemoCoordinator` are runtime
+ports over that one implementation. The parity gate compares complete recorded
+decision sequences and the two live runtime openings, which match at 33
+selections and normalized digest
+`f335f6b950ac1b58857ca84b40e7151f966d5d53408fd0e643fbc54a39671385`.
+Findings 2 and 7 remain assigned to M7.3 and M7.4 respectively.
+
 ## Planning-primitiveness inventory (drives M7.3–M7.5)
 
 - **Candidate generation**: compiled-in 6-rule catalog, fixed order, single
