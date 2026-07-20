@@ -1,0 +1,179 @@
+{
+  "$schema": "../schemas/scenario.schema.json",
+  "scenario_id": "bootstrap-defense-v0",
+  "scenario_version": 1,
+  "engine": { "tag": "v159.7", "commit": "c9686eb" },
+  "doc": "docs/SCENARIOS.md",
+
+  "coords": {
+    "system": "mindustry_tile",
+    "origin": "south-west",
+    "x_axis": "east",
+    "y_axis": "north",
+    "tilesize": 8,
+    "ticks_per_second": 60,
+    "multiblock_placement": "center_tile_for_odd_sizes"
+  },
+
+  "world": {
+    "width": 48,
+    "height": 48,
+    "floor": "stone",
+    "generator": "procedural",
+    "weather": "none",
+    "fog": false
+  },
+
+  "core": {
+    "block": "core-shard",
+    "team": "sharded",
+    "center": [24, 24],
+    "footprint_rect": { "x": 23, "y": 23, "w": 3, "h": 3 },
+    "health": 1100,
+    "item_capacity": 4000
+  },
+
+  "loadout": { "copper": 250, "lead": 0 },
+
+  "ore_patches": [
+    { "id": "A_copper_main",    "ore": "ore-copper", "rect": { "x": 27, "y": 27, "w": 6, "h": 6 }, "role": "primary_economy" },
+    { "id": "B_copper_support", "ore": "ore-copper", "rect": { "x": 28, "y": 18, "w": 4, "h": 4 }, "role": "east_ammo_feed" },
+    { "id": "C_lead",           "ore": "ore-lead",   "rect": { "x": 16, "y": 27, "w": 4, "h": 4 }, "role": "optional_v0", "required_to_win": false }
+  ],
+
+  "enemy_spawns": [
+    { "id": "east", "team": "crux", "tile": [46, 24] }
+  ],
+
+  "regions": {
+    "east_lane":     { "rect": { "x": 26, "y": 21, "w": 21, "h": 7 } },
+    "defense_block": { "rect": { "x": 30, "y": 20, "w": 6,  "h": 9 } }
+  },
+
+  "allowed_content": {
+    "blocks": ["mechanical-drill", "conveyor", "junction", "router", "duo", "copper-wall"],
+    "units": ["alpha"],
+    "tech_tree": false
+  },
+
+  "rules": {
+    "waves": true,
+    "can_game_over": true,
+    "pvp": false,
+    "attack_mode": false,
+    "infinite_resources": false,
+    "fog": false,
+    "default_team": "sharded",
+    "wave_team": "crux",
+    "unit_cap": 6
+  },
+
+  "wave_schedule": [
+    { "wave": 1, "tick": 2700, "spawn": "east", "spawns": [ { "unit": "dagger", "count": 3 } ] },
+    { "wave": 2, "tick": 4500, "spawn": "east", "spawns": [ { "unit": "dagger", "count": 4 } ] },
+    { "wave": 3, "tick": 6300, "spawn": "east", "spawns": [ { "unit": "dagger", "count": 5 } ] }
+  ],
+
+  "termination": {
+    "win":  { "predicate": "core_alive_at_tick", "core": "sharded", "tick": 8100 },
+    "lose": [
+      { "predicate": "core_destroyed", "core": "sharded" },
+      { "predicate": "tick_cap_reached_without_win" }
+    ],
+    "tick_cap": 9000
+  },
+
+  "reference_schematic": {
+    "id": "east_duo_line",
+    "path": "schematics/east-duo-v1.msch",
+    "blocks": [
+      { "block": "copper-wall", "tile": [33, 22] },
+      { "block": "copper-wall", "tile": [33, 23] },
+      { "block": "copper-wall", "tile": [33, 24] },
+      { "block": "copper-wall", "tile": [33, 25] },
+      { "block": "copper-wall", "tile": [33, 26] },
+      { "block": "duo", "tile": [32, 23], "rotation": 1 },
+      { "block": "duo", "tile": [32, 25], "rotation": 1 }
+    ],
+    "copper_cost": 100,
+    "notes": "Duos face east (+x). Agents may add a 2nd wall column at x=34 and a supply router near (30,24)."
+  },
+
+  "objectives": [
+    {
+      "id": "T1", "task_type": "HARVEST_RESOURCE",
+      "target": { "kind": "ore_patch", "ref": "A_copper_main" },
+      "predicate": { "type": "cumulative_delivered_ge", "item": "copper", "amount": 300, "source": "ore" },
+      "precedes": ["T4"]
+    },
+    {
+      "id": "T2", "task_type": "BUILD_LINE",
+      "target": { "kind": "path", "from": "A_copper_main", "to": [24, 24] },
+      "predicate": { "type": "all", "of": [
+        { "type": "block_count_ge", "block": "mechanical-drill", "on_ore": true, "count": 2 },
+        { "type": "conveyor_path_connects", "from_block": "mechanical-drill", "to": "core" },
+        { "type": "core_item_inflow_ge", "item": "copper", "rate_per_s": 0.6 }
+      ] },
+      "precedes": ["T4"]
+    },
+    {
+      "id": "T3", "task_type": "BUILD_SCHEMATIC",
+      "target": { "kind": "schematic", "ref": "east_duo_line" },
+      "predicate": { "type": "all_footprint_blocks_ready", "schematic": "east_duo_line" },
+      "precedes": ["T4", "T5"]
+    },
+    {
+      "id": "T4", "task_type": "SUPPLY_TURRET",
+      "target": { "kind": "buildings", "tiles": [[32, 23], [32, 25]] },
+      "predicate": { "type": "all_turrets_ammo_ge", "tiles": [[32, 23], [32, 25]], "total_ammo": 10, "sustained_each_wave": true },
+      "precedes": ["T5"]
+    },
+    {
+      "id": "T5", "task_type": "DEFEND_REGION",
+      "target": { "kind": "region", "ref": "east_lane" },
+      "predicate": { "type": "region_enemy_count_zero_after_each_wave", "region": "east_lane" },
+      "precedes": []
+    },
+    {
+      "id": "T6", "task_type": "REPAIR_REGION",
+      "target": { "kind": "region", "ref": "defense_block" },
+      "predicate": { "type": "region_block_health_fraction_ge", "region": "defense_block", "fraction": 0.9, "by": "next_wave_tick" },
+      "recurring": true
+    },
+    {
+      "id": "T7", "task_type": "ASSIST_BUILD",
+      "target": { "kind": "any_incomplete_build_plan" },
+      "predicate": { "type": "target_plan_ready" },
+      "opportunistic": true
+    }
+  ],
+
+  "seed_policy": {
+    "root_seed_feeds": "Mathf.rand at reset (docs/ENGINE_NOTES.md 6)",
+    "varies_with_root_seed_v0": [],
+    "planned_variation_axes_v1_plus": [
+      "ore_patch_positions",
+      "approach_lane_or_spawn_side",
+      "wall_obstacle_scatter",
+      "wave_timing_and_composition",
+      "starting_loadout_amount",
+      "agent_count_and_delayed_teammate",
+      "allowed_block_subset"
+    ]
+  },
+
+  "balance_check": {
+    "two_duo_dps_copper": 54,
+    "dagger_hp": 150,
+    "dagger_dps": 41.5,
+    "copper_wall_hp": 320,
+    "duo_hp": 250,
+    "core_hp": 1100,
+    "wave3_clear_seconds": 13.9,
+    "wave3_incoming_damage_total": 1729,
+    "reference_line_hp_total": 2100,
+    "undefended_core_death_seconds_wave1": 8.9,
+    "episode_copper_demand_estimate": 284,
+    "note": "See docs/SCENARIOS.md 'Wave survivability arithmetic' for derivations; all inputs engine-verified against v159.7."
+  }
+}
