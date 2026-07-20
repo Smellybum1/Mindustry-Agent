@@ -127,6 +127,9 @@ engine classes on the classpath (no `--add-opens` needed):
   (`AGENTS.md`, `CLAUDE.md`, `NOTICE.md`, `ENGINE_VERSION`, `Makefile`) are
   **additions**, not modifications of upstream files, and do not require an entry
   here.
+- `tests/golden/bootstrap-defense-v0-scripted-v1.jsonl` is an additive M6
+  project-owned replay fixture in the roadmap-mandated golden directory. It
+  modifies no upstream test source or build configuration.
 - The `.gitignore` additions are appended to an upstream file but are purely
   additive ignore rules. Noted here for completeness; not a behavioural patch.
 

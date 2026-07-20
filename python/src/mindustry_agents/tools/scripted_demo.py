@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import sys
 from dataclasses import dataclass, field
 from typing import Any
@@ -61,17 +62,38 @@ class ExpertEpisode:
         self.copper_min = self.copper_start
         self.copper_boundary_in = 0
         self.copper_boundary_out = 0
+        self.trace_records: list[dict[str, Any]] = [
+            {
+                "kind": "reset",
+                "seed": seed,
+                "agent_count": 3,
+                "state_hash": reset.state_hash,
+            }
+        ]
 
     def step(self, ticks: int = 30, actions: list[dict[str, Any]] | None = None):
+        request_tick = self.tick
+        request_actions = copy.deepcopy(actions or [])
         response = self.env.step(
             self.episode,
             expected_tick=self.tick,
             ticks_to_advance=ticks,
-            agent_actions=actions or [],
+            agent_actions=request_actions,
         )
         self.tick = response.tick
         self.observations = response.observations
         self.step_response = response
+        self.trace_records.append(
+            {
+                "kind": "step",
+                "expected_tick": request_tick,
+                "ticks_to_advance": ticks,
+                "agent_actions": request_actions,
+                "state_hash": response.state_hash,
+                "task_events": copy.deepcopy(response.task_events),
+                "outcome": response.outcome,
+            }
+        )
         copper = int(response.observations[0]["team"]["copper"])
         delta = copper - self.last_copper
         if delta > 0:

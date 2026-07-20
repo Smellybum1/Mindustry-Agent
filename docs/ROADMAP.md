@@ -439,6 +439,12 @@ actually winning it, and humans watching it happen.
   docs/BENCHMARKS.md (M6 section).
 
 ### 6.3 Replay + golden traces
+- **DONE (verified 2026-07-20):** the checked-in JSONL golden contains two
+  complete expert episodes (seeds 12345/23456), 16,200 advanced ticks, 678
+  checkpoints, every ordered action, every structured coordination event, and
+  every resulting hash. `make determinism` replays it through a fresh JVM after
+  the legacy 79-boundary stage. An in-memory one-line MINE-target mutation
+  provably flips a checkpoint; the golden file remains unchanged.
 - Objective: record seed + full action/coordination trace per episode
   (compact JSONL); `tools/replay.py` re-runs a trace through a fresh JVM and
   verifies hash checkpoints. Check in one golden trace ≥10,000 ticks

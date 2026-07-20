@@ -433,6 +433,19 @@ build time — the JSON is the single source of truth, nothing hardcoded).
 - The dependency-free summarizer/aggregator has unit coverage; pytest is now
   **36 passed**.
 
+## Milestone 6.3 — checked-in deterministic replay (DONE, verified 2026-07-20)
+
+- The expert runner records reset seeds, every external step/action bundle,
+  every structured coordination event, outcome, and response hash. The pinned
+  JSONL manifest includes engine/Arc/protocol/scenario/policy versions.
+- `tests/golden/bootstrap-defense-v0-scripted-v1.jsonl` contains seeds 12345 and
+  23456: two complete wins, **16,200 ticks** and **678 checkpoints**. Fresh-JVM
+  replay matches every hash and event; `make determinism` now runs this after
+  the unchanged 79-boundary legacy replay.
+- `--negative-check` changes the first MINE tile in memory and requires a
+  mismatch. It passed; no mutated trace is written. Parser/mutation unit tests
+  bring pytest to **38 passed**. Format and commands are in `docs/REPLAY.md`.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),

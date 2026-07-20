@@ -20,4 +20,10 @@ if [[ ! -f "$JAR" ]]; then
 fi
 
 echo "== rl-server determinism (port=$PORT seed=$SEED) =="
-exec "$PY" -m mindustry_agents.tools.determinism --port "$PORT" --seed "$SEED"
+"$PY" -m mindustry_agents.tools.determinism --port "$PORT" --seed "$SEED"
+
+echo
+echo "== M6 golden scripted replay (port=$PORT) =="
+NEGATIVE=()
+if [[ "${REPLAY_NEGATIVE:-0}" == "1" ]]; then NEGATIVE=(--negative-check); fi
+exec "$PY" -m mindustry_agents.tools.replay --port "$PORT" "${NEGATIVE[@]}"

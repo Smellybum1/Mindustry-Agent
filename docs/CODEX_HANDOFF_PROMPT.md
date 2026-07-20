@@ -20,7 +20,7 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 2. `docs/HANDOFF.md` — verified project state, exact commands with expected
    outputs, architecture map, performance, known risks.
 3. `docs/ROADMAP.md` — Milestones M4–M6 are broken into issue-sized items with
-   acceptance criteria. **Your work queue begins at M6 item 6.3.**
+   acceptance criteria. **Your work queue begins at M6 item 6.4.**
 4. `docs/M4_DESIGN.md` — the approved design you are implementing (it has open
    questions to resolve against engine source and record in place — follow the
    precedent in `docs/M3_DESIGN.md`, which shows the expected resolution style).
@@ -33,7 +33,7 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 - M0–M5 complete + the bootstrap-defense-v0 scenario loader with deterministic
   enemy waves. `bash scripts/{bootstrap,build,test-java,test-python,smoke,
-  determinism,stress-reset,benchmark}.sh` all exit 0. 102 JUnit + 36 pytest.
+  determinism,stress-reset,benchmark}.sh` all exit 0. 102 JUnit + 38 pytest.
 - The fixed-step headless env: ~76k engine ticks/sec, ~1 ms resets, determinism
   proven across processes at 79 hash boundaries including ordered
   `east_duo_v1` build+supply, a post-wave wall placement, and moving/re-pathing enemies;
@@ -63,6 +63,8 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
   emits `resources_short`, replans through mining, and wins too.
 - M6.2 emits pinned JSONL episode summaries and a reproducible aggregate table:
   5/5 seed-set wins, minimum/mean final core health 848/927.2.
+- M6.3 checks in 16,200 ticks of complete expert actions/events/hashes. Fresh-JVM
+  replay matches 678 checkpoints; the in-memory negative mutation flips one.
 
 ## Invariants (violating these is failure, even if tests pass)
 
@@ -89,8 +91,8 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Your first task
 
-`docs/ROADMAP.md` → **Milestone 6, item 6.3 (replay and golden traces)**.
-Milestones 4–5 and M6.1–6.2 are verified complete: the
+`docs/ROADMAP.md` → **Milestone 6, item 6.4 (agent-plugin demo server)**.
+Milestones 4–5 and M6.1–6.3 are verified complete: the
 thread-less pathfinder refresh is wall-clock-free and the 79-boundary determinism
 trace legally executes and supplies the schematic, then builds a post-wave wall;
 `BuildBlock` uses real engine plans and balances core resources; reset/step now
