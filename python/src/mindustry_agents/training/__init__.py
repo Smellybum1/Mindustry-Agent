@@ -5,5 +5,6 @@ driven by configs under ``configs/training/``. Imports the RL stack (the ``[rl]`
 extra) and is the only layer permitted to depend on a specific learning
 framework.
 
-Currently a skeleton package; training lands in roadmap M7+.
+M8.3 contains only the shadow inference/collector throughput gate. Policy
+optimization, rewards, and checkpointing remain gated behind M8.4.
 """

@@ -29,10 +29,13 @@ Run: ``python -m mindustry_agents.tools.stress_reset [--resets N] [--seed S]``
 from __future__ import annotations
 
 import argparse
+import json
+import platform
 import statistics
 import subprocess
 import sys
 import time
+from pathlib import Path
 from typing import Optional
 
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
@@ -118,6 +121,19 @@ def _percentile(values: list[float], pct: float) -> float:
     return ordered[lo] + (ordered[hi] - ordered[lo]) * (k - lo)
 
 
+def _pid_exists(pid: int) -> bool:
+    """Return whether the exact child PID still exists after managed shutdown."""
+    if sys.platform.startswith("win"):
+        output = subprocess.run(
+            ["tasklist", "/FI", f"PID eq {pid}", "/FO", "CSV", "/NH"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        ).stdout
+        return f'"{pid}"' in output
+    return Path(f"/proc/{pid}").exists()
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="rl-server M2 reset stress test")
     parser.add_argument("--resets", type=int, default=1000)
@@ -130,6 +146,7 @@ def main(argv=None) -> int:
         default=DEFAULT_MAX_HEAP,
         help="JVM -Xmx (e.g. 512m); empty string leaves the heap uncapped",
     )
+    parser.add_argument("--json-output", type=Path)
     args = parser.parse_args(argv)
 
     port = _probe_free_port(args.port)
@@ -142,9 +159,11 @@ def main(argv=None) -> int:
     rss_source = "n/a"
     first_hash: Optional[str] = None
     mismatches = 0
+    child_pid: Optional[int] = None
 
     with RlServerProcess(LaunchConfig(port=port, java=args.java, jvm_args=jvm_args)) as env:
         assert env.pid is not None
+        child_pid = env.pid
         hs = env.handshake()
         print(f"handshake: engine={hs.engine_version} commit={hs.engine_commit[:12]} pid={env.pid}")
 
@@ -193,6 +212,10 @@ def main(argv=None) -> int:
     warmup_cut = args.resets * WARMUP_FRACTION
     tail = [(i, r) for (i, r) in rss_samples if i >= warmup_cut]
     leak_ok = True
+    memory_report: dict[str, object] = {
+        "source": rss_source,
+        "samples": [[index, rss] for index, rss in rss_samples],
+    }
     if len(tail) >= 2:
         base_rss = tail[0][1]
         last_rss = tail[-1][1]
@@ -200,6 +223,16 @@ def main(argv=None) -> int:
         growth = last_rss - base_rss
         rel = growth / base_rss if base_rss > 0 else 0.0
         overall_first = rss_samples[0][1]
+        memory_report.update(
+            {
+                "startup_mib": overall_first,
+                "steady_base_mib": base_rss,
+                "last_mib": last_rss,
+                "peak_mib": peak_rss,
+                "tail_growth_mib": growth,
+                "tail_growth_fraction": rel,
+            }
+        )
         print(
             f"memory (source={rss_source}): startup={overall_first:.1f} MiB  "
             f"steady-state base={base_rss:.1f} MiB  last={last_rss:.1f} MiB  "
@@ -208,6 +241,7 @@ def main(argv=None) -> int:
         )
         if heap_cap_mb is not None:
             ceiling = heap_cap_mb + NATIVE_ALLOWANCE_MB
+            memory_report["ceiling_mib"] = ceiling
             print(
                 f"  ceiling check (capped heap): peak {peak_rss:.1f} MiB vs "
                 f"Xmx {heap_cap_mb:.0f} + {NATIVE_ALLOWANCE_MB:.0f} allowance = {ceiling:.0f} MiB; "
@@ -227,8 +261,33 @@ def main(argv=None) -> int:
         print(f"memory (source={rss_source}): insufficient samples; skipping leak check")
 
     hash_ok = mismatches == 0 and first_hash is not None
-    ok = hash_ok and leak_ok
-    print(f"\nhash_stable={hash_ok}  no_leak={leak_ok}")
+    orphaned = child_pid is not None and _pid_exists(child_pid)
+    ok = hash_ok and leak_ok and not orphaned
+    print(f"\nhash_stable={hash_ok}  no_leak={leak_ok}  no_orphan={not orphaned}")
+    if args.json_output is not None:
+        report = {
+            "schema": "stress_reset_v1",
+            "platform": platform.platform(),
+            "python": platform.python_version(),
+            "java": args.java,
+            "resets": args.resets,
+            "seed": args.seed,
+            "max_heap": args.max_heap,
+            "first_state_hash": first_hash,
+            "hash_mismatches": mismatches,
+            "latency_ms": {"min": mn, "median": med, "p95": p95, "max": mx},
+            "memory": memory_report,
+            "hash_stable": hash_ok,
+            "no_leak": leak_ok,
+            "child_pid": child_pid,
+            "no_orphan": not orphaned,
+            "pass": ok,
+        }
+        args.json_output.parent.mkdir(parents=True, exist_ok=True)
+        args.json_output.write_text(
+            json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        print(f"json={args.json_output}")
     print("STRESS-RESET", "OK" if ok else "FAILED")
     return 0 if ok else 1
 

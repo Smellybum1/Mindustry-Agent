@@ -61,25 +61,36 @@ class VectorCollector:
         self,
         actions: Optional[list[list[dict[str, Any]]]] = None,
         ticks: int = 1,
+        *,
+        stop_on_decision_event: bool = False,
     ) -> VectorStepResult:
-        """Step every child by ``ticks`` engine updates, overlapping round-trips.
+        """Step every child by up to ``ticks`` updates, overlapping round-trips.
 
         ``actions`` is an optional list (one action-bundle per child); ``None``
-        sends empty no-op bundles. Returns aggregate timing.
+        sends empty no-op bundles. Event-driven mode may stop each child at a
+        different decision tick, so aggregate ticks use response boundaries.
         """
         outcomes: list[Optional[StepOutcome]] = [None] * self.size
 
         def _one(i: int) -> None:
             bundle = actions[i] if actions is not None and i < len(actions) else None
-            outcomes[i] = self.sup.step(i, bundle, ticks=ticks)
+            outcomes[i] = self.sup.step(
+                i,
+                bundle,
+                ticks=ticks,
+                stop_on_decision_event=stop_on_decision_event,
+            )
 
         start = time.perf_counter()
         self._parallel(_one)
         wall = time.perf_counter() - start
 
         final = [o for o in outcomes if o is not None]
-        live = sum(1 for o in final if not o.crashed)
-        ticks_advanced = ticks * live
+        ticks_advanced = sum(
+            max(0, int(o.info.get("tick", 0)) - int(o.info.get("previous_tick", 0)))
+            for o in final
+            if not o.crashed
+        )
         tps = ticks_advanced / wall if wall > 0 else float("inf")
         return VectorStepResult(
             outcomes=final,

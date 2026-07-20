@@ -70,6 +70,12 @@ class TestEnvClient(unittest.TestCase):
                 self.assertEqual(truncs, [False, False])
                 self.assertIn("engine_ms", info["timing"])
                 self.assertEqual(info["coordination_metrics"], {})
+                self.assertEqual(info["decision_boundary"], {})
+
+                _, _, _, _, event_info = client.step(
+                    [{}, {}], ticks=60, stop_on_decision_event=True
+                )
+                self.assertEqual(event_info["tick"], 120)
 
                 h = client.health()
                 self.assertTrue(h.ok)

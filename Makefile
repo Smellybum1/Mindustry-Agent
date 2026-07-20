@@ -14,7 +14,8 @@ SCRIPTS := scripts
 .PHONY: help codex-status bootstrap build test test-java test-python smoke \
         determinism stress-reset benchmark scripted-demo evaluate-scripted \
         candidate-policy-check coordination-parity adaptive-planning-check \
-        scenario-variation-check evaluate-ladder verify-rl-boundary demo-server
+        scenario-variation-check evaluate-ladder verify-rl-boundary \
+        training-gate demo-server
 
 help: ## List available targets
 	@echo "mindustry-coop-agents — make targets:"
@@ -36,6 +37,7 @@ help: ## List available targets
 	@echo "  scenario-variation-check bounded scenario-v2 dev acceptance (M7.5)"
 	@echo "  evaluate-ladder permanent baselines + teammate scorecard (M7.6)"
 	@echo "  verify-rl-boundary reconstruct pinned WSL2 CPU training runtime (M8.2)"
+	@echo "  training-gate WSL2 event collector + inference + 10k resets (M8.3)"
 	@echo "  demo-server   human-joinable real-time server (M6/M10)"
 
 codex-status: ## Print compact read-only takeover status
@@ -91,6 +93,9 @@ evaluate-ladder: ## Permanent policy ladder and teammate scorecard (M7.6)
 
 verify-rl-boundary: ## Reconstruct and verify the M8.2 WSL2 CPU runtime
 	@bash $(SCRIPTS)/verify-rl-boundary.sh
+
+training-gate: ## Run the M8.3 WSL2 throughput and long-reset gates
+	@bash $(SCRIPTS)/training-gate.sh
 
 demo-server: ## Human-joinable real-time server (M6/M10)
 	@bash $(SCRIPTS)/demo-server.sh

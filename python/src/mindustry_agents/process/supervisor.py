@@ -385,13 +385,19 @@ class ProcessSupervisor:
         index: int,
         actions_bundle: Optional[list[dict[str, Any]]] = None,
         ticks: int = 1,
+        *,
+        stop_on_decision_event: bool = False,
     ) -> StepOutcome:
         """Step one child. On crash: mark truncated, replace, return truncated."""
         child = self.child(index)
         actions_bundle = actions_bundle or []
         try:
             child.proc.conn.set_timeout(self.config.step_timeout_s)  # type: ignore[union-attr]
-            obs, rewards, terms, truncs, info = child.client.step(actions_bundle, ticks)
+            obs, rewards, terms, truncs, info = child.client.step(
+                actions_bundle,
+                ticks,
+                stop_on_decision_event=stop_on_decision_event,
+            )
             return StepOutcome(
                 observations=obs,
                 rewards=rewards,

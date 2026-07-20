@@ -148,6 +148,8 @@ class EnvClient:
         self,
         actions_bundle: list[dict[str, Any]],
         ticks: int = 1,
+        *,
+        stop_on_decision_event: bool = False,
     ) -> tuple[
         list[dict[str, Any]],
         list[dict[str, Any]],
@@ -155,7 +157,10 @@ class EnvClient:
         list[bool],
         dict[str, Any],
     ]:
-        """Advance exactly ``ticks`` engine updates applying ``actions_bundle``.
+        """Advance up to ``ticks`` engine updates applying ``actions_bundle``.
+
+        With ``stop_on_decision_event=True`` the server may return early at an
+        M7.4 decision boundary. Default behavior remains exact stepping.
 
         Returns ``(observations, reward_breakdowns, terminations, truncations,
         info)`` where each list is per-agent-slot in agent-index order, and
@@ -172,6 +177,7 @@ class EnvClient:
                 expected_tick=self.tick,
                 ticks_to_advance=int(ticks),
                 agent_actions=list(actions_bundle),
+                stop_on_decision_event=stop_on_decision_event,
             )
         )
         if not isinstance(resp, P.StepResponse):
@@ -184,9 +190,12 @@ class EnvClient:
             "team_state": resp.team_state,
             "timing": resp.timing,
             "action_masks": resp.action_masks,
+            "action_results": resp.action_results,
             "game_events": resp.game_events,
             "task_events": resp.task_events,
+            "decision_boundary": resp.decision_boundary,
             "coordination_metrics": resp.coordination_metrics,
+            "outcome": resp.outcome,
         }
         return (
             list(resp.observations),
