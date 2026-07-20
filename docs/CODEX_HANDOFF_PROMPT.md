@@ -20,7 +20,7 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 2. `docs/HANDOFF.md` — verified project state, exact commands with expected
    outputs, architecture map, performance, known risks.
 3. `docs/ROADMAP.md` — **"Phase 2: The Teammate Roadmap" (M7–M10, restructured
-   2026-07-27) is your work queue, beginning at M7.1.** The north star: agents
+   2026-07-27) is your work queue, beginning at M7.2.** The north star: agents
    that cooperate at a level top players would want on their team. M7 comes
    before any learning on purpose — read the section preamble.
 4. `docs/REVIEW_M6.md` — the independent review of the milestone-6 work. Its
@@ -33,9 +33,9 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Verified state you can rely on (all re-verified 2026-07-20)
 
-- M0–M5 complete + the bootstrap-defense-v0 scenario loader with deterministic
+- M0–M6 and M7.1 complete + the bootstrap-defense-v0 scenario loader with deterministic
   enemy waves. `bash scripts/{bootstrap,build,test-java,test-python,smoke,
-  determinism,stress-reset,benchmark}.sh` all exit 0. 102 JUnit + 38 pytest.
+  determinism,stress-reset,benchmark}.sh` all exit 0. 103 JUnit + 40 pytest.
 - The fixed-step headless env: ~76k engine ticks/sec, ~1 ms resets, determinism
   proven across processes at 79 hash boundaries including ordered
   `east_duo_v1` build+supply, a post-wave wall placement, and moving/re-pathing enemies;
@@ -63,15 +63,23 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 - M6.1 adds the live `copper_line_v1` board task and a three-agent expert. All
   five evaluation seeds win at tick 8100; the legal insufficient-copper variant
   emits `resources_short`, replans through mining, and wins too.
-- M6.2 emits pinned JSONL episode summaries and a reproducible aggregate table:
-  5/5 seed-set wins, minimum/mean final core health 848/927.2.
-- M6.3 checks in 16,200 ticks of complete expert actions/events/hashes. Fresh-JVM
-  replay matches 678 checkpoints; the in-memory negative mutation flips one.
+- M6.2 emits pinned JSONL episode summaries and a reproducible aggregate table.
+  The M7.1 revalidation remains 5/5 wins, with minimum/mean final core health
+  749/840.8 and the same two total unit losses as the M6 baseline.
+- M6.3 checks in 16,200 ticks of complete expert actions/events/hashes. After
+  deliberate M7.1 regeneration, fresh-JVM replay matches 672 checkpoints; the
+  in-memory negative mutation flips one.
 - M6.4's real-server plugin builds/supplies four Duos, mines continuously,
   expands to six/eight supplied Duos after waves 1–2, and clears all three waves
-  at 1091 core health. A stock v159.7 client observed the complete run and
+  at 1100 core health in the latest no-port probe. A stock v159.7 client observed the complete run and
   verified `/agents stop` halted all three tasks. M6.5's matrix/audit is recorded
   and the closure commit is tagged `milestone-6`.
+- M7.1 resolves review findings 1/3/4/6/8/9/10/11/12: scenario-owned
+  coordinates/timing feed both demos, candidate overflow is utility-ranked with
+  DEFEND reserved, reset IDs are seed+counter deterministic, duplicated skill
+  constants/dead branches are removed, stock telemetry consumers are explicit,
+  and the Pathfinder patch catalogue is exact. Full closure validation is
+  recorded in `docs/STATUS.md` and `docs/BENCHMARKS.md`.
 
 ## Invariants (violating these is failure, even if tests pass)
 
@@ -98,19 +106,19 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Your first task
 
-`docs/ROADMAP.md` → **Milestone 7, item 7.1 (review-findings consolidation)**,
-then 7.2 → 7.6 strictly in order. Milestones 4–6 are verified complete and
+`docs/ROADMAP.md` → **Milestone 7, item 7.2 (one coordination brain)**,
+then 7.3 → 7.6 strictly in order. Milestones 4–6 and M7.1 are verified complete and
 independently re-verified 2026-07-27 (all suites green; evaluation 5/5
-reproduced exactly; golden replay 678/678 checkpoints). Do NOT start learned-
+reproduced exactly); M7.1's current golden replay is 672/672 checkpoints. Do NOT start learned-
 selector work (M8) until every M7 exit criterion is met — M7 exists because
 the M6 expert is a hand-authored macro (see REVIEW_M6.md) and a learned policy
 must have adaptive baselines worth beating and an evaluation ladder to be
 judged by.
 
 Special notes for M7:
-- 7.1 will change the golden replay (constants unify → hashes move). Regenerate
-  the golden trace deliberately in its own commit, showing before/after outcome
-  equivalence (wins stay wins, ledger still balances).
+- 7.1 changed the golden replay as expected. The deliberate fixture-only
+  regeneration is commit `00421cf76`; before/after both win twice at tick 8100,
+  and smoke ledgers remain balanced.
 - 7.2 (one coordination brain) is the parity backbone for everything that
   follows; treat any training/demo behaviour divergence found while unifying
   as a bug to surface, not to paper over.

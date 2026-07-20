@@ -521,6 +521,15 @@ machinery every later milestone is judged by. No learning yet; no new
 dependencies.
 
 ### 7.1 Review-findings consolidation
+- **DONE (verified 2026-07-20):** findings 1/3/4/6/8/9/10/11/12 are
+  resolved. Scenario geometry/timing now flows through reset metadata to the
+  expert and directly from `Scenario` to the plugin; overflow truncation ranks
+  by utility while reserving DEFEND; episode handles use root seed plus a
+  deterministic process reset counter; duplicated skill defaults/dead branches
+  and unsafe reservation removal are removed. The Pathfinder catalogue matches
+  the actual 48-line patch. Full validation is green (103 JUnit, 40 pytest,
+  smoke ledgers, 79-boundary determinism, 672-checkpoint/16,200-tick golden,
+  1,000 resets, 5/5 evaluation, plugin and three-wave survival probes).
 - Objective: resolve `docs/REVIEW_M6.md` findings 1, 3, 4, 6, 8, 9, 10, 11, 12
   (mechanical fixes: regenerate the UPSTREAM_PATCHES diff, delete dead
   DemoCoordinator branches, derive probe-asserted counts from placement loops,

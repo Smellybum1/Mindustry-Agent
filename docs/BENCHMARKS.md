@@ -126,7 +126,7 @@ Measure each layer separately; do not conflate them.
 
 | Gate | Target | Stretch | Status |
 |---|---|---|---|
-| 1. Deterministic stepping | Identical hash ≥10,000 ticks; exact tick advance; no wall-clock dep | — | **PASS** (M6 golden: 16,200 ticks / 678 checkpoints across two complete expert episodes; legacy 79-boundary replay also passes) |
+| 1. Deterministic stepping | Identical hash ≥10,000 ticks; exact tick advance; no wall-clock dep | — | **PASS** (M7.1 golden: 16,200 ticks / 672 checkpoints across two complete expert episodes; legacy 79-boundary replay also passes) |
 | 2. Reset | <250 ms reset, no JVM restart, no stale state | <100 ms | **PASS** (median ~0.8 ms over 1000 resets, no restart) |
 | 3. Single-env speed | ≥10× real-time on small scenario | ≥30× | **PASS** (engine ~1,270× real-time; wrapper ~900×) |
 | 4. Aggregate parallel | Stable scaling 1/2/4/8/16 JVMs; ≥100× aggregate | more | partial (1/2/4 measured, near-linear to 2; capped at 4 on this shared host) |
@@ -182,3 +182,35 @@ port 6567 only after an explicit request and waits for a stock v159.7 client.
 A stock client joined locally, resumed the policy, visually observed the
 mining/building/supplying/chat behavior through all three waves, then issued
 `/agents stop`; the log showed all three active tasks abandoned immediately.
+
+## M7.1 consolidation revalidation (2026-07-20)
+
+The expert now derives its wave/termination values, ore tiles, reference-turret
+tiles, and defend/rebuild regions from the scenario metadata instead of copied
+literals. This intentionally changed its defense action trace, so the two-seed
+golden was regenerated in its own commit. Before and after are both two wins at
+tick 8100 with 16,200 total ticks; the new trace has 672 checkpoints (previously
+678), replays exactly, and still fails the deliberate one-line MINE mutation.
+The smoke mine/deliver/build/schematic/supply/rebuild ledgers all remain exact.
+
+Current five-seed evaluation:
+
+| seed | outcome | core hp | first drill | line complete | turrets built | supplied | units lost | messages |
+|---:|:---:|---:|---:|---:|---:|---:|---:|---:|
+| 12345 | win | 803 | 15 | 40 | 250 | 1082 | 0 | 158 / 5 |
+| 23456 | win | 875 | 15 | 40 | 250 | 1082 | 0 | 158 / 5 |
+| 34567 | win | 803 | 15 | 40 | 250 | 1082 | 0 | 158 / 5 |
+| 45678 | win | 974 | 15 | 40 | 250 | 1082 | 1 | 158 / 5 |
+| 987666666 | win | 749 | 15 | 40 | 250 | 1082 | 1 | 158 / 5 |
+
+Aggregate: **5/5 wins**, minimum/mean final core health **749/840.8**, two
+agent losses. Relative to the M6 baseline, wins and unit losses are unchanged;
+health is lower because the old magic defend anchor/radius was replaced by a
+tactical hold point and radius derived from `east_lane`. This is recorded as a
+baseline shift, not hidden as noise.
+
+The reset-path revalidation completed 1,000 resets with zero hash mismatches,
+1.31 ms median / 2.60 ms p95 latency, 298.3 MiB peak RSS, and no leak. The
+real-server no-port probe reported the dynamic opening counts (20 blocks/four
+turrets); its survival variant reported 9 blocks/two turrets for each expansion,
+cleared all three waves, and reached tick 8100 with **1100/1100** core health.

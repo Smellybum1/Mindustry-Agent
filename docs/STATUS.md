@@ -441,7 +441,8 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   every structured coordination event, outcome, and response hash. The pinned
   JSONL manifest includes engine/Arc/protocol/scenario/policy versions.
 - `tests/golden/bootstrap-defense-v0-scripted-v1.jsonl` contains seeds 12345 and
-  23456: two complete wins, **16,200 ticks** and **678 checkpoints**. Fresh-JVM
+  23456: two complete wins and **16,200 ticks**. M7.1 deliberately regenerated
+  the behavior-adjacent trace from 678 to **672 checkpoints**. Fresh-JVM
   replay matches every hash and event; `make determinism` now runs this after
   the unchanged 79-boundary legacy replay.
 - `--negative-check` changes the first MINE tile in memory and requires a
@@ -529,6 +530,31 @@ repository-evidence mapping used for the M6 audit is:
 15. **PASS — closure record/tag:** status, benchmarks, roadmap, handoff, and the
     takeover prompt are refreshed; the closure commit is tagged `milestone-6`.
 
+## Milestone 7.1 — review-findings consolidation (DONE, verified 2026-07-20)
+
+- Resolved independent-review findings 1/3/4/6/8/9/10/11/12. The expert and
+  real-time plugin derive scenario-owned mining/turret/region coordinates and
+  timing from one JSON-backed `Scenario` payload; probe counts come from the
+  actual placement queues. Dead demo transitions are gone.
+- Candidate overflow now retains highest deterministic utility while reserving
+  a DEFEND slot. Reset transport IDs are wall-clock-free
+  (`ep-<root_seed>-<reset_counter>`). Shared skill arrival/retry defaults,
+  type-safe reservation yielding, and explicit supply-stock telemetry consumers
+  close the remaining mechanical findings. `UPSTREAM_PATCHES.md` now matches the
+  actual 48-line `Pathfinder.syncUpdate()` addition.
+- Golden regeneration is isolated in commit `00421cf76`: both seeds remain wins
+  at tick 8100, total ticks remain 16,200, replay matches all 672 checkpoints,
+  and the negative MINE mutation diverges. Smoke confirms every resource ledger
+  remains balanced.
+- Closure validation: **103 JUnit**, **40 pytest**, full smoke, legacy
+  79-boundary determinism, the 672-checkpoint golden, 1,000 resets with zero
+  mismatches (1.31/2.60 ms median/p95, 298.3 MiB peak, no leak), scripted normal
+  and blocked wins, and 5/5 evaluation wins (core health min/mean 749/840.8,
+  two unit losses). The plugin probe and real-time three-wave survival probe are
+  green; the latter reaches tick 8100 with 1100 core health.
+- Next: M7.2, the single shared coordination brain and decision-sequence parity
+  probe. Findings 2/5/7 remain deliberately open for M7.2–M7.4.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -556,7 +582,7 @@ repository-evidence mapping used for the M6 audit is:
 
 - **`rl-server` Java build/run is verified** (`./gradlew rl-server:dist` green;
   jar boots headlessly and passes smoke + determinism + stress-reset). **`agent-core`
-  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 102 tests
+  build + JUnit suite are now verified** (`./gradlew agent-core:test` → 103 tests
   green, including 31 M3/M4 skill tests). `agent-plugin:dist` and its isolated
   real-server acceptance probe are verified.
 - **No CI** configured yet.

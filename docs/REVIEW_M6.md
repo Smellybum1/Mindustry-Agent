@@ -60,6 +60,15 @@ actions, docs truthfulness, module boundaries) — one doc-accuracy gap
 12. Minor: bare `60L` retry in EmergencyRetreat; `commitYields` blind-remove
     under `@SuppressWarnings`; inline fully-qualified `SkillStatus`.
 
+## M7.1 resolution (verified 2026-07-20)
+
+Findings 1, 3, 4, 6, 8, 9, 10, 11, and 12 are resolved by
+`e81752706`, `7bb3b21db`, and the deliberately regenerated golden fixture in
+`00421cf76`. `SupplyBuilding` stock values remain intentionally: smoke and
+determinism consume both sides of the supply ledger, and the scripted expert
+uses current target stock to decide whether a `CORE_SHORT` supply block needs
+recovery. Findings 2, 5, and 7 remain assigned to M7.2–M7.4.
+
 ## Planning-primitiveness inventory (drives M7.3–M7.5)
 
 - **Candidate generation**: compiled-in 6-rule catalog, fixed order, single
