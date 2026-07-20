@@ -15,6 +15,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0008](ADR-0008-ippo-before-mappo-scripted-first.md) | Scripted first; IPPO before MAPPO |
 | [0009](ADR-0009-reference-runtime-linux-wsl2.md) | Reference runtime = Linux/WSL2 |
 | [0010](ADR-0010-upstream-patch-policy.md) | Upstream patch policy |
+| [0011](ADR-0011-rl-dependency-boundary.md) | RL dependencies are training-only and Linux CPU locked |
 | [0012](ADR-0012-scenario-variation-and-seed-governance.md) | Bounded scenario variation and seed governance |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal

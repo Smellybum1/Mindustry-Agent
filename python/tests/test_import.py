@@ -2,6 +2,8 @@
 third-party dependencies, and pins match ENGINE_VERSION.
 """
 
+import ast
+from pathlib import Path
 import unittest
 
 
@@ -24,6 +26,29 @@ class TestImport(unittest.TestCase):
             telemetry,
             tools,
         )
+
+    def test_rl_framework_imports_are_training_only(self):
+        """ADR-0011 keeps every RL framework import below training/."""
+        package_root = Path(__file__).parents[1] / "src" / "mindustry_agents"
+        forbidden = {"numpy", "pettingzoo", "torch"}
+        violations = []
+
+        for source_path in sorted(package_root.rglob("*.py")):
+            relative = source_path.relative_to(package_root)
+            if relative.parts[0] == "training":
+                continue
+            tree = ast.parse(source_path.read_text(encoding="utf-8"))
+            for node in ast.walk(tree):
+                names = []
+                if isinstance(node, ast.Import):
+                    names = [alias.name for alias in node.names]
+                elif isinstance(node, ast.ImportFrom) and node.module:
+                    names = [node.module]
+                for name in names:
+                    if name.split(".", 1)[0] in forbidden:
+                        violations.append(f"{relative}:{node.lineno}:{name}")
+
+        self.assertEqual([], violations)
 
 
 if __name__ == "__main__":

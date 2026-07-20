@@ -20,9 +20,22 @@ dependencies = []
 [project.optional-dependencies]
 # Test/dev tooling. Core tests fall back to stdlib unittest if pytest is absent.
 dev = ["pytest>=7"]
-# Reinforcement-learning extras, pulled in only for training/eval runtimes.
-# Deliberately NOT required by the env layer (ADR-0007: framework-neutral env).
-rl = ["pettingzoo>=1.24", "numpy>=1.24"]
+# Reinforcement-learning extras, pulled in only for the Linux/WSL2 training
+# runtime. Keep exact direct pins here and resolve torch only from the official
+# CPU wheel index below. See ADR-0011 and requirements-rl-linux-py312.lock.
+rl = [
+    "numpy==2.4.2",
+    "pettingzoo==1.26.1",
+    "torch==2.12.1",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
