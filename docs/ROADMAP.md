@@ -56,18 +56,29 @@ Exit criteria:
 ## Milestone 2: Persistent reset and process pool
 
 Deliverables:
-- [ ] Persistent process
-- [ ] Repeated in-memory reset
-- [ ] Python process supervisor
-- [ ] PettingZoo skeleton
-- [ ] Multi-JVM benchmark
-- [ ] Leak/stability test
+- [x] Persistent process (`process/supervisor.py` — pool of long-lived JVMs)
+- [x] Repeated in-memory reset (`tools/stress_reset.py` — 1000 resets, no restart)
+- [x] Python process supervisor (`ProcessSupervisor`: ports, seeds, logs,
+      handshake verify, crash detect + auto-replace, clean shutdown via
+      atexit + context manager)
+- [x] PettingZoo skeleton (`env/parallel_env.py` `MindustryParallelEnv`,
+      duck-typed ParallelEnv surface; `env/client.py`, `env/vector.py`)
+- [x] Multi-JVM benchmark (`tools/benchmark.py` — 1/2/4 JVMs)
+- [x] Leak/stability test (`tools/stress_reset.py` — RSS sampled, no leak)
 
 Exit criteria:
-- [ ] 1,000 repeated resets pass
-- [ ] Four or more environments step independently
-- [ ] Dead child process is detected and replaced
-- [ ] Performance baseline documented in `docs/BENCHMARKS.md`
+- [x] 1,000 repeated resets pass (`bash scripts/stress-reset.sh` → exit 0; all
+      1000 initial hashes identical; no leak)
+- [x] Four or more environments step independently (`VectorCollector` steps a
+      4-JVM pool in lockstep; see `docs/BENCHMARKS.md` M2 scaling)
+- [x] Dead child process is detected and replaced (crash → truncation → respawn
+      + re-handshake; unit-tested against a fake server, both crash and hang)
+- [x] Performance baseline documented in `docs/BENCHMARKS.md` (M2 measurements)
+
+**M2 caveats (truthful):** per-agent observations are still world-level (M3);
+`MindustryParallelEnv` wires the per-agent dict plumbing but every agent receives
+the same world observation and actions are accepted-but-no-op. Scaling is capped
+at 4 JVMs (shared host); ≥10,000-reset Gate 5 and 8/16-JVM scaling are deferred.
 
 ## Milestone 3: Agent entities and first skills
 

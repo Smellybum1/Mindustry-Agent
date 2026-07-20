@@ -16,16 +16,18 @@ and what is unverified.
   `BENCHMARKS.md`, and ADR-0001..0010 under `docs/decisions/`.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
-  and all v1 message dataclasses. **13 Python tests pass** via
-  `python -m pytest python/tests -q` (verified 2026-07-20 with pytest 8.4.2 on
-  Python 3.12.5).
+  and all v1 message dataclasses; the M2 process/env layer (supervisor, env
+  client, parallel-env facade, vector collector) is stdlib-only too. **26 Python
+  tests pass** via `python -m pytest python/tests -q` (verified 2026-07-20 with
+  pytest 8.4.2 on Python 3.12.5).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
   machine (JDK 21 Temurin, Python 3.12.5, Git 2.46). Verified working in Git Bash.
 - **`smoke` / `determinism` scripts**: implemented (M1) and passing — see the
   Milestone 1 section above.
-- **Still not-implemented scripts** (`stress-reset`, `benchmark`,
-  `scripted-demo`, `demo-server`, `test-java`): exit 1 with a pointer to
-  `docs/ROADMAP.md`, by design.
+- **M2 scripts** (`stress-reset`, `benchmark`): implemented and passing — see the
+  Milestone 2 section below.
+- **Still not-implemented scripts** (`scripted-demo`, `demo-server`): exit 1 with
+  a pointer to `docs/ROADMAP.md`, by design. (`test-java` is implemented.)
 
 ## Milestone 1 — external-step spike (DONE, verified 2026-07-20)
 
@@ -70,6 +72,51 @@ machine (AMD Ryzen 7 9800X3D, JDK 21.0.11, Windows 11).
   achieved by stopping the threads via reflection (they idle with no flowfields
   in M1), avoiding the sanctioned-but-optional upstream patch.
 
+## Milestone 2 — persistent process pool + env facade (DONE, verified 2026-07-20)
+
+All M2 exit criteria met on this machine; no Java changes were needed.
+
+- **Process supervisor** (`process/supervisor.py`): `ProcessSupervisor` manages a
+  pool of ≤4 persistent JVMs (cap is deliberate — shared host). Unique port per
+  child (probe upward from a base, EADDRINUSE handled by retrying the next port),
+  explicit per-child seed + stderr log file under `runs/` (gitignored, last-N
+  lines retrievable), handshake verification (`engine_commit` must equal the
+  `ENGINE_VERSION` pin), startup-failure detection (no READY / bad commit →
+  loud failure with stderr tail), reset/step socket timeouts, and **crash/hang
+  detection with automatic replacement**: a dead or unresponsive child has its
+  episode marked truncated, is terminated by the PID we spawned (never
+  kill-by-name), and is transparently respawned + re-handshaked. Clean shutdown
+  is wired to both `atexit` and the context-manager protocol; verified no
+  orphaned JVMs after the full test run.
+- **Env facade** (`env/`): `client.EnvClient` — synchronous, framework-neutral,
+  per-connection episode/tick bookkeeping, returns Gym/PettingZoo-flavoured
+  tuples. `parallel_env.MindustryParallelEnv` — the PettingZoo `ParallelEnv`
+  method surface (possible_agents/agents/reset/step/close + space stubs)
+  **without importing pettingzoo** (duck-typed; a trivial adapter is documented
+  in the module for when the `[rl]` extra is installed). `vector.VectorCollector`
+  — steps M worlds in lockstep, one thread per child, aggregates ticks/sec.
+- **Honesty caveat (M1 engine, unchanged):** observations are still
+  **world-level**; there are no per-agent entities yet (M3). `possible_agents =
+  ["agent_0","agent_1"]` but every agent currently receives the *same* world
+  observation and actions are accepted-but-**no-op** bundles. The per-agent dict
+  plumbing (in/out, bundled into one `StepRequest`) is fully wired, so M3 changes
+  only the payload contents, not the API shape. Nothing fakes per-agent state.
+- **Tools**: `tools/stress_reset.py` (1000 in-JVM resets, same seed — all initial
+  hashes identical, reset latency distribution, RSS leak check via psutil-or-
+  `tasklist` fallback, `-Xmx` bounded so the working set is observable) and
+  `tools/benchmark.py` (single-env engine ticks/sec + reset latency, protocol
+  overhead, 1/2/4-JVM scaling; markdown report). Wired to `scripts/stress-reset.sh`
+  and `scripts/benchmark.sh`.
+- **Verified**: `python -m pytest python/tests -q` → 26 pass;
+  `bash scripts/stress-reset.sh` → exit 0 (1000 resets, 0 hash mismatches, no
+  leak); `bash scripts/benchmark.sh` → exit 0 (engine ~76k ticks/sec, reset
+  median ~2 ms, scaling 1/2/4 JVMs); `bash scripts/smoke.sh` → exit 0 (no
+  regression). Numbers in `docs/BENCHMARKS.md` (M2 measurements).
+- **Memory note**: an uncapped JVM's RSS climbs for a few hundred resets then
+  plateaus — this is lazy heap expansion toward the default max (~25% of RAM),
+  **not** a leak. Confirmed by capping `-Xmx350m`: RSS held flat at ~186 MiB over
+  2000 resets. The stress tool bounds the heap so the leak check is meaningful.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -77,9 +124,10 @@ machine (AMD Ryzen 7 9800X3D, JDK 21.0.11, Windows 11).
   test. No task board, skills, observations, or reward logic yet.
 - **`agent-plugin`**: `mindustry.agentplugin.AgentPlugin` placeholder; not a
   loadable Mindustry plugin. See `agent-plugin/README.md`.
-- **Python subpackages** `process` and `tools` now carry real M1 code
-  (`process/launcher.py`, `tools/smoke.py`, `tools/determinism.py`). `env`,
-  `policies`, `training`, `evaluation`, `telemetry`: still documented skeletons.
+- **Python subpackages** `process`, `env`, and `tools` now carry real M1/M2 code
+  (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
+  `tools/{smoke,determinism,stress_reset,benchmark}.py`). `policies`, `training`,
+  `evaluation`, `telemetry`: still documented skeletons.
 - **`scenarios/bootstrap-defense-v0/`**: spec stub only.
 - **`configs/`**: example YAML stubs marked unused-yet.
 

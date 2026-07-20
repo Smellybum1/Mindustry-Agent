@@ -30,8 +30,8 @@ underlying `bash scripts/<name>.sh` directly if so.
 | `make test-python` | `python -m pytest python/tests -q` | Works |
 | `make smoke` | One reset/step/close against a JVM env | Not implemented (M1) |
 | `make determinism` | Golden replay / hash check | Not implemented (M1) |
-| `make stress-reset` | Repeated in-memory reset test | Not implemented (M2) |
-| `make benchmark` | Scaling + timing report | Not implemented (M2) |
+| `make stress-reset` | Repeated in-memory reset test | Works (M2: 1000 resets) |
+| `make benchmark` | Scaling + timing report | Works (M2: 1/2/4 JVMs) |
 | `make scripted-demo` | Headless scripted team | Not implemented (M6) |
 | `make demo-server` | Human-joinable real-time server | Not implemented (M6/M10) |
 

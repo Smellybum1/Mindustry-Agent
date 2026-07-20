@@ -33,8 +33,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make test-java` | `gradlew agent-core:test` (64 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
 | `make smoke` | Builds `rl-server.jar` if missing, launches one JVM, handshake + `reset(seed=12345)` + 10×60 ticks; prints transcript ending `SMOKE OK: tick advanced exactly 600`, exit 0. Verified 2026-07-20. |
 | `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary; in-JVM reset purity check; ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
-| `make stress-reset` | **Exits 1** — not implemented (M2). |
-| `make benchmark` | **Exits 1** — not implemented (M2). |
+| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, child RSS sampled for leaks (heap bounded via `-Xmx512m`); ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
+| `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
 | `make demo-server` | **Exits 1** — not implemented (M6/M10). |
 
@@ -45,6 +45,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 - **Key modules**: `rl-server` (headless fixed-step launcher, `mindustry.rl`),
   `agent-core` (`agentcore`), `agent-plugin` (`mindustry.agentplugin`); Python
   `mindustry_agents` package. See `docs/ARCHITECTURE.md`.
+- **Python env/process layer (M2)** — the request path top to bottom:
+  `env.parallel_env.MindustryParallelEnv` (per-agent dict PettingZoo surface,
+  duck-typed, no pettingzoo import) → `env.client.EnvClient` (one connection,
+  episode/tick bookkeeping, tuple returns) → `process.launcher.Connection`
+  (length-prefixed JSON socket) → one JVM. `process.supervisor.ProcessSupervisor`
+  owns a pool of these (ports, seeds, per-child `runs/` stderr logs, handshake
+  verification, crash/hang detection + auto-replacement, atexit/context-manager
+  shutdown); `env.vector.VectorCollector` steps the whole pool in lockstep. All
+  stdlib-only (ADR-0007). The JVM is mocked in unit tests by
+  `python/tests/fake_server.py` (a subprocess speaking the real protocol).
 - **Important classes/functions**: `mindustry.rl.RlServer` (fixed-step launcher +
   control loop; see `FixedStepApplication`, `FixedStepGraphics`, `StateHasher`,
   `ScenarioLoader` in `rl-server/src/main/java/mindustry/rl/`);
@@ -70,16 +80,29 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Current performance
 
-- **Machine information**: TODO (benchmark not run).
-- **Single-environment ticks/sec**: TODO.
-- **Reset latency**: TODO (target <250 ms, stretch <100 ms; brief §24 Gate 2).
-- **Memory per JVM**: TODO.
-- **Scaling table**: TODO.
-- **Known bottleneck**: TODO (unmeasured).
+- **Machine information**: AMD Ryzen 7 9800X3D (8C/16T), 61.6 GB RAM, Windows 11,
+  Temurin 21.0.11, Python 3.12.5.
+- **Single-environment ticks/sec**: ~76,000 engine-only (~1,270× real-time);
+  ~54,000 end-to-end through the Python client.
+- **Reset latency**: median ~0.8 ms over 1000 resets (p95 ~1.5 ms) — Gate 2
+  (<250 ms) passes comfortably; no JVM restart, no stale state.
+- **Memory per JVM**: working set ~325 MiB steady-state with `-Xmx512m`; no
+  per-reset leak (tail growth +0.2% over 1000 resets). Uncapped RSS climbs then
+  plateaus — that is lazy heap sizing, not a leak.
+- **Scaling table**: 1 JVM ~42k, 2 JVMs ~66k (~79%), 4 JVMs ~89k (~53%) aggregate
+  ticks/sec. Near-linear to 2; capped at 4 on this shared host. Full table +
+  caveats in `docs/BENCHMARKS.md` (M2 measurements).
+- **Known bottleneck**: at 4 JVMs the per-step engine time (<1 ms for a 60-tick
+  chunk) is smaller than the `VectorCollector`'s GIL-bound JSON encode/decode, so
+  the Python side — not the engine — limits aggregate throughput. Larger step
+  chunks or a process-based collector would scale further (future work).
 
 ## Tests
 
-- **Passing**: 13 Python tests (`test_import.py`, `test_protocol.py`).
+- **Passing**: 26 Python tests (`test_import.py`, `test_protocol.py`,
+  `test_supervisor.py`, `test_env.py`). The M2 tests use a fake-server subprocess
+  (`fake_server.py`) — no JVM — so the suite stays fast; real-JVM coverage is the
+  shell scripts (smoke/determinism/stress/benchmark).
 - **Skipped**: none.
 - **Flaky**: none known.
 - **Failing**: none.
