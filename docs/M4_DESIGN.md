@@ -109,6 +109,13 @@ supply runs must perturb it deterministically.
   survive wave 1 per SCENARIOS.md arithmetic; rebuild integration — destroy a
   wall via wave, rebuild it, assert costs.
 
+M4.8 live resolution: on the deliberately flat/open v0 map, the short reference
+column alone allowed path-around core damage despite clearing wave 1. The accepted
+one-agent script therefore mines/delivers 21 copper and legally adds a closed
+16-wall core ring plus a 7-wall east outer layer (23 reinforcements total). With
+both Duos supplied, wave 1 clears at tick 3271 and the core remains exactly 1100 HP.
+This is a scripted M4 safety reinforcement, not a change to `east_duo_v1` data.
+
 ## Non-goals
 
 Mender/power (scenario v1+), CommandAI/pathfinder use for agent units (flat

@@ -170,6 +170,16 @@ lane, outlasting the 13.9 s clear when combined with the funnel. The reference
 schematic below uses a single wall column; agents are expected to thicken/funnel
 it, and doing so is a scored `BUILD_SCHEMATIC`/`DEFEND` competency.
 
+**Live M4.8 qualification (2026-07-20):** hit-point totals alone do not prove
+an untouched core on this flat, open map. In-engine, the short five-wall column
+let daggers walk around and damage the core before the finite magazines cleared
+wave 1. The accepted one-agent trace keeps `east_duo_v1` authoritative, then
+legally adds 23 copper walls: a closed 16-wall ring around the core and a
+seven-wall outer east layer. It mines/delivers 21 copper to balance the added
+cost. With both Duos at 30 ammo, wave 1 clears at tick 3271 and core HP remains
+exactly 1100. This empirical result supersedes any reading of the arithmetic as
+proof that the seven-block schematic alone is sufficient.
+
 **(c) Lose if the team builds nothing.** With no turrets, daggers path unopposed
 to the core: wave 1's 3 daggers deal `3 × 41.5 = 124 DPS`; core 1100 HP → dead in
 **8.9 s** of contact. An undefended core cannot survive even wave 1 to

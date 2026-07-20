@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M3 + M4.1–4.7 complete, all verified 2026-07-20): the
+- **What currently works** (M0–M4 complete, all verified 2026-07-20): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
   board **and the M3/M4 `agentcore.skill` FSM layer** (95 JUnit tests), agent
@@ -30,10 +30,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   alpha defense, agent-attributed damage events, and plan-cancelling core retreat
   (95 JUnit tests total); combat is present in the 79-boundary replay. M4.7 closes
   plan/progress/turret observations and hashes ordered build plans, broken queues,
-  and turret ammo.
+  and turret ammo. M4.8 proves the one-agent defended wave-1 path with an untouched
+  core and retains the matched omitted-defense loss regression.
 - **What is stubbed**: `agent-plugin` (placeholder for the M6/M10 demo server);
   the scenario now loads fully, but its scored `objectives[]` (M5 task-board
-  wiring) and a scripted *win* path are still to come (M4–M6); `action_masks`
+  wiring) and a scripted full three-wave *win* path are still to come (M5–M6); `action_masks`
   are empty placeholders; rewards are empty until M7;
   training/evaluation Python subpackages. See `docs/STATUS.md`.
 - **What is broken**: nothing known.
@@ -55,9 +56,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make test` | Runs the Python suite (30 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make test-java` | `gradlew agent-core:test` (95 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-20. |
-| `make smoke` | Runs exact stepping + M3/M4 resource ledgers, rebuild, live RETREAT queue cancellation, agent-attributed DEFEND damage (enemy HP 450 -> 443), and the undefended scenario loss path. Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
+| `make smoke` | Runs exact stepping + M3/M4 resource ledgers, rebuild, RETREAT/DEFEND checks, the single-agent M4 acceptance (wave 1 clear at tick 3271, core 1100 HP), and both omitted-defense loss checks (tick 3450). Ends `SCENARIO OK`, exit 0. Verified 2026-07-20. |
 | `make determinism` | Two fresh JVMs, same seed/schedule → identical hashes at every boundary, including ordered schematic build+supply, deterministic agent combat, and **post-wave wall placement with moving/re-pathing enemies** (79 hashes); reset purity and seed sensitivity also pass. Ends `DETERMINISM OK`, exit 0. Verified 2026-07-20. |
-| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling (within-cap growth is heap ergonomics, informational only — trend thresholds proved flaky); ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20 (twice, incl. after the methodology fix). |
+| `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; all 1000 initial hashes identical, reset latency median/p95/max reported, leak check = peak RSS under `Xmx(350m) + 300 MiB` ceiling. Latest post-M4 run: median 0.94 ms, p95 1.87 ms, peak 297.2 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | **Exits 1** — not implemented (M6). |
 | `make demo-server` | **Exits 1** — not implemented (M6/M10). |
@@ -171,7 +172,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M4 item 4.8 (then M5/M6,
+**Authoritative work queue: `docs/ROADMAP.md` M5 item 5.1 (then M5/M6,
 also broken down there). Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.

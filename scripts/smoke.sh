@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-# smoke.sh — one reset/step/close against a live rl-server JVM (roadmap M1).
-# Builds the rl-server fat jar if missing, then runs the Python smoke harness:
-# handshake, reset(seed), step 600 ticks in 10x60 chunks, print transcript, exit 0.
+# smoke.sh — live protocol, skill-ledger, combat, M4 acceptance, and loss checks.
+# Builds the rl-server fat jar if missing, then runs the Python harnesses in order.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -24,6 +23,10 @@ echo "== rl-server smoke (port=$PORT seed=$SEED) =="
 echo
 echo "== rl-server combat check (port=$PORT seed=$SEED) =="
 "$PY" -m mindustry_agents.tools.combat_check --port "$PORT" --seed "$SEED"
+
+echo
+echo "== Milestone 4 acceptance (port=$PORT seed=$SEED) =="
+"$PY" -m mindustry_agents.tools.m4_acceptance --port "$PORT" --seed "$SEED"
 
 echo
 echo "== rl-server scenario check (port=$PORT seed=$SEED) =="

@@ -202,7 +202,7 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   (1000 resets, 0 mismatches, reset latency median **1.07 ms** / p95 2.11 ms /
   max 44.94 ms warmup — comfortably under the 250 ms gate even with the bigger world).
 
-## Milestone 4 — build and defence skills (IN PROGRESS)
+## Milestone 4 — build and defence skills (COMPLETE)
 
 - **4.1 dynamic re-path determinism is done (verified 2026-07-20).** The minimal
   upstream amendment is catalogued in `docs/UPSTREAM_PATCHES.md`. Validation:
@@ -251,7 +251,14 @@ build time — the JSON is the single source of truth, nothing hardcoded).
   removal markers), and native turret `totalAmmo`. Live checks observe plan
   progress 0.000 -> 0.056 and supplied Duo summaries `[30, 30]`; Python protocol
   records/round-trip coverage bring pytest to 30.
-- **4.8 remains unimplemented.**
+- **M4.8 — live acceptance is complete.** The script-wired single-agent run
+  legally mines/delivers 21 copper, builds `east_duo_v1` plus 23 wall
+  reinforcements, supplies both Duos to 30 ammo, and issues DEFEND. Wave 1 clears
+  at tick 3271 with the core untouched at 1100 HP and copper ledger ending at 3.
+  A matched omission reset still loses at tick 3450. The extra walls are an
+  empirical requirement on the flat open map; the short reference column alone
+  was not claimed sufficient after this live test. The post-M4 1000-reset run
+  reports zero hash mismatches, median 0.94 ms / p95 1.87 ms, and no leak.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -236,6 +236,15 @@ below; implement in order — 4.1/4.2 unblock everything else.
   hashes perturb deterministically under build/supply traces.
 
 ### 4.8 M4 acceptance run
+- **DONE (verified 2026-07-20):** `scripts/smoke.sh` runs a dedicated live M4
+  acceptance. One alpha mines/delivers 21 copper, builds all seven ordered
+  `east_duo_v1` entries plus 23 legal wall reinforcements, supplies both Duos
+  with 15 copper / 30 ammo each, issues `DEFEND`, and clears wave 1 at tick 3271
+  with core health exactly 1100. The balanced ledger is copper 250 + 21 mined -
+  100 schematic - 138 reinforcement - 30 ammo = 3. A reset with defense omitted
+  still loses at tick 3450. The full build+supply+combat determinism trace matches
+  all 79 boundaries; stress-reset passes 1000 resets with zero hash mismatches
+  (median 0.94 ms, p95 1.87 ms) and no leak.
 - Objective: scripted single agent builds east_duo_v1, supplies both Duos, and
   the team survives wave 1 with the core untouched (SCENARIOS.md arithmetic
   (a)/(b) finally demonstrated in-engine); a second run with defence omitted

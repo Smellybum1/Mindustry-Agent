@@ -20,7 +20,7 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 2. `docs/HANDOFF.md` — verified project state, exact commands with expected
    outputs, architecture map, performance, known risks.
 3. `docs/ROADMAP.md` — Milestones M4–M6 are broken into issue-sized items with
-   acceptance criteria. **Your work queue is M4 item 4.8.**
+   acceptance criteria. **Your work queue begins at M5 item 5.1.**
 4. `docs/M4_DESIGN.md` — the approved design you are implementing (it has open
    questions to resolve against engine source and record in place — follow the
    precedent in `docs/M3_DESIGN.md`, which shows the expected resolution style).
@@ -31,7 +31,7 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Verified state you can rely on (all re-verified 2026-07-20)
 
-- M0–M3 and M4.1–4.7 complete + the bootstrap-defense-v0 scenario loader with deterministic
+- M0–M4 complete + the bootstrap-defense-v0 scenario loader with deterministic
   enemy waves. `bash scripts/{bootstrap,build,test-java,test-python,smoke,
   determinism,stress-reset,benchmark}.sh` all exit 0. 95 JUnit + 30 pytest.
 - The fixed-step headless env: ~76k engine ticks/sec, ~1 ms resets, determinism
@@ -69,8 +69,8 @@ monorepo of Anuken/Mindustry pinned at tag `v159.7`, commit
 
 ## Your first task
 
-`docs/ROADMAP.md` → **Milestone 4, item 4.8 (M4 acceptance run)**. Items 4.1–4.7
-are verified complete: the
+`docs/ROADMAP.md` → **Milestone 5, item 5.1 (candidate task generator)**. Milestone
+4 is verified complete: the
 thread-less pathfinder refresh is wall-clock-free and the 79-boundary determinism
 trace legally executes and supplies the schematic, then builds a post-wave wall;
 `BuildBlock` uses real engine plans and balances core resources. Each item lists objective, files,
