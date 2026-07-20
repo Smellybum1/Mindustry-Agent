@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mindustry-agents"
+version = "0.0.1"
+description = "Deterministic externally-stepped multi-agent RL environment for Mindustry cooperative agents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "mindustry-coop-agents" }]
+keywords = ["mindustry", "multi-agent", "reinforcement-learning", "pettingzoo"]
+
+# The CORE package is intentionally installable with ZERO third-party
+# dependencies (stdlib only): protocol framing, process supervision skeleton,
+# and the env facade contracts must be importable without a heavy RL stack.
+dependencies = []
+
+[project.optional-dependencies]
+# Test/dev tooling. Core tests fall back to stdlib unittest if pytest is absent.
+dev = ["pytest>=7"]
+# Reinforcement-learning extras, pulled in only for training/eval runtimes.
+# Deliberately NOT required by the env layer (ADR-0007: framework-neutral env).
+rl = ["pettingzoo>=1.24", "numpy>=1.24"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
