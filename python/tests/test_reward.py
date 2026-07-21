@@ -120,9 +120,32 @@ class TestSelectorRewardAdversaries(unittest.TestCase):
         reports = [run_case(case) for case in CASES]
         self.assertTrue(all(report["pass"] for report in reports))
         for report in reports:
-            self.assertEqual(set(report["components"]), set(COMPONENT_KEYS))
+            expected = COMPONENT_KEYS
+            if report["reward_schema"] == "selector_reward_v2":
+                expected += QUALITY_COMPONENT_KEYS
+            self.assertEqual(set(report["components"]), set(expected))
             self.assertEqual(len(report["action_hashes"]), len(report["state_hashes"]))
             self.assertIn("structured_events", report)
+            self.assertIn("coordination_metrics", report)
+
+    def test_reward_v2_breakdown_exposes_auditable_counters_and_totals(self):
+        result = SelectorReward(quality_reward=QUALITY).observe(
+            team(),
+            team(10),
+            advanced_ticks=10,
+            tick_cap=9000,
+            coordination_metrics={
+                "agent_ticks": 30,
+                "idle_agent_ticks": 12,
+                "duplicate_work_incidents": 2,
+                "announced_messages": 3,
+            },
+        )
+        self.assertEqual(result.quality_counters["idle_agent_ticks"], 12)
+        self.assertAlmostEqual(
+            result.quality_penalty_totals["reward.penalty.team_idle_ticks"],
+            0.0012,
+        )
 
     def test_rebuild_loop_and_fake_wave_clear_pay_each_physical_highwater_once(self):
         reward = SelectorReward()

@@ -410,6 +410,16 @@ def rollout_episode(
                 "log_probability": log_prob,
                 "value_prediction": float(value.item()),
                 "reward_components": breakdown.components,
+                **(
+                    {
+                        "reward_quality_counters": breakdown.quality_counters,
+                        "reward_quality_penalty_totals": (
+                            breakdown.quality_penalty_totals
+                        ),
+                    }
+                    if reward_schema == REWARD_SCHEMA_V2
+                    else {}
+                ),
                 "boundary_reasons": reasons,
                 "state_hash": response.state_hash,
                 "task_events": response.task_events,

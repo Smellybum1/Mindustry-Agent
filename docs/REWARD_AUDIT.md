@@ -145,11 +145,11 @@ not an M8.5 promotion approval and does not authorize held-out evaluation.
 | Telemetry key | `reward.penalty.abandonment_liability`, `reward.abandonment_reason_counts`. |
 | Status | implemented-approved-m8.4; adversaries pass 2026-07-21 |
 
-## V12 selector reward v2 precommit
+## V12 selector reward v2 implementation
 
 `selector_reward_v2` retains every v1 component and adds the four negative-only
-rows below. They are precommitted under ADR-0022 and may influence V12 only
-after production tests and the expanded adversary gate pass.
+rows below. They were precommitted under ADR-0022 before implementation and
+may influence V12 after the production tests and expanded adversary gate pass.
 
 ### `reward.penalty.team_idle_ticks`
 
@@ -163,8 +163,8 @@ after production tests and the expanded adversary gate pass.
 | Exploit hypothesis 2 | Manipulate step chunking. Mitigation: charge exact cumulative delta and fail counter rollback. |
 | Exploit hypothesis 3 | Perform churn/busywork instead of idling. Mitigation: duplicate/abandon penalties plus milestone, win, and scorecard gates. |
 | Adversarial tests | `idle-early-loss`; `quality-chunk-size`; `idle-busywork`. |
-| Telemetry key | `reward.penalty.team_idle_ticks` plus charged idle ticks. |
-| Status | precommitted-v12; not active until tests pass |
+| Telemetry key | `reward.penalty.team_idle_ticks`, `reward_quality_counters.idle_agent_ticks`, `reward_quality_penalty_totals`. |
+| Status | implemented-approved-v12; adversaries pass 2026-07-21 |
 
 ### `reward.penalty.duplicate_work`
 
@@ -178,8 +178,8 @@ after production tests and the expanded adversary gate pass.
 | Exploit hypothesis 2 | Farm after the cap. Mitigation: no positive signal exists; scorecard still counts every incident. |
 | Exploit hypothesis 3 | Counter reset hides incidents. Mitigation: any in-episode rollback fails the run. |
 | Adversarial tests | `duplicate-quality-cap`; `duplicate-after-cap`; `quality-counter-rollback`. |
-| Telemetry key | `reward.penalty.duplicate_work` plus charged incident count. |
-| Status | precommitted-v12; not active until tests pass |
+| Telemetry key | `reward.penalty.duplicate_work`, `reward_quality_counters.duplicate_work_incidents`, `reward_quality_penalty_totals`. |
+| Status | implemented-approved-v12; adversaries pass 2026-07-21 |
 
 ### `reward.penalty.communication`
 
@@ -193,8 +193,8 @@ after production tests and the expanded adversary gate pass.
 | Exploit hypothesis 2 | Relabel announcements as routine. Mitigation: server-authoritative message priority; policy cannot set telemetry classification. |
 | Exploit hypothesis 3 | Change boundary frequency to repeat charges. Mitigation: cumulative delta accounting. |
 | Adversarial tests | `announcement-quality-cap`; `routine-message-zero`; `quality-chunk-size`. |
-| Telemetry key | `reward.penalty.communication` plus charged announcement count. |
-| Status | precommitted-v12; not active until tests pass |
+| Telemetry key | `reward.penalty.communication`, `reward_quality_counters.announced_messages`, `reward_quality_penalty_totals`. |
+| Status | implemented-approved-v12; adversaries pass 2026-07-21 |
 
 ### `reward.penalty.team_abandonment`
 
@@ -208,8 +208,8 @@ after production tests and the expanded adversary gate pass.
 | Exploit hypothesis 2 | Trigger excluded reasons intentionally. Mitigation: exclusions are authoritative safety/lifecycle events and remain visible in scorecards. |
 | Exploit hypothesis 3 | Duplicate/replay one event. Mitigation: server event stream is authoritative and each delivered event is charged once; cap bounds damage. |
 | Adversarial tests | `team-abandon-quality-cap`; `team-forced-abandon-zero`; `blocked-never-release`. |
-| Telemetry key | `reward.penalty.team_abandonment` plus charged/excluded reason counts. |
-| Status | precommitted-v12; not active until tests pass |
+| Telemetry key | `reward.penalty.team_abandonment`, `reward_quality_penalty_totals`, structured `task_events.reason_code`. |
+| Status | implemented-approved-v12; adversaries pass 2026-07-21 |
 
 ## Cross-component adversarial matrix
 
@@ -226,9 +226,11 @@ These CI-runnable cases are mandatory before changing any status to approved:
 | Build/rebuild loop | Repeatedly damage/rebuild an already credited plan. | High-water id pays exactly once and repair/build quantities pay zero. |
 | Chunk manipulation | Replay one action trace using different requested step chunk sizes. | Per-component rewards and charged tick totals match exactly. |
 
-The implementation emits `runs/m8-selector-v1/reward-adversaries.json` with
-27 passing component and cross-component cases, including the eight mandatory
-matrix rows plus mask corruption, early suicide, readiness loss, unsafe
-telemetry, and farming exclusions. It contains action/state
-hashes, structured events, every component, total return, and pass/fail reason.
-Reward totals alone are insufficient evidence.
+The implementation emits `reward-adversaries.json` in the selected run
+directory with 37 passing component and cross-component cases: the original
+27 v1 cases plus all ten precommitted v2 cases. It includes the eight mandatory
+matrix rows, cap and post-cap checks, counter rollback, chunk invariance, early
+loss, busywork, mask corruption, readiness loss, unsafe telemetry, and farming
+exclusions. Each case records its reward schema, action/state hashes,
+structured events, coordination counters, every applicable component, total
+return, and pass/fail reason. Reward totals alone are insufficient evidence.

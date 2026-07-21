@@ -51,6 +51,8 @@ class RewardBreakdown:
     charged_ticks: int
     invalid_action_count: int
     abandonment_reason_counts: dict[str, int]
+    quality_counters: dict[str, int]
+    quality_penalty_totals: dict[str, float]
 
     @property
     def total(self) -> float:
@@ -185,6 +187,8 @@ class SelectorReward:
             charged_ticks=charged,
             invalid_action_count=self.invalid_action_count,
             abandonment_reason_counts=dict(sorted(self.abandonment_reason_counts.items())),
+            quality_counters=dict(sorted(self.prior_quality_counters.items())),
+            quality_penalty_totals=dict(sorted(self.quality_penalty_totals.items())),
         )
 
     def _observe_quality(

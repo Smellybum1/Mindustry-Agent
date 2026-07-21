@@ -919,6 +919,11 @@ must reproduce and reach 9/10 dev-v1 wins with mean idle below 0.25. A disjoint
 160-root dev-v8 set is frozen for one corrected confirmation; held-out-v4
 remains sealed.
 
+The production v2 accumulator, rollout telemetry, schema plumbing, and all 37
+v1/v2 reward adversaries pass on 2026-07-21, together with the 121-test Python
+suite. The reward gate is satisfied and V12 training is authorized; no V12 run
+has started yet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -256,9 +256,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   recovery, and abandonment fail. V11 is rejected and dev-v7 consumed.
 - **V12 precommit**: ADR-0022 freezes reward v2 as v1 plus capped negative-only
   idle, duplicate, announcement, and non-forced team-abandonment components.
-  Audit rows exist, but implementation/adversaries must pass before training.
-  V12 uses V6's long recipe, names held-out-v4, and must reach 9/10 dev-v1 with
-  idle below 0.25. Dev-v8 is a new disjoint 160-root one-way confirmation set.
+  Production accounting and trace telemetry are implemented; all 37 reward
+  adversaries and the 121-test Python suite pass, authorizing training. V12
+  uses V6's long recipe, names held-out-v4, and must reach 9/10 dev-v1 with idle
+  below 0.25. Dev-v8 is a new disjoint 160-root one-way confirmation set.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

@@ -944,10 +944,12 @@ repository-evidence mapping used for the M6 audit is:
   `bdf411b0fb386e7c...`.
 - ADR-0022 precommits V12 under `selector_reward_v2`: v1 plus bounded penalties
   for idle ticks, duplicate work, announcements, and non-forced team
-  abandonment. Audit rows are written; production code/adversaries must pass
-  before training. V12 otherwise uses V6's long recipe, names held-out-v4, and
-  must reach 9/10 dev-v1 with idle below 0.25. Dev-v8 is frozen as a disjoint
-  160-root one-way confirmation set. V12 has not been trained.
+  abandonment. Production delta accounting, caps, rollback failures, rollout
+  telemetry, and schema plumbing are implemented. All 37 reward adversaries
+  and the 121-test Python suite pass, so the reward gate authorizes training.
+  V12 otherwise uses V6's long recipe, names held-out-v4, and must reach 9/10
+  dev-v1 with idle below 0.25. Dev-v8 is frozen as a disjoint 160-root one-way
+  confirmation set. V12 has not been trained.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
