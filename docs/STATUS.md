@@ -1180,6 +1180,17 @@ repository-evidence mapping used for the M6 audit is:
   and negative replay pass. Config/adversary SHA-256 are
   `95bc200596718170...` and `18f337ac3ca54700...`. No V22 model work preceded
   this precommit.
+- V22 replica A completed 2,048 episodes/32 updates and stopped at the
+  precommitted dev quality gate; replica B was not started. Frontier idle means
+  were `0.43868123..0.54747927`; update 17 reached 10/10 wins but reported
+  `0.48320387` idle. The reconstructed rejection frontier hashes to
+  `17d8afa6e7fb2f33...`. Agent-death cleanup had exposed that permanently dead
+  seats still accumulated available and idle ticks, contaminating both the gate
+  and training reward. Metrics now partition seat-ticks into available or
+  unavailable and charge idle only while a seat can act. Diagnostic update-17
+  evaluation becomes 10/10 at `0.13474577` idle, but cannot rehabilitate a model
+  trained under the faulty reward. V22 is rejected, dev-v18 is retired unopened,
+  held-out-v4 remains sealed, and a newly precommitted retrain is required.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

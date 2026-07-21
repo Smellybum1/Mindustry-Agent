@@ -1166,6 +1166,21 @@ Config/adversary SHA-256 are `95bc200596718170...` and
 `18f337ac3ca54700...`. No V22 model work began before this packet; exact twin
 replicas and reusable preflight are next, and M8.5 remains unmet.
 
+V22 replica A completed all 2,048 episodes/32 updates but correctly failed its
+precommitted construction gate before a selected checkpoint or run manifest was
+produced. All frontier idle means were `0.43868123..0.54747927`; update 17 was
+10/10 wins but `0.48320387` idle. Replica B did not start, dev-v18 remained
+unopened, and held-out-v4 remains sealed. The reconstructed frontier hashes to
+`17d8afa6e7fb2f3360d327ef76d0ee082dc8fe3aa6d77926c532c7051ae380d4`.
+The real-agent-loss correction had exposed a metric defect: dead seats still
+accumulated both `agent_ticks` and idle forever. Occupancy now partitions each
+seat-tick into available or unavailable, and idle applies only to available,
+unassigned seats. A diagnostic update-17 replay under the corrected metric is
+10/10 with mean idle `0.13474577`, but V22's training reward was contaminated,
+so its checkpoint cannot be promoted or relabeled. V22 is rejected, dev-v18 is
+retired unopened, and a fresh governed retrain is required before any new
+confirmation set can be opened. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -82,3 +82,24 @@ and golden determinism including the negative replay. Config SHA-256 is
 `95bc200596718170b21e1aae47398486e6173996d7086d55af4d0e1a1757ee47`;
 adversary report SHA-256 is
 `18f337ac3ca54700b3b50ad193a33c292b578c3b376aa1a52156cbec93ab8998`.
+
+## Outcome (2026-07-22)
+
+Replica A completed all 2,048 training episodes and 32 updates, then stopped at
+the precommitted dev quality gate. No frontier row had reported mean idle below
+0.25 (`0.43868123..0.54747927`). Update 17 reached 10/10 wins but reported mean
+idle `0.48320387`; update 32 also reached 10/10 at `0.47812454`. Replica B was
+not started, dev-v18 remained unopened, and held-out-v4 remained sealed. The
+deterministically reconstructed rejection frontier has SHA-256
+`17d8afa6e7fb2f3360d327ef76d0ee082dc8fe3aa6d77926c532c7051ae380d4`.
+
+Failure analysis found that the new honest agent-death cleanup exposed a metric
+contract defect: `recordMetricsTick()` continued to count a permanently dead
+fixed seat in both `agent_ticks` and `idle_agent_ticks`. That made impossible
+post-death work look like policy idleness and also contaminated the idle reward
+used during training. Re-evaluating update 17 diagnostically after partitioning
+unavailable seat-ticks gives 10/10 wins and mean idle `0.13474577`, proving the
+selection failure was metric-driven, but it cannot rehabilitate a checkpoint
+trained with the contaminated reward. V22 is rejected. Its unopened dev-v18 is
+retired, and any successor requires a fresh runtime contract, precommit, and
+from-scratch exact replicas.

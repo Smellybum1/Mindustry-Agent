@@ -457,7 +457,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   leaves only no-op WAIT legal for that seat. Fixed seeds are 5/5 with 12 loss
   releases. The regenerated two-win/16,200-tick/664-checkpoint golden reproduces
   twice at `f08c5af6b6ea4e25...`; only hashes changed, and the negative mutation
-  still diverges. No V22 model or governed confirmation set has been opened.
+  still diverges. This was the validated boundary before V22 model work began;
+  the governed confirmation set was not opened.
 - **V22 precommit**: ADR-0033 freezes an exact V21 retrain under runtime contract
   `abandon_wait_retry_and_agent_death_boundaries_v3`; only candidate ID,
   runtime contract, and confirmation path differ. Dev-v17 is retired unopened;
@@ -465,8 +466,19 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   held-out-v4 stays sealed. The 44 exact reward adversaries, 143 Python tests,
   pinned build, five-seed candidate gate, smoke, determinism, and negative replay
   pass. Config hash is `95bc200596718170...`; adversary report hash is
-  `18f337ac3ca54700...`. Training has not started.
-- **What is broken**: nothing known.
+  `18f337ac3ca54700...`.
+- **V22 rejected at construction gate**: replica A completed all 2,048 episodes
+  and 32 updates, then found no frontier row below the frozen idle threshold.
+  Update 17 was 10/10 but reported idle `0.48320387`; the reconstructed frontier
+  hashes to `17d8afa6e7fb2f33...`. Replica B did not start. The cause is a runtime
+  metric defect exposed by real agent death: dead seats accumulated both
+  available and idle ticks forever, contaminating the idle reward. The adapter
+  now partitions unavailable ticks separately; diagnostic update-17 evaluation
+  becomes 10/10 at `0.13474577`, but the trained checkpoint remains rejected.
+  Dev-v18 is retired unopened and held-out-v4 remains sealed.
+- **What is broken**: no known gameplay/runtime defect remains after the metric
+  correction; a fresh governed candidate is still required because V22 trained
+  with contaminated idle reward.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
@@ -628,11 +640,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Train two exact V22 replicas.** Use the precommitted corrected runtime and
-   frozen config without reopening the idle, reward-cap, or teacher-coefficient
-   lines. Require exact checkpoint/frontier/model/replay/full-run/direct-lineage
-   reproduction before reusable preflight; dev-v18 must remain unopened.
-2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
+1. **Verify and precommit the post-V22 metric contract.** Require the full
+   Python suite, pinned build, five-seed availability ledger, smoke,
+   determinism, and negative replay. Freeze a fresh disjoint confirmation set
+   and an exact V22-successor config before any model work; dev-v18 stays
+   retired unopened.
+2. **Train two exact successor replicas.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
    confirmation. Never inspect dev-v14/dev-v15/dev-v16/dev-v17 or
    held-out-v1/v2/v3 outcomes for tuning; held-out-v4 remains sealed.
