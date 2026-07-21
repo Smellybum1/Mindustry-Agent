@@ -50,6 +50,19 @@ GREEDY_MIXED = "greedy-mixed-seat0"
 RANDOM_MIXED = "random-mixed-seat0"
 PERMANENT_BASELINES = ("random-valid", "greedy-utility")
 CONFIRMATION_ATTEMPT_SCHEMA = "selector_promotion_dev_confirmation_attempt_v1"
+
+
+def _canonical_control_action(
+    action: dict[str, Any], candidates: list[dict[str, Any]]
+) -> tuple[dict[str, Any], int]:
+    canonical = _canonical_scripted_action(action, candidates)
+    index = _scripted_index(canonical, candidates)
+    if (
+        canonical.get("task_action", {}).get("type") == "SELECT_CANDIDATE_TASK"
+        and not 0 <= index < len(candidates)
+    ):
+        raise ValueError("matched control selected an out-of-range candidate")
+    return canonical, index
 ALLOWED_DIRTY_PATHS = frozenset(
     {
         "AGENTS.md",
@@ -100,7 +113,10 @@ def rollout_control_episode(
 
     while outcome == "running" and tick < int(metadata["tick_cap"]):
         bundle = adaptive.actions(observations, masks)
-        lifecycle_action = bundle[LEARNED_SEAT]
+        candidates = observations[LEARNED_SEAT]["task_candidates"]
+        lifecycle_action, lifecycle_index = _canonical_control_action(
+            bundle[LEARNED_SEAT], candidates
+        )
         lifecycle_type = lifecycle_action.get("task_action", {}).get("type")
         features = build_selector_features(
             observations,
@@ -118,17 +134,17 @@ def rollout_control_episode(
         )
         if forced:
             selected_action = lifecycle_action
+            selected_index = lifecycle_index
         else:
-            selected_action = selector.action(
-                LEARNED_SEAT, observations[LEARNED_SEAT], masks[LEARNED_SEAT]
-            )
-            selected_action = _canonical_scripted_action(
-                selected_action, observations[LEARNED_SEAT]["task_candidates"]
+            selected_action, selected_index = _canonical_control_action(
+                selector.action(
+                    LEARNED_SEAT,
+                    observations[LEARNED_SEAT],
+                    masks[LEARNED_SEAT],
+                ),
+                candidates,
             )
         bundle[LEARNED_SEAT] = selected_action
-        selected_index = _scripted_index(
-            selected_action, observations[LEARNED_SEAT]["task_candidates"]
-        )
 
         response = env.step(
             episode_id,
@@ -157,9 +173,7 @@ def rollout_control_episode(
             previous_dead[agent_id] = dead
 
         if selected_action["task_action"]["type"] == "SELECT_CANDIDATE_TASK":
-            selected_task_type = observations[LEARNED_SEAT]["task_candidates"][
-                selected_index
-            ]["task_type"]
+            selected_task_type = candidates[selected_index]["task_type"]
             if any(
                 int(item.get("agent_id", -1)) == LEARNED_SEAT
                 and item.get("accepted", False)

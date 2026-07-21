@@ -199,6 +199,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   and abandonment intervals are uncertain on ten dev-v1 pairs. ADR-0014 freezes
   a one-way 40-root dev-v2 confirmation with an exclusive attempt and refreshed
   permanent baselines. It must pass before held-out-v2 can be opened.
+- **V6 confirmation result**: the exclusive marker was created, then the run
+  aborted before result files on a matched-control catalog-WAIT indexing bug.
+  ADR-0014 consumes any started attempt, so V6 is rejected and dev-v2 must not
+  be rerun. The bug is fixed/regression-tested. Held-out-v2 remains unopened.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

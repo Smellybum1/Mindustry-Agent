@@ -28,6 +28,35 @@ def _record(policy, seed, win, score):
 
 
 class TestPromotion(unittest.TestCase):
+    def test_matched_control_canonicalizes_catalog_wait_before_indexing(self):
+        from mindustry_agents.training.promotion import _canonical_control_action
+
+        candidates = [{"task_type": "HARVEST_RESOURCE"}, {"task_type": "WAIT"}]
+        action, index = _canonical_control_action(
+            {
+                "agent_id": 0,
+                "task_action": {
+                    "type": "SELECT_CANDIDATE_TASK",
+                    "candidate_index": 1,
+                },
+            },
+            candidates,
+        )
+        self.assertEqual(action["task_action"], {"type": "WAIT"})
+        self.assertEqual(index, 9)
+
+        with self.assertRaisesRegex(ValueError, "out-of-range"):
+            _canonical_control_action(
+                {
+                    "agent_id": 0,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": 7,
+                    },
+                },
+                candidates,
+            )
+
     def test_confirmation_attempt_marker_is_exclusive(self):
         from mindustry_agents.training.promotion import _create_exclusive_attempt
 

@@ -822,6 +822,12 @@ ADR-0014 freezes a disjoint 40-root dev-v2 one-way confirmation for V6, with an
 exclusive attempt marker and freshly matched permanent baselines. Failure
 rejects V6; success is required before held-out-v2 can be opened.
 
+The exclusive dev-v2 attempt started but aborted on a matched-control
+catalog-WAIT indexing bug before any result artifacts were persisted. Under
+ADR-0014 the attempt is consumed, V6 is rejected, and dev-v2 will not be rerun.
+The control path is fixed and regression-tested for future candidates.
+Held-out-v2 remains unopened; M8.5 is still unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -41,3 +41,8 @@ The dev-v1 preflight passed all win-rate comparisons but failed scorecard
 certainty. ADR-0014 now freezes `bootstrap-defense-v1-dev-v2` as a 40-root
 one-way V6 confirmation with an exclusive attempt. Refresh permanent baselines
 on dev-v2 and run that confirmation before considering held-out-v2.
+
+That exclusive attempt was created but aborted before result artifacts on a
+matched-control catalog-WAIT indexing bug. ADR-0014 consumes the attempt, so do
+not rerun dev-v2 and do not open held-out-v2 for V6. The control bug is fixed;
+the next step requires a newly governed successor candidate/confirmation path.

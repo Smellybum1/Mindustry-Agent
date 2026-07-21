@@ -344,6 +344,16 @@ runner creates an exclusive attempt marker and uses freshly matched permanent
 baselines. Failure rejects V6; success is still only permission to invoke the
 separate held-out-v2 final.
 
+The exclusive dev-v2 attempt was created on commit `888095a664` but aborted
+before artifacts were written: a forced matched-control lifecycle action chose
+the catalog WAIT row, was represented as canonical index 9, and was indexed as
+if it were a candidate row. ADR-0014 makes a started attempt consuming, so V6
+is rejected and dev-v2 will not be rerun. Held-out-v2 remains unopened.
+
+Matched controls now canonicalize every lifecycle/selector action before index
+use and fail explicitly on a genuinely out-of-range SELECT. The regression is
+covered without weakening the exclusive-attempt rule.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -860,8 +860,14 @@ repository-evidence mapping used for the M6 audit is:
   random/greedy by observed win rate, with reward/lineage/repository gates
   passing. It is still ineligible because idle, recovery, and abandonment
   scorecard intervals cross zero. ADR-0014 freezes a 40-root, globally disjoint
-  dev-v2 one-way confirmation with an exclusive attempt. It has not been run;
-  held-out-v2 remains unopened.
+  dev-v2 one-way confirmation with an exclusive attempt. Its consumed attempt
+  status is recorded below; held-out-v2 remains unopened.
+- The exclusive dev-v2 attempt was created on commit `888095a664` and aborted
+  before result artifacts on a matched-control catalog-WAIT indexing bug. Its
+  `status: started` marker consumes dev-v2 under ADR-0014, so V6 is rejected and
+  the attempt will not be rerun. The control path now canonicalizes WAIT before
+  indexing and rejects genuine out-of-range SELECT actions explicitly.
+  Held-out-v2 remains unopened.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
