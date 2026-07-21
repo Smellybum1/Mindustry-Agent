@@ -281,6 +281,21 @@ hypothesis on dev. Both selected update 1 at 3/10 dev wins with checkpoint
 digest `e9e1ee37fbfef6ee...`. Later updates scored 1–3/10. The recipe therefore
 stops before promotion preflight or any held-out-v2 access.
 
+The second successor hypothesis, `m8-selector-v4-teacher-regularized`, keeps
+the rejected v3 recipe and adds one training-only coefficient: 0.05
+cross-entropy toward adaptive-v1's action at the same immutable boundary, only
+for unforced transitions in successful on-policy episodes. The teacher action
+is already produced for scripted lifecycle/teammate control, so this adds no
+engine read or behavior to evaluation. PPO actions and audited rewards remain
+authoritative; the earlier self-imitation coefficient stays zero. Teacher
+actions, indices, loss, and sample counts are recorded for replay and optimizer
+telemetry. The zero-default path preserves all older recipes.
+
+This hypothesis addresses sparse successful diverse-root training evidence
+(49/512 v3 train episodes) with a structured coordination prior, without
+changing model capacity, roots, episode/update budget, RNGs, reward, dev set,
+or evaluation. Its frozen config names held-out-v2 and must stop on dev failure.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

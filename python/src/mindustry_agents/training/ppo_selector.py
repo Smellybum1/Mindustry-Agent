@@ -59,6 +59,7 @@ class Transition:
     done: bool
     policy_loss_mask: bool
     successful_episode: bool = False
+    teacher_action: int | None = None
 
 
 @dataclass
@@ -258,7 +259,13 @@ def rollout_episode(
         with torch.no_grad():
             raw_logits, masked_logits, value, tensors = _model_outputs(model, features)
 
-        scripted_action = scripted_bundle[LEARNED_SEAT]
+        scripted_action = _canonical_scripted_action(
+            scripted_bundle[LEARNED_SEAT],
+            observations[LEARNED_SEAT]["task_candidates"],
+        )
+        teacher_index = _scripted_index(
+            scripted_action, observations[LEARNED_SEAT]["task_candidates"]
+        )
         scripted_type = scripted_action.get("task_action", {}).get("type")
         forced = (
             features.forced_task_action is not None
@@ -266,9 +273,7 @@ def rollout_episode(
             or scripted_type == "ABANDON"
         )
         if forced:
-            learned_action = _canonical_scripted_action(
-                scripted_action, observations[LEARNED_SEAT]["task_candidates"]
-            )
+            learned_action = scripted_action
             selected_index = _scripted_index(
                 learned_action, observations[LEARNED_SEAT]["task_candidates"]
             )
@@ -374,6 +379,7 @@ def rollout_episode(
                 ),
                 done=done,
                 policy_loss_mask=features.policy_loss_mask and not forced,
+                teacher_action=teacher_index,
             )
         )
         trace.append(
@@ -383,6 +389,8 @@ def rollout_episode(
                 "action": learned_action["task_action"],
                 "agent_actions": bundle,
                 "action_index": selected_index,
+                "teacher_action": scripted_action["task_action"],
+                "teacher_action_index": teacher_index,
                 "policy_loss_mask": transitions[-1].policy_loss_mask,
                 "raw_logits": [float(value) for value in raw_logits.tolist()],
                 "masked_logits": [float(value) for value in masked_logits.tolist()],
@@ -487,6 +495,19 @@ def ppo_update(
         [item.policy_loss_mask and item.successful_episode for item in transitions],
         dtype=torch.bool,
     )
+    teacher_actions = torch.tensor(
+        [item.teacher_action if item.teacher_action is not None else 0 for item in transitions],
+        dtype=torch.long,
+    )
+    successful_teacher_mask = torch.tensor(
+        [
+            item.policy_loss_mask
+            and item.successful_episode
+            and item.teacher_action is not None
+            for item in transitions
+        ],
+        dtype=torch.bool,
+    )
     batch_size = int(config["minibatch_size"])
     metrics = {
         "policy_loss": 0.0,
@@ -494,6 +515,8 @@ def ppo_update(
         "entropy": 0.0,
         "success_imitation_loss": 0.0,
         "success_imitation_samples": 0.0,
+        "successful_teacher_imitation_loss": 0.0,
+        "successful_teacher_imitation_samples": 0.0,
         "batches": 0.0,
     }
     for _ in range(int(config["ppo_epochs"])):
@@ -503,7 +526,8 @@ def ppo_update(
             _, masked_logits, values = model(
                 candidates[index], scalars[index], present[index], masks[index]
             )
-            log_probs = torch.log_softmax(masked_logits, dim=-1).gather(
+            all_log_probs = torch.log_softmax(masked_logits, dim=-1)
+            log_probs = all_log_probs.gather(
                 1, actions[index, None]
             ).squeeze(1)
             probabilities = torch.softmax(masked_logits, dim=-1)
@@ -531,6 +555,20 @@ def ppo_update(
             else:
                 success_imitation_loss = values.sum() * 0.0
                 success_imitation_samples = 0.0
+            successful_teacher = successful_teacher_mask[index]
+            if successful_teacher.any():
+                teacher_log_probs = all_log_probs.gather(
+                    1, teacher_actions[index, None]
+                ).squeeze(1)
+                successful_teacher_imitation_loss = -teacher_log_probs[
+                    successful_teacher
+                ].mean()
+                successful_teacher_imitation_samples = float(
+                    successful_teacher.sum().item()
+                )
+            else:
+                successful_teacher_imitation_loss = values.sum() * 0.0
+                successful_teacher_imitation_samples = 0.0
             value_loss = functional.mse_loss(values, returns[index])
             loss = (
                 policy_loss
@@ -538,6 +576,10 @@ def ppo_update(
                 - float(config["entropy_coefficient"]) * entropy_loss
                 + float(config.get("success_imitation_coefficient", 0.0))
                 * success_imitation_loss
+                + float(
+                    config.get("successful_teacher_imitation_coefficient", 0.0)
+                )
+                * successful_teacher_imitation_loss
             )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -552,11 +594,22 @@ def ppo_update(
                 success_imitation_loss.item()
             )
             metrics["success_imitation_samples"] += success_imitation_samples
+            metrics["successful_teacher_imitation_loss"] += float(
+                successful_teacher_imitation_loss.item()
+            )
+            metrics["successful_teacher_imitation_samples"] += (
+                successful_teacher_imitation_samples
+            )
             metrics["batches"] += 1.0
     divisor = max(1.0, metrics["batches"])
     return {
         key: value / divisor
-        if key not in {"batches", "success_imitation_samples"}
+        if key
+        not in {
+            "batches",
+            "success_imitation_samples",
+            "successful_teacher_imitation_samples",
+        }
         else value
         for key, value in metrics.items()
     }

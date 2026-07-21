@@ -84,3 +84,23 @@ def test_m8_successor_recipe_precommits_diverse_train_roots_and_v2_final():
         path = DEFAULT_SEED_SET.with_name(name)
         other = json.loads(path.read_text(encoding="utf-8"))
         assert train_seeds.isdisjoint(other["seeds"]), name
+
+
+def test_m8_teacher_regularized_recipe_is_frozen_on_v2_contract():
+    config_path = (
+        DEFAULT_SEED_SET.parents[1]
+        / "training/m8-selector-v4-teacher-regularized.json"
+    )
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+
+    assert config["train_seed_set"].endswith(
+        "bootstrap-defense-v1-train-v2.json"
+    )
+    assert config["held_out_seed_set_id"] == (
+        "bootstrap-defense-v1-held-out-v2"
+    )
+    assert config["held_out_seed_set_version"] == 2
+    assert config["training_cycles"] == 8
+    assert config["episodes_per_update"] == 64
+    assert config["success_imitation_coefficient"] == 0.0
+    assert config["successful_teacher_imitation_coefficient"] == 0.05

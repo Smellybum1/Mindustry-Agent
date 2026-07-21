@@ -835,6 +835,10 @@ repository-evidence mapping used for the M6 audit is:
   runs reproduced exactly but selected update 1 at 3/10 dev wins (checkpoint
   `174c71d6b44819d4...`, replay `9d156396fc6ee71a...`, full-run
   `e9e1ee37fbfef6ee...`). It is rejected before preflight; v2 remains unopened.
+- `m8-selector-v4-teacher-regularized` is precommitted as the next train/dev
+  hypothesis. It adds a 0.05 successful-episode adaptive-teacher auxiliary to
+  the otherwise unchanged v3 recipe, with explicit loss/sample telemetry and a
+  zero-default compatibility path. Its config names v2; it has not been run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

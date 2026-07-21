@@ -791,6 +791,13 @@ reproduced exactly but selected update 1 at only 3/10 dev wins (full-run digest
 `e9e1ee37fbfef6ee...`), so the hypothesis is rejected before preflight and v2
 remains unopened.
 
+The next precommitted train/dev-only hypothesis is
+`m8-selector-v4-teacher-regularized`: the v3 recipe plus coefficient 0.05
+successful-episode imitation of adaptive-v1's action at the same structured
+boundary. The auxiliary is training-only, separately metered, zero by default,
+and changes neither reward nor evaluation. Its config names held-out-v2; no v4
+training evidence exists yet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
