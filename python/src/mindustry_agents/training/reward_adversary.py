@@ -18,6 +18,8 @@ from mindustry_agents.training.reward import (
 
 QUALITY_CASES = (
     "idle-early-loss",
+    "idle-quality-cap",
+    "idle-after-cap",
     "quality-chunk-size",
     "idle-busywork",
     "duplicate-quality-cap",
@@ -319,6 +321,61 @@ def run_case(
         assert result.components["reward.team.terminal_outcome"] == -10.0
         assert result.charged_ticks == 9000
         reason = "early loss remained worse than full-horizon idle survival"
+    elif case == "idle-quality-cap":
+        result = apply(
+            _team(0),
+            _team(9000),
+            advanced_ticks=9000,
+            coordination_metrics={
+                "agent_ticks": 27000,
+                "idle_agent_ticks": 27000,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+        )
+        expected = float(
+            quality_reward.get(
+                "idle_agent_tick_cap",
+                27000 * float(quality_reward["idle_agent_tick_cost"]),
+            )
+        )
+        assert result.components["reward.penalty.team_idle_ticks"] == -expected
+        reason = f"idle quality cost stopped at its exact -{expected:g} cap"
+    elif case == "idle-after-cap":
+        idle_cost = float(quality_reward["idle_agent_tick_cost"])
+        idle_cap = float(quality_reward.get("idle_agent_tick_cap", 27000 * idle_cost))
+        cap_ticks = min(27000, int(round(idle_cap / idle_cost)))
+        first_tick = min(9000, (cap_ticks + 2) // 3)
+        first_agent_ticks = first_tick * 3
+        first_idle_ticks = min(cap_ticks, first_agent_ticks)
+        first = apply(
+            _team(0),
+            _team(first_tick),
+            advanced_ticks=first_tick,
+            coordination_metrics={
+                "agent_ticks": first_agent_ticks,
+                "idle_agent_ticks": first_idle_ticks,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+        )
+        after_tick = min(9000, first_tick + 1)
+        after_agent_ticks = after_tick * 3
+        after = apply(
+            _team(first_tick),
+            _team(after_tick),
+            advanced_ticks=after_tick - first_tick,
+            coordination_metrics={
+                "agent_ticks": after_agent_ticks,
+                "idle_agent_ticks": min(after_agent_ticks, first_idle_ticks + 3),
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+        )
+        assert first.components["reward.penalty.team_idle_ticks"] == -idle_cap
+        assert after.components["reward.penalty.team_idle_ticks"] == 0.0
+        assert after.total <= 0.0
+        reason = "post-cap idle ticks produced neither repeated cost nor positive reward"
     elif case == "quality-chunk-size":
         whole_events = [
             {"act": "ABANDON", "agent_id": 1, "reason_code": "blocked_replan"},

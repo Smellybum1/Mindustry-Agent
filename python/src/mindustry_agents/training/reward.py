@@ -220,11 +220,17 @@ class SelectorReward:
         idle_delta = counters["idle_agent_ticks"] - self.prior_quality_counters.get(
             "idle_agent_ticks", 0
         )
+        idle_cost = float(self.quality_reward["idle_agent_tick_cost"])
+        idle_cap = float(
+            self.quality_reward.get("idle_agent_tick_cap", tick_cap * 3 * idle_cost)
+        )
+        if idle_cost < 0.0 or idle_cap < 0.0:
+            raise RewardAuditError("reward v2 idle cost/cap is invalid")
         self._quality_charge(
             components,
             "reward.penalty.team_idle_ticks",
-            idle_delta * float(self.quality_reward["idle_agent_tick_cost"]),
-            cap=tick_cap * 3 * float(self.quality_reward["idle_agent_tick_cost"]),
+            idle_delta * idle_cost,
+            cap=idle_cap,
         )
         for counter, component, cost_key, cap_key in (
             (

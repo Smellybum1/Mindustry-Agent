@@ -31,6 +31,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0024](ADR-0024-scorecard-v2-forced-abandonment.md) | Scorecard v2 forced-abandonment semantics |
 | [0025](ADR-0025-v14-corrected-abandon-boundary-retraining.md) | V14 corrected-abandon-boundary retraining |
 | [0026](ADR-0026-v15-stronger-quality-pressure.md) | V15 stronger idle and abandonment pressure |
+| [0027](ADR-0027-v16-high-slope-capped-idle.md) | V16 high-slope capped idle pressure |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

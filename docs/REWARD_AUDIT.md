@@ -227,6 +227,20 @@ full-horizon idle, cumulative chunk invariance, idle busywork, rollback, caps,
 and forced-abandon exclusions. Status: implemented-approved-v15 pre-training,
 2026-07-21.
 
+## V16 explicit idle cap
+
+ADR-0027 adds an optional `idle_agent_tick_cap` to reward v2. Its absence
+preserves the V12-V15 coefficient-derived maximum exactly. V16 alone sets idle
+cost to `-0.001` per idle agent tick and caps that component at `-5.0`; all
+other V15 components and caps remain unchanged. Negative idle cost/cap values
+fail the run.
+
+The exact V16 config is SHA-256 `13bea4f89ac396f7...`. Its adversary report is
+`ac35e476ae77fbd6...`; all 39 cases pass. New `idle-quality-cap` and
+`idle-after-cap` cases prove exact saturation and zero post-cap charge, while
+`idle-early-loss`, chunk invariance, busywork, rollback, and forced exclusions
+remain green. Status: implemented-approved-v16 pre-training, 2026-07-21.
+
 ## Cross-component adversarial matrix
 
 These CI-runnable cases are mandatory before changing any status to approved:

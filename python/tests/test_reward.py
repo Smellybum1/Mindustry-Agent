@@ -116,6 +116,52 @@ class TestSelectorRewardAdversaries(unittest.TestCase):
         self.assertEqual(result.components["reward.penalty.communication"], -1.0)
         self.assertEqual(result.components["reward.penalty.team_abandonment"], -2.0)
 
+    def test_reward_v2_supports_explicit_idle_cap_and_rejects_negative_values(self):
+        capped = {**QUALITY, "idle_agent_tick_cost": 0.001, "idle_agent_tick_cap": 0.5}
+        reward = SelectorReward(quality_reward=capped)
+        first = reward.observe(
+            team(),
+            team(1000),
+            advanced_ticks=1000,
+            tick_cap=9000,
+            coordination_metrics={
+                "agent_ticks": 3000,
+                "idle_agent_ticks": 3000,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+        )
+        self.assertEqual(first.components["reward.penalty.team_idle_ticks"], -0.5)
+        after = reward.observe(
+            team(1000),
+            team(1001),
+            advanced_ticks=1,
+            tick_cap=9000,
+            coordination_metrics={
+                "agent_ticks": 3003,
+                "idle_agent_ticks": 3003,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+        )
+        self.assertEqual(after.components["reward.penalty.team_idle_ticks"], 0.0)
+
+        with self.assertRaisesRegex(RewardAuditError, "idle cost/cap"):
+            SelectorReward(
+                quality_reward={**QUALITY, "idle_agent_tick_cap": -1.0}
+            ).observe(
+                team(),
+                team(1),
+                advanced_ticks=1,
+                tick_cap=9000,
+                coordination_metrics={
+                    "agent_ticks": 3,
+                    "idle_agent_ticks": 3,
+                    "duplicate_work_incidents": 0,
+                    "announced_messages": 0,
+                },
+            )
+
     def test_every_named_audit_case_emits_complete_machine_evidence(self):
         reports = [run_case(case) for case in CASES]
         self.assertTrue(all(report["pass"] for report in reports))

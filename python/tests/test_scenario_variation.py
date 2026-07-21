@@ -453,3 +453,48 @@ def test_v15_quality_pressure_and_dev_v11_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v11"] == path.name
+
+
+def test_v16_capped_idle_pressure_and_dev_v12_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v12.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v12"
+    assert confirmation["seed_set_version"] == 12
+    assert confirmation["seeds"] == list(range(121001, 121161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v15 = json.loads(
+        (training_dir / "m8-selector-v15-quality-pressure.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    v16 = json.loads(
+        (training_dir / "m8-selector-v16-capped-idle-pressure.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert v16.pop("candidate_version") == "v16"
+    assert v16.pop("quality_intervention") == "high_slope_capped_idle_v1"
+    assert v16.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v12.json"
+    )
+    assert v15.pop("candidate_version") == "v15"
+    assert v15.pop("quality_intervention") == (
+        "idle_x3_and_nonforced_abandon_x2_5_v1"
+    )
+    assert v15.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v11.json"
+    )
+    assert v16["quality_reward"].pop("idle_agent_tick_cost") == 0.001
+    assert v16["quality_reward"].pop("idle_agent_tick_cap") == 5.0
+    assert v15["quality_reward"].pop("idle_agent_tick_cost") == 0.0003
+    assert v16 == v15
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v12"] == path.name

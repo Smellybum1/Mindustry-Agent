@@ -338,6 +338,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   preflight rejects V15 because permanent-greedy idle is definitively worse;
   recovery and matched idle are uncertain. Dev-v11 is unopened, held-out-v4 is
   sealed, and M8.5 remains unmet.
+- **V16 precommit**: V15's lowest-idle 10/10 checkpoint is still 0.16449283, so
+  ranking cannot meet the permanent comparator. ADR-0027 adds a backward-
+  compatible optional idle cap; V16 uses cost `0.001` capped at `5.0`, keeps
+  V15's abandonment pressure and every other construction field fixed, and
+  retains early-loss ordering. All 39 exact-config adversaries and 133 Python
+  tests pass. Dev-v11 is retired unopened; dev-v12 is frozen at disjoint roots
+  `121001..121160`. Held-out-v4 remains sealed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
