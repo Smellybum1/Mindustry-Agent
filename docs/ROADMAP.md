@@ -1331,6 +1331,21 @@ hash is `ba963bea1d0d303b...`. Replica B did not start, dev-v24 remained unopene
 and is retired, held-out-v4 stays sealed, and V28 is rejected before reusable
 preflight. M8.5 remains unmet.
 
+ADR-0040 precommits V29 as a successful-corpus diversity intervention. V28
+reduced disagreement margin without changing its 134/401 actions, so increasing
+strength on the same 121 labels is rejected. Before any outcomes are observed,
+V29 freezes a separate 256-root train-only teacher set `291001..291256`. All
+teacher episodes and outcomes are archived; only complete wins enter the same
+eight-epoch warmup and one-epoch-per-update rehearsal. PPO remains exactly V28:
+the original 64 roots, 2,048 episodes, 32 updates, reward, runtime, model,
+optimizer values, RNG values, online coefficient, selection, and inference.
+Dev-v24 is retired unopened. Dev-v25 freezes disjoint roots `251001..251160` and
+remains unopened; held-out-v4 stays sealed. No teacher outcomes/model work have
+been observed. All 44 exact-config adversaries, 154 Python tests, pinned build,
+5/5 candidate gate, smoke, determinism, and negative replay pass. Config/
+adversary hashes are `a40a8772ef5392fb...` and `cac12af7f0861dea...`. A committed
+packet is required before V29 collection/model work; M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -590,6 +590,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   margin `2.24436055 -> 1.81065121` but does not flip actions; frontier hash is
   `ba963bea1d0d303b...`. Replica B did not start, dev-v24 is retired unopened,
   held-out-v4 stays sealed, and V28 stops before reusable preflight.
+- **V29 precommit in validation**: ADR-0040 freezes a separate 256-root
+  train-only teacher corpus `291001..291256` before any outcomes are observed.
+  It keeps V28's exact warmup/rehearsal strengths and PPO construction but
+  collects teacher episodes from the auxiliary set, archives every outcome, and
+  filters only complete wins into CE. PPO still uses the original 64 roots for
+  2,048 episodes. Dev-v24 is retired unopened; dev-v25 freezes roots
+  `251001..251160` and remains unopened; held-out-v4 stays sealed. Complete gates
+  pass: 44 exact-config adversaries, 154 Python tests, pinned build, 5/5
+  candidate gate, smoke, determinism, and negative replay. Config/adversary
+  hashes are `a40a8772ef5392fb...` and `cac12af7f0861dea...`. Commit the packet
+  before collecting V29 teacher outcomes or training.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).

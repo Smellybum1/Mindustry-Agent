@@ -1057,3 +1057,66 @@ def test_v28_successful_teacher_rehearsal_and_dev_v24_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v24"] == path.name
+
+
+def test_v29_diverse_teacher_corpus_and_dev_v25_are_precommitted():
+    teacher_path = DEFAULT_SEED_SET.with_name(
+        "bootstrap-defense-v1-teacher-train-v1.json"
+    )
+    teacher = _load_seed_set(teacher_path)
+    assert teacher["seed_set_id"] == "bootstrap-defense-v1-teacher-train-v1"
+    assert teacher["seed_set_version"] == 1
+    assert teacher["split"] == "train"
+    assert teacher["seeds"] == list(range(291001, 291257))
+    teacher_seeds = set(teacher["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != teacher_path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert teacher_seeds.isdisjoint(document["seeds"]), other.name
+
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v25.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v25"
+    assert confirmation["seed_set_version"] == 25
+    assert confirmation["seeds"] == list(range(251001, 251161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v28 = json.loads(
+        (
+            training_dir
+            / "m8-selector-v28-successful-teacher-rehearsal.json"
+        ).read_text(encoding="utf-8")
+    )
+    v29 = json.loads(
+        (
+            training_dir
+            / "m8-selector-v29-diverse-successful-teacher-corpus.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert v29.pop("candidate_version") == "v29"
+    assert v29.pop("quality_intervention") == (
+        "unsaturated_idle_plus_diverse_successful_teacher_trajectory_rehearsal_v3"
+    )
+    assert v29.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v25.json"
+    )
+    assert v29.pop("teacher_warmup_seed_set").endswith(
+        "bootstrap-defense-v1-teacher-train-v1.json"
+    )
+    assert v28.pop("candidate_version") == "v28"
+    assert v28.pop("quality_intervention") == (
+        "unsaturated_idle_plus_successful_teacher_trajectory_rehearsal_v2"
+    )
+    assert v28.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v24.json"
+    )
+    assert v29 == v28
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v25"] == path.name

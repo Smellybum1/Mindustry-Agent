@@ -44,6 +44,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0037](ADR-0037-v26-final-full-boundary-teacher-step.md) | V26 final full-boundary teacher step |
 | [0038](ADR-0038-v27-successful-teacher-trajectory-warmup.md) | V27 successful teacher-trajectory warmup |
 | [0039](ADR-0039-v28-successful-teacher-trajectory-rehearsal.md) | V28 successful teacher-trajectory rehearsal |
+| [0040](ADR-0040-v29-diverse-successful-teacher-corpus.md) | V29 diverse successful teacher corpus |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

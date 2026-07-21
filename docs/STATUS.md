@@ -1311,6 +1311,18 @@ repository-evidence mapping used for the M6 audit is:
   `2.24436055 -> 1.81065121`. Losses remain 2004/2009 and frontier hash is
   `ba963bea1d0d303b...`. Replica B did not start, dev-v24 is retired unopened,
   held-out-v4 stays sealed, and V28 is rejected before preflight.
+- ADR-0040 precommits V29 as a corpus-diversity test, not another strength step.
+  It freezes 256 globally disjoint train-only teacher roots `291001..291256`
+  before observing any outcomes. Teacher warmup/rehearsal uses that auxiliary
+  set, while V28's 64-root/2,048-episode PPO construction, reward, runtime,
+  model, optimizer values, RNG values, online teacher coefficient, selection,
+  and inference remain exact. All 256 outcomes are archived; only successful
+  trajectories enter CE. Dev-v24 is retired unopened; dev-v25 freezes roots
+  `251001..251160` and remains unopened; held-out-v4 stays sealed. V29
+  teacher outcomes/model work remain unobserved. All 44 exact-config
+  adversaries, 154 Python tests, pinned build, 5/5 candidate gate, smoke,
+  determinism, and negative replay pass. Config/adversary hashes are
+  `a40a8772ef5392fb...` and `cac12af7f0861dea...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
