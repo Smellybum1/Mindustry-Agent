@@ -200,6 +200,37 @@ class TestPpoSelector(unittest.TestCase):
             {"agent_id": 0, "task_action": {"type": "WAIT"}},
         )
 
+    def test_selected_candidate_diagnostics_are_bounded_and_behavior_neutral(self):
+        from mindustry_agents.training.ppo_selector import (
+            _selected_candidate_diagnostics,
+        )
+
+        candidate = {
+            "task_type": "SUPPLY_TURRET",
+            "target": "entity #75",
+            "estimated_cost": {"copper": 15},
+            "utility_features": {
+                "resource_cost": 0.75,
+                "urgency": 0.9,
+                "switching_cost": 0.2,
+            },
+            "semantic_task_active": True,
+        }
+        self.assertEqual(
+            _selected_candidate_diagnostics([candidate], 0),
+            {
+                "candidate_index": 0,
+                "task_type": "SUPPLY_TURRET",
+                "target": "entity #75",
+                "resource_cost": 0.75,
+                "urgency": 0.9,
+                "switching_cost": 0.2,
+                "estimated_copper": 15,
+                "semantic_task_active": True,
+            },
+        )
+        self.assertIsNone(_selected_candidate_diagnostics([candidate], 9))
+
     def test_gae_lambda_decay_depends_on_elapsed_ticks_not_boundary_count(self):
         import torch
 

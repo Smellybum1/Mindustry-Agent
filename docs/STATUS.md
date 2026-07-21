@@ -974,6 +974,12 @@ repository-evidence mapping used for the M6 audit is:
   V13 is rejected, dev-v9 is consumed, and held-out-v4 remains sealed.
   Records/aggregate/report hashes are `b4caeaba900f047a...`,
   `46f940a8361b4dad...`, and `a4dd2ecad7c485de...`.
+- Reusable dev-v1 analysis, never dev-v9 episode inspection, attributes all 23
+  non-forced V13 abandons to learned seat 0's `resources_short_replan`. Of
+  those, 21 are `SUPPLY_TURRET` selections with authoritative resource cost
+  1.0; successful supplies average 0.144 resource cost. Behavior-neutral
+  selected-candidate diagnostics now record the bounded evidence needed to
+  audit a successor without entering the action/state replay digest.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

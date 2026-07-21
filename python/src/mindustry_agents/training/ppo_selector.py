@@ -275,6 +275,32 @@ def _canonical_scripted_action(
     return action
 
 
+def _selected_candidate_diagnostics(
+    candidates: list[dict[str, Any]], selected_index: int
+) -> dict[str, Any] | None:
+    """Return behavior-neutral evidence for the selected catalog candidate."""
+
+    if (
+        selected_index < 0
+        or selected_index >= len(candidates)
+        or selected_index >= 8
+    ):
+        return None
+    candidate = candidates[selected_index]
+    utility = candidate.get("utility_features", {})
+    estimated_cost = candidate.get("estimated_cost", {})
+    return {
+        "candidate_index": selected_index,
+        "task_type": str(candidate.get("task_type", "")),
+        "target": str(candidate.get("target", "")),
+        "resource_cost": float(utility.get("resource_cost", 0.0)),
+        "urgency": float(utility.get("urgency", 0.0)),
+        "switching_cost": float(utility.get("switching_cost", 0.0)),
+        "estimated_copper": int(estimated_cost.get("copper", 0)),
+        "semantic_task_active": bool(candidate.get("semantic_task_active", False)),
+    }
+
+
 def rollout_episode(
     env: RlServerProcess,
     model: SelectorActorCritic,
@@ -467,6 +493,9 @@ def rollout_episode(
                 "action_index": selected_index,
                 "teacher_action": scripted_action["task_action"],
                 "teacher_action_index": teacher_index,
+                "selected_candidate_diagnostics": _selected_candidate_diagnostics(
+                    observations[LEARNED_SEAT]["task_candidates"], selected_index
+                ),
                 "policy_loss_mask": transitions[-1].policy_loss_mask,
                 "raw_logits": [float(value) for value in raw_logits.tolist()],
                 "masked_logits": [float(value) for value in masked_logits.tolist()],

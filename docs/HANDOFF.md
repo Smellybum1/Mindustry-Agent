@@ -280,6 +280,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   recovery, and abandonment fail. V13 is rejected, dev-v9 is consumed, and
   held-out-v4 remains sealed. Records/aggregate/report hashes are
   `b4caeaba900f047a...`, `46f940a8361b4dad...`, and `a4dd2ecad7c485de...`.
+- **Permitted successor evidence**: reusable dev-v1 traces attribute all 23
+  non-forced V13 abandons to learned seat 0 resource-short replans; 21 are
+  saturated-resource turret-supply selections. Selected-candidate diagnostics
+  now expose bounded resource/urgency/switching evidence without changing the
+  replay action/state digest. Do not inspect dev-v9 episode records for tuning.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
