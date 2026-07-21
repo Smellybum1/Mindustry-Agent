@@ -856,6 +856,12 @@ repository-evidence mapping used for the M6 audit is:
   training replicas and shares validation with the legacy interpolation path.
   It rejects manifest, checkpoint, config, update, model-state, commit, or dirt
   mismatches before promotion evaluation.
+- V6's full dev-v1 preflight beats permanent random/greedy and matched
+  random/greedy by observed win rate, with reward/lineage/repository gates
+  passing. It is still ineligible because idle, recovery, and abandonment
+  scorecard intervals cross zero. ADR-0014 freezes a 40-root, globally disjoint
+  dev-v2 one-way confirmation with an exclusive attempt. It has not been run;
+  held-out-v2 remains unopened.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

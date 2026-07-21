@@ -816,6 +816,12 @@ precommitted continuation bar. Direct reproducible-checkpoint lineage is now
 validated alongside legacy interpolation. The full dev scorecard preflight is
 next; held-out-v2 remains unopened.
 
+The dev-v1 preflight beats every win-rate comparator but remains ineligible
+because three favorable scorecard means have ten-pair intervals crossing zero.
+ADR-0014 freezes a disjoint 40-root dev-v2 one-way confirmation for V6, with an
+exclusive attempt marker and freshly matched permanent baselines. Failure
+rejects V6; success is required before held-out-v2 can be opened.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

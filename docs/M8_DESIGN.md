@@ -331,6 +331,19 @@ same training commit, and no unexpected dirt. Promotion accepts this schema or
 the legacy interpolation schema through one validator. The lineage must be
 constructed on the frozen evaluator commit before dev preflight.
 
+The first full V6 dev-v1 preflight beats all four win-rate comparators, with
+learned 9/10 versus permanent greedy 8/10 and matched greedy 1/10. Reward,
+checkpoint, lineage, and repository gates pass. The scorecard means favor V6,
+but idle, recovery, and abandonment intervals cross zero with only ten pairs,
+so the result is not eligible for held-out.
+
+ADR-0014 freezes a one-way 40-root dev-v2 confirmation set before execution.
+It is disjoint from every governed split and is used only to resolve V6's
+scorecard uncertainty, never to select or tune a checkpoint. The confirmation
+runner creates an exclusive attempt marker and uses freshly matched permanent
+baselines. Failure rejects V6; success is still only permission to invoke the
+separate held-out-v2 final.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

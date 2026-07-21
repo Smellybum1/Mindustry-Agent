@@ -18,6 +18,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0011](ADR-0011-rl-dependency-boundary.md) | RL dependencies are training-only and Linux CPU locked |
 | [0012](ADR-0012-scenario-variation-and-seed-governance.md) | Bounded scenario variation and seed governance |
 | [0013](ADR-0013-post-failure-held-out-renewal.md) | Post-failure held-out renewal |
+| [0014](ADR-0014-one-way-dev-confirmation.md) | One-way development confirmation after uncertain scorecards |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

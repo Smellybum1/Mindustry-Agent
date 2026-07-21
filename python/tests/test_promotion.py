@@ -1,4 +1,6 @@
+import tempfile
 import unittest
+from pathlib import Path
 
 from mindustry_agents.evaluation.ladder import aggregate_records
 from mindustry_agents.evaluation.promotion import (
@@ -26,6 +28,15 @@ def _record(policy, seed, win, score):
 
 
 class TestPromotion(unittest.TestCase):
+    def test_confirmation_attempt_marker_is_exclusive(self):
+        from mindustry_agents.training.promotion import _create_exclusive_attempt
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "attempt.json"
+            _create_exclusive_attempt(path, {"status": "started"})
+            with self.assertRaises(FileExistsError):
+                _create_exclusive_attempt(path, {"status": "started"})
+
     def test_preflight_requires_all_win_comparators_and_paired_scorecard(self):
         records = []
         for seed in range(10):

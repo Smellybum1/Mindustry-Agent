@@ -36,3 +36,8 @@ exactly and selected update 31 at 9/10 dev wins; direct-checkpoint lineage is
 implemented. Construct lineage and run the full frozen dev scorecard preflight
 before deciding whether v2 is eligible. Do not treat the 9/10 screen alone as
 held-out authorization.
+
+The dev-v1 preflight passed all win-rate comparisons but failed scorecard
+certainty. ADR-0014 now freezes `bootstrap-defense-v1-dev-v2` as a 40-root
+one-way V6 confirmation with an exclusive attempt. Refresh permanent baselines
+on dev-v2 and run that confirmation before considering held-out-v2.

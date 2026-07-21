@@ -145,3 +145,19 @@ def test_m8_long_diverse_recipe_changes_only_precommitted_cycle_budget():
     assert v6["held_out_seed_set_version"] == 2
     v3["training_cycles"] = 32
     assert v3 == v6
+
+
+def test_v6_confirmation_dev_v2_is_exact_and_globally_disjoint():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v2.json")
+    confirmation = json.loads(path.read_text(encoding="utf-8"))
+
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v2"
+    assert confirmation["seed_set_version"] == 2
+    assert confirmation["split"] == "dev"
+    assert confirmation["seeds"] == list(range(21001, 21041))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other == path:
+            continue
+        document = json.loads(other.read_text(encoding="utf-8"))
+        assert confirmation_seeds.isdisjoint(document["seeds"]), other.name

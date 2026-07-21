@@ -33,6 +33,7 @@ from mindustry_agents.tools.utility_expert import run_utility_episode
 SEED_SET_FILES = {
     "fixed": "bootstrap-defense-v0-fixed-v1.json",
     "dev": "bootstrap-defense-v1-dev-v1.json",
+    "dev-v2": "bootstrap-defense-v1-dev-v2.json",
     "held-out": "bootstrap-defense-v1-held-out-v1.json",
 }
 POLICY_VERSIONS = {

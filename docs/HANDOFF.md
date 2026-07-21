@@ -195,6 +195,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   per root. Two pinned runs reproduce exactly and select update 31 at 9/10 dev
   wins (`0dfdcf9b5273ae3f...`, full-run `54476ef63e31e06d...`). Direct-checkpoint
   lineage is implemented; full dev scorecard preflight is next. V2 is unopened.
+- **V6 dev preflight**: all four win-rate comparisons pass, but idle, recovery,
+  and abandonment intervals are uncertain on ten dev-v1 pairs. ADR-0014 freezes
+  a one-way 40-root dev-v2 confirmation with an exclusive attempt and refreshed
+  permanent baselines. It must pass before held-out-v2 can be opened.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -368,7 +372,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0013` (do not relitigate).
+See `docs/decisions/ADR-0001..0014` (do not relitigate).
 
 ## Deviations from the brief in this scaffold
 

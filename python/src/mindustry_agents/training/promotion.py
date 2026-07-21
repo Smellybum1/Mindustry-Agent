@@ -49,6 +49,7 @@ CANDIDATE_POLICY = "learned-selector-v2"
 GREEDY_MIXED = "greedy-mixed-seat0"
 RANDOM_MIXED = "random-mixed-seat0"
 PERMANENT_BASELINES = ("random-valid", "greedy-utility")
+CONFIRMATION_ATTEMPT_SCHEMA = "selector_promotion_dev_confirmation_attempt_v1"
 ALLOWED_DIRTY_PATHS = frozenset(
     {
         "AGENTS.md",
@@ -252,6 +253,12 @@ def _load_baselines(path: Path, seed_set: dict[str, Any]) -> list[dict[str, Any]
     ]
 
 
+def _create_exclusive_attempt(path: Path, evidence: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(evidence, indent=2, sort_keys=True) + "\n")
+
+
 def main(argv: list[str] | None = None) -> int:
     root = repo_root()
     parser = argparse.ArgumentParser(description="M8.5 mixed-seat dev preflight")
@@ -286,6 +293,7 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=root / "runs/m8-promotion-preflight.json",
     )
+    parser.add_argument("--exclusive-attempt", type=Path)
     parser.add_argument("--java", default="java")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     args = parser.parse_args(argv)
@@ -312,6 +320,40 @@ def main(argv: list[str] | None = None) -> int:
     reward_passed = bool(reward_report.get("pass", False)) and all(
         item.get("pass", False) for item in reward_report.get("cases", [])
     )
+    baseline_aggregates = _load_baselines(args.baseline_aggregate, seed_set)
+    if len(baseline_aggregates) != len(PERMANENT_BASELINES):
+        raise RuntimeError("permanent dev baselines are missing or stale")
+    repository = _git_evidence(root)
+    unexpected_dirty = [
+        line
+        for line in repository["status"]
+        if line[3:].replace("\\", "/") not in ALLOWED_DIRTY_PATHS
+    ]
+    attempt = None
+    if args.exclusive_attempt is not None:
+        output_paths = (
+            args.output.resolve(),
+            args.aggregate_output.resolve(),
+            args.preflight_output.resolve(),
+        )
+        existing = [str(path) for path in output_paths if path.exists()]
+        if args.exclusive_attempt.resolve().exists() or existing:
+            parser.error(
+                "dev confirmation is one-way; attempt/output already exists"
+            )
+        if unexpected_dirty:
+            raise ValueError("dev confirmation requires a frozen repository")
+        attempt = {
+            "schema": CONFIRMATION_ATTEMPT_SCHEMA,
+            "status": "started",
+            "repository_commit": repository["commit"],
+            "checkpoint_sha256": checkpoint_sha256,
+            "config_sha256": _sha256(args.config.resolve()),
+            "lineage_manifest_sha256": _sha256(args.lineage_manifest.resolve()),
+            "seed_set_id": seed_set["seed_set_id"],
+            "seed_set_version": int(seed_set["seed_set_version"]),
+        }
+        _create_exclusive_attempt(args.exclusive_attempt.resolve(), attempt)
 
     records = []
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
@@ -349,9 +391,6 @@ def main(argv: list[str] | None = None) -> int:
                 )
 
     mixed_aggregates = aggregate_records(records)
-    baseline_aggregates = _load_baselines(args.baseline_aggregate, seed_set)
-    if len(baseline_aggregates) != len(PERMANENT_BASELINES):
-        raise RuntimeError("permanent dev baselines are missing or stale")
     preflight = promotion_preflight(
         records,
         [*baseline_aggregates, *mixed_aggregates],
@@ -360,12 +399,6 @@ def main(argv: list[str] | None = None) -> int:
         scorecard_baseline=GREEDY_MIXED,
         reward_adversaries_passed=reward_passed,
     )
-    repository = _git_evidence(root)
-    unexpected_dirty = [
-        line
-        for line in repository["status"]
-        if line[3:].replace("\\", "/") not in ALLOWED_DIRTY_PATHS
-    ]
     preflight.update(
         {
             "checkpoint": {
@@ -415,6 +448,20 @@ def main(argv: list[str] | None = None) -> int:
         json.dumps(preflight, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
+    if attempt is not None:
+        attempt.update(
+            {
+                "status": "completed",
+                "records_sha256": _sha256(args.output.resolve()),
+                "aggregate_sha256": _sha256(args.aggregate_output.resolve()),
+                "preflight_sha256": _sha256(args.preflight_output.resolve()),
+                "eligible_for_held_out": preflight["eligible_for_held_out"],
+            }
+        )
+        args.exclusive_attempt.resolve().write_text(
+            json.dumps(attempt, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
     for item in preflight["win_rate_comparisons"]:
         print(
             f"{item['candidate']} vs {item['baseline']}: {item['status']}"
