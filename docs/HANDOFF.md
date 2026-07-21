@@ -258,8 +258,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   idle, duplicate, announcement, and non-forced team-abandonment components.
   Production accounting and trace telemetry are implemented; all 37 reward
   adversaries and the 121-test Python suite pass, authorizing training. V12
-  uses V6's long recipe, names held-out-v4, and must reach 9/10 dev-v1 with idle
-  below 0.25. Dev-v8 is a new disjoint 160-root one-way confirmation set.
+  uses V6's long recipe and names held-out-v4. Two exact 2,048-episode runs
+  reproduce at update 28 with 10/10 dev-v1 wins, checkpoint
+  `a10752ccf12b513c...`, model state `64846932b7e2d948...`, replay
+  `6f99df0a3243de3f...`, and full-run digest `6d8912cbc00766c6...`.
+  Mean idle is 0.26628148, missing the precommitted `<0.25` bar, so V12 is
+  rejected. Dev-v8 is unopened and held-out-v4 remains sealed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

@@ -234,3 +234,8 @@ loss, busywork, mask corruption, readiness loss, unsafe telemetry, and farming
 exclusions. Each case records its reward schema, action/state hashes,
 structured events, coordination counters, every applicable component, total
 return, and pass/fail reason. Reward totals alone are insufficient evidence.
+
+V12 runs A and B use the approved v2 reward and reproduce bit-for-bit at
+update 28. The selected policy wins 10/10 dev-v1 episodes but records mean idle
+0.26628148, above the precommitted `<0.25` continuation threshold. This rejects
+the candidate before dev-v8; it does not invalidate the accumulator audit.

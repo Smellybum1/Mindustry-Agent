@@ -921,8 +921,11 @@ remains sealed.
 
 The production v2 accumulator, rollout telemetry, schema plumbing, and all 37
 v1/v2 reward adversaries pass on 2026-07-21, together with the 121-test Python
-suite. The reward gate is satisfied and V12 training is authorized; no V12 run
-has started yet.
+suite. Two exact 2,048-episode V12 runs then reproduce bit-for-bit at update 28:
+10/10 dev-v1 wins, checkpoint `a10752ccf12b513c...`, replay
+`6f99df0a3243de3f...`, and full-run digest `6d8912cbc00766c6...`. Mean idle is
+0.26628148, which misses the precommitted `<0.25` continuation bar. V12 is
+rejected before confirmation; dev-v8 and held-out-v4 remain unopened.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

@@ -948,8 +948,12 @@ repository-evidence mapping used for the M6 audit is:
   telemetry, and schema plumbing are implemented. All 37 reward adversaries
   and the 121-test Python suite pass, so the reward gate authorizes training.
   V12 otherwise uses V6's long recipe, names held-out-v4, and must reach 9/10
-  dev-v1 with idle below 0.25. Dev-v8 is frozen as a disjoint 160-root one-way
-  confirmation set. V12 has not been trained.
+  dev-v1 with idle below 0.25. Two exact 2,048-episode runs reproduce at update
+  28 with 10/10 dev wins, but mean idle is 0.26628148, so V12 is rejected before
+  confirmation. Checkpoint/model-state/replay/full-run hashes are
+  `a10752ccf12b513c...`, `64846932b7e2d948...`, `6f99df0a3243de3f...`,
+  and `6d8912cbc00766c6...`. Dev-v8 remains unopened and held-out-v4 remains
+  sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
