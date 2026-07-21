@@ -391,6 +391,25 @@ before the already frozen, globally disjoint 40-root dev-v4 set is opened for
 one confirmation. A started attempt consumes dev-v4. Only full eligibility can
 authorize held-out-v2; dev-v2 and dev-v3 remain consumed.
 
+V8 constructions match checkpoint `1f3c4525fb5fd10d...`, model state
+`b0ff1497ce1ae702...`, and lineage `8bc6ee1a9719e78d...`. Its one-way dev-v4
+confirmation is fully eligible at 37/40 wins, with every paired scorecard
+passing. The exclusive held-out-v2 final then completes once at 36/40 wins
+(95% CI `[0.8,0.975]`), CI-separated from permanent random 19/40
+(`[0.325,0.625]`) and permanent greedy 23/40 (`[0.425,0.725]`), and above
+matched greedy 5/40.
+
+V8 is nevertheless **not promoted**. Versus permanent greedy, announcements
+are uncertain and idle (`+0.2710`) plus abandonment (`+0.1893`) regress with
+separated intervals; recovery is uncertain. Versus matched greedy, idle remains
+uncertain. Win superiority cannot override teammate-quality gates. The v2
+attempt and artifacts are immutable, and individual outcomes cannot tune a
+successor.
+
+ADR-0017 freezes held-out-v3 before any new model work: 80 globally disjoint
+roots, development-loader refusal, and one future exclusive final only after a
+new candidate passes newly governed confirmation. Held-out-v2 is consumed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

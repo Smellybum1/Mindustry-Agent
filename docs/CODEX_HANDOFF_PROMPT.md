@@ -52,6 +52,11 @@ explicit cross-commit lineage. Its two constructions matched and its dev-v3
 result is recorded below; held-out-v2 stayed sealed.
 
 V7 completed dev-v3 at 35/40 but failed idle certainty, so it is rejected and
-dev-v3 consumed. ADR-0016 precommits V8 as exactly one `-0.25` WAIT-logit bias
-adjustment to V7. Construct it twice, require exact lineage, then run dev-v1.
-Dev-v4 is frozen for one confirmation only if V8 qualifies; v2 stays sealed.
+dev-v3 consumed. ADR-0016 precommitted V8 as exactly one `-0.25` WAIT-logit bias
+adjustment to V7; its completed result is recorded below.
+
+V8 qualified on dev-v4 and consumed held-out-v2 exactly once. It won 36/40 and
+CI-beat both permanent baselines, but failed teammate-quality gates, so it is
+not promoted. Do not rerun v2 or inspect individual outcomes. ADR-0017 freezes
+held-out-v3 (80 roots) before any new model work; the next candidate must name
+v3 and use newly governed train/dev confirmation evidence. M9 remains gated.

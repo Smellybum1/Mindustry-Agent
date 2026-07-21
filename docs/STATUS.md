@@ -879,7 +879,20 @@ repository-evidence mapping used for the M6 audit is:
 - ADR-0016 freezes V8 as exactly one `-0.25` WAIT-logit bias adjustment to V7.
   Masks remain authoritative and no reward or lifecycle behavior changes. A
   new disjoint 40-root dev-v4 set is frozen for one confirmation after dev-v1.
-  V8 has not been constructed; held-out-v2 remains sealed.
+  Its construction and final result are recorded below.
+- V8 constructions match checkpoint `1f3c4525fb5fd10d...` and lineage
+  `8bc6ee1a9719e78d...`. Dev-v4 is fully eligible at 37/40 wins with every
+  paired scorecard passing. The exclusive held-out-v2 final completes once:
+  V8 36/40, permanent random 19/40, permanent greedy 23/40, matched greedy
+  5/40. Win-rate CI gates pass, but permanent-greedy idle and abandonment
+  regress, announcements/recovery are uncertain, and matched-greedy idle is
+  uncertain. Status: **not promoted**. Held-out-v2 is consumed.
+- Final v2 artifacts: records SHA `c291e704b2a93a65...`, aggregate
+  `fd2acc01813ea147...`, report `71e83f38562ec889...`. Individual outcomes and
+  traces must not inform policy revision.
+- ADR-0017 freezes an 80-root, globally disjoint held-out-v3 contract before
+  further model work. Development loaders refuse it and it permits one future
+  exclusive final after a newly governed candidate/confirmation path.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

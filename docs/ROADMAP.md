@@ -840,7 +840,19 @@ permanent greedy 30/40. Every scorecard except idle passes; idle is favorable
 on average but its interval crosses zero, so V7 is rejected and dev-v3 is
 consumed. ADR-0016 precommits V8 as a one-coordinate `-0.25` WAIT-logit bias
 adjustment to V7, with no reward/mask/lifecycle change. Dev-v4 is frozen as a
-new disjoint 40-root one-way confirmation. V8 is not yet constructed.
+new disjoint 40-root one-way confirmation. Its result is recorded below.
+
+V8 constructions match exactly and dev-v4 is fully eligible at 37/40 wins with
+all scorecards passing. Its exclusive held-out-v2 final completes at 36/40 and
+strictly CI-beats permanent random (19/40) and greedy (23/40), but V8 is **not
+promoted**: idle and abandonment regress versus permanent greedy,
+announcements/recovery are uncertain, and matched-greedy idle is uncertain.
+Held-out-v2 is consumed and cannot be rerun.
+
+ADR-0017 freezes `bootstrap-defense-v1-held-out-v3` before further model work:
+80 globally disjoint roots and one future exclusive final. A new candidate must
+name v3 and use newly governed train/dev confirmation evidence. M8.5 remains
+unmet and M9 remains gated.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

@@ -212,7 +212,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   idle remains favorable but uncertain. V7 is rejected and dev-v3 consumed.
 - **V8 precommit**: ADR-0016 freezes a single `-0.25` WAIT-logit bias adjustment
   to V7, with masks/reward/lifecycle unchanged. Dev-v4 is a new disjoint
-  40-root, one-way confirmation set. V8 is not yet constructed.
+  40-root, one-way confirmation set. Its result follows.
+- **V8 final**: exact checkpoint `1f3c4525fb5fd10d...`; dev-v4 fully eligible
+  at 37/40. Held-out-v2 completes once at V8 36/40, random 19/40, greedy 23/40,
+  matched greedy 5/40. Win gates pass, but permanent-greedy idle/abandonment
+  regress and other scorecards remain uncertain. V8 is not promoted; v2 is
+  consumed and individual outcomes must not guide future policy changes.
+- **Post-V8 governance**: ADR-0017 freezes 80 disjoint held-out-v3 roots before
+  further model work. A successor must name v3 and use a new confirmation path.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -386,7 +393,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0016` (do not relitigate).
+See `docs/decisions/ADR-0001..0017` (do not relitigate).
 
 ## Deviations from the brief in this scaffold
 

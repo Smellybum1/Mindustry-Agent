@@ -193,3 +193,21 @@ def test_v8_confirmation_dev_v4_is_exact_and_globally_disjoint():
             continue
         document = json.loads(other.read_text(encoding="utf-8"))
         assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+
+def test_post_v8_held_out_v3_is_sealed_exact_and_globally_disjoint():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-held-out-v3.json")
+    with pytest.raises(ValueError, match="sealed"):
+        _load_seed_set(path)
+
+    held_out = json.loads(path.read_text(encoding="utf-8"))
+    assert held_out["seed_set_id"] == "bootstrap-defense-v1-held-out-v3"
+    assert held_out["seed_set_version"] == 3
+    assert held_out["split"] == "held-out"
+    assert held_out["seeds"] == list(range(920001, 920081))
+    held_out_seeds = set(held_out["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other == path:
+            continue
+        document = json.loads(other.read_text(encoding="utf-8"))
+        assert held_out_seeds.isdisjoint(document["seeds"]), other.name
