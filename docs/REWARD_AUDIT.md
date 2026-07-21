@@ -239,7 +239,12 @@ The exact V16 config is SHA-256 `13bea4f89ac396f7...`. Its adversary report is
 `ac35e476ae77fbd6...`; all 39 cases pass. New `idle-quality-cap` and
 `idle-after-cap` cases prove exact saturation and zero post-cap charge, while
 `idle-early-loss`, chunk invariance, busywork, rollback, and forced exclusions
-remain green. Status: implemented-approved-v16 pre-training, 2026-07-21.
+remain green. Two exact training replicas reproduce, but reusable dev-v1
+rejects the resulting candidate: permanent-greedy idle is 0.05618951 worse
+(95% CI +0.03029619..+0.08042806) and recovery is uncertain against both
+scorecards. The reward implementation remains adversary-approved; the V16
+training intervention is rejected before dev-v12. Status:
+implemented-approved reward / rejected candidate, 2026-07-21.
 
 ## Cross-component adversarial matrix
 

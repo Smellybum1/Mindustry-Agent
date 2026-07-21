@@ -46,3 +46,13 @@ and maximum by deriving the cap from coefficient times the scenario horizon.
   the maximum idle cost to invert the early-loss adversary.
 - V16 stops before dev-v12 if construction, reproduction, or either reusable
   scorecard fails. Only an eligible dev-v12 result may authorize held-out-v4.
+
+## Outcome
+
+Two pinned 2,048-episode replicas reproduced exactly and selected update 23 at
+9/10 construction wins with mean idle 0.10050130. The direct checkpoint lineage
+also reproduced. Reusable dev-v1 measured zero non-forced abandonment and a
+0.12929577 idle improvement against matched greedy, but permanent-greedy idle
+remained 0.05618951 worse (95% CI +0.03029619..+0.08042806). Recovery was
+uncertain against both governed scorecards. V16 is therefore rejected before
+dev-v12; held-out-v4 remains sealed.

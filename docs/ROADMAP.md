@@ -1001,14 +1001,15 @@ but the corrected dual preflight rejects V15 because permanent-greedy idle is
 definitively worse; recovery and matched idle remain uncertain. Dev-v11 is
 unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
 
-ADR-0027 precommits V16 because V15's best 10/10 reusable checkpoint is still
-0.16449283 idle and cannot meet permanent greedy through ranking alone. Reward
-v2 now supports an optional explicit idle cap without changing older configs.
-V16 holds the full V15 construction fixed except idle cost `0.0003 -> 0.001`
-with a `5.0` cap; abandonment remains `0.25` capped at `2.0`. All 39 exact-
-config adversaries and 133 Python tests pass. Dev-v11 is retired unopened;
-dev-v12 freezes 160 disjoint roots `121001..121160` for one confirmation only
-after reusable dual scorecards pass. Held-out-v4 remains sealed.
+V16's two pinned 2,048-episode replicas reproduce exactly and select update 23
+at 9/10 construction wins with mean idle 0.10050130. Checkpoint
+`6db48a03427edfa2...`, model state `91c3364b793d7091...`, replay
+`4862b1a8a319d8bf...`, full run `65bebd16464f95a1...`, and direct lineage
+`a172fad58f842f6e...` reproduce. Reusable dev-v1 shows zero non-forced
+abandonment and matched-greedy idle improvement of 0.12929577, but rejects the
+candidate because permanent-greedy idle remains 0.05618951 worse (95% CI
++0.03029619..+0.08042806) and recovery is uncertain against both scorecards.
+Dev-v12 remains unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

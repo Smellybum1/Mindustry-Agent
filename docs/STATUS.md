@@ -1040,14 +1040,16 @@ repository-evidence mapping used for the M6 audit is:
   0.01673964, but permanent-greedy idle is definitively worse by 0.17442496
   (95% CI +0.14772493..+0.20024502); recovery and matched idle are uncertain.
   Dev-v11 remains unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
-- V15's best 10/10 reusable frontier point is still 0.16449283 idle, so a
-  ranking-only successor cannot close the permanent-greedy gap. ADR-0027
-  precommits V16 by decoupling reward-v2 idle slope from maximum: optional
-  `idle_agent_tick_cap` preserves all older configs, while V16 alone uses cost
-  `0.001` capped at `5.0`. V15's `0.25` non-forced abandonment pressure and all
-  other construction fields remain fixed. All 39 exact-config adversaries and
-  133 Python tests pass. Dev-v11 is retired unopened; dev-v12 freezes 160
-  disjoint roots `121001..121160`. Held-out-v4 remains sealed.
+- V16's two pinned 2,048-episode replicas reproduce exactly and select update
+  23 at 9/10 construction wins with mean idle 0.10050130. Checkpoint
+  `6db48a03427edfa2...`, model state `91c3364b793d7091...`, replay
+  `4862b1a8a319d8bf...`, full run `65bebd16464f95a1...`, and direct lineage
+  `a172fad58f842f6e...` all reproduce. The stronger capped slope eliminates
+  non-forced abandonment and improves matched-greedy idle by 0.12929577, but
+  reusable dev-v1 rejects V16: permanent-greedy idle is still definitively
+  worse by 0.05618951 (95% CI +0.03029619..+0.08042806), and recovery remains
+  uncertain against both scorecards. Dev-v12 remains unopened, held-out-v4
+  remains sealed, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
