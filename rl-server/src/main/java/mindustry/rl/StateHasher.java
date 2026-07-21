@@ -9,6 +9,7 @@ import mindustry.game.*;
 import mindustry.game.Teams.*;
 import mindustry.gen.*;
 import mindustry.type.*;
+import mindustry.world.*;
 import mindustry.world.blocks.defense.turrets.Turret.*;
 import mindustry.world.blocks.storage.CoreBlock.*;
 
@@ -41,6 +42,18 @@ public final class StateHasher{
     private static final long QUANT = 1000L; //1e-3 precision
 
     private StateHasher(){}
+
+    /** All authoritative tile-backed buildings, independent of the sleeping update group. */
+    public static Seq<Building> worldBuildings(){
+        Seq<Building> buildings = new Seq<>();
+        IntSet seen = new IntSet();
+        for(Tile tile : world.tiles){
+            Building building = tile.build;
+            if(building != null && seen.add(building.id())) buildings.add(building);
+        }
+        buildings.sort(Comparator.comparingInt(Building::id));
+        return buildings;
+    }
 
     public static String hash(){
         return hash(null, null);
@@ -81,11 +94,7 @@ public final class StateHasher{
             }
 
             //buildings, sorted by id
-            Seq<Building> builds = new Seq<>();
-            for(Building b : Groups.build){
-                builds.add(b);
-            }
-            builds.sort(Comparator.comparingInt(b -> b.id()));
+            Seq<Building> builds = worldBuildings();
             out.writeInt(builds.size);
             for(Building b : builds){
                 out.writeInt(b.id());

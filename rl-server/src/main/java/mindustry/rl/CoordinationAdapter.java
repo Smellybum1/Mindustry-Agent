@@ -895,7 +895,7 @@ public final class CoordinationAdapter{
 
     private Skill supplySkill(TaskSpec task){
         if(!(task.target() instanceof EntityTarget target)) return null;
-        for(Building building : Groups.build){
+        for(Building building : StateHasher.worldBuildings()){
             if(building.id == target.entityId()){
                 int amount = Math.max(1, task.estimatedCost().amount("copper"));
                 return new SupplyBuilding("copper", building.tileX(), building.tileY(), amount);

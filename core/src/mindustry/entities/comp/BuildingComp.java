@@ -1875,9 +1875,18 @@ abstract class BuildingComp implements Posc, Teamc, Healthc, Buildingc, Timerc, 
             }
         }
 
-        for(Building other : tmpTiles){
-            other.proximity.remove(self(), true);
-            other.onProximityUpdate();
+        if(EntityGroup.isDeterministicOrderEnabled()){
+            Seq<Building> ordered = tmpTiles.toSeq();
+            ordered.sort(Comparator.comparingInt(Building::pos));
+            for(Building other : ordered){
+                other.proximity.remove(self(), true);
+                other.onProximityUpdate();
+            }
+        }else{
+            for(Building other : tmpTiles){
+                other.proximity.remove(self(), true);
+                other.onProximityUpdate();
+            }
         }
         proximity.clear();
     }
@@ -1901,12 +1910,17 @@ abstract class BuildingComp implements Posc, Teamc, Healthc, Buildingc, Timerc, 
         for(Building tile : tmpTiles){
             proximity.add(tile);
         }
+        if(EntityGroup.isDeterministicOrderEnabled()){
+            proximity.sort(Comparator.comparingInt(Building::pos));
+        }
 
         onProximityAdded();
         onProximityUpdate();
 
-        for(Building other : tmpTiles){
-            other.onProximityUpdate();
+        if(EntityGroup.isDeterministicOrderEnabled()){
+            for(Building other : proximity) other.onProximityUpdate();
+        }else{
+            for(Building other : tmpTiles) other.onProximityUpdate();
         }
 
         if(!headless && block.drawCached) recache();

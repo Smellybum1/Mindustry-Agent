@@ -9,6 +9,7 @@ import arc.util.serialization.*;
 import mindustry.*;
 import mindustry.content.*;
 import mindustry.core.*;
+import mindustry.async.*;
 import mindustry.ui.*;
 import mindustry.core.GameState.*;
 import mindustry.ctype.*;
@@ -79,6 +80,10 @@ public final class RlServer{
 
     private Method pathfinderStop;
     private Method controlPathStop;
+    private Field pathfinderThread;
+    private Field controlPathThread;
+    private Field physicsWorld;
+    private Field physicsRand;
     private Field entityLastId;
     private Field timeGlobalRaw;
     private Field timeGlobal;
@@ -108,6 +113,10 @@ public final class RlServer{
 
         Vars.loadSettings();
         Vars.init();
+        mindustry.entities.EntityGroup.enableDeterministicOrder();
+        Groups.build.enableDeterministicOrder(building -> -building.pos());
+        pathfinder.disableBackgroundThread();
+        controlPath.disableBackgroundThread();
 
         UI.loadColors();
         Fonts.loadContentIconsHeadless();
@@ -138,10 +147,10 @@ public final class RlServer{
         Events.on(UnitDestroyEvent.class, this::recordUnitDestroy);
 
         //listener order mirrors ServerLauncher.java:74-78, minus ServerControl
-        Core.app.addListener(new ApplicationListener(){ public void update(){ asyncCore.begin(); } });
+        Core.app.addListener(new ApplicationListener(){ public void update(){ beginAsyncStep(); } });
         Core.app.addListener(logic = new Logic());
         Core.app.addListener(netServer = new mindustry.core.NetServer());
-        Core.app.addListener(new ApplicationListener(){ public void update(){ asyncCore.end(); } });
+        Core.app.addListener(new ApplicationListener(){ public void update(){ endAsyncStep(); } });
 
         mods.eachClass(Mod::init);
         Events.fire(new ServerLoadEvent());
@@ -151,12 +160,34 @@ public final class RlServer{
         cacheReflection();
     }
 
+    /** Run upstream async-process phases on the simulation thread in external mode. */
+    private void beginAsyncStep(){
+        if(!state.isPlaying()) return;
+        for(AsyncProcess process : asyncCore.processes) process.begin();
+        for(AsyncProcess process : asyncCore.processes){
+            if(process.shouldProcess()) process.process();
+        }
+    }
+
+    private void endAsyncStep(){
+        if(!state.isPlaying()) return;
+        for(AsyncProcess process : asyncCore.processes) process.end();
+    }
+
     private void cacheReflection(){
         try{
             pathfinderStop = pathfinder.getClass().getDeclaredMethod("stop");
             pathfinderStop.setAccessible(true);
             controlPathStop = controlPath.getClass().getDeclaredMethod("stop");
             controlPathStop.setAccessible(true);
+            pathfinderThread = pathfinder.getClass().getDeclaredField("thread");
+            pathfinderThread.setAccessible(true);
+            controlPathThread = controlPath.getClass().getDeclaredField("thread");
+            controlPathThread.setAccessible(true);
+            physicsWorld = PhysicsProcess.class.getDeclaredField("physics");
+            physicsWorld.setAccessible(true);
+            physicsRand = PhysicsProcess.PhysicsWorld.class.getDeclaredField("rand");
+            physicsRand.setAccessible(true);
             entityLastId = mindustry.entities.EntityGroup.class.getDeclaredField("lastId");
             entityLastId.setAccessible(true);
             //globalTimeRaw has no public setter (docs/ENGINE_NOTES.md §12.3)
@@ -528,6 +559,7 @@ public final class RlServer{
         state.rules = scenario.buildRules();
 
         scenario.load();   //fires WorldLoad* -> starts pathfinder threads
+        seedAsyncPhysics(seed);
         logic.play();      //State.playing, loadout, PlayEvent (zeroes state.tick)
 
         //deterministic mode: stop the free-running wall-clock pathfinder threads. Our agent
@@ -564,13 +596,39 @@ public final class RlServer{
         }
     }
 
-    /** Stop the two free-running pathfinder threads via their private stop() (no upstream edit). */
+    /** Stop and join any pathfinder workers that predated deterministic mode. */
     private void stopPathfinders(){
         try{
+            Thread pathThread = (Thread)pathfinderThread.get(pathfinder);
+            Thread controlThread = (Thread)controlPathThread.get(controlPath);
             pathfinderStop.invoke(pathfinder);
             controlPathStop.invoke(controlPath);
+            joinPathfinder(pathThread, "Pathfinder");
+            joinPathfinder(controlThread, "Control Pathfinder");
         }catch(Exception e){
-            Log.err("failed to stop pathfinder threads: @", e.getMessage());
+            throw new RuntimeException("failed to stop pathfinder threads", e);
+        }
+    }
+
+    private void joinPathfinder(Thread thread, String name) throws InterruptedException{
+        if(thread == null || thread == Thread.currentThread()) return;
+        thread.join(5_000L);
+        if(thread.isAlive()) throw new IllegalStateException(name + " thread did not stop");
+    }
+
+    /** Seed the one entropy-backed RNG in the step-synchronized async physics process. */
+    private void seedAsyncPhysics(long seed){
+        try{
+            for(var process : asyncCore.processes){
+                if(!(process instanceof PhysicsProcess physics)) continue;
+                Object world = physicsWorld.get(physics);
+                if(world == null) throw new IllegalStateException("async physics world is absent");
+                ((Rand)physicsRand.get(world)).setSeed(seed ^ 0x4d38504859534cL);
+                return;
+            }
+            throw new IllegalStateException("async physics process is absent");
+        }catch(Exception e){
+            throw new RuntimeException("failed to seed async physics", e);
         }
     }
 
@@ -695,7 +753,7 @@ public final class RlServer{
         o.put("copper", StateHasher.coreItem(Items.copper));
         o.put("lead", StateHasher.coreItem(Items.lead));
         o.put("unit_count", Groups.unit.size());
-        o.put("building_count", Groups.build.size());
+        o.put("building_count", StateHasher.worldBuildings().size);
         o.put("broken_block_count", brokenBlockCount());
         o.put("core_health", core == null ? 0.0 : core.health);
         //wave/enemy telemetry (scenario phase): time to the next spawn and live enemy summary.
@@ -754,7 +812,7 @@ public final class RlServer{
 
     private Jval turretSummary(){
         arc.struct.Seq<Building> turrets = new arc.struct.Seq<>();
-        for(Building building : Groups.build){
+        for(Building building : StateHasher.worldBuildings()){
             if(building.team == scenario.coreTeam && building instanceof TurretBuild){
                 turrets.add(building);
             }

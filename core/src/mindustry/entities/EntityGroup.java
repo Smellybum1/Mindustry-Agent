@@ -17,6 +17,7 @@ import static mindustry.Vars.*;
 @SuppressWarnings("unchecked")
 public class EntityGroup<T extends Entityc> implements Iterable<T>{
     private static int lastId = 0;
+    private static boolean deterministicOrderEnabled;
 
     private final Seq<T> array;
     private final Seq<T> intersectArray = new Seq<>();
@@ -26,6 +27,7 @@ public class EntityGroup<T extends Entityc> implements Iterable<T>{
     private IntMap<T> map;
     private QuadTree tree;
     private boolean clearing;
+    private Intf<T> deterministicOrderKey;
 
     private int index;
 
@@ -36,6 +38,20 @@ public class EntityGroup<T extends Entityc> implements Iterable<T>{
     public static int nextId(){
         if(lastId >= Integer.MAX_VALUE - 2) lastId = 0;
         return lastId++;
+    }
+
+    /** Preserve stable entity iteration for deterministic external simulation. */
+    public static void enableDeterministicOrder(){
+        deterministicOrderEnabled = true;
+    }
+
+    public static boolean isDeterministicOrderEnabled(){
+        return deterministicOrderEnabled;
+    }
+
+    /** Canonicalize additions by an engine-owned stable key. */
+    public void enableDeterministicOrder(Intf<T> key){
+        deterministicOrderKey = key;
     }
 
     /** Makes sure the next ID counter is higher than this number, so future entities cannot possibly use this ID. */
@@ -246,7 +262,7 @@ public class EntityGroup<T extends Entityc> implements Iterable<T>{
 
     public void add(T type){
         if(type == null) throw new RuntimeException("Cannot add a null entity!");
-        array.add(type);
+        addArray(type);
 
         if(mappingEnabled()){
             map.put(type.id(), type);
@@ -254,9 +270,44 @@ public class EntityGroup<T extends Entityc> implements Iterable<T>{
     }
 
     public int addIndex(T type){
-        int index = array.size;
-        add(type);
-        return index;
+        if(type == null) throw new RuntimeException("Cannot add a null entity!");
+        int position = addArray(type);
+        if(mappingEnabled()){
+            map.put(type.id(), type);
+        }
+        return position;
+    }
+
+    private int addArray(T type){
+        if(deterministicOrderKey != null && !array.isEmpty()){
+            int typeKey = deterministicOrderKey.get(type);
+            int low = 0, high = array.size;
+            while(low < high){
+                int middle = (low + high) >>> 1;
+                T middleType = array.items[middle];
+                int middleKey = deterministicOrderKey.get(middleType);
+                if(middleKey < typeKey || middleKey == typeKey && middleType.id() < type.id()){
+                    low = middle + 1;
+                }else{
+                    high = middle;
+                }
+            }
+            int position = low;
+            array.ensureCapacity(1);
+            System.arraycopy(array.items, position, array.items, position + 1, array.size - position);
+            array.items[position] = type;
+            array.size++;
+            if(indexer != null){
+                for(int i = position + 1; i < array.size; i++){
+                    indexer.change(array.items[i], i);
+                }
+            }
+            if(index >= position) index++;
+            return position;
+        }
+        int position = array.size;
+        array.add(type);
+        return position;
     }
 
     public void remove(T type){
@@ -264,13 +315,7 @@ public class EntityGroup<T extends Entityc> implements Iterable<T>{
         if(type == null) throw new RuntimeException("Cannot remove a null entity!");
         int idx = array.indexOf(type, true);
         if(idx != -1){
-            array.remove(idx);
-
-            //fix incorrect HEAD index since it was swapped
-            if(array.size > 0 && idx != array.size){
-                var swapped = array.items[idx];
-                if(indexer != null) indexer.change(swapped, idx);
-            }
+            removeArrayIndex(idx);
 
             if(map != null){
                 map.remove(type.id());
@@ -294,15 +339,7 @@ public class EntityGroup<T extends Entityc> implements Iterable<T>{
                 return;
             }
 
-            //swap head with current
-            if(array.size > 1){
-                var head = array.items[array.size - 1];
-                if(indexer != null) indexer.change(head, position);
-                array.items[position] = head;
-            }
-
-            array.size --;
-            array.items[array.size] = null;
+            removeArrayIndex(position);
 
             if(map != null){
                 map.remove(type.id());
@@ -312,6 +349,30 @@ public class EntityGroup<T extends Entityc> implements Iterable<T>{
             if(index >= position){
                 index --;
             }
+        }
+    }
+
+    private void removeArrayIndex(int position){
+        if(deterministicOrderEnabled){
+            int moved = array.size - position - 1;
+            if(moved > 0){
+                System.arraycopy(array.items, position + 1, array.items, position, moved);
+            }
+            array.size--;
+            array.items[array.size] = null;
+            if(indexer != null){
+                for(int i = position; i < array.size; i++){
+                    indexer.change(array.items[i], i);
+                }
+            }
+        }else{
+            if(array.size > 1){
+                var head = array.items[array.size - 1];
+                if(indexer != null) indexer.change(head, position);
+                array.items[position] = head;
+            }
+            array.size--;
+            array.items[array.size] = null;
         }
     }
 

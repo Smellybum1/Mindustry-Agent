@@ -102,6 +102,7 @@ public class Pathfinder implements Runnable{
     TaskQueue queue = new TaskQueue();
     /** Current pathfinding thread */
     @Nullable Thread thread;
+    private boolean backgroundThreadEnabled = true;
     IntSeq tmpArray = new IntSeq();
 
     boolean needsRefresh;
@@ -185,6 +186,9 @@ public class Pathfinder implements Runnable{
         });
 
         Events.run(Trigger.afterGameUpdate, () -> {
+            //External deterministic mode consumes this flag in syncUpdate(), without
+            //letting wall-clock time decide whether the refresh happens this tick.
+            if(!backgroundThreadEnabled) return;
             if(!needsRefresh) return;
 
             long now = Time.millis();
@@ -282,12 +286,18 @@ public class Pathfinder implements Runnable{
     /** Starts or restarts the pathfinding thread. */
     private void start(){
         stop();
-        if(net.client()) return;
+        if(net.client() || !backgroundThreadEnabled) return;
 
         thread = new Thread(this, "Pathfinder");
         thread.setPriority(Thread.MIN_PRIORITY);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    /** Disables the wall-clock worker before deterministic external stepping begins. */
+    public void disableBackgroundThread(){
+        backgroundThreadEnabled = false;
+        stop();
     }
 
     /** Stops the pathfinding thread. */

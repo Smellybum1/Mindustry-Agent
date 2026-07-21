@@ -144,6 +144,7 @@ public class ControlPathfinder implements Runnable{
 
     /** Current pathfinding thread */
     @Nullable Thread thread;
+    private boolean backgroundThreadEnabled = true;
 
     /** If true, this pathfinder is no longer relevant (stopped) and its errors can be ignored. */
     volatile boolean invalidated;
@@ -387,12 +388,18 @@ public class ControlPathfinder implements Runnable{
 
     /** Starts or restarts the pathfinding thread. */
     private void start(){
-        if(net.client() || thread != null) return;
+        if(net.client() || thread != null || !backgroundThreadEnabled) return;
 
         thread = new Thread(this, "Control Pathfinder");
         thread.setPriority(Thread.MIN_PRIORITY);
         thread.setDaemon(true);
         thread.start();
+    }
+
+    /** Disables the wall-clock worker before deterministic external stepping begins. */
+    public void disableBackgroundThread(){
+        backgroundThreadEnabled = false;
+        stop();
     }
 
     /** Stops the pathfinding thread. */

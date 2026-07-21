@@ -32,6 +32,7 @@ from typing import Any, Deque, Optional
 from mindustry_agents import protocol as P
 
 DEFAULT_PORT = 47810
+DEFAULT_JVM_ARGS = ("-Xbatch",)
 _READY_PREFIX = "READY"
 _DEFAULT_STDERR_RING = 400
 
@@ -113,7 +114,7 @@ class Connection:
 class LaunchConfig:
     port: int = DEFAULT_PORT
     java: str = "java"
-    jvm_args: tuple[str, ...] = ()
+    jvm_args: tuple[str, ...] = DEFAULT_JVM_ARGS
     ready_timeout_s: float = 60.0
     connect_timeout_s: float = 30.0
     build_if_missing: bool = True

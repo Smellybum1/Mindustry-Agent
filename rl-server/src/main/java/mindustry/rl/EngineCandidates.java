@@ -82,7 +82,7 @@ public final class EngineCandidates{
         Scenario.SchematicSpec schematicSpec = scenario.schematic(scenario.referenceSchematicId);
         Scenario.SchematicSpec lineSpec = scenario.schematic(scenario.buildLineId);
         ArrayList<TurretSnapshot> turrets = new ArrayList<>();
-        for(Building building : Groups.build){
+        for(Building building : StateHasher.worldBuildings()){
             if(building.team == scenario.coreTeam && building instanceof TurretBuild turret){
                 turrets.add(new TurretSnapshot(building.id, building.tileX(), building.tileY(),
                     turret.totalAmmo));

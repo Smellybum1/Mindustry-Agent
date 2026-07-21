@@ -100,7 +100,7 @@ public final class AdaptiveWorldFacts{
         int requiredTurrets = referenceTurretCount();
         int readyTurrets = 0;
         int totalAmmo = 0;
-        for(Building building : Groups.build){
+        for(Building building : StateHasher.worldBuildings()){
             if(building.team != scenario.coreTeam || building.block != Blocks.duo
                 || !(building instanceof Turret.TurretBuild turret)) continue;
             totalAmmo += Math.max(0, Math.round(turret.totalAmmo));
@@ -238,7 +238,7 @@ public final class AdaptiveWorldFacts{
         Scenario.RegionSpec region = scenario.region(
             scenario.objective(agentcore.TaskType.REPAIR_REGION).targetRef());
         double health = 0.0;
-        for(Building building : Groups.build){
+        for(Building building : StateHasher.worldBuildings()){
             if(building.team == scenario.coreTeam && building.tileX() >= region.x()
                 && building.tileX() < region.x() + region.w()
                 && building.tileY() >= region.y()

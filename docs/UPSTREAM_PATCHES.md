@@ -25,17 +25,19 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
 - **Reason**: enemy ground units (wave daggers) steer by the flow-field
   `Pathfinder`, which the engine updates on a **free-running, wall-clock-paced
   background thread** (`run()`, 8 ms budget + `Thread.sleep`). That thread is
-  non-deterministic, so `rl-server` keeps it **stopped** (reflection, unchanged).
+  non-deterministic, so `rl-server` disables it before world load and drives the
+  work synchronously.
   With it stopped, nothing advances a flow field when tiles change, and there is
   no public entry point to converge one on the simulation thread — the update
   methods (`updateFrontier`, `updateTargets`, `queue`) are all `private`. A tiny,
   isolated method exposes exactly that, so the stepper can converge the field once
   per tick on the sim thread with **no wall-clock budget** (docs/ENGINE_NOTES.md
-  §5.5, §11.6). This was the single sanctioned upstream edit the brief reserved for
-  Risk 1/Risk 3.
-- **File / lines**: `core/src/mindustry/ai/Pathfinder.java:356-402` — one new
-  `public void syncUpdate()` (48 added lines incl. javadoc), inserted immediately
-  before `getField(...)`. No existing line changed.
+  §5.5, §11.6). M8.4 extends that boundary so the worker cannot restart during
+  external stepping.
+- **File / lines**: `core/src/mindustry/ai/Pathfinder.java` — the existing
+  `syncUpdate()` entry point remains, while M8.4 adds an external-mode worker
+  disable flag/method and prevents the wall-clock refresh callback from
+  consuming deterministic-mode work.
 - **Diff summary**: adds the following simulation-thread-only sequence:
   ```java
   public void syncUpdate(){
@@ -69,13 +71,14 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
   (8 ms) budget with `-1` (unbounded). The leading block performs the refresh work
   that normal play schedules through `afterGameUpdate`, without its wall-clock
   delay or asynchronous queue hand-off. `rl-server` calls the method once per tick
-  after each `stepOnce()` (and once at reset). `ControlPathfinder` is **not** patched:
-  wave `GroundAI` consults only the flow-field `Pathfinder`
+  after each `stepOnce()` (and once at reset). Wave `GroundAI` consults the
+  flow-field `Pathfinder`
   (`AIController.pathfind → pathfinder.getField(...).getNextTile(...)`);
-  `ControlPathfinder` serves only `CommandAI`/`LogicAI`, which our units do not use.
+  `ControlPathfinder` serves `CommandAI`/`LogicAI` and now has the matching
+  external-mode worker-disable hook catalogued in entry 3.
 - **Behaviour change for normal game mode**: **none**. The engine never calls
-  `syncUpdate()`; the threaded `run()` path is byte-for-byte unchanged. The method
-  is only reachable from `rl-server` with the thread stopped.
+  either external-mode disable hook or `syncUpdate()`; threaded play retains
+  the upstream behavior.
 - **Determinism audit of the synchronous path**:
   - *Iteration order*: `threadList` is appended in registration order (one field —
     the wave-team ground core field — in v0); `updateFrontier` is a plain BFS over
@@ -93,9 +96,11 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
     thread-less deterministic path, `syncUpdate()` now consumes `needsRefresh`
     immediately on the simulation thread, refreshes targets, marks every registered
     flow field dirty, and fully converges it in the same call. It does not read or
-    update the wall-clock timestamp. The ordinary threaded handler is untouched.
-- **Risk**: minimal — additive public method, no existing code touched, no normal-mode
-  path affected. Verified by `bash scripts/determinism.sh` (two fresh JVMs, identical
+    update the wall-clock timestamp. A guard keeps the ordinary callback out of
+    this external mode.
+- **Risk**: narrow — external mode changes worker startup/refresh hand-off only
+  after the new hook is called; normal mode is unaffected. Verified by
+  `bash scripts/determinism.sh` (two fresh JVMs, identical
   hashes across the moving-enemy window) and `scripts/smoke.sh` (daggers path to the
   core deterministically).
 - **Introduced by**: bootstrap-defense-v0 scenario loader (this branch, M4 prep).
@@ -103,6 +108,42 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
   thread-less tile-change refresh described above. Verified by the determinism
   harness placing a copper wall in the east lane after wave 1 spawns, then comparing
   hashes across two fresh JVMs while daggers continue around the changed tile.
+- **M8.4 amendment (2026-07-21)**: added `backgroundThreadEnabled`,
+  `disableBackgroundThread()`, and a deterministic-mode guard around the
+  wall-clock refresh hand-off. `rl-server` disables the worker before world
+  load and drives `syncUpdate()` on the simulation thread. Normal game mode
+  retains the original threaded path.
+
+### 3. `core/src/mindustry/ai/ControlPathfinder.java` — external worker disable
+
+- **Reason / diff**: deterministic external stepping cannot leave the command
+  pathfinder on a wall-clock worker. A private enable flag makes `start()`
+  opt-out, and `disableBackgroundThread()` stops an existing worker. Ordinary
+  game mode never calls it.
+
+### 4. `core/src/mindustry/entities/EntityGroup.java` — external stable ordering
+
+- **Reason / diff**: swap removal and unordered sleeping-building re-addition
+  made identical training runs diverge. External mode may install a stable
+  integer key; `rl-server` uses reverse tile position only for `Groups.build`.
+  External removals shift in order and repair affected generated indices.
+  Ordinary mode retains upstream swap removal.
+- **Verification**: dedicated tests cover insertion, removal/index repair, and
+  insertion ahead of the update cursor; independent PPO action/state traces
+  match bit-exactly.
+
+### 5. `core/src/mindustry/entities/comp/BuildingComp.java` — proximity order
+
+- **Reason / diff**: `ObjectSet` proximity callbacks could choose different
+  conveyor neighbors and sleeping-building wake order. External mode sorts
+  stored proximity plus add/remove notification targets by tile position;
+  ordinary mode retains the upstream path.
+
+### 6. `core/src/mindustry/world/blocks/ConstructBlock.java` — headless RNG guard
+
+- **Reason / diff**: headless placement sound pitch consumed global RNG despite
+  having no observable effect. Placement effect/sound emission now requires
+  `!headless`; graphical play is unchanged.
 
 ## M1 decision: pathfinder threads — reflection, not an upstream patch
 
@@ -120,8 +161,9 @@ daggers do consume the flow-field `Pathfinder`, so the sanctioned `syncUpdate()`
 patch (entry 2 above) was added — the cleaner choice than reflecting into four
 private members (`threadList`, `queue`, `updateFrontier`, `updateTargets`), and the
 exact approach ENGINE_NOTES §11.6 recommends. Both threads stay stopped;
-`syncUpdate()` drives the field synchronously on the sim thread. `ControlPathfinder`
-still needs no patch (unused by wave AI and by our straight-steering agents).
+`syncUpdate()` drives the field synchronously on the sim thread. M8.4 later
+added explicit external-mode disable hooks for both workers (entries 2–3), even
+though current wave AI does not consume `ControlPathfinder`.
 
 When units/enemies arrive (M3+) and
 pathfinding is actually consumed, a synchronous `syncUpdate()` — reflection or a

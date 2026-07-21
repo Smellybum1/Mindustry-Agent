@@ -110,7 +110,7 @@ public class ConstructBlock extends Block{
             }
         }
 
-        if(fogControl.isVisibleTile(team, tile.x, tile.y)){
+        if(!headless && fogControl.isVisibleTile(team, tile.x, tile.y)){
             block.placeEffect.at(tile.drawx(), tile.drawy(), block.size);
             if(shouldPlay()) block.placeSound.at(tile, block.placePitchChange ? calcPitch(true) : 1f);
         }

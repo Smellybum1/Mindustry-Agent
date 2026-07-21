@@ -64,9 +64,9 @@ been copied back into `agent-plugin`.
 | `agent-core` | `agentcore` | `:core` | Agent identity, task catalog + validation, shared scripted coordination driver and scenario plan, task board, intention/offer/claim/lease protocol, skill executors, candidate task generation, action masks, observation construction, reward accounting, metrics, announcement templates, structured event log. **No Python/RL dependency.** |
 | `agent-plugin` | `mindustry.agentplugin` | `:core`, `:agent-core`, selected project-owned `:rl-server` adapters | Real-time dedicated-server adapter for demo mode. A loadable stock-server plugin that starts the exact scenario, spawns/rebinds three controlled Alphas, adapts the shared coordination driver to legal engine skills, renders approved announcements, and exposes status/pause/resume/emergency-stop controls. It owns pacing, engine/IO adaptation, controls, and telemetry—not a separate coordination policy. |
 
-Upstream modules (`core`, `server`, `desktop`, `annotations`, `tools`, `tests`)
-are unmodified except for the `settings.gradle` registration edit
-(`docs/UPSTREAM_PATCHES.md`).
+Upstream modules are preserved except for the narrowly catalogued deterministic
+external-mode patches and `settings.gradle` registration edit in
+`docs/UPSTREAM_PATCHES.md`.
 
 ### Python package (`python/src/mindustry_agents/`)
 
@@ -120,6 +120,17 @@ their command callbacks through Mindustry's existing command path.
   and read only on the simulation thread.
 - Same seed + same action trace ⇒ identical `state_hash` (target: 10,000 ticks;
   brief §24 Gate 1).
+
+### M8.4 deterministic runtime boundary
+
+Both pathfinder workers are disabled before world load and stopped/joined on
+reset. Every upstream async-process begin/process/end phase runs synchronously
+on the simulation thread; the physics RNG is seeded from the episode root seed.
+Building proximity callbacks are tile-ordered, sleeping building insertion is
+canonical by reverse tile position, and removals preserve order with generated
+indices repaired. Authoritative observations and hashes enumerate unique
+tile-backed buildings rather than the sleeping `Groups.build` update subset.
+Headless placement effects consume no audio RNG. Training JVMs use `-Xbatch`.
 
 ## Where the design is still open
 
