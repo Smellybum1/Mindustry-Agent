@@ -24,6 +24,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0017](ADR-0017-second-post-failure-renewal.md) | Second post-failure held-out renewal |
 | [0018](ADR-0018-v9-final-wait-bias.md) | V9 final WAIT-bias step and enlarged confirmation |
 | [0019](ADR-0019-third-post-failure-and-preflight-parity.md) | Third post-failure renewal and preflight parity |
+| [0020](ADR-0020-v10-full-boundary-teacher-distillation.md) | V10 full-boundary teacher distillation |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

@@ -42,6 +42,15 @@ a new immutable candidate names v4 and passes a newly governed confirmation
 under the corrected dual-scorecard gate. Choose future behavior from train/dev
 evidence only. M9.1 remains gated on an M8 promotion.
 
+ADR-0020 precommits that next candidate as V10. It uses V6's 64-root, 32-cycle
+PPO recipe and adds one training-only coefficient: `1.0` adaptive-v1
+cross-entropy on every unforced transition. Reward, features, model, masks,
+lifecycle, RNGs, and inference remain unchanged. Its config already names
+held-out-v4. Implement zero-default telemetry compatibility, reproduce two
+pinned runs, screen dev-v1, then use the frozen 160-root dev-v6 set for one
+corrected dual-scorecard confirmation. Do not open held-out-v4 unless every
+gate passes.
+
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.

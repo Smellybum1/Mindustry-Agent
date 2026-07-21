@@ -877,6 +877,16 @@ greedy, and hashes the permanent record source for final validation. It freezes
 disjoint roots, development-loader refusal, and one future exclusive final only
 after the corrected gate passes. M8.5 remains unmet and M9 remains gated.
 
+ADR-0020 precommits V10 from train/dev evidence only. V9 agreed with
+adaptive-v1 on 5.3% of unforced dev-v5 decisions; adaptive-v1 substantially
+reduced idle and abandonment, while role assignment sacrificed wins and
+duplicates. V10 therefore uses V6's 64-root/32-cycle recipe with one new
+training-only term: coefficient `1.0` adaptive-teacher cross-entropy on every
+unforced transition. Reward and inference stay unchanged, and the immutable
+config names held-out-v4. A globally disjoint 160-root dev-v6 set is frozen for
+one corrected dual-scorecard confirmation after reproducible construction and
+dev-v1 screening.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

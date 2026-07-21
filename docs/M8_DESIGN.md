@@ -448,6 +448,25 @@ before any future candidate work. Development tools refuse v4, which permits
 one exclusive future final only after a newly governed candidate passes the
 corrected dual-scorecard preflight.
 
+## V10 governed successor
+
+ADR-0020 precommits a full-boundary adaptive-teacher distillation experiment
+from reusable dev evidence. V9 matched adaptive-v1 on only 5.3% of 8,180
+unforced dev-v5 decisions. Adaptive-v1 reduced mean idle from about 0.310 to
+0.076 and abandonment from about 0.202 to 0.118 on those roots, while a
+role-assignment alternative won only 43/80 and raised duplicates.
+
+V10 returns to V6's 64-root, 32-cycle PPO recipe and adds coefficient `1.0`
+cross-entropy toward adaptive-v1 on every unforced transition. The earlier
+V4/V5 term used only successful episodes at 0.05/0.10, so it did not address
+losing-episode coverage. V10 changes no reward, feature, model, mask, lifecycle,
+RNG, or inference behavior and names held-out-v4 in its immutable config.
+
+Dev-v1 is only an early screen. ADR-0020 freezes a new one-way, 160-root
+dev-v6 confirmation. Exact permanent records must be refreshed on dev-v6, and
+both permanent-greedy and matched-greedy paired scorecards must pass before
+held-out-v4 can be authorized.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

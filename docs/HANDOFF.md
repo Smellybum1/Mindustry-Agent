@@ -236,6 +236,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   matched greedy, hashing the permanent record source, and revalidating it at
   final time. It freezes 160 globally disjoint held-out-v4 roots before future
   candidate work; development tools refuse v4 and only one final is allowed.
+- **V10 precommit**: ADR-0020 selects one all-boundary teacher-distillation
+  hypothesis from dev evidence. V10 uses V6's 64-root/32-cycle recipe and adds
+  coefficient `1.0` adaptive-v1 cross-entropy on every unforced transition;
+  reward/inference are unchanged. Its config names held-out-v4. A new disjoint
+  160-root dev-v6 set is frozen for one corrected dual-scorecard confirmation.
+  V10 is not yet trained.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -411,7 +417,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0019` (do not relitigate).
+See `docs/decisions/ADR-0001..0020` (do not relitigate).
 
 ## Deviations from the brief in this scaffold
 

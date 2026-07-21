@@ -914,6 +914,13 @@ repository-evidence mapping used for the M6 audit is:
   greedy, hashes the permanent record source, and has the final revalidate it.
   Held-out-v4 is frozen before future model work as 160 globally disjoint roots
   refused by development tools and available for at most one exclusive final.
+- ADR-0020 precommits V10 as V6's 64-root/32-cycle PPO recipe plus coefficient
+  `1.0` adaptive-teacher cross-entropy on every unforced transition. Reusable
+  dev-v5 evidence found only 5.3% V9/teacher agreement; adaptive-v1 sharply
+  reduced idle/abandonment, whereas role assignment lost win capacity and
+  increased duplicates. Reward and inference behavior remain unchanged. The
+  config names held-out-v4 and a disjoint 160-root dev-v6 one-way confirmation
+  is frozen for the corrected dual-scorecard gate. V10 is not yet trained.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
