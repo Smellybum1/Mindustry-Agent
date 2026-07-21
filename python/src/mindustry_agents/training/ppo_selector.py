@@ -9,7 +9,7 @@ import os
 import platform
 import random
 import subprocess
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -25,7 +25,11 @@ from mindustry_agents.process.launcher import (
     RlServerProcess,
     repo_root,
 )
-from mindustry_agents.training.model import MODEL_SCHEMA, SelectorActorCritic, feature_tensors
+from mindustry_agents.training.model import (
+    MODEL_SCHEMA,
+    SelectorActorCritic,
+    feature_tensors,
+)
 from mindustry_agents.training.reward import REWARD_SCHEMA, SelectorReward
 from mindustry_agents.training.selector import (
     FEATURE_SCHEMA,
@@ -66,6 +70,9 @@ class EpisodeRollout:
     reward_components: dict[str, float]
     trace: list[dict[str, Any]]
     coordination_metrics: dict[str, Any]
+    task_events: list[dict[str, Any]] = field(default_factory=list)
+    game_events: list[dict[str, Any]] = field(default_factory=list)
+    agent_loss_ticks: dict[int, int] = field(default_factory=dict)
 
 
 def _sha256(path: Path) -> str:
@@ -109,6 +116,24 @@ def _seed_set(root: Path, relative: str, required_split: str) -> dict[str, Any]:
     return document
 
 
+def _training_seed_schedule(
+    train_set: dict[str, Any], config: dict[str, Any]
+) -> list[int]:
+    """Repeat only the governed train split with a deterministic per-cycle order."""
+
+    seeds = [int(seed) for seed in train_set["seeds"]]
+    cycles = int(config.get("training_cycles", 1))
+    if cycles < 1:
+        raise ValueError("training_cycles must be positive")
+    schedule: list[int] = []
+    shuffle_seed = int(config["shuffle_seed"])
+    for cycle in range(cycles):
+        cycle_seeds = list(seeds)
+        random.Random(shuffle_seed + cycle).shuffle(cycle_seeds)
+        schedule.extend(cycle_seeds)
+    return schedule
+
+
 def _configure_torch(config: dict[str, Any]) -> None:
     torch.use_deterministic_algorithms(True)
     try:
@@ -145,14 +170,40 @@ def _select_index(
     return index, log_prob
 
 
-def _scripted_index(action: dict[str, Any]) -> int:
+def _scripted_index(
+    action: dict[str, Any], candidates: list[dict[str, Any]] | None = None
+) -> int:
     task_action = action.get("task_action", {})
     action_type = task_action.get("type")
     if action_type == "SELECT_CANDIDATE_TASK":
-        return int(task_action["candidate_index"])
+        index = int(task_action["candidate_index"])
+        if (
+            candidates is not None
+            and index < len(candidates)
+            and candidates[index].get("task_type") == "WAIT"
+        ):
+            return 9
+        return index
     if action_type == "CONTINUE_CURRENT_TASK":
         return 8
     return 9
+
+
+def _canonical_scripted_action(
+    action: dict[str, Any], candidates: list[dict[str, Any]]
+) -> dict[str, Any]:
+    """Map a scripted catalog-WAIT selection to the canonical WAIT action."""
+
+    task_action = action.get("task_action", {})
+    if (
+        task_action.get("type") == "SELECT_CANDIDATE_TASK"
+        and _scripted_index(action, candidates) == 9
+    ):
+        return {
+            "agent_id": int(action.get("agent_id", LEARNED_SEAT)),
+            "task_action": {"type": "WAIT"},
+        }
+    return action
 
 
 def rollout_episode(
@@ -187,6 +238,10 @@ def rollout_episode(
     previous_team = dict(observations[0]["team"])
     outcome = "running"
     final_metrics: dict[str, Any] = {}
+    task_events: list[dict[str, Any]] = []
+    game_events: list[dict[str, Any]] = []
+    agent_loss_ticks: dict[int, int] = {}
+    previous_dead = [bool(item["unit"]["dead"]) for item in observations]
 
     while outcome == "running" and tick < int(metadata["tick_cap"]):
         scripted_bundle = scripted.actions(observations, masks)
@@ -210,11 +265,15 @@ def rollout_episode(
             or scripted_type == "ABANDON"
         )
         if forced:
-            selected_index = _scripted_index(scripted_action)
+            learned_action = _canonical_scripted_action(
+                scripted_action, observations[LEARNED_SEAT]["task_candidates"]
+            )
+            selected_index = _scripted_index(
+                learned_action, observations[LEARNED_SEAT]["task_candidates"]
+            )
             log_prob = float(
                 torch.log_softmax(masked_logits, dim=-1)[selected_index].item()
             )
-            learned_action = scripted_action
         else:
             selected_index, log_prob = _select_index(
                 masked_logits,
@@ -245,6 +304,22 @@ def rollout_episode(
             stop_on_decision_event=True,
         )
         scripted.observe_action_results(response.action_results)
+        task_events.extend(response.task_events)
+        game_events.extend(response.game_events)
+        for event in response.game_events:
+            if event.get("type") == "unit_destroy" and int(
+                event.get("agent_id", -1)
+            ) >= 0:
+                agent_loss_ticks[int(event["agent_id"])] = int(event["tick"])
+        for agent_id, observation in enumerate(response.observations):
+            dead = bool(observation["unit"]["dead"])
+            if (
+                dead
+                and not previous_dead[agent_id]
+                and agent_id not in agent_loss_ticks
+            ):
+                agent_loss_ticks[agent_id] = response.tick
+            previous_dead[agent_id] = dead
         selected_task_type = None
         if selected_index < 8 and selected_index < len(
             observations[LEARNED_SEAT]["task_candidates"]
@@ -267,7 +342,11 @@ def rollout_episode(
         breakdown = reward.observe(
             previous_team,
             current_team,
-            advanced_ticks=int(response.decision_boundary.get("advanced_ticks", response.tick - tick)),
+            advanced_ticks=int(
+                response.decision_boundary.get(
+                    "advanced_ticks", response.tick - tick
+                )
+            ),
             tick_cap=int(metadata["tick_cap"]),
             outcome=response.outcome,
             task_events=response.task_events,
@@ -287,7 +366,11 @@ def rollout_episode(
                 old_log_prob=log_prob,
                 old_value=float(value.item()),
                 reward=breakdown.total,
-                advanced_ticks=int(response.decision_boundary.get("advanced_ticks", response.tick - tick)),
+                advanced_ticks=int(
+                    response.decision_boundary.get(
+                        "advanced_ticks", response.tick - tick
+                    )
+                ),
                 done=done,
                 policy_loss_mask=features.policy_loss_mask and not forced,
             )
@@ -329,6 +412,9 @@ def rollout_episode(
         reward_components=reward_totals,
         trace=trace,
         coordination_metrics=final_metrics,
+        task_events=task_events,
+        game_events=game_events,
+        agent_loss_ticks=agent_loss_ticks,
     )
 
 
@@ -346,10 +432,14 @@ def _advantages(
         next_advantage = 0.0
         for index in range(len(episode.transitions) - 1, -1, -1):
             item = episode.transitions[index]
-            gamma = gamma_per_second ** (item.advanced_ticks / 60.0)
+            elapsed_seconds = item.advanced_ticks / 60.0
+            gamma = gamma_per_second**elapsed_seconds
+            lambda_decay = gae_lambda**elapsed_seconds
             continuation = 0.0 if item.done else 1.0
             delta = item.reward + gamma * next_value * continuation - item.old_value
-            advantage = delta + gamma * gae_lambda * next_advantage * continuation
+            advantage = (
+                delta + gamma * lambda_decay * next_advantage * continuation
+            )
             episode_advantages[index] = advantage
             next_value = item.old_value
             next_advantage = advantage
@@ -426,14 +516,19 @@ def ppo_update(
             )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), float(config["max_grad_norm"]))
+            torch.nn.utils.clip_grad_norm_(
+                model.parameters(), float(config["max_grad_norm"])
+            )
             optimizer.step()
             metrics["policy_loss"] += float(policy_loss.item())
             metrics["value_loss"] += float(value_loss.item())
             metrics["entropy"] += float(entropy_loss.item())
             metrics["batches"] += 1.0
     divisor = max(1.0, metrics["batches"])
-    return {key: value / divisor if key != "batches" else value for key, value in metrics.items()}
+    return {
+        key: value / divisor if key != "batches" else value
+        for key, value in metrics.items()
+    }
 
 
 def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
@@ -581,6 +676,7 @@ def _manifest(
     parent_checkpoint: str,
     produced_checkpoints: list[Path],
     verification_paths: list[Path],
+    training_seed_schedule: list[int],
     initial_model_state_sha256: str,
     selected_model_state_sha256: str,
     selected_update: int,
@@ -619,7 +715,8 @@ def _manifest(
             "environment_root_seeds": {
                 "train": list(train_set["seeds"]),
                 "dev": list(dev_set["seeds"]),
-            }
+            },
+            "training_seed_schedule": training_seed_schedule,
         },
         "controller": {
             "learned_seat_id": LEARNED_SEAT,
@@ -635,6 +732,7 @@ def _manifest(
             "train_episodes": len(train_summaries),
             "dev_episodes": len(dev_summaries),
             "updates": len(optimizer_updates),
+            "training_cycles": int(config.get("training_cycles", 1)),
         },
         "source_config": {
             "path": str(config_path.relative_to(root)),
@@ -747,8 +845,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     minibatch_generator = torch.Generator().manual_seed(int(config["minibatch_seed"]))
     train_episodes: list[EpisodeRollout] = []
     optimizer_updates: list[dict[str, Any]] = []
-    seeds = [int(seed) for seed in train_set["seeds"]]
-    random.Random(int(config["shuffle_seed"])).shuffle(seeds)
+    seeds = _training_seed_schedule(train_set, config)
     episodes_per_update = int(config["episodes_per_update"])
     output_dir.mkdir(parents=True, exist_ok=True)
     dev_seeds = [int(seed) for seed in dev_set["seeds"]]
@@ -756,6 +853,26 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     dev_selection: list[dict[str, Any]] = []
     produced_checkpoints: list[Path] = []
     parent_checkpoint = ""
+
+    def record_dev_candidate(update: int, checkpoint: Path, checkpoint_sha: str) -> None:
+        candidate_dev = _evaluate(
+            model, dev_seeds, config, java=java, port=port + 1
+        )
+        dev_candidates.append(candidate_dev)
+        summaries = [_episode_summary(item) for item in candidate_dev]
+        dev_selection.append(
+            {
+                "update": update,
+                "checkpoint_path": str(checkpoint.relative_to(root)),
+                "checkpoint_sha256": checkpoint_sha,
+                "wins": sum(item["outcome"] == "win" for item in summaries),
+                "mean_return": sum(item["return"] for item in summaries)
+                / len(summaries),
+                "mean_core_health": sum(item["core_health"] for item in summaries)
+                / len(summaries),
+            }
+        )
+
     with RlServerProcess(
         LaunchConfig(port=port, java=java, build_if_missing=False)
     ) as env:
@@ -790,20 +907,8 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
             )
             produced_checkpoints.append(checkpoint)
             parent_checkpoint = checkpoint_sha
-            candidate_dev = _evaluate(
-                model, dev_seeds, config, java=java, port=port + 1
-            )
-            dev_candidates.append(candidate_dev)
-            summaries = [_episode_summary(item) for item in candidate_dev]
-            dev_selection.append(
-                {
-                    "update": len(optimizer_updates),
-                    "checkpoint_path": str(checkpoint.relative_to(root)),
-                    "checkpoint_sha256": checkpoint_sha,
-                    "wins": sum(item["outcome"] == "win" for item in summaries),
-                    "mean_return": sum(item["return"] for item in summaries) / len(summaries),
-                    "mean_core_health": sum(item["core_health"] for item in summaries) / len(summaries),
-                }
+            record_dev_candidate(
+                len(optimizer_updates), checkpoint, checkpoint_sha
             )
 
     best_index = max(
@@ -888,6 +993,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         str(selected_payload.get("parent_checkpoint", "")),
         produced_checkpoints,
         verification_paths,
+        seeds,
         initial_model_state_sha256,
         selected_model_state_sha256,
         int(selected_payload["update"]),

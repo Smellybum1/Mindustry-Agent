@@ -58,6 +58,105 @@ class TestPpoSelector(unittest.TestCase):
                 "dev",
             )
 
+    def test_training_seed_schedule_repeats_only_train_seeds_deterministically(self):
+        from mindustry_agents.training.ppo_selector import _training_seed_schedule
+
+        train_set = {"seeds": [1, 2, 3, 4]}
+        config = {"shuffle_seed": 91, "training_cycles": 3}
+        first = _training_seed_schedule(train_set, config)
+        second = _training_seed_schedule(train_set, config)
+
+        self.assertEqual(first, second)
+        self.assertEqual(len(first), 12)
+        for start in range(0, len(first), 4):
+            self.assertEqual(sorted(first[start : start + 4]), [1, 2, 3, 4])
+
+        with self.assertRaisesRegex(ValueError, "training_cycles"):
+            _training_seed_schedule(
+                train_set, {"shuffle_seed": 91, "training_cycles": 0}
+            )
+
+    def test_teacher_wait_candidate_maps_to_canonical_wait_action(self):
+        from mindustry_agents.training.ppo_selector import (
+            _canonical_scripted_action,
+            _scripted_index,
+        )
+
+        action = {
+            "task_action": {
+                "type": "SELECT_CANDIDATE_TASK",
+                "candidate_index": 2,
+            }
+        }
+        candidates = [
+            {"task_type": "HARVEST_RESOURCE"},
+            {"task_type": "BUILD_LINE"},
+            {"task_type": "WAIT"},
+        ]
+
+        self.assertEqual(_scripted_index(action, candidates), 9)
+        self.assertEqual(_scripted_index(action), 2)
+        self.assertEqual(
+            _canonical_scripted_action(action, candidates),
+            {"agent_id": 0, "task_action": {"type": "WAIT"}},
+        )
+
+    def test_gae_lambda_decay_depends_on_elapsed_ticks_not_boundary_count(self):
+        import torch
+
+        from mindustry_agents.training.ppo_selector import (
+            EpisodeRollout,
+            Transition,
+            _advantages,
+        )
+
+        def transition(ticks, reward=0.0, done=False):
+            return Transition(
+                candidates=torch.zeros((8, 37)),
+                scalars=torch.zeros(56),
+                candidate_present=torch.zeros(8, dtype=torch.bool),
+                action_mask=torch.ones(10, dtype=torch.bool),
+                action=9,
+                old_log_prob=0.0,
+                old_value=0.0,
+                reward=reward,
+                advanced_ticks=ticks,
+                done=done,
+                policy_loss_mask=False,
+            )
+
+        def rollout(transitions):
+            return EpisodeRollout(
+                seed=1,
+                outcome="win",
+                tick=61,
+                core_health=1.0,
+                transitions=transitions,
+                reward_components={},
+                trace=[],
+                coordination_metrics={},
+            )
+
+        config = {"gamma_per_second": 0.99, "gae_lambda": 0.95}
+        _, whole, _ = _advantages(
+            [rollout([transition(60), transition(1, reward=1.0, done=True)])],
+            config,
+        )
+        _, chunked, _ = _advantages(
+            [
+                rollout(
+                    [
+                        transition(30),
+                        transition(30),
+                        transition(1, reward=1.0, done=True),
+                    ]
+                )
+            ],
+            config,
+        )
+
+        self.assertAlmostEqual(float(whole[0]), float(chunked[0]), places=6)
+
     def test_checkpoint_requires_exact_schema_match(self):
         import torch
 
