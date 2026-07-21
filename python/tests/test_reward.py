@@ -2,9 +2,20 @@ import unittest
 
 from mindustry_agents.training.reward import (
     COMPONENT_KEYS,
+    QUALITY_COMPONENT_KEYS,
     RewardAuditError,
     SelectorReward,
 )
+
+QUALITY = {
+    "idle_agent_tick_cost": 0.0001,
+    "duplicate_work_cost": 0.05,
+    "duplicate_work_cap": 1.0,
+    "announcement_cost": 0.005,
+    "announcement_cap": 1.0,
+    "team_abandonment_cost": 0.1,
+    "team_abandonment_cap": 2.0,
+}
 from mindustry_agents.training.reward_adversary import CASES, run_case
 
 
@@ -19,6 +30,92 @@ def team(tick=0, *, line=False, readiness=0.0, enemies=0, wave=1):
 
 
 class TestSelectorRewardAdversaries(unittest.TestCase):
+    def test_reward_v2_charges_monotonic_deltas_and_preserves_v1_default(self):
+        self.assertEqual(set(SelectorReward().component_keys), set(COMPONENT_KEYS))
+        reward = SelectorReward(quality_reward=QUALITY)
+        first = reward.observe(
+            team(),
+            team(10),
+            advanced_ticks=10,
+            tick_cap=9000,
+            coordination_metrics={
+                "agent_ticks": 30,
+                "idle_agent_ticks": 12,
+                "duplicate_work_incidents": 2,
+                "announced_messages": 3,
+            },
+            task_events=[
+                {"act": "ABANDON", "agent_id": 1, "reason_code": "blocked_replan"}
+            ],
+        )
+        self.assertEqual(
+            set(first.components), set(COMPONENT_KEYS + QUALITY_COMPONENT_KEYS)
+        )
+        self.assertAlmostEqual(first.components["reward.penalty.team_idle_ticks"], -0.0012)
+        self.assertEqual(first.components["reward.penalty.duplicate_work"], -0.1)
+        self.assertEqual(first.components["reward.penalty.communication"], -0.015)
+        self.assertEqual(first.components["reward.penalty.team_abandonment"], -0.1)
+
+        unchanged = reward.observe(
+            team(10),
+            team(20),
+            advanced_ticks=10,
+            tick_cap=9000,
+            coordination_metrics={
+                "agent_ticks": 60,
+                "idle_agent_ticks": 12,
+                "duplicate_work_incidents": 2,
+                "announced_messages": 3,
+            },
+        )
+        self.assertTrue(
+            all(unchanged.components[key] == 0.0 for key in QUALITY_COMPONENT_KEYS)
+        )
+
+    def test_reward_v2_rejects_missing_invalid_or_rolled_back_metrics(self):
+        with self.assertRaisesRegex(RewardAuditError, "requires coordination"):
+            SelectorReward(quality_reward=QUALITY).observe(
+                team(), team(1), advanced_ticks=1, tick_cap=9000
+            )
+        reward = SelectorReward(quality_reward=QUALITY)
+        metrics = {
+            "agent_ticks": 30,
+            "idle_agent_ticks": 10,
+            "duplicate_work_incidents": 1,
+            "announced_messages": 1,
+        }
+        reward.observe(
+            team(), team(10), advanced_ticks=10, tick_cap=9000,
+            coordination_metrics=metrics,
+        )
+        with self.assertRaisesRegex(RewardAuditError, "rolled back"):
+            reward.observe(
+                team(10), team(20), advanced_ticks=10, tick_cap=9000,
+                coordination_metrics={**metrics, "idle_agent_ticks": 9},
+            )
+
+    def test_reward_v2_caps_quality_costs_and_excludes_forced_abandonment(self):
+        reward = SelectorReward(quality_reward=QUALITY)
+        result = reward.observe(
+            team(), team(9000), advanced_ticks=9000, tick_cap=9000,
+            coordination_metrics={
+                "agent_ticks": 27000,
+                "idle_agent_ticks": 27000,
+                "duplicate_work_incidents": 100,
+                "announced_messages": 1000,
+            },
+            task_events=[
+                {"act": "ABANDON", "agent_id": 1, "reason_code": "blocked_replan"}
+                for _ in range(30)
+            ] + [
+                {"act": "ABANDON", "agent_id": 2, "reason_code": "wave_preemption"}
+            ],
+        )
+        self.assertEqual(result.components["reward.penalty.team_idle_ticks"], -2.7)
+        self.assertEqual(result.components["reward.penalty.duplicate_work"], -1.0)
+        self.assertEqual(result.components["reward.penalty.communication"], -1.0)
+        self.assertEqual(result.components["reward.penalty.team_abandonment"], -2.0)
+
     def test_every_named_audit_case_emits_complete_machine_evidence(self):
         reports = [run_case(case) for case in CASES]
         self.assertTrue(all(report["pass"] for report in reports))

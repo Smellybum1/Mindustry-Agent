@@ -36,6 +36,7 @@ from mindustry_agents.training.ppo_selector import (
     _git_evidence,
     _sha256,
     load_checkpoint,
+    REWARD_SCHEMA,
     rollout_episode,
 )
 from mindustry_agents.training.promotion import (
@@ -285,7 +286,10 @@ def main(argv: list[str] | None = None) -> int:
     config = _load_json(config_path)
     _configure_torch(config)
     model = SelectorActorCritic(int(config["model_init_seed"]))
-    checkpoint = load_checkpoint(checkpoint_path, model)
+    reward_schema = str(config.get("reward_schema", REWARD_SCHEMA))
+    checkpoint = load_checkpoint(
+        checkpoint_path, model, reward_schema=reward_schema
+    )
     if checkpoint.get("config_sha256") != _sha256(config_path):
         raise ValueError("held-out checkpoint config hash mismatch")
 
@@ -334,6 +338,8 @@ def main(argv: list[str] | None = None) -> int:
                         scenario_version=int(seed_set["scenario_version"]),
                         evaluation=True,
                         action_generator=generator,
+                        reward_schema=reward_schema,
+                        quality_reward=config.get("quality_reward"),
                     )
                     record = _record(
                         rollout,

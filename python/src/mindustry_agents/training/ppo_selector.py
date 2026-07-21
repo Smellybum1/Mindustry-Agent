@@ -30,7 +30,11 @@ from mindustry_agents.training.model import (
     SelectorActorCritic,
     feature_tensors,
 )
-from mindustry_agents.training.reward import REWARD_SCHEMA, SelectorReward
+from mindustry_agents.training.reward import (
+    REWARD_SCHEMA,
+    REWARD_SCHEMA_V2,
+    SelectorReward,
+)
 from mindustry_agents.training.selector import (
     FEATURE_SCHEMA,
     SelectorFeatures,
@@ -217,6 +221,8 @@ def rollout_episode(
     scenario_version: int,
     evaluation: bool,
     action_generator: torch.Generator,
+    reward_schema: str = REWARD_SCHEMA,
+    quality_reward: dict[str, float] | None = None,
 ) -> EpisodeRollout:
     reset = env.reset(
         seed,
@@ -232,7 +238,13 @@ def rollout_episode(
     board: list[dict[str, Any]] = []
     boundary_reasons: list[str] = []
     history = SelectorHistory()
-    reward = SelectorReward()
+    if reward_schema not in {REWARD_SCHEMA, REWARD_SCHEMA_V2}:
+        raise ValueError(f"unsupported reward schema: {reward_schema}")
+    if reward_schema == REWARD_SCHEMA and quality_reward is not None:
+        raise ValueError("reward v1 cannot use quality shaping")
+    if reward_schema == REWARD_SCHEMA_V2 and quality_reward is None:
+        raise ValueError("reward v2 requires quality shaping config")
+    reward = SelectorReward(quality_reward=quality_reward)
     scripted = GreedyUtilityPolicy()
     transitions: list[Transition] = []
     trace: list[dict[str, Any]] = []
@@ -358,6 +370,7 @@ def rollout_episode(
             task_events=response.task_events,
             boundary_reasons=reasons,
             raw_action_valid=raw_action_valid,
+            coordination_metrics=response.coordination_metrics,
         )
         for key, amount in breakdown.components.items():
             reward_totals[key] = reward_totals.get(key, 0.0) + amount
@@ -697,6 +710,8 @@ def _evaluate(
                 scenario_version=int(config["scenario_version"]),
                 evaluation=True,
                 action_generator=generator,
+                reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+                quality_reward=config.get("quality_reward"),
             )
             for seed in seeds
         ]
@@ -710,10 +725,11 @@ def save_checkpoint(
     config_sha256: str,
     parent_checkpoint: str,
     update: int,
+    reward_schema: str = REWARD_SCHEMA,
 ) -> str:
     payload = {
         "feature_schema": FEATURE_SCHEMA,
-        "reward_schema": REWARD_SCHEMA,
+        "reward_schema": reward_schema,
         "model_schema": MODEL_SCHEMA,
         "config_sha256": config_sha256,
         "parent_checkpoint": parent_checkpoint,
@@ -727,9 +743,14 @@ def save_checkpoint(
     return _sha256(path)
 
 
-def load_checkpoint(path: Path, model: SelectorActorCritic) -> dict[str, Any]:
+def load_checkpoint(
+    path: Path,
+    model: SelectorActorCritic,
+    *,
+    reward_schema: str = REWARD_SCHEMA,
+) -> dict[str, Any]:
     payload = torch.load(path, map_location="cpu", weights_only=False)
-    expected = (FEATURE_SCHEMA, REWARD_SCHEMA, MODEL_SCHEMA)
+    expected = (FEATURE_SCHEMA, reward_schema, MODEL_SCHEMA)
     actual = (
         payload.get("feature_schema"),
         payload.get("reward_schema"),
@@ -795,7 +816,11 @@ def _manifest(
         "engine": {"tag": ENGINE_TAG, "commit": ENGINE_COMMIT, "arc": ARC_HASH},
         "protocol_version": PROTOCOL_VERSION,
         "scenario": {"id": config["scenario_id"], "version": config["scenario_version"]},
-        "schemas": {"feature": FEATURE_SCHEMA, "reward": REWARD_SCHEMA, "model": MODEL_SCHEMA},
+        "schemas": {
+            "feature": FEATURE_SCHEMA,
+            "reward": str(config.get("reward_schema", REWARD_SCHEMA)),
+            "model": MODEL_SCHEMA,
+        },
         "repository": _git_evidence(root),
         "runtime": {
             "python": platform.python_version(),
@@ -996,6 +1021,8 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     scenario_version=int(config["scenario_version"]),
                     evaluation=False,
                     action_generator=action_generator,
+                    reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+                    quality_reward=config.get("quality_reward"),
                 )
                 for seed in seeds[start : start + episodes_per_update]
             ]
@@ -1012,6 +1039,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                 config_sha256=_sha256(config_path),
                 parent_checkpoint=parent_checkpoint,
                 update=len(optimizer_updates),
+                reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
             )
             produced_checkpoints.append(checkpoint)
             parent_checkpoint = checkpoint_sha
@@ -1030,7 +1058,11 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     )
     checkpoint_path = produced_checkpoints[best_index]
     checkpoint_sha = str(dev_selection[best_index]["checkpoint_sha256"])
-    selected_payload = load_checkpoint(checkpoint_path, model)
+    selected_payload = load_checkpoint(
+        checkpoint_path,
+        model,
+        reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+    )
     selected_model_state_sha256 = _model_state_digest(model.state_dict())
     dev_episodes = dev_candidates[best_index]
 
@@ -1038,7 +1070,11 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     traces = []
     for offset in (2, 3):
         replay_model = SelectorActorCritic(int(config["model_init_seed"]))
-        load_checkpoint(checkpoint_path, replay_model)
+        load_checkpoint(
+            checkpoint_path,
+            replay_model,
+            reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+        )
         replay = _evaluate(
             replay_model, [verify_seed], config, java=java, port=port + offset
         )[0]

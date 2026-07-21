@@ -6,12 +6,19 @@ from dataclasses import dataclass, field
 from typing import Any
 
 REWARD_SCHEMA = "selector_reward_v1"
+REWARD_SCHEMA_V2 = "selector_reward_v2"
 COMPONENT_KEYS = (
     "reward.team.milestone_highwater",
     "reward.team.terminal_outcome",
     "reward.team.unresolved_tick_cost",
     "reward.penalty.invalid_action",
     "reward.penalty.abandonment_liability",
+)
+QUALITY_COMPONENT_KEYS = (
+    "reward.penalty.team_idle_ticks",
+    "reward.penalty.duplicate_work",
+    "reward.penalty.communication",
+    "reward.penalty.team_abandonment",
 )
 MILESTONE_VALUES = {
     "line_operational": 1.0,
@@ -62,6 +69,17 @@ class SelectorReward:
     abandonment_count: int = 0
     charged_ticks: int = 0
     abandonment_reason_counts: dict[str, int] = field(default_factory=dict)
+    quality_reward: dict[str, float] | None = None
+    prior_quality_counters: dict[str, int] = field(default_factory=dict)
+    quality_penalty_totals: dict[str, float] = field(default_factory=dict)
+
+    @property
+    def schema(self) -> str:
+        return REWARD_SCHEMA_V2 if self.quality_reward is not None else REWARD_SCHEMA
+
+    @property
+    def component_keys(self) -> tuple[str, ...]:
+        return COMPONENT_KEYS + (QUALITY_COMPONENT_KEYS if self.quality_reward is not None else ())
 
     def record_learned_selection(self, task_id: str) -> None:
         if task_id:
@@ -79,12 +97,13 @@ class SelectorReward:
         boundary_reasons: list[str] | tuple[str, ...] = (),
         raw_action_valid: bool = True,
         environment_mask_valid: bool = True,
+        coordination_metrics: dict[str, Any] | None = None,
     ) -> RewardBreakdown:
         if advanced_ticks < 0 or tick_cap <= 0:
             raise RewardAuditError("advanced_ticks and tick_cap are invalid")
         if not environment_mask_valid:
             raise RewardAuditError("environment mask/boundary mismatch")
-        components = {key: 0.0 for key in COMPONENT_KEYS}
+        components = {key: 0.0 for key in self.component_keys}
         emitted: list[str] = []
         reasons = set(boundary_reasons)
 
@@ -152,6 +171,14 @@ class SelectorReward:
                 self.abandonment_count += 1
                 components["reward.penalty.abandonment_liability"] -= 0.05
 
+        if self.quality_reward is not None:
+            self._observe_quality(
+                components,
+                coordination_metrics,
+                task_events or [],
+                tick_cap=tick_cap,
+            )
+
         return RewardBreakdown(
             components=components,
             milestone_ids=tuple(emitted),
@@ -159,6 +186,95 @@ class SelectorReward:
             invalid_action_count=self.invalid_action_count,
             abandonment_reason_counts=dict(sorted(self.abandonment_reason_counts.items())),
         )
+
+    def _observe_quality(
+        self,
+        components: dict[str, float],
+        metrics: dict[str, Any] | None,
+        task_events: list[dict[str, Any]],
+        *,
+        tick_cap: int,
+    ) -> None:
+        if metrics is None:
+            raise RewardAuditError("reward v2 requires coordination metrics")
+        required = (
+            "agent_ticks",
+            "idle_agent_ticks",
+            "duplicate_work_incidents",
+            "announced_messages",
+        )
+        if any(key not in metrics for key in required):
+            raise RewardAuditError("reward v2 coordination metrics are incomplete")
+        counters = {key: int(metrics[key]) for key in required}
+        if (
+            any(value < 0 for value in counters.values())
+            or counters["idle_agent_ticks"] > counters["agent_ticks"]
+            or counters["agent_ticks"] > tick_cap * 3
+        ):
+            raise RewardAuditError("reward v2 coordination metrics are invalid")
+        for key, value in counters.items():
+            if value < self.prior_quality_counters.get(key, 0):
+                raise RewardAuditError(f"reward v2 counter rolled back: {key}")
+
+        idle_delta = counters["idle_agent_ticks"] - self.prior_quality_counters.get(
+            "idle_agent_ticks", 0
+        )
+        self._quality_charge(
+            components,
+            "reward.penalty.team_idle_ticks",
+            idle_delta * float(self.quality_reward["idle_agent_tick_cost"]),
+            cap=tick_cap * 3 * float(self.quality_reward["idle_agent_tick_cost"]),
+        )
+        for counter, component, cost_key, cap_key in (
+            (
+                "duplicate_work_incidents",
+                "reward.penalty.duplicate_work",
+                "duplicate_work_cost",
+                "duplicate_work_cap",
+            ),
+            (
+                "announced_messages",
+                "reward.penalty.communication",
+                "announcement_cost",
+                "announcement_cap",
+            ),
+        ):
+            delta = counters[counter] - self.prior_quality_counters.get(counter, 0)
+            self._quality_charge(
+                components,
+                component,
+                delta * float(self.quality_reward[cost_key]),
+                cap=float(self.quality_reward[cap_key]),
+            )
+
+        abandonments = sum(
+            event.get("act") == "ABANDON"
+            and not any(
+                token in str(event.get("reason_code", "")).lower()
+                for token in ABANDON_EXCLUSIONS
+            )
+            for event in task_events
+        )
+        self._quality_charge(
+            components,
+            "reward.penalty.team_abandonment",
+            abandonments * float(self.quality_reward["team_abandonment_cost"]),
+            cap=float(self.quality_reward["team_abandonment_cap"]),
+        )
+        self.prior_quality_counters = counters
+
+    def _quality_charge(
+        self,
+        components: dict[str, float],
+        key: str,
+        requested: float,
+        *,
+        cap: float,
+    ) -> None:
+        prior = self.quality_penalty_totals.get(key, 0.0)
+        charge = min(max(0.0, requested), max(0.0, cap - prior))
+        self.quality_penalty_totals[key] = prior + charge
+        components[key] = -charge
 
     def _milestone(self, milestone: str, emitted: list[str]) -> None:
         if milestone not in MILESTONE_VALUES:

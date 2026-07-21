@@ -396,6 +396,25 @@ class TestPpoSelector(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "schema mismatch"):
                 load_checkpoint(path, SelectorActorCritic(1))
 
+            v2 = Path(directory) / "v2.pt"
+            state = SelectorActorCritic(1).state_dict()
+            torch.save(
+                {
+                    "feature_schema": "selector_features_v1",
+                    "reward_schema": "selector_reward_v2",
+                    "model_schema": "selector_actor_critic_v1",
+                    "model_state": state,
+                },
+                v2,
+            )
+            with self.assertRaisesRegex(ValueError, "schema mismatch"):
+                load_checkpoint(v2, SelectorActorCritic(1))
+            load_checkpoint(
+                v2,
+                SelectorActorCritic(1),
+                reward_schema="selector_reward_v2",
+            )
+
     def test_model_state_digest_is_stable_and_weight_sensitive(self):
         from mindustry_agents.training.model import SelectorActorCritic
         from mindustry_agents.training.ppo_selector import _model_state_digest

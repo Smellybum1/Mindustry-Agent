@@ -15,6 +15,7 @@ from mindustry_agents.training.checkpoint_interpolation import (
 )
 from mindustry_agents.training.model import SelectorActorCritic
 from mindustry_agents.training.ppo_selector import (
+    REWARD_SCHEMA,
     _git_evidence,
     _json_digest,
     _model_state_digest,
@@ -157,7 +158,11 @@ def build_direct_lineage(
     model_state_hashes: list[str] = []
     for checkpoint_path in checkpoint_paths:
         model = SelectorActorCritic(int(config["model_init_seed"]))
-        checkpoint = load_checkpoint(checkpoint_path, model)
+        checkpoint = load_checkpoint(
+            checkpoint_path,
+            model,
+            reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+        )
         if checkpoint.get("config_sha256") != config_sha256:
             raise ValueError("selected checkpoint config hash mismatch")
         if int(checkpoint.get("update", 0)) != selected_updates[0]:
@@ -277,7 +282,11 @@ def validate_lineage_manifest(
             raise ValueError("checkpoint adjustment artifact hash mismatch")
         config = _load_json(config_path)
         model = SelectorActorCritic(int(config["model_init_seed"]))
-        checkpoint = load_checkpoint(checkpoint_path, model)
+        checkpoint = load_checkpoint(
+            checkpoint_path,
+            model,
+            reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+        )
         if checkpoint.get("config_sha256") != config_sha256:
             raise ValueError("adjusted checkpoint config hash mismatch")
         model_state_sha256 = _model_state_digest(checkpoint["model_state"])
@@ -309,7 +318,11 @@ def validate_lineage_manifest(
         raise ValueError("checkpoint lineage artifact hash mismatch")
     config = _load_json(config_path)
     model = SelectorActorCritic(int(config["model_init_seed"]))
-    checkpoint = load_checkpoint(checkpoint_path, model)
+    checkpoint = load_checkpoint(
+        checkpoint_path,
+        model,
+        reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+    )
     if checkpoint.get("config_sha256") != config_sha256:
         raise ValueError("direct checkpoint config hash mismatch")
     model_state_sha256 = _model_state_digest(checkpoint["model_state"])

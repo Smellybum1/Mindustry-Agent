@@ -31,6 +31,7 @@ from mindustry_agents.training.model import SelectorActorCritic
 from mindustry_agents.training.checkpoint_lineage import validate_lineage_manifest
 from mindustry_agents.training.ppo_selector import (
     LEARNED_SEAT,
+    REWARD_SCHEMA,
     EpisodeRollout,
     _canonical_scripted_action,
     _configure_torch,
@@ -354,7 +355,10 @@ def main(argv: list[str] | None = None) -> int:
     config = json.loads(args.config.read_text(encoding="utf-8"))
     _configure_torch(config)
     model = SelectorActorCritic(int(config["model_init_seed"]))
-    checkpoint_payload = load_checkpoint(args.checkpoint.resolve(), model)
+    reward_schema = str(config.get("reward_schema", REWARD_SCHEMA))
+    checkpoint_payload = load_checkpoint(
+        args.checkpoint.resolve(), model, reward_schema=reward_schema
+    )
     checkpoint_sha256 = _sha256(args.checkpoint.resolve())
     checkpoint_config_match = checkpoint_payload.get("config_sha256") == _sha256(
         args.config.resolve()
@@ -421,6 +425,8 @@ def main(argv: list[str] | None = None) -> int:
                         scenario_version=int(seed_set["scenario_version"]),
                         evaluation=True,
                         action_generator=generator,
+                        reward_schema=reward_schema,
+                        quality_reward=config.get("quality_reward"),
                     )
                 else:
                     rollout = rollout_control_episode(
