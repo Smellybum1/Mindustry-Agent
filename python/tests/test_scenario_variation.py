@@ -302,3 +302,35 @@ def test_v11_confirmation_and_blend_are_precommitted():
         ("base", 31, 0.9),
         ("auxiliary", 6, 0.1),
     ]
+
+
+def test_v12_quality_reward_and_dev_v8_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v8.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v8"
+    assert confirmation["seed_set_version"] == 8
+    assert confirmation["seeds"] == list(range(81001, 81161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    config = json.loads(
+        (
+            DEFAULT_SEED_SET.parents[1]
+            / "training"
+            / "m8-selector-v12-quality-reward.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert config["reward_schema"] == "selector_reward_v2"
+    assert config["held_out_seed_set_id"] == "bootstrap-defense-v1-held-out-v4"
+    assert config["quality_reward"] == {
+        "idle_agent_tick_cost": 0.0001,
+        "duplicate_work_cost": 0.05,
+        "duplicate_work_cap": 1.0,
+        "announcement_cost": 0.005,
+        "announcement_cap": 1.0,
+        "team_abandonment_cost": 0.1,
+        "team_abandonment_cap": 2.0,
+    }

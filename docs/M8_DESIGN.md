@@ -507,6 +507,21 @@ sealed. Records, aggregate, and report hashes are
 `a605ec43468f9f89158e95e6d4f2e47355415fd4d9f3b353ac282f6582569410`,
 and `bdf411b0fb386e7cf1385292570f79384252701f31d9484f832c70c945b78cff`.
 
+## V12 governed successor
+
+ADR-0022 precommits `selector_reward_v2` after V11 proved that win capacity and
+matched-team quality are no longer the limiting gates. V2 retains reward v1 and
+adds bounded negative-only costs for cumulative idle agent ticks, duplicate
+work, announcements, and non-forced team abandonment. The maximum new episode
+penalty is 6.7, below the 20-point terminal win/loss gap. V1 remains the default
+and cross-schema checkpoint use must fail.
+
+V12 otherwise uses V6's 64-root/32-cycle recipe and names held-out-v4. Two
+pinned runs must reproduce; dev-v1 continuation requires 9/10 wins and mean
+idle below 0.25. Dev-v8 is frozen as a new globally disjoint 160-root one-way
+confirmation under ADR-0019. No V12 training may begin until all four reward
+audit rows and their adversarial tests pass.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

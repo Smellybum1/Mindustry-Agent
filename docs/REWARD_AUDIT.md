@@ -145,6 +145,72 @@ not an M8.5 promotion approval and does not authorize held-out evaluation.
 | Telemetry key | `reward.penalty.abandonment_liability`, `reward.abandonment_reason_counts`. |
 | Status | implemented-approved-m8.4; adversaries pass 2026-07-21 |
 
+## V12 selector reward v2 precommit
+
+`selector_reward_v2` retains every v1 component and adds the four negative-only
+rows below. They are precommitted under ADR-0022 and may influence V12 only
+after production tests and the expanded adversary gate pass.
+
+### `reward.penalty.team_idle_ticks`
+
+| Field | Value |
+|---|---|
+| Definition | `-0.0001` for each monotonic increase in cumulative `idle_agent_ticks`. |
+| Scale / range | `[-2.7,0]` for three agents and the 9,000-tick cap. |
+| State variables read | Structured cumulative `idle_agent_ticks`, `agent_ticks`, scenario tick/agent cap, prior counters. |
+| Intended behaviour | Prefer action traces that keep the whole mixed team doing useful work. |
+| Exploit hypothesis 1 | Lose early to avoid idle cost. Mitigation: terminal loss plus full-horizon unresolved cost dominates. |
+| Exploit hypothesis 2 | Manipulate step chunking. Mitigation: charge exact cumulative delta and fail counter rollback. |
+| Exploit hypothesis 3 | Perform churn/busywork instead of idling. Mitigation: duplicate/abandon penalties plus milestone, win, and scorecard gates. |
+| Adversarial tests | `idle-early-loss`; `quality-chunk-size`; `idle-busywork`. |
+| Telemetry key | `reward.penalty.team_idle_ticks` plus charged idle ticks. |
+| Status | precommitted-v12; not active until tests pass |
+
+### `reward.penalty.duplicate_work`
+
+| Field | Value |
+|---|---|
+| Definition | `-0.05` per monotonic increase in cumulative `duplicate_work_incidents`, capped at `-1.0`. |
+| Scale / range | `[-1,0]`. |
+| State variables read | Structured cumulative duplicate counter and prior charged count. |
+| Intended behaviour | Reduce redundant claims/work without blaming mask-valid atomic claim races as invalid actions. |
+| Exploit hypothesis 1 | Stop proposing useful work. Mitigation: terminal/milestone/time terms and WAIT-only adversary. |
+| Exploit hypothesis 2 | Farm after the cap. Mitigation: no positive signal exists; scorecard still counts every incident. |
+| Exploit hypothesis 3 | Counter reset hides incidents. Mitigation: any in-episode rollback fails the run. |
+| Adversarial tests | `duplicate-quality-cap`; `duplicate-after-cap`; `quality-counter-rollback`. |
+| Telemetry key | `reward.penalty.duplicate_work` plus charged incident count. |
+| Status | precommitted-v12; not active until tests pass |
+
+### `reward.penalty.communication`
+
+| Field | Value |
+|---|---|
+| Definition | `-0.005` per monotonic increase in cumulative announced messages, capped at `-1.0`; routine structured messages cost zero. |
+| Scale / range | `[-1,0]`. |
+| State variables read | Structured cumulative `announced_messages` and prior charged count. |
+| Intended behaviour | Discourage announcement spam while retaining structured communication authority. |
+| Exploit hypothesis 1 | Suppress necessary warnings. Mitigation: small capped scale plus win/recovery/scorecard gates. |
+| Exploit hypothesis 2 | Relabel announcements as routine. Mitigation: server-authoritative message priority; policy cannot set telemetry classification. |
+| Exploit hypothesis 3 | Change boundary frequency to repeat charges. Mitigation: cumulative delta accounting. |
+| Adversarial tests | `announcement-quality-cap`; `routine-message-zero`; `quality-chunk-size`. |
+| Telemetry key | `reward.penalty.communication` plus charged announcement count. |
+| Status | precommitted-v12; not active until tests pass |
+
+### `reward.penalty.team_abandonment`
+
+| Field | Value |
+|---|---|
+| Definition | `-0.1` per structured non-forced ABANDON by any agent, capped at `-2.0`; forced wave/readiness/death/lease/human/terminal cleanup reasons are excluded. |
+| Scale / range | `[-2,0]`. |
+| State variables read | Structured task events, agent id, task id, reason code, charged count. |
+| Intended behaviour | Reduce team-wide task churn that the learned selector induces through shared coordination. |
+| Exploit hypothesis 1 | Hold permanently blocked tasks. Mitigation: unresolved time cost, lifecycle bounds, and win gate. |
+| Exploit hypothesis 2 | Trigger excluded reasons intentionally. Mitigation: exclusions are authoritative safety/lifecycle events and remain visible in scorecards. |
+| Exploit hypothesis 3 | Duplicate/replay one event. Mitigation: server event stream is authoritative and each delivered event is charged once; cap bounds damage. |
+| Adversarial tests | `team-abandon-quality-cap`; `team-forced-abandon-zero`; `blocked-never-release`. |
+| Telemetry key | `reward.penalty.team_abandonment` plus charged/excluded reason counts. |
+| Status | precommitted-v12; not active until tests pass |
+
 ## Cross-component adversarial matrix
 
 These CI-runnable cases are mandatory before changing any status to approved:

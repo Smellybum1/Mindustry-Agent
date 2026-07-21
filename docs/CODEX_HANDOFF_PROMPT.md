@@ -64,6 +64,13 @@ recovery, and abandonment fail. V11 is rejected and dev-v7 consumed.
 Held-out-v4 stays sealed. Precommit any next candidate and confirmation path
 before execution.
 
+ADR-0022 now precommits V12 and dev-v8. Implement `selector_reward_v2` exactly
+as audited: v1 plus bounded negative-only idle-tick, duplicate-work,
+announcement, and non-forced team-abandonment costs. Preserve v1 behavior and
+make cross-schema checkpoint loading fail. Expand reward adversaries before any
+training. V12 then uses V6's long recipe and must reproduce, reach 9/10 dev-v1,
+and lower mean idle below 0.25 before exclusive dev-v8. Held-out-v4 stays sealed.
+
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.

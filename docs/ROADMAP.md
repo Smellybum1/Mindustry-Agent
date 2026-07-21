@@ -911,6 +911,14 @@ matched-greedy scorecards pass. Permanent-greedy duplicates pass, but
 announcements, idle, recovery, and abandonment fail. V11 is rejected, dev-v7
 is consumed, held-out-v4 remains sealed, and M8.5 remains unmet.
 
+ADR-0022 precommits V12 as V6's 64-root/32-cycle recipe under
+`selector_reward_v2`. Four capped negative-only components target the exact
+remaining gates: idle ticks, duplicate work, announcements, and non-forced team
+abandonment. Their audit rows and adversaries must pass before training. V12
+must reproduce and reach 9/10 dev-v1 wins with mean idle below 0.25. A disjoint
+160-root dev-v8 set is frozen for one corrected confirmation; held-out-v4
+remains sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
