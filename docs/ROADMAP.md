@@ -1229,6 +1229,15 @@ Config/adversary SHA-256 are `94a7ae8cf57cb1ce...` and
 `4cd7f5096bbd0ebc...`. Exact twin replicas and reusable preflight are next;
 M8.5 remains unmet.
 
+V24 replica A completed all 2,048 episodes/32 updates but no checkpoint reached
+the frozen 9/10 construction threshold. The best ranking row is update 19 at
+8/10, mean return `1.20730`, mean core health `692.8`, and mean idle
+`0.06516475`; the retained frontier hashes to `90ead621f808c53f...`. Replica B
+did not start, dev-v20 remained unopened and is retired, and held-out-v4 stays
+sealed. Current-runtime reusable diagnosis shows adaptive-v1 at 10/10, idle
+`0.07308979`, and zero abandonment; V24 update 19 disagrees on 73/427 unforced
+decisions and loses seeds 2004/2005. V24 is rejected and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

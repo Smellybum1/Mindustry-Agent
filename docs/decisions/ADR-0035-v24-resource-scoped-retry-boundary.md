@@ -78,3 +78,24 @@ and golden determinism including the negative replay. Config SHA-256 is
 `94a7ae8cf57cb1ce890e99e7139749039726624929e138c50ec84c3e76dfb6ca`;
 adversary report SHA-256 is
 `4cd7f5096bbd0ebc9031b82290156dc4f5ae3f50d089b97278879c252b9720b5`.
+
+## Outcome
+
+Replica A completed all 2,048 episodes and 32 updates, then correctly failed
+the precommitted construction gate. No checkpoint reached 9/10 reusable-dev
+wins. The best frozen-ranking row was update 19 at 8/10, mean return
+`1.207300000000004`, mean core health `692.8`, and mean idle
+`0.06516475136727648`. The complete retained frontier hashes to
+`90ead621f808c53f4b5443941e6f322cd7190dceef4eab3c4d6cc1212c51c5ba`.
+Replica B did not start, no selected manifest or lineage was created, dev-v20
+remained unopened, and held-out-v4 remained sealed.
+
+Permitted reusable-dev diagnosis evaluated the current-runtime all-adaptive
+reference: it wins 10/10 with mean idle `0.07308978685499233` and zero task
+abandonment. Its record and aggregate hashes are
+`fd90b6232b3017a2a933f557ce450f86a694c03eb89382c03218eb232b19bce5`
+and
+`94c423e042f8537a70a32b93d538c772033089b04217a91324cc4c7648e5ea91`.
+V24 update 19 disagrees with that teacher on 73 of 427 unforced decisions; its
+two losses are seeds 2004 and 2005. V24 is rejected and dev-v20 is retired
+unopened.

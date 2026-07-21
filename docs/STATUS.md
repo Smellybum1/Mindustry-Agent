@@ -1229,6 +1229,13 @@ repository-evidence mapping used for the M6 audit is:
   build, 5/5 candidate gate, smoke, determinism, and negative replay pass.
   Config/adversary hashes are `94a7ae8cf57cb1ce...` and
   `4cd7f5096bbd0ebc...`; exact twin replicas are next.
+- V24 replica A completed 2,048 episodes/32 updates but failed construction:
+  no checkpoint reached 9/10. Best-ranked update 19 is 8/10 with mean idle
+  `0.06516475`; the retained frontier hash is `90ead621f808c53f...`. Replica B
+  did not start, dev-v20 remained unopened and is retired, and held-out-v4 stays
+  sealed. On current-runtime reusable dev-v1, adaptive-v1 is 10/10 with idle
+  `0.07308979` and zero abandonment, while update 19 disagrees on 73/427
+  unforced decisions and loses seeds 2004/2005. V24 is rejected.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

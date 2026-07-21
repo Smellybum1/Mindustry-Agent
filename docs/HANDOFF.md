@@ -500,8 +500,6 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   pinned build, 145 Python tests, 5/5 gate, smoke, determinism, and negative
   replay pass; final golden hash is `8fee3db9b5cf01f2...` with zero non-hash
   replay changes. The V23 diagnostic is inference-only and cannot promote.
-- **What is broken**: V23 was trained under the superseded target-local retry
-  decision sequence. A governed V24 from-scratch retrain is required.
 - **V24 precommit**: ADR-0035 freezes an exact V23 retrain under runtime contract
   `abandon_wait_resource_scoped_retry_agent_death_available_idle_v5`; only
   candidate ID, runtime contract, and confirmation path differ. Dev-v19 is
@@ -509,7 +507,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   held-out-v4 stays sealed. No V24 model work preceded the packet. All 44
   exact-config reward adversaries, 146 Python tests, pinned build, 5/5 candidate
   gate, smoke, determinism, and negative replay pass. Config/adversary hashes are
-  `94a7ae8cf57cb1ce...` and `4cd7f5096bbd0ebc...`; exact replicas are next.
+  `94a7ae8cf57cb1ce...` and `4cd7f5096bbd0ebc...`.
+- **V24 rejected at construction**: replica A completed 2,048 episodes/32
+  updates, but no checkpoint reached 9/10. Best-ranked update 19 is 8/10 with
+  idle `0.06516475`; retained frontier hash is `90ead621f808c53f...`. Replica B
+  did not start, dev-v20 remained unopened and is retired, and held-out-v4 stays
+  sealed. Current-runtime adaptive-v1 is 10/10 with idle `0.07308979` and zero
+  abandonment; update 19 disagrees on 73/427 unforced decisions and loses seeds
+  2004/2005. V24 is rejected.
+- **What is broken**: learned construction remains below the 9/10 gate. The
+  reusable evidence supports a governed moderate teacher-strength successor;
+  no successor model work has started.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
@@ -671,12 +679,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Precommit V24 before model work.** Freeze a new runtime contract for the
-   resource-scoped retry decision sequence and a new unopened, globally
-   disjoint dev confirmation set; retire dev-v19 unopened.
-2. **Train two exact V24 replicas sequentially.** Use only the frozen config and
-   pinned toolchain. Require checkpoint/frontier/model/replay/full-run/direct-
-   lineage reproduction; a rejected gate must retain its frontier.
+1. **Precommit the next train/dev-only hypothesis before model work.** Base it
+   only on V24's retained reusable frontier and current-runtime adaptive-v1
+   evidence; freeze a new unopened, globally disjoint confirmation set.
+2. **Train replicas sequentially.** Require the first construction gate before
+   starting the second, then exact checkpoint/frontier/model/replay/full-run/
+   direct-lineage reproduction.
 3. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
    confirmation. Never inspect dev-v14/dev-v15/dev-v16/dev-v17 or
