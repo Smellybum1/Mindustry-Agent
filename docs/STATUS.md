@@ -1012,6 +1012,17 @@ repository-evidence mapping used for the M6 audit is:
   confirmation. Dev-v10 freezes 160 disjoint roots `101001..101160`; held-out-v4
   remains sealed. The precommit governance test brings the Python suite to 129
   passing tests.
+- Two pinned V14 2,048-episode replicas reproduce exactly and select update 32
+  at 10/10 dev-v1 wins, mean idle 0.15861366, and mean core health 1034.3.
+  Checkpoint/model-state/replay/full-run/lineage hashes are
+  `d403044cc5adec74...`, `d2d60661ad2a5b90...`, `c6647a44b09ce7eb...`,
+  `ecd8776cda1430d5...`, and `52f6138246423c54...`. Fresh scorecard-v2
+  permanent baselines and the corrected reusable dev-v1 dual preflight then
+  reject V14: versus permanent greedy, idle difference is +0.11430187 (95% CI
+  +0.08198337..+0.14898070) and non-forced abandonment difference is
+  +0.04469033 (+0.01168093..+0.09201991); recovery is uncertain. Baseline,
+  candidate, aggregate, and preflight artifacts are hashed. Dev-v10 remains
+  unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

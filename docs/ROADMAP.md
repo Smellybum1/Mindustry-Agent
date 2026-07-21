@@ -975,6 +975,14 @@ permanent/matched scorecards before a one-way confirmation can begin. Dev-v10
 is frozen at 160 disjoint roots `101001..101160`; the 129-test Python suite
 passes and held-out-v4 remains sealed.
 
+Two exact V14 2,048-episode replicas select update 32 at 10/10 reusable dev-v1
+wins and mean idle 0.15861366. Checkpoint `d403044cc5adec74...`, replay
+`c6647a44b09ce7eb...`, full-run digest `ecd8776cda1430d5...`, and lineage
+`52f6138246423c54...` reproduce. Fresh scorecard-v2 permanent baselines and the
+corrected dual preflight then reject V14: permanent-greedy idle and non-forced
+abandonment are definitively worse, while recovery is uncertain. Dev-v10 is
+unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

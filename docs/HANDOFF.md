@@ -313,6 +313,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   the corrected permanent-plus-matched dual scorecards before dev-v10 can be
   consumed. Dev-v10 is frozen at disjoint roots `101001..101160`; held-out-v4
   remains sealed. The full 129-test Python suite passes.
+- **V14 result**: two pinned 2,048-episode runs reproduce exactly at update 32,
+  10/10 reusable dev-v1 wins, idle 0.15861366, checkpoint `d403044cc5adec74...`,
+  model state `d2d60661ad2a5b90...`, replay `c6647a44b09ce7eb...`, full-run
+  digest `ecd8776cda1430d5...`, and lineage `52f6138246423c54...`. Fresh
+  scorecard-v2 permanent baselines are used. The corrected dev-v1 preflight
+  rejects V14 before confirmation: permanent-greedy idle is definitively worse
+  by 0.11430187 and non-forced abandonment by 0.04469033; recovery is
+  uncertain. Dev-v10 is unopened, held-out-v4 is sealed, and M8.5 remains
+  unmet.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
