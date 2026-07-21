@@ -798,6 +798,12 @@ boundary. The auxiliary is training-only, separately metered, zero by default,
 and changes neither reward nor evaluation. Its config names held-out-v2; no v4
 training evidence exists yet.
 
+V4 reproduced exactly and improved the diverse-root result to 5/10 dev wins at
+update 5 (full-run digest `fc23c1ed82a546d3...`), but remains ineligible for
+preflight. V5 is precommitted as the final coefficient-only test, changing only
+the successful teacher coefficient from 0.05 to 0.10. It must reach at least
+9/10 dev wins or this line stops; its config names held-out-v2.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

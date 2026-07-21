@@ -104,3 +104,25 @@ def test_m8_teacher_regularized_recipe_is_frozen_on_v2_contract():
     assert config["episodes_per_update"] == 64
     assert config["success_imitation_coefficient"] == 0.0
     assert config["successful_teacher_imitation_coefficient"] == 0.05
+
+
+def test_m8_final_teacher_strength_changes_only_precommitted_coefficient():
+    config_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v4 = json.loads(
+        (config_dir / "m8-selector-v4-teacher-regularized.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    v5 = json.loads(
+        (config_dir / "m8-selector-v5-teacher-regularized.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert v5["held_out_seed_set_id"] == "bootstrap-defense-v1-held-out-v2"
+    assert v5["held_out_seed_set_version"] == 2
+    assert v5["successful_teacher_imitation_coefficient"] == 0.1
+    assert v5["optimizer_ppo"]["successful_teacher_imitation_coefficient"] == 0.1
+    v4["successful_teacher_imitation_coefficient"] = 0.1
+    v4["optimizer_ppo"]["successful_teacher_imitation_coefficient"] = 0.1
+    assert v4 == v5

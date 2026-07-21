@@ -838,7 +838,12 @@ repository-evidence mapping used for the M6 audit is:
 - `m8-selector-v4-teacher-regularized` is precommitted as the next train/dev
   hypothesis. It adds a 0.05 successful-episode adaptive-teacher auxiliary to
   the otherwise unchanged v3 recipe, with explicit loss/sample telemetry and a
-  zero-default compatibility path. Its config names v2; it has not been run.
+  zero-default compatibility path. Two pinned runs reproduce exactly and select
+  update 5 at 5/10 dev wins (`da777520e27ee20c...`, full-run
+  `fc23c1ed82a546d3...`), so v4 stops before preflight.
+- V5 is frozen as the final coefficient-only follow-up at 0.10. It changes no
+  other recipe field, names held-out-v2, and must reach at least 9/10 dev wins
+  or the teacher-regularization line ends. It has not been run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

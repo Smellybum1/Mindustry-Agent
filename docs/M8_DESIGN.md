@@ -296,6 +296,17 @@ This hypothesis addresses sparse successful diverse-root training evidence
 changing model capacity, roots, episode/update budget, RNGs, reward, dev set,
 or evaluation. Its frozen config names held-out-v2 and must stop on dev failure.
 
+Two pinned v4 runs reproduced exactly and selected update 5 at 5/10 dev wins:
+checkpoint `da777520e27ee20c...`, replay `a455e5c0caf702ec...`, and full-run
+digest `fc23c1ed82a546d3...`. This improves v3 but cannot strictly beat the 8/10
+permanent-greedy dev aggregate, so v4 stops before preflight.
+
+V5 is the final coefficient-only follow-up. It changes only the successful
+teacher coefficient from 0.05 to 0.10 and precommits a strict continuation bar:
+at least 9/10 dev wins, sufficient to exceed the existing 8/10 permanent-greedy
+aggregate before the full scorecard preflight. A lower result ends this
+teacher-regularization line. Its frozen config names held-out-v2.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

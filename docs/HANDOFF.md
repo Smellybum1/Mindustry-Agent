@@ -186,6 +186,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   512-episode budget and reproduced exactly, but selected update 1 at only 3/10
   dev wins (`e9e1ee37fbfef6ee...`). It stops before preflight and v2 remains
   unopened. M9.1 remains blocked by its explicit promotion prerequisite.
+- **Teacher-regularized successor**: v4 reproduced exactly and improved the
+  diverse-root dev result to 5/10, but remains ineligible. V5 changes only the
+  teacher coefficient from 0.05 to 0.10 and is precommitted as the final test;
+  it must reach at least 9/10 dev wins or stop before preflight. V2 is unopened.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
