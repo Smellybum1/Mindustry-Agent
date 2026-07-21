@@ -783,6 +783,12 @@ development loaders, and permits one exclusive future final attempt under the
 same promotion gates. No successor candidate has been trained. M9 remains
 gated on M8 promotion.
 
+The first successor recipe is precommitted as `m8-selector-v3-diverse`: it
+holds the 512-episode/eight-update budget, model, reward, optimizer, RNGs, and
+dev selection fixed while replacing 32 repeats over 16 train roots with 8
+repeats over 64 new train roots. Its config names held-out-v2. Training and dev
+evidence are not yet recorded.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

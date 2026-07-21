@@ -49,3 +49,38 @@ def test_post_failure_held_out_v2_is_sealed_exact_and_globally_disjoint():
         path = DEFAULT_SEED_SET.with_name(name)
         other = json.loads(path.read_text(encoding="utf-8"))
         assert v2_seeds.isdisjoint(other["seeds"]), name
+
+
+def test_m8_successor_recipe_precommits_diverse_train_roots_and_v2_final():
+    config_path = DEFAULT_SEED_SET.parents[1] / "training/m8-selector-v3-diverse.json"
+    train_path = DEFAULT_SEED_SET.with_name(
+        "bootstrap-defense-v1-train-v2.json"
+    )
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    train = json.loads(train_path.read_text(encoding="utf-8"))
+
+    assert config["train_seed_set"].endswith(
+        "bootstrap-defense-v1-train-v2.json"
+    )
+    assert config["held_out_seed_set_id"] == (
+        "bootstrap-defense-v1-held-out-v2"
+    )
+    assert config["held_out_seed_set_version"] == 2
+    assert config["training_cycles"] * len(train["seeds"]) == 512
+    assert config["episodes_per_update"] == 64
+    assert config["success_imitation_coefficient"] == 0.0
+    assert train["split"] == "train"
+    assert train["seeds"] == list(range(11001, 11065))
+
+    governed_names = (
+        "bootstrap-defense-v0-fixed-v1.json",
+        "bootstrap-defense-v1-train-v1.json",
+        "bootstrap-defense-v1-dev-v1.json",
+        "bootstrap-defense-v1-held-out-v1.json",
+        "bootstrap-defense-v1-held-out-v2.json",
+    )
+    train_seeds = set(train["seeds"])
+    for name in governed_names:
+        path = DEFAULT_SEED_SET.with_name(name)
+        other = json.loads(path.read_text(encoding="utf-8"))
+        assert train_seeds.isdisjoint(other["seeds"]), name

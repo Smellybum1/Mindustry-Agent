@@ -259,6 +259,22 @@ permanent greedy and recovery is uncertain. The final decision is
 `not_promoted`. Exact local artifact hashes are recorded in `docs/STATUS.md` and
 the completed attempt marker forbids any rerun or outcome-driven policy tuning.
 
+## Post-failure successor precommit
+
+ADR-0013 freezes held-out-v2 before successor model work. The first successor
+hypothesis changes only training-root diversity: `m8-selector-v3-diverse` uses
+64 new train-only roots (`11001..11064`) for 8 cycles instead of 16 roots for
+32 cycles. Both recipes therefore contain exactly 512 training episodes and
+eight 64-episode optimizer updates. Model architecture, reward, PPO parameters,
+RNG seeds, dev-v1 checkpoint selection, learned seat, scripted teammates, and
+event cadence remain unchanged; successful-trajectory imitation is disabled.
+
+The hypothesis is that broader train-root coverage reduces repeated-root
+specialization without increasing the training or model capacity budget. It
+was selected from train/dev methodology only, before running the recipe, and
+its immutable config names `bootstrap-defense-v1-held-out-v2`. A successor that
+does not pass the frozen dev preflight stops there and never opens v2.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

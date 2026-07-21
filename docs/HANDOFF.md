@@ -182,8 +182,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 - **Post-failure governance**: ADR-0013 freezes the 40-root, globally disjoint
   `bootstrap-defense-v1-held-out-v2` contract before any successor model work.
   Development loaders refuse it and only one exclusive future final is
-  permitted. No successor candidate has been trained. M9.1 remains blocked by
-  its explicit promotion prerequisite.
+  permitted. `m8-selector-v3-diverse` is precommitted to test 64 train roots at
+  the unchanged 512-episode budget and names v2; it has not been trained. M9.1
+  remains blocked by its explicit promotion prerequisite.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

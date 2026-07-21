@@ -830,7 +830,9 @@ repository-evidence mapping used for the M6 audit is:
   `bootstrap-defense-v1-held-out-v2` contract freezes 40 globally disjoint root
   seeds before another candidate is designed or trained. Development loaders
   refuse the split, its one future final attempt is exclusive, and M9 remains
-  gated. No post-v1 candidate training has begun.
+  gated. The precommitted `m8-selector-v3-diverse` recipe isolates broader
+  train-root coverage at the same 512-episode budget and names v2; no post-v1
+  candidate training has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
