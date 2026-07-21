@@ -1358,6 +1358,21 @@ health `182.6`, and idle `0.21429663`; complete frontier hash is
 retired, held-out-v4 stays sealed, and V29 is rejected before reusable preflight.
 M8.5 remains unmet.
 
+ADR-0041 precommits V30 after V29 exposed a presentation-budget confound. The
+successful corpus grew from 121 to 860 transitions, so fixed epoch counts also
+grew warmup presentations `968 -> 6,880` and per-update rehearsal
+`121 -> 860`; the best construction result fell from V28's 8/10 to V29's 4/10.
+V30 holds V29 exact but deterministically caps each warmup and rehearsal epoch
+at 121 sampled transitions. This restores V28's eight warmup batches and one
+rehearsal batch per PPO update while rotating through all 860 eligible labels;
+exact sampled indices and schedule hashes join reproducibility evidence.
+Dev-v25 is retired unopened. Dev-v26 freezes disjoint roots `261001..261160`
+and remains unopened; held-out-v4 stays sealed. No V30 teacher collection or
+model work preceded the committed packet. All 44 exact-config adversaries, 155
+Python tests, pinned build, 5/5 candidate gate, smoke, determinism, and negative
+replay pass. Config/adversary hashes are `c57556695157dcd4...` and
+`a3bcf116478e1be0...`. Replica A is next; M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -1332,6 +1332,17 @@ repository-evidence mapping used for the M6 audit is:
   frontier hash is `26c6270efca0c852...`. Replica B did not start, dev-v25 is
   retired unopened, held-out-v4 stays sealed, and V29 is rejected before
   reusable preflight.
+- ADR-0041 precommits V30 to isolate V29's corpus diversity from its roughly
+  sevenfold CE-budget increase. V30 holds V29 exact but caps every warmup and
+  rehearsal epoch at 121 deterministically shuffled transitions, restoring
+  V28's 968 total warmup presentations and one rehearsal batch per PPO update.
+  Exact sampled indices, unique coverage, and schedule hashes join the reports;
+  cap-free historical configs retain full-corpus behavior. Dev-v25 is retired
+  unopened; dev-v26 freezes roots `261001..261160` and remains unopened;
+  held-out-v4 stays sealed. No V30 model work preceded the packet. All 44 exact-
+  config adversaries, 155 Python tests, pinned build, 5/5 candidate gate, smoke,
+  determinism, and negative replay pass. Config/adversary hashes are
+  `c57556695157dcd4...` and `a3bcf116478e1be0...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

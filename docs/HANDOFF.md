@@ -13,7 +13,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 92 pytest
+  crash-replacement, PettingZoo-shaped facade, vector collector; 155 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
   `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
   east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
@@ -607,6 +607,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `26c6270efca0c852...`. Best-ranked update 5 has idle `0.21429663`. Replica B
   did not start, dev-v25 is retired unopened, held-out-v4 stays sealed, and V29
   stops before reusable preflight.
+- **V30 precommitted; replica A next**: ADR-0041 identifies V29's confound:
+  expanding 121 eligible labels to 860 while keeping epoch counts fixed raised
+  warmup presentations `968 -> 6,880` and rehearsal `121 -> 860` per update.
+  V30 holds V29 exact but caps each CE epoch at 121 deterministic samples, so
+  update counts return to V28 strength while schedules rotate through the
+  diverse corpus. Exact indices/coverage/schedule hashes are reproducibility
+  evidence; absent caps preserve historical behavior. Dev-v25 is retired
+  unopened; dev-v26 freezes `261001..261160` and remains unopened; held-out-v4
+  stays sealed. All 44 exact-config adversaries, 155 Python tests, pinned build,
+  5/5 candidate gate, smoke, determinism, and negative replay pass. Config/
+  adversary hashes are `c57556695157dcd4...` and `a3bcf116478e1be0...`. The
+  committed packet must precede all V30 teacher collection and model work.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
@@ -624,7 +636,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (92 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (155 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
 | `make training-gate` | On WSL2 with pinned `UV`/`JAVA`, reconstructs the RL environment, runs the 1/2/4-JVM shadow-inference collector gate, then 10,000 resets. Current 4-JVM result 375.1x real-time; zero reset drift/leak/orphans; ends `TRAINING-GATE OK`. Verified 2026-07-21. |
@@ -714,7 +726,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 92 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.6
+- **Passing**: 155 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.6
   action/board/event roundtrips, `test_supervisor.py`, `test_env.py`; fake-server
   subprocess, no JVM, fast) and 108 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
@@ -768,23 +780,23 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Precommit the next train/dev-only hypothesis before model work.** Base it
-   only on V24's retained reusable frontier and current-runtime adaptive-v1
-   evidence; freeze a new unopened, globally disjoint confirmation set.
-2. **Train replicas sequentially.** Require the first construction gate before
-   starting the second, then exact checkpoint/frontier/model/replay/full-run/
-   direct-lineage reproduction.
+1. **Run V30 replica A from committed evidence.** Use the pinned WSL2 lock and
+   `m8-selector-v30-budgeted-diverse-teacher-corpus.json`; preserve its complete
+   teacher outcomes and capped sample schedules.
+2. **Train replica B only after construction passes.** Require A at 9/10 wins
+   and idle `<0.25` before starting B, then require exact corpus/schedule/
+   checkpoint/frontier/model/replay/full-run/direct-lineage reproduction.
 3. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
-   confirmation. Never inspect dev-v14/dev-v15/dev-v16/dev-v17 or
-   held-out-v1/v2/v3 outcomes for tuning; held-out-v4 remains sealed.
+   confirmation. Dev-v26 remains unopened until those gates pass; held-out-v4
+   remains sealed.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0020` (do not relitigate).
+See `docs/decisions/ADR-0001..0041` (do not relitigate).
 
 ## Deviations from the brief in this scaffold
 

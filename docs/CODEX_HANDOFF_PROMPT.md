@@ -1,87 +1,61 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, after the failed V9 held-out-v3 final and ADR-0019 parity
-correction.
+`coop-agent/v159.7`, after the V29 construction rejection and the committed V30
+presentation-budget precommit.
 
 Read first, in order:
 
-1. `AGENTS.md` in full; obey the no-subagent rule.
-2. `docs/codex-handoffs/2026-07-21-m8-5.md` in full.
-3. Only M8.5 and the M8 exit criteria in `docs/ROADMAP.md` initially.
-4. `docs/M8_DESIGN.md`, `docs/REWARD_AUDIT.md`, and ADR-0011 through ADR-0019.
+1. `AGENTS.md` in full; obey its project-wide no-subagent rule.
+2. `docs/HANDOFF.md`, focusing on the V24–V30 entries and next-five queue.
+3. M8.5 and the M8 exit criteria in `docs/ROADMAP.md`.
+4. ADR-0035 through ADR-0041.
 
 Run `bash scripts/codex-status.sh`. Preserve and never stage the user-modified
-`AGENTS.md`, generated `annotations/src/main/resources/classids.properties`, or
-the two protected stat-only upstream files `core/src/mindustry/ai/BlockIndexer.java`
-and `core/src/mindustry/entities/Units.java`. Then run the baseline from the
-dated handoff.
+`AGENTS.md`, generated
+`annotations/src/main/resources/classids.properties`, or protected stat-only
+upstream files `core/src/mindustry/ai/BlockIndexer.java` and
+`core/src/mindustry/entities/Units.java`. Then run the baseline:
 
-V9 is the exact checkpoint
-`3ae49108c913b0783300744d906eda0ca2b7846115f3919378fc7ab9e8d2c998`
-with lineage
-`c329bfc096122a13b2b5b18c4f1ff90bbaafa30fde621e70a7c25302ccc7f88c`.
-It completed exclusive dev-v5 at 65/80, then consumed held-out-v3 exactly once.
-The final was V9 70/80, permanent random 33/80, permanent greedy 49/80, and
-matched greedy 5/80. Win gates passed, but permanent-greedy announcements,
-idle, and abandonment regressed; permanent recovery and matched idle were
-uncertain. V9 is not promoted. Never rerun v3 or inspect its individual
-outcomes/traces for policy work.
+```bash
+bash scripts/smoke.sh && bash scripts/determinism.sh
+```
 
-The final exposed a real governance defect: development preflight had required
-the paired teammate scorecard only against matched greedy, while final also
-required permanent greedy. ADR-0019 corrects that mismatch. Future preflight
-must load exact seed-level permanent records, require scorecard non-regression
-against both permanent greedy and matched greedy, hash the permanent record
-source, and have final revalidate it.
+V29 replica A completed 256 teacher episodes and all 2,048 PPO episodes/32
+updates but failed construction. Its frozen teacher set yielded 37 wins and 860
+eligible transitions. Warmup/rehearsal/frontier SHA-256 values are
+`582f362322e4aa43916f0e80c65bcfec3fe1e33e713e2bf590f02ad7e96fe736`,
+`b5c089bf4d85acd238f8c8cc3d0ed1b42e7916e877dbd3b8eb4b8c5391e0efcc`,
+and `26c6270efca0c85210fb4c4fb9486ecd6cfe9e4fc7fe71618c33bb811bb31c1a`.
+No checkpoint exceeded 4/10. Replica B did not start, dev-v25 was retired
+unopened, and held-out-v4 remains sealed.
 
-ADR-0019 freezes the 160-root, globally disjoint
-`bootstrap-defense-v1-held-out-v4` contract before further model work.
-Development tools refuse it. It permits one exclusive future final only after
-a new immutable candidate names v4 and passes a newly governed confirmation
-under the corrected dual-scorecard gate. Choose future behavior from train/dev
-evidence only. M9.1 remains gated on an M8 promotion.
+ADR-0041 precommits V30 as the isolated correction. V29 increased the corpus
+from 121 to 860 transitions while leaving epoch counts fixed, multiplying CE
+optimization roughly sevenfold. V30 keeps the complete diverse corpus but caps
+each warmup and rehearsal epoch at 121 deterministic samples. This restores
+V28's 968 warmup presentations and one rehearsal batch per PPO update while
+rotating through V29's broader corpus. Exact sampled indices, coverage, and
+schedule hashes are reproducibility evidence. Historical cap-free configs keep
+their full-corpus behavior.
 
-ADR-0020 precommits that next candidate as V10. It uses V6's 64-root, 32-cycle
-PPO recipe and adds one training-only coefficient: `1.0` adaptive-v1
-cross-entropy on every unforced transition. Reward and inference remain
-unchanged. The implementation and zero-default telemetry are complete. Two
-pinned runs reproduce exactly but select update 6 at only 1/10 dev wins
-(`a20f44d6ec093076...`; full run `787b5d4bd6548eea...`), so V10 is rejected.
-Dev-v6 and held-out-v4 remain unopened. Choose the next candidate from existing
-train/dev evidence and precommit it before implementation or execution.
+The immutable V30 config is
+`configs/training/m8-selector-v30-budgeted-diverse-teacher-corpus.json`, SHA-256
+`c57556695157dcd4b405ea7a69a527ee6f3c304a67cd042599e9ebf84571473d`.
+Pretraining gates are green: 44 exact-config reward adversaries (report SHA-256
+`a3bcf116478e1be0948c8653deccba749bd5f97b84b058093275eb22c5298677`),
+155 Python tests, pinned build, 5/5 candidate-policy survival, smoke, golden
+determinism, and negative replay. Dev-v26 is frozen at roots `261001..261160`
+and remains unopened. No V30 teacher collection or model work preceded the
+committed packet.
 
-ADR-0021 now precommits V11 as a 90/10 interpolation of reproducible V6 update
-31 and V10 update 6, using V7's established blend weight. Construct it twice
-with cross-commit lineage, then require at least 9/10 dev-v1 wins. Construction
-matches at checkpoint `0a8fa8b4ba98581d...`, lineage `845282326c58308c...`,
-and dev-v1 is 9/10. Dev-v6 is retired unopened. Dev-v7 is frozen as a new
-160-root one-way confirmation under the corrected permanent-plus-matched
-scorecard gate. It completes at V11 137/160, permanent random 69/160,
-permanent greedy 100/160, matched random 19/160, and matched greedy 12/160.
-All win and matched scorecard gates pass, but permanent announcements, idle,
-recovery, and abandonment fail. V11 is rejected and dev-v7 consumed.
-Held-out-v4 stays sealed. Precommit any next candidate and confirmation path
-before execution.
-
-ADR-0022 now precommits V12 and dev-v8. Implement `selector_reward_v2` exactly
-as audited: v1 plus bounded negative-only idle-tick, duplicate-work,
-announcement, and non-forced team-abandonment costs. Preserve v1 behavior and
-make cross-schema checkpoint loading fail. Expand reward adversaries before any
-training. V12 then uses V6's long recipe and must reproduce, reach 9/10 dev-v1,
-and lower mean idle below 0.25 before exclusive dev-v8. Held-out-v4 stays sealed.
-
-V12's exact runs select update 28 at 10/10 wins but idle 0.26628148, so it is
-rejected and dev-v8 is retired unopened. ADR-0023 precommits V13 as the same
-construction with a strict 9/10-win and `<0.25`-idle checkpoint gate. Two exact
-V13 runs select update 24 at 10/10 and idle 0.24980951; checkpoint
-`ff5c21bc6644d903...`, full-run digest `842ac034e91e84ae...`, and lineage
-`8aff4629be3090b3...` reproduce. Dev-v9 is frozen at roots `91001..91160` for
-one exclusive dual-scorecard confirmation. It completes at V13 152/160,
-permanent random 62/160, permanent greedy 92/160, matched random 13/160, and
-matched greedy 15/160. All win and matched scorecards pass; permanent
-announcements, idle, recovery, and abandonment fail. V13 is rejected and
-held-out-v4 remains sealed. Precommit any successor before construction.
+Run V30 replica A only, sequentially, under the pinned Linux/WSL2 CPU lock.
+Preserve its warmup and rehearsal reports even if the construction gate raises.
+Replica B is forbidden unless A reaches at least 9/10 reusable dev-v1 wins with
+mean idle below 0.25. If A fails, do not start B or open dev-v26; record the
+rejection truthfully. If A passes, require an exact B reproduction and reusable
+dual-scorecard preflight before any one-way confirmation. Never open
+held-out-v4 without every governed prerequisite.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
