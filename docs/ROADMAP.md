@@ -905,6 +905,12 @@ comparator. Ten-pair scorecards remain ineligible: permanent idle/abandonment
 regress and matched idle/abandonment are favorable but uncertain. The frozen
 bar authorizes one dev-v7 confirmation only; held-out-v4 remains sealed.
 
+Dev-v7 completes once: V11 137/160, permanent random 69/160, permanent greedy
+100/160, matched random 19/160, matched greedy 12/160. Win gates and all
+matched-greedy scorecards pass. Permanent-greedy duplicates pass, but
+announcements, idle, recovery, and abandonment fail. V11 is rejected, dev-v7
+is consumed, held-out-v4 remains sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

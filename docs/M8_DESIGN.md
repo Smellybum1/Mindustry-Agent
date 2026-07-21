@@ -497,6 +497,16 @@ continuation bar. Permanent-greedy idle and abandonment regress; matched-greedy
 idle and abandonment are favorable but uncertain on ten pairs. This authorizes
 only the exclusive dev-v7 confirmation, not held-out-v4.
 
+The exclusive dev-v7 confirmation completes once at V11 137/160, permanent
+random 69/160, permanent greedy 100/160, matched random 19/160, and matched
+greedy 12/160. Every observed win gate and every matched-greedy scorecard pass.
+Versus permanent greedy, duplicates pass but announcements, idle, recovery, and
+abandonment fail. V11 is rejected; dev-v7 is consumed and held-out-v4 remains
+sealed. Records, aggregate, and report hashes are
+`ebc2362db79af180804b6de057ec2e5bc3879b137a1856a281f12fa8f930d8bc`,
+`a605ec43468f9f89158e95e6d4f2e47355415fd4d9f3b353ac282f6582569410`,
+and `bdf411b0fb386e7cf1385292570f79384252701f31d9484f832c70c945b78cff`.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -57,7 +57,12 @@ with cross-commit lineage, then require at least 9/10 dev-v1 wins. Construction
 matches at checkpoint `0a8fa8b4ba98581d...`, lineage `845282326c58308c...`,
 and dev-v1 is 9/10. Dev-v6 is retired unopened. Dev-v7 is frozen as a new
 160-root one-way confirmation under the corrected permanent-plus-matched
-scorecard gate. Held-out-v4 stays sealed until that full gate passes.
+scorecard gate. It completes at V11 137/160, permanent random 69/160,
+permanent greedy 100/160, matched random 19/160, and matched greedy 12/160.
+All win and matched scorecard gates pass, but permanent announcements, idle,
+recovery, and abandonment fail. V11 is rejected and dev-v7 consumed.
+Held-out-v4 stays sealed. Precommit any next candidate and confirmation path
+before execution.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

@@ -935,6 +935,13 @@ repository-evidence mapping used for the M6 audit is:
   beats all win comparators. Permanent idle/abandonment regress while matched
   idle/abandonment are favorable but uncertain. V11 qualifies for dev-v7 only;
   held-out-v4 remains sealed.
+- Exclusive dev-v7 completes once at V11 137/160, permanent random 69/160,
+  permanent greedy 100/160, matched random 19/160, and matched greedy 12/160.
+  All win and matched-greedy scorecard gates pass. Permanent duplicates pass,
+  but announcements, idle, recovery, and abandonment fail. V11 is rejected;
+  dev-v7 is consumed and held-out-v4 remains sealed. Records/aggregate/report
+  hashes are `ebc2362db79af180...`, `a605ec43468f9f89...`, and
+  `bdf411b0fb386e7c...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

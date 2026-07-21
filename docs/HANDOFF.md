@@ -250,7 +250,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   one-way confirmation set. Exact constructions produce checkpoint
   `0a8fa8b4ba98581d...` and lineage `845282326c58308c...`; dev-v1 is 9/10 and
   beats all win comparators. Scorecards are still uncertain/regressing, so V11
-  is authorized for dev-v7 only.
+  is authorized for dev-v7 only. Dev-v7 then completes once at V11 137/160,
+  random 69/160, greedy 100/160, matched random 19/160, matched greedy 12/160.
+  Win and matched scorecard gates pass; permanent announcements, idle,
+  recovery, and abandonment fail. V11 is rejected and dev-v7 consumed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
