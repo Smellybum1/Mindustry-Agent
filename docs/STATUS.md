@@ -826,6 +826,11 @@ repository-evidence mapping used for the M6 audit is:
   SHA `e8beeda83880cd4b...`, aggregate `c245c46227047600...`, report
   `02d05e925cecf964...`. The completed attempt marker permanently forbids a
   rerun. Individual held-out outcomes must not be used to revise behavior.
+- ADR-0013 now governs any post-failure continuation. The sealed
+  `bootstrap-defense-v1-held-out-v2` contract freezes 40 globally disjoint root
+  seeds before another candidate is designed or trained. Development loaders
+  refuse the split, its one future final attempt is exclusive, and M9 remains
+  gated. No post-v1 candidate training has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -859,9 +864,9 @@ repository-evidence mapping used for the M6 audit is:
   task-level policy baselines. The winning primary expert is now the M7.3
   greedy candidate policy; the M6 macro remains a frozen baseline. Scenario v2
   adds bounded seed-resolved variation and the M7.4 probe remains explicit.
-- **`configs/`**: the M7.5 train/dev/held-out seed sets and M7.6 fixed seed set
-  are active governance artifacts; unrelated example training YAML remains
-  unused.
+- **`configs/`**: the M7.5 train/dev/held-out-v1 seed sets, M7.6 fixed seed set,
+  and ADR-0013 held-out-v2 successor are active governance artifacts; unrelated
+  example training YAML remains unused.
 
 ## What is unverified
 

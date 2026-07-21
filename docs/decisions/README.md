@@ -17,6 +17,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0010](ADR-0010-upstream-patch-policy.md) | Upstream patch policy |
 | [0011](ADR-0011-rl-dependency-boundary.md) | RL dependencies are training-only and Linux CPU locked |
 | [0012](ADR-0012-scenario-variation-and-seed-governance.md) | Bounded scenario variation and seed governance |
+| [0013](ADR-0013-post-failure-held-out-renewal.md) | Post-failure held-out renewal |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

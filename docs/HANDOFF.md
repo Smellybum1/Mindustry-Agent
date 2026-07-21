@@ -179,9 +179,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   work. M8.5 evaluation machinery is real, but the candidate did not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
-- **Next roadmap decision**: govern the post-M8.5-failure path without using
-  held-out-v1 outcomes. M9.1 remains blocked by its explicit promotion
-  prerequisite.
+- **Post-failure governance**: ADR-0013 freezes the 40-root, globally disjoint
+  `bootstrap-defense-v1-held-out-v2` contract before any successor model work.
+  Development loaders refuse it and only one exclusive future final is
+  permitted. No successor candidate has been trained. M9.1 remains blocked by
+  its explicit promotion prerequisite.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -343,9 +345,9 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Govern the post-failure path before more learning.** Do not inspect or tune
-   against individual held-out-v1 outcomes. Any new candidate/final evaluation
-   requires an explicit, separately versioned sealed contract or superseding ADR.
+1. **Choose the next M8 candidate from train/dev evidence only.** ADR-0013 and
+   held-out-v2 are frozen; the candidate config must name v2 before training.
+   Never inspect or tune against individual held-out-v1 outcomes.
 2. **M8.5 remains unmet.** The v1 one-seat selector was not promoted and its
    held-out attempt cannot be rerun.
 3. **M9.1 remains gated.** The roadmap says to begin only after the single
@@ -355,7 +357,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0012` (do not relitigate).
+See `docs/decisions/ADR-0001..0013` (do not relitigate).
 
 ## Deviations from the brief in this scaffold
 

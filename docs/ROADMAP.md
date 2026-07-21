@@ -775,6 +775,14 @@ did not CI-beat either permanent baseline and regressed on permanent-greedy idle
 and abandonment scorecards. The completed attempt marker forbids rerunning this
 held-out set; individual outcomes must not inform policy changes.
 
+**POST-FAILURE GOVERNANCE FROZEN (2026-07-21):** ADR-0013 permanently
+quarantines held-out-v1 and precommits `bootstrap-defense-v1-held-out-v2`
+before any new model work. V2 contains 40 unique roots (`910001..910040`), is
+globally disjoint from fixed/train/dev/v1-held-out roots, is refused by
+development loaders, and permits one exclusive future final attempt under the
+same promotion gates. No successor candidate has been trained. M9 remains
+gated on M8 promotion.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
