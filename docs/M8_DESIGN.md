@@ -318,6 +318,18 @@ full-run reproducibility digest. With `teacher_warmup_cycles` absent or zero,
 the trainer does not require warmup fields and preserves the historical
 rollout/manifest shape.
 
+An independently seeded, zero-default rehearsal mode may reuse that governed
+eligible corpus after each ordinary PPO update. Rehearsal performs a configured
+number of CE-only epochs before the checkpoint is saved and evaluated; it does
+not recollect episodes, expand the train split, or consume ordinary PPO RNGs.
+It continues through the same Adam instance, making the optimizer ordering
+`PPO -> rehearsal -> checkpoint` explicit. Enabled runs atomically refresh
+`selector-v1-teacher-rehearsal.json` after every update with the exact warmup-
+report hash, compact corpus, per-update loss/sample metrics, and current model
+digest. The rehearsal report joins full-run reproducibility evidence and
+survives a later construction-gate failure. Absent or zero rehearsal epochs
+preserve the warmup-only and historical trainer paths exactly.
+
 This hypothesis addresses sparse successful diverse-root training evidence
 (49/512 v3 train episodes) with a structured coordination prior, without
 changing model capacity, roots, episode/update budget, RNGs, reward, dev set,

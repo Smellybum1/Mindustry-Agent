@@ -193,6 +193,22 @@ def _teacher_warmup_policy(config: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def _teacher_rehearsal_policy(config: dict[str, Any]) -> dict[str, int] | None:
+    """Validate optional per-PPO-update rehearsal of the warmup corpus."""
+
+    epochs = int(config.get("teacher_rehearsal_epochs_per_update", 0))
+    if epochs < 0:
+        raise ValueError("teacher_rehearsal_epochs_per_update cannot be negative")
+    if epochs == 0:
+        return None
+    if _teacher_warmup_policy(config) is None:
+        raise ValueError("teacher trajectory rehearsal requires teacher warmup")
+    return {
+        "epochs_per_update": epochs,
+        "minibatch_seed": int(config["teacher_rehearsal_minibatch_seed"]),
+    }
+
+
 def _dev_checkpoint_selection_policy(
     config: dict[str, Any],
 ) -> dict[str, Any] | None:
@@ -863,22 +879,24 @@ def ppo_update(
     }
 
 
-def teacher_trajectory_warmup_update(
+def _teacher_trajectory_imitation_update(
     model: SelectorActorCritic,
     optimizer: torch.optim.Optimizer,
     episodes: list[EpisodeRollout],
-    config: dict[str, Any],
     shuffle_generator: torch.Generator,
+    *,
+    epochs: int,
+    batch_size: int,
+    success_only: bool,
+    max_grad_norm: float,
+    schema: str,
 ) -> dict[str, Any]:
-    """Run deterministic CE-only warmup on teacher-controlled train trajectories."""
+    """Apply deterministic CE-only updates from teacher-controlled trajectories."""
 
-    policy = _teacher_warmup_policy(config)
-    if policy is None:
-        raise ValueError("teacher trajectory warmup is disabled")
     eligible_episodes = [
         episode
         for episode in episodes
-        if not bool(policy["success_only"]) or episode.outcome == "win"
+        if not success_only or episode.outcome == "win"
     ]
     transitions = [
         item
@@ -903,8 +921,6 @@ def teacher_trajectory_warmup_update(
     teacher_actions = torch.tensor(
         [int(item.teacher_action) for item in transitions], dtype=torch.long
     )
-    epochs = int(policy["epochs"])
-    batch_size = int(policy["minibatch_size"])
     loss_total = 0.0
     batches = 0
     samples = 0
@@ -918,24 +934,73 @@ def teacher_trajectory_warmup_update(
             loss = functional.cross_entropy(masked_logits, teacher_actions[index])
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(
-                model.parameters(), float(config["max_grad_norm"])
-            )
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
             optimizer.step()
             loss_total += float(loss.item())
             batches += 1
             samples += int(index.numel())
     return {
-        "schema": "teacher_trajectory_warmup_v1",
+        "schema": schema,
         "epochs": epochs,
         "batches": batches,
         "samples": samples,
         "unique_transitions": len(transitions),
         "eligible_episodes": len(eligible_episodes),
         "total_episodes": len(episodes),
-        "success_only": bool(policy["success_only"]),
+        "success_only": success_only,
         "mean_cross_entropy": loss_total / max(1, batches),
     }
+
+
+def teacher_trajectory_warmup_update(
+    model: SelectorActorCritic,
+    optimizer: torch.optim.Optimizer,
+    episodes: list[EpisodeRollout],
+    config: dict[str, Any],
+    shuffle_generator: torch.Generator,
+) -> dict[str, Any]:
+    """Run deterministic CE-only warmup on teacher-controlled train trajectories."""
+
+    policy = _teacher_warmup_policy(config)
+    if policy is None:
+        raise ValueError("teacher trajectory warmup is disabled")
+    return _teacher_trajectory_imitation_update(
+        model,
+        optimizer,
+        episodes,
+        shuffle_generator,
+        epochs=int(policy["epochs"]),
+        batch_size=int(policy["minibatch_size"]),
+        success_only=bool(policy["success_only"]),
+        max_grad_norm=float(config["max_grad_norm"]),
+        schema="teacher_trajectory_warmup_v1",
+    )
+
+
+def teacher_trajectory_rehearsal_update(
+    model: SelectorActorCritic,
+    optimizer: torch.optim.Optimizer,
+    episodes: list[EpisodeRollout],
+    config: dict[str, Any],
+    shuffle_generator: torch.Generator,
+) -> dict[str, Any]:
+    """Rehearse the governed warmup corpus after one ordinary PPO update."""
+
+    warmup_policy = _teacher_warmup_policy(config)
+    rehearsal_policy = _teacher_rehearsal_policy(config)
+    if warmup_policy is None or rehearsal_policy is None:
+        raise ValueError("teacher trajectory rehearsal is disabled")
+    return _teacher_trajectory_imitation_update(
+        model,
+        optimizer,
+        episodes,
+        shuffle_generator,
+        epochs=int(rehearsal_policy["epochs_per_update"]),
+        batch_size=int(warmup_policy["minibatch_size"]),
+        success_only=bool(warmup_policy["success_only"]),
+        max_grad_norm=float(config["max_grad_norm"]),
+        schema="teacher_trajectory_rehearsal_v1",
+    )
 
 
 def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
@@ -1127,6 +1192,55 @@ def _write_teacher_warmup_report(
     return path, report
 
 
+def _write_teacher_rehearsal_report(
+    root: Path,
+    output_dir: Path,
+    config_path: Path,
+    config: dict[str, Any],
+    warmup_report_path: Path,
+    corpus_summaries: list[dict[str, Any]],
+    optimizer_updates: list[dict[str, Any]],
+    post_rehearsal_model_state_sha256: str,
+) -> tuple[Path, dict[str, Any]]:
+    """Atomically preserve rehearsal evidence even if construction later fails."""
+
+    report = {
+        "schema": "selector_teacher_trajectory_rehearsal_report_v1",
+        "source_config": {
+            "path": str(config_path.relative_to(root)),
+            "sha256": _sha256(config_path),
+        },
+        "source_warmup_report": {
+            "path": str(warmup_report_path.relative_to(root)),
+            "sha256": _sha256(warmup_report_path),
+        },
+        "configuration": {
+            key: config[key]
+            for key in (
+                "teacher_rehearsal_epochs_per_update",
+                "teacher_rehearsal_minibatch_seed",
+            )
+        },
+        "corpus": {
+            "episodes": corpus_summaries,
+            "eligible_episodes": len(corpus_summaries),
+            "unique_transitions": sum(
+                int(item["policy_decisions"]) for item in corpus_summaries
+            ),
+        },
+        "optimizer_updates": optimizer_updates,
+        "updates": len(optimizer_updates),
+        "post_rehearsal_model_state_sha256": post_rehearsal_model_state_sha256,
+    }
+    path = output_dir / "selector-v1-teacher-rehearsal.json"
+    temporary_path = path.with_suffix(".json.tmp")
+    temporary_path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    temporary_path.replace(path)
+    return path, report
+
+
 def _manifest(
     root: Path,
     config_path: Path,
@@ -1148,6 +1262,7 @@ def _manifest(
     selected_model_state_sha256: str,
     selected_update: int,
     teacher_warmup: dict[str, Any] | None,
+    teacher_rehearsal: dict[str, Any] | None,
 ) -> dict[str, Any]:
     lock = root / "python" / "requirements-rl-linux-py312.lock"
     selection_policy = _dev_checkpoint_selection_policy(config)
@@ -1257,6 +1372,14 @@ def _manifest(
         manifest["rng_seeds"]["teacher_warmup_minibatch_seed"] = config[
             "teacher_warmup_minibatch_seed"
         ]
+    if teacher_rehearsal is not None:
+        manifest["teacher_rehearsal"] = teacher_rehearsal
+        manifest["rollout_update_counts"]["teacher_rehearsal_updates"] = len(
+            teacher_rehearsal["optimizer_updates"]
+        )
+        manifest["rng_seeds"]["teacher_rehearsal_minibatch_seed"] = config[
+            "teacher_rehearsal_minibatch_seed"
+        ]
     if selection_policy is not None:
         manifest["dev_checkpoint_selection_policy"] = selection_policy
     return manifest
@@ -1299,6 +1422,8 @@ def _reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
         evidence["dev_checkpoint_selection_policy"] = selection_policy
     if manifest.get("teacher_warmup") is not None:
         evidence["teacher_warmup"] = manifest["teacher_warmup"]
+    if manifest.get("teacher_rehearsal") is not None:
+        evidence["teacher_rehearsal"] = manifest["teacher_rehearsal"]
     return evidence
 
 
@@ -1329,6 +1454,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     config = _load_json(config_path)
     selection_policy = _dev_checkpoint_selection_policy(config)
     teacher_warmup_policy = _teacher_warmup_policy(config)
+    teacher_rehearsal_policy = _teacher_rehearsal_policy(config)
     _configure_torch(config)
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
     dev_set = _seed_set(root, str(config["dev_seed_set"]), "dev")
@@ -1346,12 +1472,22 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         if teacher_warmup_policy is not None
         else 0
     )
+    teacher_rehearsal_generator = torch.Generator().manual_seed(
+        int(teacher_rehearsal_policy["minibatch_seed"])
+        if teacher_rehearsal_policy is not None
+        else 0
+    )
     train_episodes: list[EpisodeRollout] = []
     optimizer_updates: list[dict[str, Any]] = []
     seeds = _training_seed_schedule(train_set, config)
     teacher_warmup_seeds = _teacher_warmup_seed_schedule(train_set, config)
     teacher_warmup_report: dict[str, Any] | None = None
     teacher_warmup_path: Path | None = None
+    teacher_rehearsal_episodes: list[EpisodeRollout] = []
+    teacher_rehearsal_summaries: list[dict[str, Any]] = []
+    teacher_rehearsal_updates: list[dict[str, Any]] = []
+    teacher_rehearsal_report: dict[str, Any] | None = None
+    teacher_rehearsal_path: Path | None = None
     episodes_per_update = int(config["episodes_per_update"])
     output_dir.mkdir(parents=True, exist_ok=True)
     dev_seeds = [int(seed) for seed in dev_set["seeds"]]
@@ -1428,6 +1564,18 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     _model_state_digest(model.state_dict()),
                 )
             )
+            if teacher_rehearsal_policy is not None:
+                assert teacher_warmup_policy is not None
+                teacher_rehearsal_episodes = [
+                    episode
+                    for episode in warmup_episodes
+                    if not bool(teacher_warmup_policy["success_only"])
+                    or episode.outcome == "win"
+                ]
+                teacher_rehearsal_summaries = [
+                    _episode_summary(episode)
+                    for episode in teacher_rehearsal_episodes
+                ]
             del warmup_episodes
         for start in range(0, len(seeds), episodes_per_update):
             model.eval()
@@ -1447,9 +1595,36 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
             ]
             train_episodes.extend(batch)
             model.train()
-            optimizer_updates.append(
-                ppo_update(model, optimizer, batch, config, minibatch_generator)
+            update_number = len(optimizer_updates) + 1
+            update_metrics = ppo_update(
+                model, optimizer, batch, config, minibatch_generator
             )
+            if teacher_rehearsal_policy is not None:
+                rehearsal_metrics = teacher_trajectory_rehearsal_update(
+                    model,
+                    optimizer,
+                    teacher_rehearsal_episodes,
+                    config,
+                    teacher_rehearsal_generator,
+                )
+                teacher_rehearsal_updates.append(
+                    {"update": update_number, **rehearsal_metrics}
+                )
+                update_metrics["teacher_trajectory_rehearsal"] = rehearsal_metrics
+                assert teacher_warmup_path is not None
+                teacher_rehearsal_path, teacher_rehearsal_report = (
+                    _write_teacher_rehearsal_report(
+                        root,
+                        output_dir,
+                        config_path,
+                        config,
+                        teacher_warmup_path,
+                        teacher_rehearsal_summaries,
+                        teacher_rehearsal_updates,
+                        _model_state_digest(model.state_dict()),
+                    )
+                )
+            optimizer_updates.append(update_metrics)
             checkpoint = output_dir / f"selector-v1-update-{len(optimizer_updates)}.pt"
             checkpoint_sha = save_checkpoint(
                 checkpoint,
@@ -1524,6 +1699,8 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     verification_paths.append(dev_frontier_path)
     if teacher_warmup_path is not None:
         verification_paths.append(teacher_warmup_path)
+    if teacher_rehearsal_path is not None:
+        verification_paths.append(teacher_rehearsal_path)
 
     train_summaries = [_episode_summary(item) for item in train_episodes]
     dev_summaries = [_episode_summary(item) for item in dev_episodes]
@@ -1563,6 +1740,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         selected_model_state_sha256,
         int(selected_payload["update"]),
         teacher_warmup_report,
+        teacher_rehearsal_report,
     )
     reproducibility_digest = _json_digest(_reproducibility_evidence(manifest))
     manifest["full_run_reproducibility"] = {

@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import json
 import tempfile
@@ -78,6 +79,7 @@ class TestPpoSelector(unittest.TestCase):
 
     def test_teacher_warmup_schedule_is_separate_deterministic_and_optional(self):
         from mindustry_agents.training.ppo_selector import (
+            _teacher_rehearsal_policy,
             _teacher_warmup_policy,
             _teacher_warmup_seed_schedule,
         )
@@ -108,6 +110,17 @@ class TestPpoSelector(unittest.TestCase):
                     "teacher_warmup_shuffle_seed": 123,
                     "teacher_warmup_minibatch_seed": 124,
                 },
+            )
+        with self.assertRaisesRegex(ValueError, "requires teacher warmup"):
+            _teacher_rehearsal_policy(
+                {
+                    "teacher_rehearsal_epochs_per_update": 1,
+                    "teacher_rehearsal_minibatch_seed": 125,
+                }
+            )
+        with self.assertRaisesRegex(ValueError, "cannot be negative"):
+            _teacher_rehearsal_policy(
+                {"teacher_rehearsal_epochs_per_update": -1}
             )
 
     def test_quality_gated_checkpoint_selection_is_strict_and_ranked(self):
@@ -631,6 +644,7 @@ class TestPpoSelector(unittest.TestCase):
             EpisodeRollout,
             Transition,
             _model_state_digest,
+            teacher_trajectory_rehearsal_update,
             teacher_trajectory_warmup_update,
         )
 
@@ -703,6 +717,21 @@ class TestPpoSelector(unittest.TestCase):
             _model_state_digest(models[0].state_dict()),
             _model_state_digest(models[1].state_dict()),
         )
+        rehearsal_config = dict(config) | {
+            "teacher_rehearsal_epochs_per_update": 1,
+            "teacher_rehearsal_minibatch_seed": 18,
+        }
+        rehearsal_model = SelectorActorCritic(9)
+        rehearsal = teacher_trajectory_rehearsal_update(
+            rehearsal_model,
+            torch.optim.Adam(rehearsal_model.parameters(), lr=1e-3),
+            [episode, losing_episode],
+            rehearsal_config,
+            torch.Generator().manual_seed(18),
+        )
+        self.assertEqual(rehearsal["schema"], "teacher_trajectory_rehearsal_v1")
+        self.assertEqual(rehearsal["epochs"], 1)
+        self.assertEqual(rehearsal["samples"], 1)
         transition.action_mask[0] = False
         invalid_model = SelectorActorCritic(9)
         with self.assertRaisesRegex(RuntimeError, "masked action"):
@@ -717,6 +746,7 @@ class TestPpoSelector(unittest.TestCase):
     def test_teacher_warmup_report_is_atomic_and_reproducibility_evidence(self):
         from mindustry_agents.training.ppo_selector import (
             _reproducibility_evidence,
+            _write_teacher_rehearsal_report,
             _write_teacher_warmup_report,
         )
 
@@ -732,6 +762,8 @@ class TestPpoSelector(unittest.TestCase):
                 "teacher_warmup_success_only": True,
                 "teacher_warmup_shuffle_seed": 41,
                 "teacher_warmup_minibatch_seed": 42,
+                "teacher_rehearsal_epochs_per_update": 1,
+                "teacher_rehearsal_minibatch_seed": 43,
             }
             config_path.write_text(json.dumps(config), encoding="utf-8")
             path, report = _write_teacher_warmup_report(
@@ -748,6 +780,7 @@ class TestPpoSelector(unittest.TestCase):
                 [
                     {
                         "outcome": "win",
+                        "policy_decisions": 1,
                         "trace_digest": "teacher-trace",
                     }
                 ],
@@ -767,11 +800,37 @@ class TestPpoSelector(unittest.TestCase):
                 json.loads(path.read_text(encoding="utf-8")), report
             )
 
+            rehearsal_path, rehearsal_report = _write_teacher_rehearsal_report(
+                root,
+                output_dir,
+                config_path,
+                config,
+                path,
+                report["episodes"],
+                [
+                    {
+                        "update": 1,
+                        "schema": "teacher_trajectory_rehearsal_v1",
+                        "samples": 1,
+                    }
+                ],
+                "rehearsed-model",
+            )
+            self.assertTrue(rehearsal_path.is_file())
+            self.assertFalse(rehearsal_path.with_suffix(".json.tmp").exists())
+            self.assertEqual(rehearsal_report["updates"], 1)
+            self.assertEqual(rehearsal_report["corpus"]["unique_transitions"], 1)
+            self.assertEqual(
+                rehearsal_report["source_warmup_report"]["sha256"],
+                hashlib.sha256(path.read_bytes()).hexdigest(),
+            )
+
             manifest = self._repro_manifest()
             manifest["teacher_warmup"] = report
+            manifest["teacher_rehearsal"] = rehearsal_report
             first = _reproducibility_evidence(manifest)
-            manifest["teacher_warmup"] = dict(report) | {
-                "post_warmup_model_state_sha256": "changed"
+            manifest["teacher_rehearsal"] = dict(rehearsal_report) | {
+                "post_rehearsal_model_state_sha256": "changed"
             }
             second = _reproducibility_evidence(manifest)
             self.assertNotEqual(first, second)
