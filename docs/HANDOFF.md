@@ -13,7 +13,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 77 pytest
+  crash-replacement, PettingZoo-shaped facade, vector collector; 84 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
   `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
   east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
@@ -167,8 +167,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   promotable; held-out remains sealed. Current final capacity is 375.1x at four
   JVMs and 10,000 resets with zero drift/no leak/no orphan. The golden is 664
   checkpoints over 16,200 ticks and two wins.
-- **What is stubbed**: M8.5 ablation/promotion logic and the M10 human
-  goal/override/study surface remain future work. M8.4 training/rewards are real.
+- **M8.5 progress**: the retained train/dev improvements are elapsed-time GAE,
+  deterministic repeated train cycles, and canonical WAIT mapping. The best
+  exploratory update (`e1fdab4ae229dffe...`, seed 8601) wins 8/10 dev episodes.
+  The mixed-seat preflight archives behavioural traces and compares against
+  permanent and matched controls. Learned 8/10 beats permanent random-valid
+  3/10, matched random 2/10, and matched greedy 1/10; paired observed scorecard
+  metrics pass, but permanent greedy-utility is also 8/10. The candidate is not
+  frozen or eligible, and held-out remains sealed.
+- **What is stubbed**: the one-way held-out final and the M10 human
+  goal/override/study surface remain future work. M8.4 training/rewards and the
+  M8.5 dev ablation/preflight path are real.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
 - **Next roadmap item**: M8.5, improve/freeze a candidate using train/dev only,
@@ -191,7 +200,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (77 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (84 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
 | `make training-gate` | On WSL2 with pinned `UV`/`JAVA`, reconstructs the RL environment, runs the 1/2/4-JVM shadow-inference collector gate, then 10,000 resets. Current 4-JVM result 375.1x real-time; zero reset drift/leak/orphans; ends `TRAINING-GATE OK`. Verified 2026-07-21. |
@@ -281,7 +290,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 55 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.6
+- **Passing**: 84 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.6
   action/board/event roundtrips, `test_supervisor.py`, `test_env.py`; fake-server
   subprocess, no JVM, fast) and 108 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
@@ -293,7 +302,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   generalized blocked-replan, and adaptive-vs-frozen probe coverage. M7.5 adds
   cross-JVM variant-reset, sealed-set refusal, and frozen-dev survival coverage.
   M7.6 adds deterministic policy/scorecard/bootstrap unit coverage and the live
-  65-episode ladder.
+  65-episode ladder. M8 adds deterministic PPO/replay coverage plus the dev-only
+  promotion comparator and paired-scorecard gates.
 - **Skipped**: none.
 - **Flaky**: the stress-reset *leak* check was flaky under the original
   growth-trend methodology (passed for the author, failed on re-verification);
@@ -334,8 +344,9 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M8.5: improve/freeze candidate and run ablations.** Use train/dev only;
-   the current 0/10 dev checkpoint is not eligible for promotion.
+1. **M8.5: improve/freeze candidate.** Use train/dev only; the current best
+   exploratory checkpoint is 8/10 and ties permanent greedy, so it is not
+   eligible for promotion.
 2. **M8.5: held-out promotion gate.** Open held-out exactly once only after the
    policy/code and all comparator/scorecard preconditions are frozen.
 3. **M9.1: M9 design gate.** Begin only after the single learned seat promotes.

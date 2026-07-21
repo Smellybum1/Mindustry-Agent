@@ -1,6 +1,7 @@
 # M8 design — one learned task-selector seat
 
-**Status:** M8.1 design accepted; M8.4 implementation verified 2026-07-21.
+**Status:** M8.1 design accepted; M8.4 verified; M8.5 preflight in progress
+2026-07-21.
 **Feature schema:** `selector_features_v1`. **Reward schema:** `selector_reward_v1`.
 
 ## Scope and success condition
@@ -211,6 +212,36 @@ update 3 with checkpoint SHA-256 `0b2bd8ac904a9e21...`, complete replay digest
 `52aecddf4c96bab6...`.
 The checkpoint won 0/10 dev episodes, so it is an implementation artifact, not
 a promotion candidate. Held-out remained sealed.
+
+## M8.5 dev preflight progress
+
+The first improvement pass fixes boundary-frequency-dependent GAE credit by
+raising both `gamma_per_second` and `gae_lambda` to elapsed engine seconds. It
+also makes repeated train-only cycles explicit in the run manifest and maps the
+catalog WAIT candidate to the one canonical WAIT action. These changes alter no
+reward component, environment state, inference action vocabulary, or scripted
+lifecycle rule.
+
+The strongest exploratory train/dev run uses 32 deterministic cycles over the
+16 governed train seeds, 64 episodes per update, eight PPO epochs, and model seed
+8601. Update 2 (`e1fdab4ae229dffe...`) wins 8/10 dev episodes. Lower PPO epochs,
+128-episode updates, successful-trajectory imitation, and bounded alternate
+initializations failed to improve that score and are not part of the retained
+algorithm.
+
+The dev-only promotion preflight evaluates permanent random-valid and
+greedy-utility aggregates plus matched seat-0 random and pure-greedy controls.
+The matched controls preserve adaptive-v1 teammates, adaptive lifecycle, event
+cadence, canonical WAIT, scenario, and seed set. Dev is a qualification screen:
+the learned observed win rate must be strictly greater than every comparator,
+all reward adversaries must pass, and paired scorecard intervals must be
+non-regressing. The 95% CI-separation claim is made only by the one-way held-out
+final described above.
+
+Current dev results are 8/10 learned, 3/10 permanent random-valid, 8/10
+permanent greedy-utility, 2/10 matched random, and 1/10 matched greedy. Observed
+paired scorecard metrics pass, but the permanent-greedy tie makes the candidate
+ineligible. No artifact is frozen and held-out remains sealed.
 
 ## M8.1 acceptance review
 

@@ -754,14 +754,22 @@ Not the destination — the proof that learning plugs into the seam.
   independent pinned WSL2 runs selected update 3 with identical checkpoint
   `0b2bd8ac904a9e21...`, replay digest `87ba273f376c47de...`, full-run digest
   `56cc7b54bc9b01b5...`, and dev action/state aggregate
-  `52aecddf4c96bab6...`. The checkpoint is 0/10 on dev,
-  so M8.5 promotion has not begun and held-out remains sealed.
+  `52aecddf4c96bab6...`. The checkpoint is 0/10 on dev and was not a promotion
+  candidate; subsequent M8.5 train/dev progress is recorded below.
 
 ### 8.5 Promotion gate
 - Beats random-valid AND greedy-utility with CI separation on HELD-OUT variant
   seeds; scorecard v0 not worse than greedy-utility (a selector that wins
   faster but teams worse fails); anti-exploit scripts show no reward farming;
   behavioural traces (task Gantt from event log) reviewed and archived.
+
+**IN PROGRESS (2026-07-21):** elapsed-time GAE, repeated governed train cycles,
+canonical WAIT, mixed-seat ablations, decision-trace archival, and paired
+scorecard preflight are implemented. The strongest exploratory learned
+checkpoint wins 8/10 dev episodes and beats permanent random-valid (3/10),
+matched random (2/10), and matched greedy (1/10), with observed scorecard
+non-regression. It ties permanent greedy-utility at 8/10, so it is not eligible
+to freeze or open held-out. Held-out remains sealed.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
