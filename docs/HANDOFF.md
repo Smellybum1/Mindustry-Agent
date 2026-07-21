@@ -502,6 +502,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   replay changes. The V23 diagnostic is inference-only and cannot promote.
 - **What is broken**: V23 was trained under the superseded target-local retry
   decision sequence. A governed V24 from-scratch retrain is required.
+- **V24 precommit**: ADR-0035 freezes an exact V23 retrain under runtime contract
+  `abandon_wait_resource_scoped_retry_agent_death_available_idle_v5`; only
+  candidate ID, runtime contract, and confirmation path differ. Dev-v19 is
+  retired unopened. Dev-v20 freezes roots `201001..201160` and remains unopened;
+  held-out-v4 stays sealed. No V24 model work preceded the packet. All 44
+  exact-config reward adversaries, 146 Python tests, pinned build, 5/5 candidate
+  gate, smoke, determinism, and negative replay pass. Config/adversary hashes are
+  `94a7ae8cf57cb1ce...` and `4cd7f5096bbd0ebc...`; exact replicas are next.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).

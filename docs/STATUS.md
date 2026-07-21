@@ -1220,6 +1220,15 @@ repository-evidence mapping used for the M6 audit is:
   `8fee3db9b5cf01f2...`; all 664 hashes differ from the prior runtime with zero
   non-hash changes. An old-checkpoint diagnostic cannot promote; V24 requires a
   governed from-scratch retrain under the corrected decision sequence.
+- ADR-0035 precommits V24 as an exact V23 retrain under runtime contract
+  `abandon_wait_resource_scoped_retry_agent_death_available_idle_v5`. Only
+  candidate ID, runtime contract, and confirmation path differ. Dev-v19 is
+  retired unopened; dev-v20 freezes globally disjoint roots `201001..201160`
+  and remains unopened; held-out-v4 stays sealed. No V24 model work preceded
+  this packet. The 44 exact-config reward adversaries, 146 Python tests, pinned
+  build, 5/5 candidate gate, smoke, determinism, and negative replay pass.
+  Config/adversary hashes are `94a7ae8cf57cb1ce...` and
+  `4cd7f5096bbd0ebc...`; exact twin replicas are next.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1216,6 +1216,19 @@ negative replay pass. Two final golden recordings match at
 The old V23 checkpoint's diagnostic is not promotion evidence. V24 must be
 precommitted and retrained from scratch under this corrected decision sequence.
 
+ADR-0035 precommits V24 as an exact V23 retrain under runtime contract
+`abandon_wait_resource_scoped_retry_agent_death_available_idle_v5`. Candidate
+ID, runtime contract, and confirmation path are the only config differences;
+reward, teacher coefficient `0.05`, train/reusable-dev roots, model, optimizer,
+RNGs, schedule, and checkpoint selection remain frozen. Dev-v19 is retired
+unopened. Dev-v20 freezes 160 globally disjoint roots `201001..201160` and
+remains unopened; held-out-v4 stays sealed. No V24 model work preceded this
+packet. All 44 exact-config reward adversaries, 146 Python tests, the pinned
+build, five-seed candidate gate, smoke, determinism, and negative replay pass.
+Config/adversary SHA-256 are `94a7ae8cf57cb1ce...` and
+`4cd7f5096bbd0ebc...`. Exact twin replicas and reusable preflight are next;
+M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

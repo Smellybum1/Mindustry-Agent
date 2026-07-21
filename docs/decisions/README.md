@@ -39,6 +39,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0032](ADR-0032-v21-corrected-wait-release-boundary.md) | V21 corrected WAIT-release-boundary retraining |
 | [0033](ADR-0033-v22-retry-eligibility-and-agent-loss-boundaries.md) | V22 retry eligibility and agent-loss boundaries |
 | [0034](ADR-0034-v23-available-seat-idle-accounting.md) | V23 available-seat idle-accounting retraining |
+| [0035](ADR-0035-v24-resource-scoped-retry-boundary.md) | V24 resource-scoped retry-boundary retraining |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.
