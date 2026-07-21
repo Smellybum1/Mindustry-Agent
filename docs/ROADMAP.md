@@ -1181,6 +1181,19 @@ so its checkpoint cannot be promoted or relabeled. V22 is rejected, dev-v18 is
 retired unopened, and a fresh governed retrain is required before any new
 confirmation set can be opened. M8.5 remains unmet.
 
+ADR-0034 precommits V23 as the exact V22 construction under corrected runtime
+contract `abandon_wait_retry_agent_death_available_idle_v4`. Candidate ID,
+runtime contract, and confirmation path are the only config differences; all
+reward fields, teacher coefficient `0.05`, train/reusable-dev roots, model,
+optimizer, RNGs, schedule, and checkpoint selection remain frozen. Dev-v18 is
+retired unopened. Dev-v19 freezes 160 globally disjoint roots `191001..191160`
+and remains unopened; held-out-v4 stays sealed. All 44 exact-config reward
+adversaries, 145 Python tests, pinned build, five-seed availability ledger,
+smoke, determinism, and negative replay pass. Config/adversary SHA-256 are
+`17e741e63f9862bc...` and `e2043acefb24a016...`. No V23 model work preceded
+this packet; exact twin replicas and reusable preflight are next. M8.5 remains
+unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

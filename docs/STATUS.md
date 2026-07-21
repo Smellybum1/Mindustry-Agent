@@ -1191,6 +1191,16 @@ repository-evidence mapping used for the M6 audit is:
   evaluation becomes 10/10 at `0.13474577` idle, but cannot rehabilitate a model
   trained under the faulty reward. V22 is rejected, dev-v18 is retired unopened,
   held-out-v4 remains sealed, and a newly precommitted retrain is required.
+- ADR-0034 precommits V23 as an exact V22 retrain under corrected runtime
+  contract `abandon_wait_retry_agent_death_available_idle_v4`. Only candidate
+  ID, runtime contract, and confirmation path differ; all reward, teacher,
+  train/dev, model, optimizer, RNG, schedule, and selection fields remain exact.
+  Dev-v18 is retired unopened; dev-v19 freezes globally disjoint roots
+  `191001..191160` and remains unopened; held-out-v4 stays sealed. The 44 exact
+  reward adversaries, 145 Python tests, pinned build, five-seed availability
+  ledger, smoke, determinism, and negative replay pass. Config/adversary hashes
+  are `17e741e63f9862bc...` and `e2043acefb24a016...`. No V23 model work preceded
+  the precommit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

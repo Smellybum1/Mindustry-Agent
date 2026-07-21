@@ -476,9 +476,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   now partitions unavailable ticks separately; diagnostic update-17 evaluation
   becomes 10/10 at `0.13474577`, but the trained checkpoint remains rejected.
   Dev-v18 is retired unopened and held-out-v4 remains sealed.
-- **What is broken**: no known gameplay/runtime defect remains after the metric
-  correction; a fresh governed candidate is still required because V22 trained
-  with contaminated idle reward.
+- **V23 precommit**: ADR-0034 freezes an exact V22 retrain under runtime contract
+  `abandon_wait_retry_agent_death_available_idle_v4`; only candidate ID,
+  runtime contract, and confirmation path differ. Dev-v19 freezes disjoint roots
+  `191001..191160` and remains unopened. All 44 exact reward adversaries, 145
+  Python tests, pinned build, five-seed availability ledger, smoke, determinism,
+  and negative replay pass. Config hash is `17e741e63f9862bc...`; adversary
+  report hash is `e2043acefb24a016...`. No V23 model work has started.
+- **What is broken**: nothing known in the governed V23 runtime packet; learned
+  promotion remains unproven.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
@@ -640,12 +646,11 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Verify and precommit the post-V22 metric contract.** Require the full
-   Python suite, pinned build, five-seed availability ledger, smoke,
-   determinism, and negative replay. Freeze a fresh disjoint confirmation set
-   and an exact V22-successor config before any model work; dev-v18 stays
-   retired unopened.
-2. **Train two exact successor replicas.** Require exact replicas, reusable dev-v1,
+1. **Train two exact V23 replicas sequentially.** Use only the frozen config and
+   pinned toolchain. Require checkpoint/frontier/model/replay/full-run/direct-
+   lineage reproduction; a rejected gate must retain its frontier. Dev-v19 must
+   remain unopened.
+2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
    confirmation. Never inspect dev-v14/dev-v15/dev-v16/dev-v17 or
    held-out-v1/v2/v3 outcomes for tuning; held-out-v4 remains sealed.

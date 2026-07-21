@@ -37,6 +37,8 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0030](ADR-0030-v19-unsaturated-idle-gradient.md) | V19 unsaturated idle gradient |
 | [0031](ADR-0031-v20-low-full-boundary-teacher.md) | V20 low full-boundary teacher regularization |
 | [0032](ADR-0032-v21-corrected-wait-release-boundary.md) | V21 corrected WAIT-release-boundary retraining |
+| [0033](ADR-0033-v22-retry-eligibility-and-agent-loss-boundaries.md) | V22 retry eligibility and agent-loss boundaries |
+| [0034](ADR-0034-v23-available-seat-idle-accounting.md) | V23 available-seat idle-accounting retraining |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.
