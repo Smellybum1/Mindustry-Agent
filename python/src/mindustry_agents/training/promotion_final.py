@@ -28,8 +28,8 @@ from mindustry_agents.process.launcher import (
 from mindustry_agents.tools.utility_expert import run_utility_episode
 from mindustry_agents.training.checkpoint_interpolation import (
     ALLOWED_DIRTY_PATHS,
-    validate_lineage_manifest,
 )
+from mindustry_agents.training.checkpoint_lineage import validate_lineage_manifest
 from mindustry_agents.training.model import SelectorActorCritic
 from mindustry_agents.training.ppo_selector import (
     _configure_torch,

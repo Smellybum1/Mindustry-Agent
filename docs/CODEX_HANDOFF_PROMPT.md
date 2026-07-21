@@ -30,3 +30,9 @@ make machine-global changes.
 The first successor diversity hypothesis, `m8-selector-v3-diverse`, reproduced
 exactly but achieved only 3/10 dev wins and was rejected before preflight. Do
 not open v2 for it.
+
+V6 restores 32 visits per each of 64 train roots. Two pinned runs reproduce
+exactly and selected update 31 at 9/10 dev wins; direct-checkpoint lineage is
+implemented. Construct lineage and run the full frozen dev scorecard preflight
+before deciding whether v2 is eligible. Do not treat the 9/10 screen alone as
+held-out authorization.

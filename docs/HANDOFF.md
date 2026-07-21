@@ -192,7 +192,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   it reproduced exactly but fell to 3/10, closing that line. V2 is unopened.
 - **Long diverse successor**: v6 is precommitted as auxiliary-free v3 with only
   cycles raised from 8 to 32 (2,048 episodes/32 updates), restoring 32 visits
-  per root. It must reach at least 9/10 dev wins or stop before preflight.
+  per root. Two pinned runs reproduce exactly and select update 31 at 9/10 dev
+  wins (`0dfdcf9b5273ae3f...`, full-run `54476ef63e31e06d...`). Direct-checkpoint
+  lineage is implemented; full dev scorecard preflight is next. V2 is unopened.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

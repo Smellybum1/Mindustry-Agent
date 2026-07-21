@@ -28,9 +28,7 @@ from mindustry_agents.process.launcher import (
 )
 from mindustry_agents.tools.expert_common import EpisodeResult
 from mindustry_agents.training.model import SelectorActorCritic
-from mindustry_agents.training.checkpoint_interpolation import (
-    validate_lineage_manifest,
-)
+from mindustry_agents.training.checkpoint_lineage import validate_lineage_manifest
 from mindustry_agents.training.ppo_selector import (
     LEARNED_SEAT,
     EpisodeRollout,

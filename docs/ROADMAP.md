@@ -810,6 +810,12 @@ an auxiliary-free data-budget test: the v3 recipe with only training cycles
 raised from 8 to 32, giving all 64 roots the original 32 visits (2,048 episodes,
 32 updates). It must reach at least 9/10 dev wins or stop before preflight.
 
+Two pinned v6 runs reproduce exactly and select update 31 at 9/10 dev wins
+(`0dfdcf9b5273ae3f...`; full-run `54476ef63e31e06d...`), meeting the
+precommitted continuation bar. Direct reproducible-checkpoint lineage is now
+validated alongside legacy interpolation. The full dev scorecard preflight is
+next; held-out-v2 remains unopened.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

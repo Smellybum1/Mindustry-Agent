@@ -319,6 +319,18 @@ of the original train-v1 recipe while expanding the total budget to 2,048
 episodes and 32 updates. The config names held-out-v2 and must reach at least
 9/10 dev wins or stop before preflight.
 
+Two pinned v6 runs reproduce exactly and select update 31 at 9/10 dev wins:
+checkpoint `0dfdcf9b5273ae3f...`, replay `c3f6e5bb720ad95d...`, and full-run
+digest `54476ef63e31e06d...`. This meets the precommitted continuation bar and
+authorizes the full dev scorecard preflight, not held-out access.
+
+Direct checkpoints now use `selector_checkpoint_direct_lineage_v1`. The
+constructor requires two path-independent full-run manifests with identical
+evidence, identical selected checkpoint bytes/model state/update/config, the
+same training commit, and no unexpected dirt. Promotion accepts this schema or
+the legacy interpolation schema through one validator. The lineage must be
+constructed on the frozen evaluator commit before dev preflight.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

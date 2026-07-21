@@ -848,7 +848,14 @@ repository-evidence mapping used for the M6 audit is:
   `4d55b193cede563b...`), so the line is closed and v2 remains unopened.
 - V6 is precommitted as an auxiliary-free data-budget test. It changes only v3
   training cycles from 8 to 32 (2,048 episodes/32 updates), restoring 32 visits
-  per each of 64 train roots. It names v2 and must reach at least 9/10 dev wins.
+  per each of 64 train roots. Two pinned runs reproduce exactly and select
+  update 31 at 9/10 dev wins: checkpoint `0dfdcf9b5273ae3f...`, replay
+  `c3f6e5bb720ad95d...`, full-run `54476ef63e31e06d...`. This authorizes full
+  dev preflight only; v2 remains unopened.
+- `checkpoint_lineage.py` now governs direct selected checkpoints from two exact
+  training replicas and shares validation with the legacy interpolation path.
+  It rejects manifest, checkpoint, config, update, model-state, commit, or dirt
+  mismatches before promotion evaluation.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
