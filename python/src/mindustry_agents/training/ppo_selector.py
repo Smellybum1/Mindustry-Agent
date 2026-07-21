@@ -643,15 +643,16 @@ def _git_evidence(root: Path) -> dict[str, Any]:
     git_executable = os.environ.get("M8_GIT", "git")
     git_root = os.environ.get("M8_GIT_ROOT", str(root))
 
-    def run(*args: str) -> str:
-        return subprocess.run(
+    def run(*args: str, strip: bool = True) -> str:
+        output = subprocess.run(
             [git_executable, "-C", git_root, *args],
             check=True,
             capture_output=True,
             text=True,
-        ).stdout.strip()
+        ).stdout
+        return output.strip() if strip else output
 
-    status = run("status", "--short").splitlines()
+    status = run("status", "--short", strip=False).splitlines()
     return {
         "commit": run("rev-parse", "HEAD"),
         "dirty": bool(status),
