@@ -1238,6 +1238,19 @@ sealed. Current-runtime reusable diagnosis shows adaptive-v1 at 10/10, idle
 `0.07308979`, and zero abandonment; V24 update 19 disagrees on 73/427 unforced
 decisions and loses seeds 2004/2005. V24 is rejected and M8.5 remains unmet.
 
+ADR-0036 precommits V25 from reusable evidence only. Current-runtime
+adaptive-v1 wins 10/10 with idle `0.07308979` and zero abandonment, while V24
+update 19 disagrees on 73/427 unforced decisions. V25 holds the V24 runtime,
+reward, roots, model, optimizer, RNGs, schedule, and selection exact and changes
+only full-boundary teacher coefficient `0.05 -> 0.10` (plus candidate/label/
+confirmation metadata). This remains tenfold below V10's failed `1.0`. Dev-v20
+is retired unopened; dev-v21 freezes disjoint roots `211001..211160` and remains
+unopened; held-out-v4 stays sealed. No V25 model work preceded this packet.
+All 44 exact-config reward adversaries, 147 Python tests, pinned build, 5/5
+candidate gate, smoke, determinism, and negative replay pass. Config/adversary
+SHA-256 are `90b50d1b7add7fd0...` and `8faa7834e426678e...`. Exact replicas
+are next; M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

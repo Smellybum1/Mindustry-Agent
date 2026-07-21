@@ -1236,6 +1236,17 @@ repository-evidence mapping used for the M6 audit is:
   sealed. On current-runtime reusable dev-v1, adaptive-v1 is 10/10 with idle
   `0.07308979` and zero abandonment, while update 19 disagrees on 73/427
   unforced decisions and loses seeds 2004/2005. V24 is rejected.
+- ADR-0036 precommits V25 as the unchanged resource-scoped runtime with one
+  training-loss coordinate: full-boundary teacher coefficient `0.05 -> 0.10`.
+  Candidate/label/confirmation metadata also change; every reward, root, model,
+  optimizer, RNG, schedule, and selection field remains exact. The current-
+  runtime teacher's 10/10 result and V24's 73/427 disagreement motivate the
+  bounded step, which is still tenfold below V10's failed `1.0`. Dev-v20 is
+  retired unopened; dev-v21 freezes roots `211001..211160` and remains unopened;
+  held-out-v4 stays sealed. No V25 model work preceded the packet. All 44 exact-
+  config reward adversaries, 147 Python tests, pinned build, 5/5 candidate gate,
+  smoke, determinism, and negative replay pass. Config/adversary hashes are
+  `90b50d1b7add7fd0...` and `8faa7834e426678e...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

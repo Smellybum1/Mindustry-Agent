@@ -518,6 +518,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 - **What is broken**: learned construction remains below the 9/10 gate. The
   reusable evidence supports a governed moderate teacher-strength successor;
   no successor model work has started.
+- **V25 precommit**: ADR-0036 holds the V24 runtime/reward/data/model/optimizer/
+  RNG/schedule/selection exact and doubles only full-boundary teacher coefficient
+  `0.05 -> 0.10`, plus candidate/label/confirmation metadata. This is motivated
+  by current-runtime adaptive-v1 at 10/10 and V24 disagreement of 73/427, while
+  remaining tenfold below V10's failed `1.0`. Dev-v20 is retired unopened;
+  dev-v21 freezes roots `211001..211160` and remains unopened; held-out-v4 stays
+  sealed. No V25 model work preceded the packet. All 44 exact-config adversaries,
+  147 Python tests, pinned build, 5/5 candidate gate, smoke, determinism, and
+  negative replay pass. Config/adversary hashes are `90b50d1b7add7fd0...` and
+  `8faa7834e426678e...`.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
