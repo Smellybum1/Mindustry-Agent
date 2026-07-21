@@ -1011,16 +1011,16 @@ candidate because permanent-greedy idle remains 0.05618951 worse (95% CI
 +0.03029619..+0.08042806) and recovery is uncertain against both scorecards.
 Dev-v12 remains unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
 
-V16's reusable traces contain 14 WAIT actions, all forced; the model selected a
-task at all 375 unforced boundaries. ADR-0028 therefore precommits V17 as one
-controlled task-quality intervention: idle cost changes `0.001 -> 0.002` while
-the explicit `5.0` cap remains fixed. The exact busywork guard also raises the
-duplicate-work cap `1.0 -> 2.0`; this is inactive at V16's observed two
-incidents but keeps pathological busywork strictly worse than honest idle.
-Every other V16 field remains fixed. All 39 exact-config adversaries and 135
-Python tests pass. Dev-v12 is retired unopened; dev-v13 freezes 160 disjoint
-roots `131001..131160` for one confirmation only after reusable dual scorecards
-pass. Held-out-v4 remains sealed.
+V17's two pinned 2,048-episode replicas reproduce exactly and select update 17
+at 9/10 construction wins with mean idle 0.08594077. Checkpoint
+`6dbde34e0b745b55...`, model state `701bff0e24bfae60...`, replay
+`ab01623eda4d40ea...`, full run `8b210937805c23f3...`, and direct lineage
+`233282b7fc536cb3...` reproduce. Reusable dev-v1 still rejects the candidate:
+permanent-greedy idle is 0.04162898 worse (95% CI
++0.01733907..+0.06734018), permanent announcements and both recovery
+comparisons are uncertain. Non-forced abandonment remains zero and matched
+idle improves by 0.14385630. Dev-v13 remains unopened, held-out-v4 remains
+sealed, and M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

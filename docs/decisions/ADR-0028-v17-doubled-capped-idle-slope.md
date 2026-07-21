@@ -55,3 +55,13 @@ ordering.
 Pretraining validation passed all 39 exact-config reward adversaries and the
 full 135-test Python suite. Config SHA-256 is `71ffd120617ac860...`; the hashed
 adversary report is `f716fc529c8aae8c...`.
+
+## Outcome
+
+Two pinned replicas reproduced exactly and selected update 17 at 9/10
+construction wins with mean idle 0.08594077. Reusable dev-v1 improved matched
+idle by 0.14385630 and retained zero non-forced abandonment, but
+permanent-greedy idle remained 0.04162898 worse (95% CI
++0.01733907..+0.06734018). Permanent announcements and both recovery
+comparisons were uncertain. V17 is rejected before dev-v13; held-out-v4 remains
+sealed.

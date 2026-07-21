@@ -347,14 +347,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   0.05618951 (95% CI +0.03029619..+0.08042806); recovery is uncertain against
   both scorecards. Dev-v12 is unopened, held-out-v4 is sealed, and M8.5 remains
   unmet.
-- **V17 precommit**: V16's 14 reusable WAIT actions were all forced; every one
-  of 375 unforced decisions selected a task. ADR-0028 changes idle cost
-  `0.001 -> 0.002`, retains the `5.0` cap, and raises duplicate-work cap
-  `1.0 -> 2.0` only to keep the exact busywork adversary ordered; V16's observed
-  two incidents remain far below that cap. Every other construction field is
-  fixed. All 39 exact-config adversaries and 135 Python tests pass. Dev-v12 is
-  retired unopened; dev-v13 is frozen at disjoint roots `131001..131160`.
-  Held-out-v4 remains sealed.
+- **V17 rejected on reusable dev-v1**: two pinned replicas reproduce update 17
+  at 9/10 construction wins and mean idle 0.08594077. Checkpoint
+  `6dbde34e0b745b55...`, model state `701bff0e24bfae60...`, replay
+  `ab01623eda4d40ea...`, full run `8b210937805c23f3...`, and lineage
+  `233282b7fc536cb3...` reproduce. Permanent-greedy idle remains 0.04162898
+  worse (95% CI +0.01733907..+0.06734018); permanent announcements and both
+  recovery comparisons are uncertain. Non-forced abandonment is zero and
+  matched idle improves by 0.14385630. Dev-v13 is unopened, held-out-v4 is
+  sealed, and M8.5 remains unmet.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

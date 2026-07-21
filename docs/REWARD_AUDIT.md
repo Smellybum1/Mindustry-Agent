@@ -260,6 +260,13 @@ config adversary matrix before training. The exact V17 config is SHA-256
 cases, and the full 135-test Python suite passes. Status: implemented-approved-
 v17 pre-training, 2026-07-21.
 
+Two pinned V17 replicas reproduce, but reusable dev-v1 rejects the resulting
+candidate. Permanent-greedy idle remains 0.04162898 worse (95% CI
++0.01733907..+0.06734018); announcement and recovery uncertainty also remain.
+The exact reward contract stays adversary-approved, while the V17 training
+intervention stops before dev-v13. Status: implemented-approved reward /
+rejected candidate, 2026-07-21.
+
 ## Cross-component adversarial matrix
 
 These CI-runnable cases are mandatory before changing any status to approved:
