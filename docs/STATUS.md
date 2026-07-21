@@ -997,6 +997,21 @@ repository-evidence mapping used for the M6 audit is:
   from the corrected decision-revision state hashes; two independent recordings
   match at SHA-256 `f386e056e3b21cbf...`. The 128-test suite, build, smoke,
   determinism, and deliberate replay-mutation check pass.
+- Replaying rejected V13 update 24 on reusable dev-v1 under the corrected
+  boundary remains 10/10 wins and improves mean team idle from 0.24980951 to
+  0.20217810. All 110 learned-seat abandon decisions advance one tick, but
+  immediate replanning exposes 105 non-forced `resources_short_replan` events;
+  permanent/matched dual scorecards remain ineligible. Records, aggregate, and
+  preflight hashes are `373d47db23646daa...`, `c03ce068da2a1203...`, and
+  `5b161a1baee74d5e...`. V13 remains rejected.
+- ADR-0025 precommits V14 as a from-scratch retrain of V13's otherwise exact
+  reward/optimizer/architecture/RNG/root/schedule/selection recipe under the
+  corrected one-tick abandonment boundary. Two exact 2,048-episode replicas
+  are required. A 9/10, idle `<0.25` reusable dev-v1 result must then pass both
+  permanent and matched greedy scorecards before one exclusive dev-v10
+  confirmation. Dev-v10 freezes 160 disjoint roots `101001..101160`; held-out-v4
+  remains sealed. The precommit governance test brings the Python suite to 129
+  passing tests.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

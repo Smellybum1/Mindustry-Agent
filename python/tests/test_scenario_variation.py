@@ -371,3 +371,40 @@ def test_v13_quality_selection_and_dev_v9_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v9"] == path.name
+
+
+def test_v14_corrected_boundary_retrain_and_dev_v10_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v10.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v10"
+    assert confirmation["seed_set_version"] == 10
+    assert confirmation["seeds"] == list(range(101001, 101161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v13 = json.loads(
+        (training_dir / "m8-selector-v13-quality-gated-selection.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    v14 = json.loads(
+        (training_dir / "m8-selector-v14-corrected-abandon-boundary.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert v14.pop("candidate_version") == "v14"
+    assert v14.pop("runtime_contract") == (
+        "successful_abandon_task_terminal_one_tick_v1"
+    )
+    assert v14.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v10.json"
+    )
+    assert v14 == v13
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v10"] == path.name

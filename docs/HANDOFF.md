@@ -300,6 +300,19 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   golden remains two wins/16,200 ticks/664 checkpoints and two recordings match
   at SHA-256 `f386e056e3b21cbf...`; only decision-revision-dependent state hashes
   changed. Python tests, build, smoke, determinism, and negative replay pass.
+- **Corrected-runtime V13 probe**: rejected update 24 remains 10/10 on reusable
+  dev-v1 and mean idle improves from 0.24980951 to 0.20217810. Every learned
+  abandonment now advances one tick, but immediate replanning exposes 105
+  non-forced resource-short abandons, so dual scorecards remain ineligible.
+  Records/aggregate/preflight hashes are `373d47db23646daa...`,
+  `c03ce068da2a1203...`, and `5b161a1baee74d5e...`. V13 stays rejected.
+- **V14 precommit**: ADR-0025 requires a from-scratch retrain of V13's exact
+  learning recipe under runtime contract
+  `successful_abandon_task_terminal_one_tick_v1`. Two 2,048-episode replicas
+  must reproduce. Reusable dev-v1 must reach 9/10 with idle `<0.25` and pass
+  the corrected permanent-plus-matched dual scorecards before dev-v10 can be
+  consumed. Dev-v10 is frozen at disjoint roots `101001..101160`; held-out-v4
+  remains sealed. The full 129-test Python suite passes.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

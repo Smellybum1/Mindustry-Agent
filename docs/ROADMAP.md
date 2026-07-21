@@ -964,6 +964,17 @@ matched-greedy scorecard passes. Permanent-greedy duplicates pass, but
 announcements, idle, recovery, and abandonment fail. V13 is rejected, dev-v9
 is consumed, held-out-v4 remains sealed, and M8.5 remains unmet.
 
+ADR-0025 precommits V14 after the corrected boundary replays rejected V13 on
+reusable dev-v1 at 10/10 wins and mean idle 0.20217810, but reveals 105
+non-forced resource-short replans and still fails the dual scorecard. V14 must
+retrain from scratch under the one-tick successful-abandon runtime while
+holding V13's reward, optimizer, architecture, RNG seeds, train/dev roots,
+schedule, and checkpoint-selection rule fixed. Two exact 2,048-episode runs
+must reproduce. Reusable dev-v1 must meet 9/10 wins, idle `<0.25`, and both
+permanent/matched scorecards before a one-way confirmation can begin. Dev-v10
+is frozen at 160 disjoint roots `101001..101160`; the 129-test Python suite
+passes and held-out-v4 remains sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
