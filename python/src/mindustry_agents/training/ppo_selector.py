@@ -499,6 +499,13 @@ def ppo_update(
         [item.teacher_action if item.teacher_action is not None else 0 for item in transitions],
         dtype=torch.long,
     )
+    teacher_mask = torch.tensor(
+        [
+            item.policy_loss_mask and item.teacher_action is not None
+            for item in transitions
+        ],
+        dtype=torch.bool,
+    )
     successful_teacher_mask = torch.tensor(
         [
             item.policy_loss_mask
@@ -517,8 +524,11 @@ def ppo_update(
         "success_imitation_samples": 0.0,
         "successful_teacher_imitation_loss": 0.0,
         "successful_teacher_imitation_samples": 0.0,
+        "teacher_imitation_loss": 0.0,
+        "teacher_imitation_samples": 0.0,
         "batches": 0.0,
     }
+    teacher_coefficient = float(config.get("teacher_imitation_coefficient", 0.0))
     for _ in range(int(config["ppo_epochs"])):
         order = torch.randperm(len(transitions), generator=shuffle_generator)
         for start in range(0, len(transitions), batch_size):
@@ -555,11 +565,18 @@ def ppo_update(
             else:
                 success_imitation_loss = values.sum() * 0.0
                 success_imitation_samples = 0.0
+            teacher_log_probs = all_log_probs.gather(
+                1, teacher_actions[index, None]
+            ).squeeze(1)
+            teacher = teacher_mask[index]
+            if teacher_coefficient != 0.0 and teacher.any():
+                teacher_imitation_loss = -teacher_log_probs[teacher].mean()
+                teacher_imitation_samples = float(teacher.sum().item())
+            else:
+                teacher_imitation_loss = values.sum() * 0.0
+                teacher_imitation_samples = 0.0
             successful_teacher = successful_teacher_mask[index]
             if successful_teacher.any():
-                teacher_log_probs = all_log_probs.gather(
-                    1, teacher_actions[index, None]
-                ).squeeze(1)
                 successful_teacher_imitation_loss = -teacher_log_probs[
                     successful_teacher
                 ].mean()
@@ -580,6 +597,7 @@ def ppo_update(
                     config.get("successful_teacher_imitation_coefficient", 0.0)
                 )
                 * successful_teacher_imitation_loss
+                + teacher_coefficient * teacher_imitation_loss
             )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -600,6 +618,10 @@ def ppo_update(
             metrics["successful_teacher_imitation_samples"] += (
                 successful_teacher_imitation_samples
             )
+            metrics["teacher_imitation_loss"] += float(
+                teacher_imitation_loss.item()
+            )
+            metrics["teacher_imitation_samples"] += teacher_imitation_samples
             metrics["batches"] += 1.0
     divisor = max(1.0, metrics["batches"])
     return {
@@ -609,6 +631,7 @@ def ppo_update(
             "batches",
             "success_imitation_samples",
             "successful_teacher_imitation_samples",
+            "teacher_imitation_samples",
         }
         else value
         for key, value in metrics.items()

@@ -294,6 +294,88 @@ class TestPpoSelector(unittest.TestCase):
             metrics["successful_teacher_imitation_loss"], expected, places=6
         )
 
+    def test_full_teacher_imitation_includes_losing_unforced_transition(self):
+        import torch
+
+        from mindustry_agents.training.model import SelectorActorCritic
+        from mindustry_agents.training.ppo_selector import (
+            EpisodeRollout,
+            Transition,
+            ppo_update,
+        )
+
+        transition = Transition(
+            candidates=torch.zeros((8, 37)),
+            scalars=torch.zeros(56),
+            candidate_present=torch.zeros(8, dtype=torch.bool),
+            action_mask=torch.ones(10, dtype=torch.bool),
+            action=9,
+            old_log_prob=0.0,
+            old_value=0.0,
+            reward=-1.0,
+            advanced_ticks=60,
+            done=True,
+            policy_loss_mask=True,
+            successful_episode=False,
+            teacher_action=0,
+        )
+        episode = EpisodeRollout(
+            seed=1,
+            outcome="loss",
+            tick=60,
+            core_health=0.0,
+            transitions=[transition],
+            reward_components={},
+            trace=[],
+            coordination_metrics={},
+        )
+        model = SelectorActorCritic(1)
+        with torch.no_grad():
+            _, logits, _ = model(
+                transition.candidates[None, :],
+                transition.scalars[None, :],
+                transition.candidate_present[None, :],
+                transition.action_mask[None, :],
+            )
+            expected = -torch.log_softmax(logits, dim=-1)[0, 0].item()
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.0)
+        config = {
+            "gamma_per_second": 0.99,
+            "gae_lambda": 0.95,
+            "minibatch_size": 1,
+            "ppo_epochs": 1,
+            "clip_ratio": 0.2,
+            "value_coefficient": 0.5,
+            "entropy_coefficient": 0.0,
+            "success_imitation_coefficient": 0.0,
+            "successful_teacher_imitation_coefficient": 0.0,
+            "teacher_imitation_coefficient": 1.0,
+            "max_grad_norm": 0.5,
+        }
+
+        metrics = ppo_update(
+            model,
+            optimizer,
+            [episode],
+            config,
+            torch.Generator().manual_seed(3),
+        )
+
+        self.assertEqual(metrics["teacher_imitation_samples"], 1.0)
+        self.assertEqual(metrics["successful_teacher_imitation_samples"], 0.0)
+        self.assertAlmostEqual(metrics["teacher_imitation_loss"], expected, places=6)
+
+        del config["teacher_imitation_coefficient"]
+        metrics = ppo_update(
+            model,
+            optimizer,
+            [episode],
+            config,
+            torch.Generator().manual_seed(3),
+        )
+        self.assertEqual(metrics["teacher_imitation_samples"], 0.0)
+        self.assertEqual(metrics["teacher_imitation_loss"], 0.0)
+
     def test_checkpoint_requires_exact_schema_match(self):
         import torch
 
