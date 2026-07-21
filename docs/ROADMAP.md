@@ -1304,6 +1304,22 @@ ranked update 20 has mean return `1.10996`, core health `601.9`, and idle
 did not start, dev-v23 remained unopened and is retired, held-out-v4 stays
 sealed, and V27 is rejected before reusable preflight. M8.5 remains unmet.
 
+ADR-0039 precommits V28 from reusable evidence only. V27's initial successful-
+teacher prior is present at update 1 (mean disagreement margin `0.02482445`) but
+is erased by best-ranked update 20 (134/401 disagreements, margin `2.24436055`,
+worse than V24). V28 therefore holds V27 exact and applies one separately seeded
+CE rehearsal epoch over the same five winning teacher episodes after every PPO
+update, before checkpoint/dev evaluation. Seed `8607`, optimizer ordering, and
+an atomic per-update report are explicit. Warmup strength, online teacher
+coefficient, reward, runtime, roots, model, PPO budget, ordinary RNGs, selection,
+and inference remain unchanged. Dev-v23 is retired unopened. Dev-v24 freezes
+disjoint roots `241001..241160` and remains unopened; held-out-v4 stays sealed.
+No V28 model work preceded the packet. All 44 exact-config adversaries, 153
+Python tests, pinned build, 5/5 candidate gate, smoke, determinism, and negative
+replay pass. Config/adversary hashes are `ef58055e7da5566d...` and
+`2d672a7f0e816a41...`. A committed packet is required before replica A; M8.5
+remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

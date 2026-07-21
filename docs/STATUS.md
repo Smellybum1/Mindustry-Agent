@@ -1291,6 +1291,18 @@ repository-evidence mapping used for the M6 audit is:
   Best-ranked update 20 has idle `0.07044212`; complete frontier hash is
   `d23df387d15966f17...`. Replica B did not start, dev-v23 remains unopened and
   is retired, held-out-v4 stays sealed, and V27 is rejected before preflight.
+- ADR-0039 precommits V28 as the exact V27 construction plus one success-only
+  teacher-trajectory rehearsal epoch after each PPO update. Reusable diagnosis
+  shows V27's disagreement margin grew from `0.02482445` at update 1 to
+  `2.24436055` at update 20, so distributed rehearsal targets forgetting rather
+  than reopening initial strength or the closed online-coefficient line. Order
+  is `PPO -> rehearsal -> checkpoint -> dev`; seed `8607` is separate, the same
+  Adam state continues, and an atomic report preserves all 32 rehearsal updates.
+  Dev-v23 is retired unopened; dev-v24 freezes roots `241001..241160` and remains
+  unopened; held-out-v4 stays sealed. No V28 model work preceded the packet. All
+  44 exact-config adversaries, 153 Python tests, pinned build, 5/5 candidate
+  gate, smoke, determinism, and negative replay pass. Config/adversary hashes
+  are `ef58055e7da5566d...` and `2d672a7f0e816a41...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -570,6 +570,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   best-ranked update 20 has idle `0.07044212`, and the frontier hashes to
   `d23df387d15966f17...`. Replica B did not start, dev-v23 is retired unopened,
   held-out-v4 stays sealed, and V27 stops before reusable preflight.
+- **V28 precommit**: ADR-0039 keeps V27 exact and rehearses the
+  same five-episode/121-transition successful teacher corpus for one CE epoch
+  after each PPO update. V27's reusable disagreement margin grew
+  `0.02482445 -> 2.24436055`, so this isolates prior retention without changing
+  warmup strength, online coefficient, reward, runtime, roots, PPO budget, or
+  inference. Rehearsal seed is `8607`; order is
+  `PPO -> rehearsal -> checkpoint -> dev`, with an atomic failure-safe report.
+  Dev-v23 is retired unopened; dev-v24 freezes roots `241001..241160` and remains
+  unopened; held-out-v4 stays sealed. All 44 exact-config adversaries, 153 Python
+  tests, pinned build, 5/5 candidate gate, smoke, determinism, and negative
+  replay pass. Config/adversary hashes are `ef58055e7da5566d...` and
+  `2d672a7f0e816a41...`. Commit the packet before replica A.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).

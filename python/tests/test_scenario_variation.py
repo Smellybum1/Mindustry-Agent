@@ -1009,3 +1009,51 @@ def test_v27_successful_teacher_warmup_and_dev_v23_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v23"] == path.name
+
+
+def test_v28_successful_teacher_rehearsal_and_dev_v24_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v24.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v24"
+    assert confirmation["seed_set_version"] == 24
+    assert confirmation["seeds"] == list(range(241001, 241161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v27 = json.loads(
+        (
+            training_dir
+            / "m8-selector-v27-successful-teacher-warmup.json"
+        ).read_text(encoding="utf-8")
+    )
+    v28 = json.loads(
+        (
+            training_dir
+            / "m8-selector-v28-successful-teacher-rehearsal.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert v28.pop("candidate_version") == "v28"
+    assert v28.pop("quality_intervention") == (
+        "unsaturated_idle_plus_successful_teacher_trajectory_rehearsal_v2"
+    )
+    assert v28.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v24.json"
+    )
+    assert v28.pop("teacher_rehearsal_epochs_per_update") == 1
+    assert v28.pop("teacher_rehearsal_minibatch_seed") == 8607
+    assert v27.pop("candidate_version") == "v27"
+    assert v27.pop("quality_intervention") == (
+        "unsaturated_idle_plus_successful_teacher_trajectory_warmup_v1"
+    )
+    assert v27.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v23.json"
+    )
+    assert v28 == v27
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v24"] == path.name
