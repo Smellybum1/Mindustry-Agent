@@ -365,6 +365,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   recovery comparisons are uncertain. Non-forced abandonment is zero and
   matched idle improves by 0.14385630. Dev-v13 is unopened, held-out-v4 is
   sealed, and M8.5 remains unmet.
+- **V18 rejected on reusable dev-v1**: two pinned replicas reproduce update 22
+  at 9/10 construction wins and mean idle 0.10978972. Checkpoint
+  `0984700a681bfdc5...`, model state `2fd25b37851c1d97...`, replay
+  `d098fba29b3de64f...`, full run `127410b515f6917e...`, and lineage
+  `b226742761e58852...` reproduce. Permanent-greedy idle is 0.06547793 worse
+  (95% CI +0.03188818..+0.09708444); recovery remains uncertain against
+  permanent greedy (-6.85 ticks, 95% CI -93.62..+114.80) and matched greedy
+  (-42.52 ticks, 95% CI -214.79..+118.93). Announcements, duplicate work, and
+  abandonment non-regress, while matched idle improves by 0.12000735. Dev-v14
+  is unopened, held-out-v4 is sealed, and M8.5 remains unmet.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

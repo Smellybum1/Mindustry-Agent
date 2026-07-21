@@ -1036,6 +1036,18 @@ retired unopened; dev-v14 freezes 160 disjoint roots `141001..141160` for one
 confirmation only after reusable dual scorecards pass. Held-out-v4 remains
 sealed.
 
+V18's two pinned 2,048-episode replicas reproduce exactly and select update 22
+at 9/10 construction wins with mean idle 0.10978972. Checkpoint
+`0984700a681bfdc5...`, model state `2fd25b37851c1d97...`, replay
+`d098fba29b3de64f...`, full run `127410b515f6917e...`, and direct lineage
+`b226742761e58852...` reproduce. Reusable dev-v1 rejects the candidate because
+permanent-greedy idle is 0.06547793 worse (95% CI
++0.03188818..+0.09708444). Recovery is also uncertain against permanent
+greedy (-6.85 ticks, 95% CI -93.62..+114.80) and matched greedy (-42.52 ticks,
+95% CI -214.79..+118.93). Announcements, duplicate work, and abandonment
+non-regress, and matched idle improves by 0.12000735. Dev-v14 remains unopened,
+held-out-v4 remains sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

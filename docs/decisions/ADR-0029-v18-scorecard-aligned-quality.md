@@ -62,3 +62,13 @@ state or adding inference behavior.
 Pretraining validation passes all 43 exact-config adversaries and the full
 138-test Python suite. Config SHA-256 is `fa6cdcfe3820da06...`; adversary report
 SHA-256 is `96058a7e7c9dd6f0...`.
+
+The two pinned training replicas reproduce exactly and select update 22 at
+9/10 construction wins with mean idle 0.10978972. Checkpoint
+`0984700a681bfdc5...`, model state `2fd25b37851c1d97...`, replay
+`d098fba29b3de64f...`, full run `127410b515f6917e...`, and direct lineage
+`b226742761e58852...` match. Reusable dev-v1 rejects promotion: permanent-greedy
+idle regresses by 0.06547793 (95% CI +0.03188818..+0.09708444), and recovery is
+uncertain against both governed scorecards. Dev-v14 therefore remains unopened
+and held-out-v4 remains sealed. The reusable preflight report SHA-256 is
+`37d9db2950801f7f2e46ee28e831b54c0cca7201c4bab9cce490580384e77384`.

@@ -1071,6 +1071,17 @@ repository-evidence mapping used for the M6 audit is:
   nor non-recovery can farm reward. All 43 exact-config adversaries and 138
   Python tests pass. Dev-v13 is retired unopened; dev-v14 freezes 160 disjoint
   roots `141001..141160`. Held-out-v4 remains sealed.
+- V18's two pinned 2,048-episode replicas reproduce exactly and select update
+  22 at 9/10 construction wins with mean idle 0.10978972. Checkpoint
+  `0984700a681bfdc5...`, model state `2fd25b37851c1d97...`, replay
+  `d098fba29b3de64f...`, full run `127410b515f6917e...`, and direct lineage
+  `b226742761e58852...` all reproduce. Reusable dev-v1 still rejects V18:
+  permanent-greedy idle is definitively worse by 0.06547793 (95% CI
+  +0.03188818..+0.09708444), while recovery remains uncertain against both
+  permanent greedy (-6.85 ticks, 95% CI -93.62..+114.80) and matched greedy
+  (-42.52 ticks, 95% CI -214.79..+118.93). Announcements, duplicate work, and
+  abandonment non-regress; matched idle improves by 0.12000735. Dev-v14
+  remains unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
