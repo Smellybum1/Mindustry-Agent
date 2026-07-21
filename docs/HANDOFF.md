@@ -322,6 +322,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   by 0.11430187 and non-forced abandonment by 0.04469033; recovery is
   uncertain. Dev-v10 is unopened, held-out-v4 is sealed, and M8.5 remains
   unmet.
+- **V15 precommit**: reusable dev-v1 shows 59 learned WAIT decisions consume
+  34,993/81,000 ticks, and V14 update 32 is already the lowest-idle 10/10
+  frontier point. ADR-0026 keeps the V14 construction exact except idle cost
+  `0.0001 -> 0.0003` and non-forced team-abandon cost `0.1 -> 0.25`, with the
+  abandonment cap unchanged. The adversary runner loads/hashes the candidate
+  config; all 37 exact-config cases and 131 Python tests pass. Dev-v10 is
+  retired unopened; dev-v11 is frozen at disjoint roots `111001..111160`.
+  Held-out-v4 remains sealed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

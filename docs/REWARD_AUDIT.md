@@ -211,6 +211,22 @@ may influence V12 after the production tests and expanded adversary gate pass.
 | Telemetry key | `reward.penalty.team_abandonment`, `reward_quality_penalty_totals`, structured `task_events.reason_code`. |
 | Status | implemented-approved-v12; adversaries pass 2026-07-21 |
 
+## V15 coefficient override
+
+ADR-0026 retains the exact reward-v2 components, authoritative inputs, caps,
+and exploit mitigations above. Only two coefficients change for V15:
+
+| Component | V12/V14 | V15 | V15 range |
+|---|---:|---:|---:|
+| `reward.penalty.team_idle_ticks` | `-0.0001` / idle agent tick | `-0.0003` / idle agent tick | `[-8.1,0]` |
+| `reward.penalty.team_abandonment` | `-0.1` / non-forced event | `-0.25` / non-forced event | `[-2,0]` |
+
+The exact V15 config is SHA-256 `c39c50d34c03e795...`. Its hashed adversary
+report is `f278eb912699b817...`; all 37 cases pass, including early loss versus
+full-horizon idle, cumulative chunk invariance, idle busywork, rollback, caps,
+and forced-abandon exclusions. Status: implemented-approved-v15 pre-training,
+2026-07-21.
+
 ## Cross-component adversarial matrix
 
 These CI-runnable cases are mandatory before changing any status to approved:

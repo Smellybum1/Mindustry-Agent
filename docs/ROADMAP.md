@@ -983,6 +983,16 @@ corrected dual preflight then reject V14: permanent-greedy idle and non-forced
 abandonment are definitively worse, while recovery is uncertain. Dev-v10 is
 unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
 
+ADR-0026 precommits V15 from reusable V14 dev-v1 evidence: 59 learned WAIT
+choices consume 34,993/81,000 ticks and the selected checkpoint is already the
+lowest-idle 10/10 frontier point. V15 holds the complete V14 construction fixed
+except idle cost `0.0001 -> 0.0003` and non-forced team-abandon cost
+`0.1 -> 0.25`; the abandonment cap remains `2.0`. The adversary runner now
+hashes the exact candidate config, and all 37 cases plus 131 Python tests pass.
+Dev-v10 is retired unopened. Dev-v11 freezes 160 disjoint roots
+`111001..111160` for one confirmation only after reusable dual scorecards pass;
+held-out-v4 remains sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

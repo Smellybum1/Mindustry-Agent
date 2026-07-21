@@ -110,20 +110,30 @@ def _report(
     return report
 
 
-def run_case(case: str) -> dict[str, Any]:
+def run_case(
+    case: str,
+    *,
+    quality_reward_override: dict[str, float] | None = None,
+) -> dict[str, Any]:
     """Run one deterministic synthetic trace through the production accumulator."""
 
     if case not in CASES:
         raise ValueError(f"unknown reward adversary: {case}")
     quality_reward = None
     if case in QUALITY_CASES:
-        config_path = (
-            repo_root() / "configs" / "training" / "m8-selector-v12-quality-reward.json"
-        )
-        config = json.loads(config_path.read_text(encoding="utf-8"))
-        if config.get("reward_schema") != "selector_reward_v2":
-            raise RewardAuditError("V12 adversary config is not reward v2")
-        quality_reward = dict(config["quality_reward"])
+        if quality_reward_override is None:
+            config_path = (
+                repo_root()
+                / "configs"
+                / "training"
+                / "m8-selector-v12-quality-reward.json"
+            )
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            if config.get("reward_schema") != "selector_reward_v2":
+                raise RewardAuditError("quality adversary config is not reward v2")
+            quality_reward = dict(config["quality_reward"])
+        else:
+            quality_reward = dict(quality_reward_override)
     reward = SelectorReward(quality_reward=quality_reward)
     transitions: list[dict[str, Any]] = []
     totals = {key: 0.0 for key in reward.component_keys}
@@ -538,15 +548,36 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="M8.4 selector reward adversaries")
     parser.add_argument("--case", action="append", choices=CASES)
     parser.add_argument(
+        "--config",
+        type=Path,
+        default=(
+            repo_root()
+            / "configs"
+            / "training"
+            / "m8-selector-v12-quality-reward.json"
+        ),
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=repo_root() / "runs" / "m8-reward-adversaries.json",
     )
     args = parser.parse_args(argv)
     selected = args.case or list(CASES)
-    reports = [run_case(case) for case in selected]
+    config_path = args.config.resolve()
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    if config.get("reward_schema") != "selector_reward_v2":
+        raise RewardAuditError("quality adversary config is not reward v2")
+    quality_reward = dict(config["quality_reward"])
+    reports = [
+        run_case(case, quality_reward_override=quality_reward) for case in selected
+    ]
     document = {
         "schema": "selector_reward_adversary_report_v2",
+        "quality_config": {
+            "path": str(config_path),
+            "sha256": hashlib.sha256(config_path.read_bytes()).hexdigest(),
+        },
         "reward_schemas": sorted({item["reward_schema"] for item in reports}),
         "cases": reports,
         "pass": all(item["pass"] for item in reports),

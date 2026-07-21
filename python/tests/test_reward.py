@@ -128,6 +128,18 @@ class TestSelectorRewardAdversaries(unittest.TestCase):
             self.assertIn("structured_events", report)
             self.assertIn("coordination_metrics", report)
 
+    def test_quality_adversaries_accept_stronger_precommitted_coefficients(self):
+        stronger = {
+            **QUALITY,
+            "idle_agent_tick_cost": 0.0003,
+            "team_abandonment_cost": 0.25,
+        }
+        reports = [
+            run_case(case, quality_reward_override=stronger)
+            for case in CASES
+        ]
+        self.assertTrue(all(report["pass"] for report in reports))
+
     def test_reward_v2_breakdown_exposes_auditable_counters_and_totals(self):
         result = SelectorReward(quality_reward=QUALITY).observe(
             team(),

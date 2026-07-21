@@ -1023,6 +1023,14 @@ repository-evidence mapping used for the M6 audit is:
   +0.04469033 (+0.01168093..+0.09201991); recovery is uncertain. Baseline,
   candidate, aggregate, and preflight artifacts are hashed. Dev-v10 remains
   unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
+- Permitted V14 dev-v1 analysis attributes 34,993 of 81,000 engine ticks to
+  only 59 learned `WAIT` choices; update 32 is already the lowest-idle 10/10
+  frontier point. ADR-0026 therefore precommits V15 with V14 held fixed except
+  for reward-v2 idle cost `0.0001 -> 0.0003` and non-forced team-abandon cost
+  `0.1 -> 0.25` (the `2.0` abandonment cap is unchanged). The adversary runner
+  now loads and hashes the exact candidate config. All 37 V15-config cases and
+  the 131-test Python suite pass. Dev-v10 is retired unopened; dev-v11 freezes
+  160 disjoint roots `111001..111160`. Held-out-v4 remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
