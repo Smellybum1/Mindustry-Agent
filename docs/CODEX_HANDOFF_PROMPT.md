@@ -53,9 +53,11 @@ train/dev evidence and precommit it before implementation or execution.
 
 ADR-0021 now precommits V11 as a 90/10 interpolation of reproducible V6 update
 31 and V10 update 6, using V7's established blend weight. Construct it twice
-with cross-commit lineage, then require at least 9/10 dev-v1 wins. Dev-v6 is
-retired unopened. Dev-v7 is frozen as a new 160-root one-way confirmation under
-the corrected permanent-plus-matched scorecard gate. Held-out-v4 stays sealed.
+with cross-commit lineage, then require at least 9/10 dev-v1 wins. Construction
+matches at checkpoint `0a8fa8b4ba98581d...`, lineage `845282326c58308c...`,
+and dev-v1 is 9/10. Dev-v6 is retired unopened. Dev-v7 is frozen as a new
+160-root one-way confirmation under the corrected permanent-plus-matched
+scorecard gate. Held-out-v4 stays sealed until that full gate passes.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

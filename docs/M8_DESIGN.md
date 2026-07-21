@@ -488,6 +488,15 @@ V11 names held-out-v4 and must reach at least 9/10 dev-v1 wins. Dev-v6 stays
 reserved to rejected V10; a new disjoint 160-root dev-v7 set is frozen for one
 ADR-0019 dual-scorecard confirmation only after V11 qualifies.
 
+Two V11 constructions match checkpoint
+`0a8fa8b4ba98581d776ee4a69e8f992b4b30f2776b82408eeeca791abd30749f`,
+model state `eefe623958d9456d48e537cbcca20efb478335880f056a15c19e5ef7aed8deaf`,
+and lineage `845282326c58308cbc4af03925559f332750de9e92cebfa365b7736d3bfa6fd7`.
+Dev-v1 is 9/10 and beats all four observed win comparators, meeting the frozen
+continuation bar. Permanent-greedy idle and abandonment regress; matched-greedy
+idle and abandonment are favorable but uncertain on ten pairs. This authorizes
+only the exclusive dev-v7 confirmation, not held-out-v4.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

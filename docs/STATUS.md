@@ -930,7 +930,11 @@ repository-evidence mapping used for the M6 audit is:
   using V7's established weight. Its config names held-out-v4 and requires at
   least 9/10 dev-v1 wins. Dev-v6 is retired unopened; a globally disjoint
   160-root dev-v7 set is frozen for one corrected dual-scorecard confirmation.
-  V11 has not yet been constructed.
+  V11 constructions match checkpoint `0a8fa8b4ba98581d...`, model state
+  `eefe623958d9456d...`, and lineage `845282326c58308c...`. Dev-v1 is 9/10 and
+  beats all win comparators. Permanent idle/abandonment regress while matched
+  idle/abandonment are favorable but uncertain. V11 qualifies for dev-v7 only;
+  held-out-v4 remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

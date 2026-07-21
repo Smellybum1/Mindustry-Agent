@@ -899,6 +899,12 @@ blend weight without another training run or sweep. V11 must reproduce and
 reach at least 9/10 dev-v1 wins. Dev-v6 remains retired unopened; a disjoint
 160-root dev-v7 set is frozen for one corrected dual-scorecard confirmation.
 
+V11 constructions match checkpoint `0a8fa8b4ba98581d...` and lineage
+`845282326c58308c...`. It reaches 9/10 dev-v1 wins and beats every observed win
+comparator. Ten-pair scorecards remain ineligible: permanent idle/abandonment
+regress and matched idle/abandonment are favorable but uncertain. The frozen
+bar authorizes one dev-v7 confirmation only; held-out-v4 remains sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
