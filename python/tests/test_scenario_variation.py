@@ -126,3 +126,22 @@ def test_m8_final_teacher_strength_changes_only_precommitted_coefficient():
     v4["successful_teacher_imitation_coefficient"] = 0.1
     v4["optimizer_ppo"]["successful_teacher_imitation_coefficient"] = 0.1
     assert v4 == v5
+
+
+def test_m8_long_diverse_recipe_changes_only_precommitted_cycle_budget():
+    config_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v3 = json.loads(
+        (config_dir / "m8-selector-v3-diverse.json").read_text(encoding="utf-8")
+    )
+    v6 = json.loads(
+        (config_dir / "m8-selector-v6-diverse-long.json").read_text(
+            encoding="utf-8"
+        )
+    )
+
+    assert v6["training_cycles"] == 32
+    assert v6["episodes_per_update"] == 64
+    assert v6["held_out_seed_set_id"] == "bootstrap-defense-v1-held-out-v2"
+    assert v6["held_out_seed_set_version"] == 2
+    v3["training_cycles"] = 32
+    assert v3 == v6

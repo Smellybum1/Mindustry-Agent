@@ -307,6 +307,18 @@ at least 9/10 dev wins, sufficient to exceed the existing 8/10 permanent-greedy
 aggregate before the full scorecard preflight. A lower result ends this
 teacher-regularization line. Its frozen config names held-out-v2.
 
+Two pinned v5 runs reproduced exactly but selected update 8 at 3/10 dev wins:
+checkpoint `6e488b4d2f21f0f6...`, replay `cdae4f433c493192...`, and full-run
+digest `4d55b193cede563b...`. The teacher-strength line is therefore closed before
+preflight and held-out-v2 remains unopened.
+
+V6 is a precommitted data-budget hypothesis. It returns to the auxiliary-free
+v3 recipe and changes only `training_cycles` from 8 to 32. Each of the 64
+train-v2 roots is therefore visited 32 times, matching the per-root repetition
+of the original train-v1 recipe while expanding the total budget to 2,048
+episodes and 32 updates. The config names held-out-v2 and must reach at least
+9/10 dev wins or stop before preflight.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

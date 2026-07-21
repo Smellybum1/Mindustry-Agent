@@ -843,7 +843,12 @@ repository-evidence mapping used for the M6 audit is:
   `fc23c1ed82a546d3...`), so v4 stops before preflight.
 - V5 is frozen as the final coefficient-only follow-up at 0.10. It changes no
   other recipe field, names held-out-v2, and must reach at least 9/10 dev wins
-  or the teacher-regularization line ends. It has not been run.
+  or the teacher-regularization line ends. Two pinned runs reproduce exactly
+  but select update 8 at 3/10 dev wins (`6e488b4d2f21f0f6...`, full-run
+  `4d55b193cede563b...`), so the line is closed and v2 remains unopened.
+- V6 is precommitted as an auxiliary-free data-budget test. It changes only v3
+  training cycles from 8 to 32 (2,048 episodes/32 updates), restoring 32 visits
+  per each of 64 train roots. It names v2 and must reach at least 9/10 dev wins.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -804,6 +804,12 @@ preflight. V5 is precommitted as the final coefficient-only test, changing only
 the successful teacher coefficient from 0.05 to 0.10. It must reach at least
 9/10 dev wins or this line stops; its config names held-out-v2.
 
+V5 reproduced exactly but fell to 3/10 dev wins at update 8 (full-run digest
+`4d55b193cede563b...`), closing the teacher-strength line. V6 is precommitted as
+an auxiliary-free data-budget test: the v3 recipe with only training cycles
+raised from 8 to 32, giving all 64 roots the original 32 visits (2,048 episodes,
+32 updates). It must reach at least 9/10 dev wins or stop before preflight.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
