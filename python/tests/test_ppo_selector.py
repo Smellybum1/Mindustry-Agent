@@ -165,6 +165,31 @@ class TestPpoSelector(unittest.TestCase):
             _teacher_warmup_policy(
                 {"teacher_warmup_seed_set": "auxiliary.json"}
             )
+        warmup_config = {
+            "teacher_warmup_cycles": 1,
+            "teacher_warmup_epochs": 1,
+            "teacher_warmup_minibatch_size": 1,
+            "teacher_warmup_success_only": True,
+            "teacher_warmup_shuffle_seed": 123,
+            "teacher_warmup_minibatch_seed": 124,
+        }
+        with self.assertRaisesRegex(
+            ValueError, "samples_per_epoch must be positive"
+        ):
+            _teacher_warmup_policy(
+                warmup_config | {"teacher_warmup_samples_per_epoch": 0}
+            )
+        with self.assertRaisesRegex(
+            ValueError, "samples_per_epoch must be positive"
+        ):
+            _teacher_rehearsal_policy(
+                warmup_config
+                | {
+                    "teacher_rehearsal_epochs_per_update": 1,
+                    "teacher_rehearsal_minibatch_seed": 125,
+                    "teacher_rehearsal_samples_per_epoch": -1,
+                }
+            )
 
     def test_quality_gated_checkpoint_selection_is_strict_and_ranked(self):
         from mindustry_agents.training.ppo_selector import (
@@ -775,6 +800,78 @@ class TestPpoSelector(unittest.TestCase):
         self.assertEqual(rehearsal["schema"], "teacher_trajectory_rehearsal_v1")
         self.assertEqual(rehearsal["epochs"], 1)
         self.assertEqual(rehearsal["samples"], 1)
+        self.assertNotIn("samples_per_epoch_cap", rehearsal)
+
+        capped_config = dict(config) | {"teacher_warmup_samples_per_epoch": 2}
+        capped_episode = EpisodeRollout(
+            seed=3,
+            outcome="win",
+            tick=60,
+            core_health=1.0,
+            transitions=[transition, transition, transition],
+            reward_components={},
+            trace=[],
+            coordination_metrics={},
+        )
+        capped_results = []
+        for model in [SelectorActorCritic(10), SelectorActorCritic(10)]:
+            capped_results.append(
+                teacher_trajectory_warmup_update(
+                    model,
+                    torch.optim.Adam(model.parameters(), lr=1e-3),
+                    [capped_episode],
+                    capped_config,
+                    torch.Generator().manual_seed(17),
+                )
+            )
+        self.assertEqual(capped_results[0], capped_results[1])
+        self.assertEqual(capped_results[0]["samples"], 4)
+        self.assertEqual(capped_results[0]["samples_per_epoch_cap"], 2)
+        self.assertEqual(
+            [
+                len(order)
+                for order in capped_results[0][
+                    "sampled_transition_indices_by_epoch"
+                ]
+            ],
+            [2, 2],
+        )
+        self.assertEqual(
+            capped_results[0]["sampled_unique_transitions"],
+            len(
+                {
+                    index
+                    for order in capped_results[0][
+                        "sampled_transition_indices_by_epoch"
+                    ]
+                    for index in order
+                }
+            ),
+        )
+        capped_rehearsal_model = SelectorActorCritic(11)
+        capped_rehearsal = teacher_trajectory_rehearsal_update(
+            capped_rehearsal_model,
+            torch.optim.Adam(capped_rehearsal_model.parameters(), lr=1e-3),
+            [capped_episode],
+            dict(config)
+            | {
+                "teacher_rehearsal_epochs_per_update": 1,
+                "teacher_rehearsal_minibatch_seed": 18,
+                "teacher_rehearsal_samples_per_epoch": 2,
+            },
+            torch.Generator().manual_seed(18),
+        )
+        self.assertEqual(capped_rehearsal["samples"], 2)
+        self.assertEqual(capped_rehearsal["samples_per_epoch_cap"], 2)
+        self.assertEqual(
+            [
+                len(order)
+                for order in capped_rehearsal[
+                    "sampled_transition_indices_by_epoch"
+                ]
+            ],
+            [2],
+        )
         transition.action_mask[0] = False
         invalid_model = SelectorActorCritic(9)
         with self.assertRaisesRegex(RuntimeError, "masked action"):
@@ -807,6 +904,8 @@ class TestPpoSelector(unittest.TestCase):
                 "teacher_warmup_minibatch_seed": 42,
                 "teacher_rehearsal_epochs_per_update": 1,
                 "teacher_rehearsal_minibatch_seed": 43,
+                "teacher_warmup_samples_per_epoch": 121,
+                "teacher_rehearsal_samples_per_epoch": 121,
             }
             config_path.write_text(json.dumps(config), encoding="utf-8")
             path, report = _write_teacher_warmup_report(
@@ -840,6 +939,9 @@ class TestPpoSelector(unittest.TestCase):
             )
             self.assertEqual(report["configuration"]["teacher_warmup_cycles"], 1)
             self.assertEqual(
+                report["configuration"]["teacher_warmup_samples_per_epoch"], 121
+            )
+            self.assertEqual(
                 json.loads(path.read_text(encoding="utf-8")), report
             )
 
@@ -862,6 +964,12 @@ class TestPpoSelector(unittest.TestCase):
             self.assertTrue(rehearsal_path.is_file())
             self.assertFalse(rehearsal_path.with_suffix(".json.tmp").exists())
             self.assertEqual(rehearsal_report["updates"], 1)
+            self.assertEqual(
+                rehearsal_report["configuration"][
+                    "teacher_rehearsal_samples_per_epoch"
+                ],
+                121,
+            )
             self.assertEqual(rehearsal_report["corpus"]["unique_transitions"], 1)
             self.assertEqual(
                 rehearsal_report["source_warmup_report"]["sha256"],

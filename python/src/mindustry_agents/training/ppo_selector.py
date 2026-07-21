@@ -198,7 +198,7 @@ def _teacher_warmup_policy(config: dict[str, Any]) -> dict[str, Any] | None:
         raise ValueError("teacher warmup epochs and minibatch size must be positive")
     if not isinstance(success_only, bool):
         raise ValueError("teacher_warmup_success_only must be boolean")
-    return {
+    policy = {
         "cycles": cycles,
         "epochs": epochs,
         "minibatch_size": batch_size,
@@ -206,6 +206,13 @@ def _teacher_warmup_policy(config: dict[str, Any]) -> dict[str, Any] | None:
         "shuffle_seed": int(config["teacher_warmup_shuffle_seed"]),
         "minibatch_seed": int(config["teacher_warmup_minibatch_seed"]),
     }
+    samples_per_epoch = config.get("teacher_warmup_samples_per_epoch")
+    if samples_per_epoch is not None:
+        samples_per_epoch = int(samples_per_epoch)
+        if samples_per_epoch < 1:
+            raise ValueError("teacher_warmup_samples_per_epoch must be positive")
+        policy["samples_per_epoch"] = samples_per_epoch
+    return policy
 
 
 def _teacher_rehearsal_policy(config: dict[str, Any]) -> dict[str, int] | None:
@@ -218,10 +225,17 @@ def _teacher_rehearsal_policy(config: dict[str, Any]) -> dict[str, int] | None:
         return None
     if _teacher_warmup_policy(config) is None:
         raise ValueError("teacher trajectory rehearsal requires teacher warmup")
-    return {
+    policy = {
         "epochs_per_update": epochs,
         "minibatch_seed": int(config["teacher_rehearsal_minibatch_seed"]),
     }
+    samples_per_epoch = config.get("teacher_rehearsal_samples_per_epoch")
+    if samples_per_epoch is not None:
+        samples_per_epoch = int(samples_per_epoch)
+        if samples_per_epoch < 1:
+            raise ValueError("teacher_rehearsal_samples_per_epoch must be positive")
+        policy["samples_per_epoch"] = samples_per_epoch
+    return policy
 
 
 def _dev_checkpoint_selection_policy(
@@ -905,6 +919,7 @@ def _teacher_trajectory_imitation_update(
     success_only: bool,
     max_grad_norm: float,
     schema: str,
+    samples_per_epoch: int | None = None,
 ) -> dict[str, Any]:
     """Apply deterministic CE-only updates from teacher-controlled trajectories."""
 
@@ -939,9 +954,13 @@ def _teacher_trajectory_imitation_update(
     loss_total = 0.0
     batches = 0
     samples = 0
+    sampled_orders: list[list[int]] = []
     for _ in range(epochs):
         order = torch.randperm(len(transitions), generator=shuffle_generator)
-        for start in range(0, len(transitions), batch_size):
+        if samples_per_epoch is not None:
+            order = order[: min(samples_per_epoch, len(transitions))]
+            sampled_orders.append([int(index) for index in order.tolist()])
+        for start in range(0, len(order), batch_size):
             index = order[start : start + batch_size]
             _, masked_logits, _ = model(
                 candidates[index], scalars[index], present[index], masks[index]
@@ -954,7 +973,7 @@ def _teacher_trajectory_imitation_update(
             loss_total += float(loss.item())
             batches += 1
             samples += int(index.numel())
-    return {
+    metrics = {
         "schema": schema,
         "epochs": epochs,
         "batches": batches,
@@ -965,6 +984,18 @@ def _teacher_trajectory_imitation_update(
         "success_only": success_only,
         "mean_cross_entropy": loss_total / max(1, batches),
     }
+    if samples_per_epoch is not None:
+        metrics.update(
+            {
+                "samples_per_epoch_cap": samples_per_epoch,
+                "sampled_unique_transitions": len(
+                    {index for order in sampled_orders for index in order}
+                ),
+                "sampled_transition_indices_by_epoch": sampled_orders,
+                "sample_schedule_sha256": _json_digest(sampled_orders),
+            }
+        )
+    return metrics
 
 
 def teacher_trajectory_warmup_update(
@@ -989,6 +1020,7 @@ def teacher_trajectory_warmup_update(
         success_only=bool(policy["success_only"]),
         max_grad_norm=float(config["max_grad_norm"]),
         schema="teacher_trajectory_warmup_v1",
+        samples_per_epoch=policy.get("samples_per_epoch"),
     )
 
 
@@ -1015,6 +1047,7 @@ def teacher_trajectory_rehearsal_update(
         success_only=bool(warmup_policy["success_only"]),
         max_grad_norm=float(config["max_grad_norm"]),
         schema="teacher_trajectory_rehearsal_v1",
+        samples_per_epoch=rehearsal_policy.get("samples_per_epoch"),
     )
 
 
@@ -1198,6 +1231,10 @@ def _write_teacher_warmup_report(
         "episodes": episode_summaries,
         "wins": sum(item["outcome"] == "win" for item in episode_summaries),
     }
+    if "teacher_warmup_samples_per_epoch" in config:
+        report["configuration"]["teacher_warmup_samples_per_epoch"] = config[
+            "teacher_warmup_samples_per_epoch"
+        ]
     path = output_dir / "selector-v1-teacher-warmup.json"
     temporary_path = path.with_suffix(".json.tmp")
     temporary_path.write_text(
@@ -1247,6 +1284,10 @@ def _write_teacher_rehearsal_report(
         "updates": len(optimizer_updates),
         "post_rehearsal_model_state_sha256": post_rehearsal_model_state_sha256,
     }
+    if "teacher_rehearsal_samples_per_epoch" in config:
+        report["configuration"]["teacher_rehearsal_samples_per_epoch"] = config[
+            "teacher_rehearsal_samples_per_epoch"
+        ]
     path = output_dir / "selector-v1-teacher-rehearsal.json"
     temporary_path = path.with_suffix(".json.tmp")
     temporary_path.write_text(
