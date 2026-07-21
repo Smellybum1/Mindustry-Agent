@@ -330,6 +330,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   config; all 37 exact-config cases and 131 Python tests pass. Dev-v10 is
   retired unopened; dev-v11 is frozen at disjoint roots `111001..111160`.
   Held-out-v4 remains sealed.
+- **V15 result**: two pinned 2,048-episode runs reproduce exactly at update 25,
+  10/10 reusable dev-v1 wins, idle 0.21873675, checkpoint
+  `a328550d36448897...`, model state `823336f58798a487...`, replay
+  `32735e17026b8903...`, full-run digest `22792939f896fbd0...`, and lineage
+  `0db57e0879cca7df...`. Abandonment improves to 0.01673964, but the corrected
+  preflight rejects V15 because permanent-greedy idle is definitively worse;
+  recovery and matched idle are uncertain. Dev-v11 is unopened, held-out-v4 is
+  sealed, and M8.5 remains unmet.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

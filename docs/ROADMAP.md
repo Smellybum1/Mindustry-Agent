@@ -993,6 +993,14 @@ Dev-v10 is retired unopened. Dev-v11 freezes 160 disjoint roots
 `111001..111160` for one confirmation only after reusable dual scorecards pass;
 held-out-v4 remains sealed.
 
+Two exact V15 2,048-episode replicas select update 25 at 10/10 reusable dev-v1
+wins and mean idle 0.21873675. Checkpoint `a328550d36448897...`, replay
+`32735e17026b8903...`, full-run digest `22792939f896fbd0...`, and lineage
+`0db57e0879cca7df...` reproduce. Non-forced abandonment improves to 0.01673964,
+but the corrected dual preflight rejects V15 because permanent-greedy idle is
+definitively worse; recovery and matched idle remain uncertain. Dev-v11 is
+unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

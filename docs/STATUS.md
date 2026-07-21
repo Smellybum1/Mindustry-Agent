@@ -1031,6 +1031,15 @@ repository-evidence mapping used for the M6 audit is:
   now loads and hashes the exact candidate config. All 37 V15-config cases and
   the 131-test Python suite pass. Dev-v10 is retired unopened; dev-v11 freezes
   160 disjoint roots `111001..111160`. Held-out-v4 remains sealed.
+- Two pinned V15 2,048-episode replicas reproduce exactly and select update 25
+  at 10/10 dev-v1 wins, mean idle 0.21873675, and mean core health 1088.3.
+  Checkpoint/model-state/replay/full-run/lineage hashes are
+  `a328550d36448897...`, `823336f58798a487...`, `32735e17026b8903...`,
+  `22792939f896fbd0...`, and `0db57e0879cca7df...`. The reusable dual
+  preflight rejects V15 before dev-v11. Non-forced abandonment improves to
+  0.01673964, but permanent-greedy idle is definitively worse by 0.17442496
+  (95% CI +0.14772493..+0.20024502); recovery and matched idle are uncertain.
+  Dev-v11 remains unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
