@@ -205,8 +205,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   be rerun. The bug is fixed/regression-tested. Held-out-v2 remains unopened.
 - **V7 precommit**: ADR-0015 freezes a 90/10 V6 update-31 / V4 update-5 blend,
   with explicit cross-commit parent validation. Dev-v3 is a new disjoint
-  40-root, one-way confirmation set available only after V7 passes dev-v1. V7
-  is not yet constructed; dev-v2 remains consumed and held-out-v2 sealed.
+  40-root, one-way confirmation set available only after V7 passes dev-v1. Its
+  result follows; dev-v2 remains consumed and held-out-v2 sealed.
+- **V7 result**: exact constructions; dev-v3 finishes 35/40 versus permanent
+  greedy 30/40. Recovery, abandonment, announcements, and duplicates pass;
+  idle remains favorable but uncertain. V7 is rejected and dev-v3 consumed.
+- **V8 precommit**: ADR-0016 freezes a single `-0.25` WAIT-logit bias adjustment
+  to V7, with masks/reward/lifecycle unchanged. Dev-v4 is a new disjoint
+  40-root, one-way confirmation set. V8 is not yet constructed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -380,7 +386,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0015` (do not relitigate).
+See `docs/decisions/ADR-0001..0016` (do not relitigate).
 
 ## Deviations from the brief in this scaffold
 

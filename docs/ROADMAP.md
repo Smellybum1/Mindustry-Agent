@@ -832,7 +832,15 @@ ADR-0015 precommits V7 as a deterministic 90/10 blend of reproducible V6
 update 31 and teacher-regularized V4 update 5. Cross-commit parent hashes are
 explicitly validated. The 40-root, globally disjoint dev-v3 confirmation set is
 frozen before construction and permits one V7 attempt only after dev-v1
-qualification. V7 has not yet been constructed; held-out-v2 remains sealed.
+qualification. Its construction and result are recorded below; held-out-v2
+remains sealed.
+
+V7 constructions match exactly and its dev-v3 confirmation wins 35/40 versus
+permanent greedy 30/40. Every scorecard except idle passes; idle is favorable
+on average but its interval crosses zero, so V7 is rejected and dev-v3 is
+consumed. ADR-0016 precommits V8 as a one-coordinate `-0.25` WAIT-logit bias
+adjustment to V7, with no reward/mask/lifecycle change. Dev-v4 is frozen as a
+new disjoint 40-root one-way confirmation. V8 is not yet constructed.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

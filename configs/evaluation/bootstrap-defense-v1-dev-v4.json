@@ -1,0 +1,14 @@
+{
+  "seed_set_id": "bootstrap-defense-v1-dev-v4",
+  "seed_set_version": 4,
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "split": "dev",
+  "seeds": [
+    41001, 41002, 41003, 41004, 41005, 41006, 41007, 41008, 41009, 41010,
+    41011, 41012, 41013, 41014, 41015, 41016, 41017, 41018, 41019, 41020,
+    41021, 41022, 41023, 41024, 41025, 41026, 41027, 41028, 41029, 41030,
+    41031, 41032, 41033, 41034, 41035, 41036, 41037, 41038, 41039, 41040
+  ],
+  "policy": "One-way V8 confirmation under ADR-0016. Never use individual outcomes for checkpoint selection, tuning, or future policy revision."
+}

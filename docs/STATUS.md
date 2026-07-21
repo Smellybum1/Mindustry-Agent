@@ -871,7 +871,15 @@ repository-evidence mapping used for the M6 audit is:
 - ADR-0015 freezes V7 before construction as a 90/10 V6-update-31 / V4-update-5
   interpolation. Cross-commit parent lineage now requires each full training
   commit. A new disjoint 40-root dev-v3 set is frozen for one confirmation only
-  after dev-v1 qualification. V7 has not been constructed; v2 remains sealed.
+  after dev-v1 qualification. Its result is recorded below; v2 remains sealed.
+- V7 constructions match checkpoint `40478db69dd700b7...` and lineage
+  `955960199cb90b18...`. Its exclusive dev-v3 confirmation completes at 35/40
+  wins versus permanent greedy 30/40. All scorecards except idle pass; idle is
+  favorable on average but uncertain, so V7 is rejected and dev-v3 consumed.
+- ADR-0016 freezes V8 as exactly one `-0.25` WAIT-logit bias adjustment to V7.
+  Masks remain authoritative and no reward or lifecycle behavior changes. A
+  new disjoint 40-root dev-v4 set is frozen for one confirmation after dev-v1.
+  V8 has not been constructed; held-out-v2 remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

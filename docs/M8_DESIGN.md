@@ -369,6 +369,28 @@ globally disjoint 40-root dev-v3 set is its single confirmation attempt. A
 started attempt consumes dev-v3. Only an eligible confirmation can authorize
 held-out-v2; dev-v2 remains consumed and V7 cannot use its outcomes.
 
+V7's two constructions match checkpoint `40478db69dd700b7...`, model state
+`872234642d7238f3...`, and lineage `955960199cb90b18...`. Dev-v1 beats every
+observed win comparator but retains small-sample scorecard uncertainty. The
+exclusive dev-v3 confirmation completes at 35/40 wins versus permanent greedy
+30/40, matched greedy 5/40, and matched random 3/40. Recovery, abandonment,
+announcements, and duplicates pass. Idle difference is favorable on average
+(`-0.0185`) but uncertain (`[-0.0566,0.0184]`), so V7 is rejected and dev-v3
+is consumed without opening held-out-v2.
+
+## V8 governed successor
+
+ADR-0016 precommits a single auditable change before construction: subtract
+0.25 from the V7 model's WAIT output bias (`special_head.2.bias[1]`). No reward,
+feature, mask, lifecycle rule, or other parameter changes. Masks remain
+authoritative, so forced/only-legal WAIT is unaffected. The hypothesis directly
+targets V7's sole failed aggregate gate and is not a bias sweep.
+
+Two constructions must match exactly. V8 must pass dev-v1 observed win gates
+before the already frozen, globally disjoint 40-root dev-v4 set is opened for
+one confirmation. A started attempt consumes dev-v4. Only full eligibility can
+authorize held-out-v2; dev-v2 and dev-v3 remain consumed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

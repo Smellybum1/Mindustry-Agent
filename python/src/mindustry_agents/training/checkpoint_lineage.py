@@ -27,6 +27,10 @@ DIRECT_LINEAGE_SCHEMA = "selector_checkpoint_direct_lineage_v1"
 DIRECT_LINEAGE_REPRODUCIBILITY_SCHEMA = (
     "selector_checkpoint_direct_lineage_reproducibility_v1"
 )
+ADJUSTMENT_LINEAGE_SCHEMA = "selector_checkpoint_logit_adjustment_v1"
+ADJUSTMENT_LINEAGE_REPRODUCIBILITY_SCHEMA = (
+    "selector_checkpoint_logit_adjustment_reproducibility_v1"
+)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -70,6 +74,30 @@ def _direct_lineage_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
             }
             for run in manifest["runs"]
         ],
+        "checkpoint_sha256": manifest["checkpoint"]["sha256"],
+        "checkpoint_model_state_sha256": manifest["checkpoint"][
+            "model_state_sha256"
+        ],
+    }
+
+
+def _adjustment_lineage_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "schema": manifest["schema"],
+        "source_config_sha256": manifest["source_config"]["sha256"],
+        "repository_commit": manifest["repository"]["commit"],
+        "schemas": manifest["schemas"],
+        "model_init_seed": manifest["model_init_seed"],
+        "parent": {
+            key: manifest["parent"][key]
+            for key in (
+                "checkpoint_sha256",
+                "checkpoint_model_state_sha256",
+                "lineage_reproducibility_sha256",
+                "source_config_sha256",
+            )
+        },
+        "adjustment": manifest["adjustment"],
         "checkpoint_sha256": manifest["checkpoint"]["sha256"],
         "checkpoint_model_state_sha256": manifest["checkpoint"][
             "model_state_sha256"
@@ -235,6 +263,36 @@ def validate_lineage_manifest(
             config_path=config_path,
             checkpoint_path=checkpoint_path,
         )
+    if manifest.get("schema") == ADJUSTMENT_LINEAGE_SCHEMA:
+        digest = _json_digest(_adjustment_lineage_evidence(manifest))
+        if manifest.get("lineage_reproducibility", {}).get("digest") != digest:
+            raise ValueError("checkpoint adjustment reproducibility digest mismatch")
+        config_path = config_path.resolve()
+        checkpoint_path = checkpoint_path.resolve()
+        config_sha256 = _sha256(config_path)
+        if manifest.get("source_config", {}).get("sha256") != config_sha256:
+            raise ValueError("checkpoint adjustment config hash mismatch")
+        checkpoint_sha256 = _sha256(checkpoint_path)
+        if manifest.get("checkpoint", {}).get("sha256") != checkpoint_sha256:
+            raise ValueError("checkpoint adjustment artifact hash mismatch")
+        config = _load_json(config_path)
+        model = SelectorActorCritic(int(config["model_init_seed"]))
+        checkpoint = load_checkpoint(checkpoint_path, model)
+        if checkpoint.get("config_sha256") != config_sha256:
+            raise ValueError("adjusted checkpoint config hash mismatch")
+        model_state_sha256 = _model_state_digest(checkpoint["model_state"])
+        if manifest["checkpoint"].get("model_state_sha256") != model_state_sha256:
+            raise ValueError("checkpoint adjustment model state hash mismatch")
+        return {
+            "manifest_path": str(manifest_path),
+            "manifest_sha256": _sha256(manifest_path),
+            "lineage_reproducibility_sha256": digest,
+            "checkpoint_sha256": checkpoint_sha256,
+            "checkpoint_model_state_sha256": model_state_sha256,
+            "source_config_sha256": config_sha256,
+            "repository_commit": manifest["repository"]["commit"],
+            "parents": [manifest["parent"]],
+        }
     if manifest.get("schema") != DIRECT_LINEAGE_SCHEMA:
         raise ValueError("checkpoint lineage manifest schema mismatch")
 

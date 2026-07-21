@@ -47,7 +47,11 @@ matched-control catalog-WAIT indexing bug. ADR-0014 consumes the attempt, so do
 not rerun dev-v2 and do not open held-out-v2 for V6. The control bug is fixed;
 the next step requires a newly governed successor candidate/confirmation path.
 
-ADR-0015 now precommits that successor: V7 is a 90/10 V6 update-31 / V4
-update-5 blend with explicit cross-commit lineage. Construct it twice from the
-A/B parent replicas and require exact equality, then run dev-v1. Dev-v3 is
-frozen for one confirmation only if V7 qualifies; held-out-v2 stays sealed.
+ADR-0015 precommitted V7 as a 90/10 V6 update-31 / V4 update-5 blend with
+explicit cross-commit lineage. Its two constructions matched and its dev-v3
+result is recorded below; held-out-v2 stayed sealed.
+
+V7 completed dev-v3 at 35/40 but failed idle certainty, so it is rejected and
+dev-v3 consumed. ADR-0016 precommits V8 as exactly one `-0.25` WAIT-logit bias
+adjustment to V7. Construct it twice, require exact lineage, then run dev-v1.
+Dev-v4 is frozen for one confirmation only if V8 qualifies; v2 stays sealed.
