@@ -291,6 +291,33 @@ authoritative; the earlier self-imitation coefficient stays zero. Teacher
 actions, indices, loss, and sample counts are recorded for replay and optimizer
 telemetry. The zero-default path preserves all older recipes.
 
+### Optional successful teacher-trajectory warmup
+
+The trainer also supports a zero-default `teacher_trajectory_warmup_v1`
+construction primitive for governed successor experiments. When enabled, it
+runs a separately shuffled number of complete train-split cycles with
+adaptive-v1 controlling the learned seat at the same structured decision
+boundaries. The model still evaluates every boundary, but its sampled action
+cannot enter the environment during warmup. Forced lifecycle actions retain
+their existing mask semantics.
+
+Only unforced labeled transitions are eligible for cross-entropy. A governed
+config may require `teacher_warmup_success_only`, in which case every losing
+teacher episode is archived but contributes no gradient. Epochs, minibatch
+size, seed-set order, and minibatch order are explicit config coordinates with
+RNGs separate from ordinary action sampling and PPO minibatching. The warmup
+uses the same Adam instance as the following PPO updates, so optimizer state
+continuity is deterministic and intentional.
+
+Warmup changes training initialization only: reward, features, masks, action
+cadence, inference, dev evaluation, and held-out access are unchanged. Enabled
+runs atomically write `selector-v1-teacher-warmup.json` before ordinary PPO,
+including the exact config and train set, seed schedule, episode summaries,
+optimizer metrics, and pre/post model-state hashes. That report is part of the
+full-run reproducibility digest. With `teacher_warmup_cycles` absent or zero,
+the trainer does not require warmup fields and preserves the historical
+rollout/manifest shape.
+
 This hypothesis addresses sparse successful diverse-root training evidence
 (49/512 v3 train episodes) with a structured coordination prior, without
 changing model capacity, roots, episode/update budget, RNGs, reward, dev set,

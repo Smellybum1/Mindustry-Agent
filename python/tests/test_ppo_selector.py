@@ -76,6 +76,40 @@ class TestPpoSelector(unittest.TestCase):
                 train_set, {"shuffle_seed": 91, "training_cycles": 0}
             )
 
+    def test_teacher_warmup_schedule_is_separate_deterministic_and_optional(self):
+        from mindustry_agents.training.ppo_selector import (
+            _teacher_warmup_policy,
+            _teacher_warmup_seed_schedule,
+        )
+
+        train_set = {"seeds": [1, 2, 3, 4]}
+        config = {
+            "teacher_warmup_cycles": 2,
+            "teacher_warmup_shuffle_seed": 123,
+        }
+        first = _teacher_warmup_seed_schedule(train_set, config)
+        second = _teacher_warmup_seed_schedule(train_set, config)
+        self.assertEqual(first, second)
+        self.assertEqual(len(first), 8)
+        self.assertEqual(sorted(first[:4]), [1, 2, 3, 4])
+        self.assertEqual(sorted(first[4:]), [1, 2, 3, 4])
+        self.assertEqual(_teacher_warmup_seed_schedule(train_set, {}), [])
+        with self.assertRaisesRegex(ValueError, "cannot be negative"):
+            _teacher_warmup_seed_schedule(
+                train_set, {"teacher_warmup_cycles": -1}
+            )
+        with self.assertRaisesRegex(ValueError, "must be boolean"):
+            _teacher_warmup_policy(
+                {
+                    "teacher_warmup_cycles": 1,
+                    "teacher_warmup_epochs": 1,
+                    "teacher_warmup_minibatch_size": 1,
+                    "teacher_warmup_success_only": 1,
+                    "teacher_warmup_shuffle_seed": 123,
+                    "teacher_warmup_minibatch_seed": 124,
+                },
+            )
+
     def test_quality_gated_checkpoint_selection_is_strict_and_ranked(self):
         from mindustry_agents.training.ppo_selector import (
             _dev_checkpoint_selection_policy,
@@ -588,6 +622,159 @@ class TestPpoSelector(unittest.TestCase):
         )
         self.assertEqual(metrics["teacher_imitation_samples"], 0.0)
         self.assertEqual(metrics["teacher_imitation_loss"], 0.0)
+
+    def test_teacher_trajectory_warmup_is_ce_only_and_deterministic(self):
+        import torch
+
+        from mindustry_agents.training.model import SelectorActorCritic
+        from mindustry_agents.training.ppo_selector import (
+            EpisodeRollout,
+            Transition,
+            _model_state_digest,
+            teacher_trajectory_warmup_update,
+        )
+
+        transition = Transition(
+            candidates=torch.zeros((8, 37)),
+            scalars=torch.zeros(56),
+            candidate_present=torch.zeros(8, dtype=torch.bool),
+            action_mask=torch.ones(10, dtype=torch.bool),
+            action=0,
+            old_log_prob=0.0,
+            old_value=0.0,
+            reward=0.0,
+            advanced_ticks=60,
+            done=True,
+            policy_loss_mask=True,
+            teacher_action=0,
+        )
+        episode = EpisodeRollout(
+            seed=1,
+            outcome="win",
+            tick=60,
+            core_health=1.0,
+            transitions=[transition],
+            reward_components={},
+            trace=[],
+            coordination_metrics={},
+        )
+        losing_episode = EpisodeRollout(
+            seed=2,
+            outcome="loss",
+            tick=60,
+            core_health=0.0,
+            transitions=[transition],
+            reward_components={},
+            trace=[],
+            coordination_metrics={},
+        )
+        config = {
+            "teacher_warmup_cycles": 1,
+            "teacher_warmup_epochs": 2,
+            "teacher_warmup_minibatch_size": 1,
+            "teacher_warmup_success_only": True,
+            "teacher_warmup_shuffle_seed": 16,
+            "teacher_warmup_minibatch_seed": 17,
+            "max_grad_norm": 0.5,
+        }
+        models = [SelectorActorCritic(9), SelectorActorCritic(9)]
+        before = _model_state_digest(models[0].state_dict())
+        results = []
+        for model in models:
+            optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+            results.append(
+                teacher_trajectory_warmup_update(
+                    model,
+                    optimizer,
+                    [episode, losing_episode],
+                    config,
+                    torch.Generator().manual_seed(17),
+                )
+            )
+        self.assertEqual(results[0], results[1])
+        self.assertEqual(results[0]["schema"], "teacher_trajectory_warmup_v1")
+        self.assertEqual(results[0]["samples"], 2)
+        self.assertEqual(results[0]["unique_transitions"], 1)
+        self.assertEqual(results[0]["eligible_episodes"], 1)
+        self.assertEqual(results[0]["total_episodes"], 2)
+        self.assertTrue(results[0]["success_only"])
+        self.assertNotEqual(before, _model_state_digest(models[0].state_dict()))
+        self.assertEqual(
+            _model_state_digest(models[0].state_dict()),
+            _model_state_digest(models[1].state_dict()),
+        )
+        transition.action_mask[0] = False
+        invalid_model = SelectorActorCritic(9)
+        with self.assertRaisesRegex(RuntimeError, "masked action"):
+            teacher_trajectory_warmup_update(
+                invalid_model,
+                torch.optim.Adam(invalid_model.parameters(), lr=1e-3),
+                [episode],
+                config,
+                torch.Generator().manual_seed(17),
+            )
+
+    def test_teacher_warmup_report_is_atomic_and_reproducibility_evidence(self):
+        from mindustry_agents.training.ppo_selector import (
+            _reproducibility_evidence,
+            _write_teacher_warmup_report,
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output_dir = root / "runs" / "warmup"
+            output_dir.mkdir(parents=True)
+            config_path = root / "config.json"
+            config = {
+                "teacher_warmup_cycles": 1,
+                "teacher_warmup_epochs": 8,
+                "teacher_warmup_minibatch_size": 128,
+                "teacher_warmup_success_only": True,
+                "teacher_warmup_shuffle_seed": 41,
+                "teacher_warmup_minibatch_seed": 42,
+            }
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+            path, report = _write_teacher_warmup_report(
+                root,
+                output_dir,
+                config_path,
+                config,
+                {
+                    "seed_set_id": "train-v1",
+                    "seed_set_version": 1,
+                    "split": "train",
+                },
+                [11, 12],
+                [
+                    {
+                        "outcome": "win",
+                        "trace_digest": "teacher-trace",
+                    }
+                ],
+                {"schema": "teacher_trajectory_warmup_v1", "samples": 8},
+                "initial-model",
+                "warm-model",
+            )
+            self.assertTrue(path.is_file())
+            self.assertFalse(path.with_suffix(".json.tmp").exists())
+            self.assertEqual(report["wins"], 1)
+            self.assertEqual(report["initial_model_state_sha256"], "initial-model")
+            self.assertEqual(
+                report["post_warmup_model_state_sha256"], "warm-model"
+            )
+            self.assertEqual(report["configuration"]["teacher_warmup_cycles"], 1)
+            self.assertEqual(
+                json.loads(path.read_text(encoding="utf-8")), report
+            )
+
+            manifest = self._repro_manifest()
+            manifest["teacher_warmup"] = report
+            first = _reproducibility_evidence(manifest)
+            manifest["teacher_warmup"] = dict(report) | {
+                "post_warmup_model_state_sha256": "changed"
+            }
+            second = _reproducibility_evidence(manifest)
+            self.assertNotEqual(first, second)
 
     def test_checkpoint_requires_exact_schema_match(self):
         import torch

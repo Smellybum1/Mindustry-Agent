@@ -148,6 +148,51 @@ def _training_seed_schedule(
     return schedule
 
 
+def _teacher_warmup_seed_schedule(
+    train_set: dict[str, Any], config: dict[str, Any]
+) -> list[int]:
+    """Return the separately seeded teacher-trajectory warmup schedule."""
+
+    cycles = int(config.get("teacher_warmup_cycles", 0))
+    if cycles < 0:
+        raise ValueError("teacher_warmup_cycles cannot be negative")
+    if cycles == 0:
+        return []
+    shuffle_seed = int(config["teacher_warmup_shuffle_seed"])
+    seeds = [int(seed) for seed in train_set["seeds"]]
+    schedule: list[int] = []
+    for cycle in range(cycles):
+        cycle_seeds = list(seeds)
+        random.Random(shuffle_seed + cycle).shuffle(cycle_seeds)
+        schedule.extend(cycle_seeds)
+    return schedule
+
+
+def _teacher_warmup_policy(config: dict[str, Any]) -> dict[str, Any] | None:
+    """Validate an optional teacher warmup before any environment work begins."""
+
+    cycles = int(config.get("teacher_warmup_cycles", 0))
+    if cycles < 0:
+        raise ValueError("teacher_warmup_cycles cannot be negative")
+    if cycles == 0:
+        return None
+    epochs = int(config["teacher_warmup_epochs"])
+    batch_size = int(config["teacher_warmup_minibatch_size"])
+    success_only = config["teacher_warmup_success_only"]
+    if epochs < 1 or batch_size < 1:
+        raise ValueError("teacher warmup epochs and minibatch size must be positive")
+    if not isinstance(success_only, bool):
+        raise ValueError("teacher_warmup_success_only must be boolean")
+    return {
+        "cycles": cycles,
+        "epochs": epochs,
+        "minibatch_size": batch_size,
+        "success_only": success_only,
+        "shuffle_seed": int(config["teacher_warmup_shuffle_seed"]),
+        "minibatch_seed": int(config["teacher_warmup_minibatch_seed"]),
+    }
+
+
 def _dev_checkpoint_selection_policy(
     config: dict[str, Any],
 ) -> dict[str, Any] | None:
@@ -371,6 +416,7 @@ def rollout_episode(
     action_generator: torch.Generator,
     reward_schema: str = REWARD_SCHEMA,
     quality_reward: dict[str, float] | None = None,
+    teacher_controlled: bool = False,
 ) -> EpisodeRollout:
     reset = env.reset(
         seed,
@@ -432,7 +478,7 @@ def rollout_episode(
             or not features.policy_loss_mask
             or scripted_type == "ABANDON"
         )
-        if forced:
+        if forced or teacher_controlled:
             learned_action = scripted_action
             selected_index = _scripted_index(
                 learned_action, observations[LEARNED_SEAT]["task_candidates"]
@@ -579,6 +625,7 @@ def rollout_episode(
                 "state_hash": response.state_hash,
                 "task_events": response.task_events,
                 "outcome": response.outcome,
+                **({"teacher_controlled": True} if teacher_controlled else {}),
             }
         )
         observations = response.observations
@@ -816,6 +863,81 @@ def ppo_update(
     }
 
 
+def teacher_trajectory_warmup_update(
+    model: SelectorActorCritic,
+    optimizer: torch.optim.Optimizer,
+    episodes: list[EpisodeRollout],
+    config: dict[str, Any],
+    shuffle_generator: torch.Generator,
+) -> dict[str, Any]:
+    """Run deterministic CE-only warmup on teacher-controlled train trajectories."""
+
+    policy = _teacher_warmup_policy(config)
+    if policy is None:
+        raise ValueError("teacher trajectory warmup is disabled")
+    eligible_episodes = [
+        episode
+        for episode in episodes
+        if not bool(policy["success_only"]) or episode.outcome == "win"
+    ]
+    transitions = [
+        item
+        for episode in eligible_episodes
+        for item in episode.transitions
+        if item.policy_loss_mask and item.teacher_action is not None
+    ]
+    if not transitions:
+        raise RuntimeError("teacher warmup produced no unforced labeled transitions")
+    for transition in transitions:
+        teacher_action = int(transition.teacher_action)
+        if (
+            teacher_action < 0
+            or teacher_action >= transition.action_mask.numel()
+            or not bool(transition.action_mask[teacher_action])
+        ):
+            raise RuntimeError("teacher warmup labeled a masked action")
+    candidates = torch.stack([item.candidates for item in transitions])
+    scalars = torch.stack([item.scalars for item in transitions])
+    present = torch.stack([item.candidate_present for item in transitions])
+    masks = torch.stack([item.action_mask for item in transitions])
+    teacher_actions = torch.tensor(
+        [int(item.teacher_action) for item in transitions], dtype=torch.long
+    )
+    epochs = int(policy["epochs"])
+    batch_size = int(policy["minibatch_size"])
+    loss_total = 0.0
+    batches = 0
+    samples = 0
+    for _ in range(epochs):
+        order = torch.randperm(len(transitions), generator=shuffle_generator)
+        for start in range(0, len(transitions), batch_size):
+            index = order[start : start + batch_size]
+            _, masked_logits, _ = model(
+                candidates[index], scalars[index], present[index], masks[index]
+            )
+            loss = functional.cross_entropy(masked_logits, teacher_actions[index])
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(
+                model.parameters(), float(config["max_grad_norm"])
+            )
+            optimizer.step()
+            loss_total += float(loss.item())
+            batches += 1
+            samples += int(index.numel())
+    return {
+        "schema": "teacher_trajectory_warmup_v1",
+        "epochs": epochs,
+        "batches": batches,
+        "samples": samples,
+        "unique_transitions": len(transitions),
+        "eligible_episodes": len(eligible_episodes),
+        "total_episodes": len(episodes),
+        "success_only": bool(policy["success_only"]),
+        "mean_cross_entropy": loss_total / max(1, batches),
+    }
+
+
 def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
     action_state_trace = [
         {
@@ -954,6 +1076,57 @@ def _git_evidence(root: Path) -> dict[str, Any]:
     }
 
 
+def _write_teacher_warmup_report(
+    root: Path,
+    output_dir: Path,
+    config_path: Path,
+    config: dict[str, Any],
+    train_set: dict[str, Any],
+    seed_schedule: list[int],
+    episode_summaries: list[dict[str, Any]],
+    optimizer_metrics: dict[str, Any],
+    initial_model_state_sha256: str,
+    post_warmup_model_state_sha256: str,
+) -> tuple[Path, dict[str, Any]]:
+    """Persist compact warmup evidence before ordinary PPO can fail."""
+
+    report = {
+        "schema": "selector_teacher_trajectory_warmup_report_v1",
+        "source_config": {
+            "path": str(config_path.relative_to(root)),
+            "sha256": _sha256(config_path),
+        },
+        "train_seed_set": {
+            key: train_set[key]
+            for key in ("seed_set_id", "seed_set_version", "split")
+        },
+        "seed_schedule": seed_schedule,
+        "configuration": {
+            key: config[key]
+            for key in (
+                "teacher_warmup_cycles",
+                "teacher_warmup_epochs",
+                "teacher_warmup_minibatch_size",
+                "teacher_warmup_success_only",
+                "teacher_warmup_shuffle_seed",
+                "teacher_warmup_minibatch_seed",
+            )
+        },
+        "optimizer": optimizer_metrics,
+        "initial_model_state_sha256": initial_model_state_sha256,
+        "post_warmup_model_state_sha256": post_warmup_model_state_sha256,
+        "episodes": episode_summaries,
+        "wins": sum(item["outcome"] == "win" for item in episode_summaries),
+    }
+    path = output_dir / "selector-v1-teacher-warmup.json"
+    temporary_path = path.with_suffix(".json.tmp")
+    temporary_path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    temporary_path.replace(path)
+    return path, report
+
+
 def _manifest(
     root: Path,
     config_path: Path,
@@ -974,6 +1147,7 @@ def _manifest(
     initial_model_state_sha256: str,
     selected_model_state_sha256: str,
     selected_update: int,
+    teacher_warmup: dict[str, Any] | None,
 ) -> dict[str, Any]:
     lock = root / "python" / "requirements-rl-linux-py312.lock"
     selection_policy = _dev_checkpoint_selection_policy(config)
@@ -1072,6 +1246,17 @@ def _manifest(
             str(checkpoint_path.with_suffix(".manifest.json").relative_to(root)),
         ],
     }
+    if teacher_warmup is not None:
+        manifest["teacher_warmup"] = teacher_warmup
+        manifest["rollout_update_counts"]["teacher_warmup_episodes"] = len(
+            teacher_warmup["episodes"]
+        )
+        manifest["rng_seeds"]["teacher_warmup_shuffle_seed"] = config[
+            "teacher_warmup_shuffle_seed"
+        ]
+        manifest["rng_seeds"]["teacher_warmup_minibatch_seed"] = config[
+            "teacher_warmup_minibatch_seed"
+        ]
     if selection_policy is not None:
         manifest["dev_checkpoint_selection_policy"] = selection_policy
     return manifest
@@ -1112,6 +1297,8 @@ def _reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
     }
     if selection_policy is not None:
         evidence["dev_checkpoint_selection_policy"] = selection_policy
+    if manifest.get("teacher_warmup") is not None:
+        evidence["teacher_warmup"] = manifest["teacher_warmup"]
     return evidence
 
 
@@ -1141,6 +1328,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     root = repo_root()
     config = _load_json(config_path)
     selection_policy = _dev_checkpoint_selection_policy(config)
+    teacher_warmup_policy = _teacher_warmup_policy(config)
     _configure_torch(config)
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
     dev_set = _seed_set(root, str(config["dev_seed_set"]), "dev")
@@ -1153,9 +1341,17 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     )
     action_generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
     minibatch_generator = torch.Generator().manual_seed(int(config["minibatch_seed"]))
+    teacher_warmup_generator = torch.Generator().manual_seed(
+        int(teacher_warmup_policy["minibatch_seed"])
+        if teacher_warmup_policy is not None
+        else 0
+    )
     train_episodes: list[EpisodeRollout] = []
     optimizer_updates: list[dict[str, Any]] = []
     seeds = _training_seed_schedule(train_set, config)
+    teacher_warmup_seeds = _teacher_warmup_seed_schedule(train_set, config)
+    teacher_warmup_report: dict[str, Any] | None = None
+    teacher_warmup_path: Path | None = None
     episodes_per_update = int(config["episodes_per_update"])
     output_dir.mkdir(parents=True, exist_ok=True)
     dev_seeds = [int(seed) for seed in dev_set["seeds"]]
@@ -1190,6 +1386,49 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         LaunchConfig(port=port, java=java, build_if_missing=False)
     ) as env:
         env.handshake("m8-ppo-training")
+        if teacher_warmup_seeds:
+            model.eval()
+            warmup_episodes = [
+                rollout_episode(
+                    env,
+                    model,
+                    seed=seed,
+                    scenario_id=str(config["scenario_id"]),
+                    scenario_version=int(config["scenario_version"]),
+                    evaluation=True,
+                    action_generator=action_generator,
+                    reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+                    quality_reward=config.get("quality_reward"),
+                    teacher_controlled=True,
+                )
+                for seed in teacher_warmup_seeds
+            ]
+            model.train()
+            warmup_metrics = teacher_trajectory_warmup_update(
+                model,
+                optimizer,
+                warmup_episodes,
+                config,
+                teacher_warmup_generator,
+            )
+            warmup_summaries = [
+                _episode_summary(episode) for episode in warmup_episodes
+            ]
+            teacher_warmup_path, teacher_warmup_report = (
+                _write_teacher_warmup_report(
+                    root,
+                    output_dir,
+                    config_path,
+                    config,
+                    train_set,
+                    teacher_warmup_seeds,
+                    warmup_summaries,
+                    warmup_metrics,
+                    initial_model_state_sha256,
+                    _model_state_digest(model.state_dict()),
+                )
+            )
+            del warmup_episodes
         for start in range(0, len(seeds), episodes_per_update):
             model.eval()
             batch = [
@@ -1283,6 +1522,8 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         str(path.relative_to(root)) for path in verification_paths
     ]
     verification_paths.append(dev_frontier_path)
+    if teacher_warmup_path is not None:
+        verification_paths.append(teacher_warmup_path)
 
     train_summaries = [_episode_summary(item) for item in train_episodes]
     dev_summaries = [_episode_summary(item) for item in dev_episodes]
@@ -1321,6 +1562,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         initial_model_state_sha256,
         selected_model_state_sha256,
         int(selected_payload["update"]),
+        teacher_warmup_report,
     )
     reproducibility_digest = _json_digest(_reproducibility_evidence(manifest))
     manifest["full_run_reproducibility"] = {
