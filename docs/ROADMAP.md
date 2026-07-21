@@ -786,8 +786,10 @@ gated on M8 promotion.
 The first successor recipe is precommitted as `m8-selector-v3-diverse`: it
 holds the 512-episode/eight-update budget, model, reward, optimizer, RNGs, and
 dev selection fixed while replacing 32 repeats over 16 train roots with 8
-repeats over 64 new train roots. Its config names held-out-v2. Training and dev
-evidence are not yet recorded.
+repeats over 64 new train roots. Its config names held-out-v2. Two pinned runs
+reproduced exactly but selected update 1 at only 3/10 dev wins (full-run digest
+`e9e1ee37fbfef6ee...`), so the hypothesis is rejected before preflight and v2
+remains unopened.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

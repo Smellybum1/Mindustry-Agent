@@ -831,8 +831,10 @@ repository-evidence mapping used for the M6 audit is:
   seeds before another candidate is designed or trained. Development loaders
   refuse the split, its one future final attempt is exclusive, and M9 remains
   gated. The precommitted `m8-selector-v3-diverse` recipe isolates broader
-  train-root coverage at the same 512-episode budget and names v2; no post-v1
-  candidate training has begun.
+  train-root coverage at the same 512-episode budget and names v2. Two pinned
+  runs reproduced exactly but selected update 1 at 3/10 dev wins (checkpoint
+  `174c71d6b44819d4...`, replay `9d156396fc6ee71a...`, full-run
+  `e9e1ee37fbfef6ee...`). It is rejected before preflight; v2 remains unopened.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

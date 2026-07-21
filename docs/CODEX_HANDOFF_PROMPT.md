@@ -26,3 +26,7 @@ evidence only and make its immutable config name v2 before training. Preserve
 engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.
+
+The first successor diversity hypothesis, `m8-selector-v3-diverse`, reproduced
+exactly but achieved only 3/10 dev wins and was rejected before preflight. Do
+not open v2 for it.

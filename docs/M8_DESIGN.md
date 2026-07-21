@@ -275,6 +275,12 @@ was selected from train/dev methodology only, before running the recipe, and
 its immutable config names `bootstrap-defense-v1-held-out-v2`. A successor that
 does not pass the frozen dev preflight stops there and never opens v2.
 
+Two independent pinned runs reproduced the recipe exactly but rejected the
+hypothesis on dev. Both selected update 1 at 3/10 dev wins with checkpoint
+`174c71d6b44819d4...`, checkpoint replay `9d156396fc6ee71a...`, and full-run
+digest `e9e1ee37fbfef6ee...`. Later updates scored 1–3/10. The recipe therefore
+stops before promotion preflight or any held-out-v2 access.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one
