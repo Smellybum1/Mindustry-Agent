@@ -1194,6 +1194,28 @@ smoke, determinism, and negative replay pass. Config/adversary SHA-256 are
 this packet; exact twin replicas and reusable preflight are next. M8.5 remains
 unmet.
 
+V23's two admissible pinned replicas reproduce update 5 exactly at 10/10
+construction wins and mean idle `0.09043677` (checkpoint
+`2ae62cc31c86731a...`, full run `85dfb4e2596cd653...`, direct lineage
+`b532f8cb8df8e3c...`). Reusable preflight rejects the candidate before dev-v19:
+abandonment is definitively `+0.04490747` worse than both permanent and matched
+greedy, and permanent idle is definitively `+0.03999701` worse. Preflight hash
+is `4237a8503bb4bff4...`; dev-v19 remains unopened and is retired, held-out-v4
+remains sealed, and M8.5 remains unmet.
+
+Trace review found 31/32 non-forced abandons alternating resource-short supply
+targets every two ticks. The adapter's single target-local slot allowed each
+new target to overwrite the previous holdoff. Retry state is now an ordered,
+canonical-hashed set. `CORE_SHORT`/`RESOURCES_SHORT` holdoffs apply to the task
+type, other failures remain target-local, direct bypass returns
+`retry_not_due`, unrelated task types remain legal, and entries reopen exactly
+when due. The live two-turret fixture proves tick 432 -> 492 behavior; the
+pinned build, 145 Python tests, 5/5 candidate gate, smoke, determinism, and
+negative replay pass. Two final golden recordings match at
+`8fee3db9b5cf01f2...`; all 664 state hashes change with zero non-hash changes.
+The old V23 checkpoint's diagnostic is not promotion evidence. V24 must be
+precommitted and retrained from scratch under this corrected decision sequence.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -1201,6 +1201,25 @@ repository-evidence mapping used for the M6 audit is:
   ledger, smoke, determinism, and negative replay pass. Config/adversary hashes
   are `17e741e63f9862bc...` and `e2043acefb24a016...`. No V23 model work preceded
   the precommit.
+- V23's two admissible pinned replicas reproduce update 5 exactly at 10/10
+  construction wins and `0.09043677` idle (checkpoint `2ae62cc31c86731a...`,
+  full run `85dfb4e2596cd653...`, direct lineage `b532f8cb8df8e3c...`). Reusable
+  preflight nevertheless rejects it: abandonment is definitively
+  `+0.04490747` worse than both permanent and matched greedy, and permanent
+  idle is definitively `+0.03999701` worse. Report hash is
+  `4237a8503bb4bff4...`; dev-v19 remains unopened and is retired, while
+  held-out-v4 remains sealed.
+- Trace review identified 31/32 non-forced abandons as two-tick alternation
+  among resource-short supply targets. Retry holdoffs are now an ordered,
+  canonical-hashed set: `CORE_SHORT`/`RESOURCES_SHORT` apply across the task
+  type, other failures remain target-local, direct bypass returns
+  `retry_not_due`, unrelated task types remain legal, and every entry expires
+  exactly when due. The live two-turret fixture proves tick 432 -> 492 behavior;
+  the pinned build, 145 Python tests, 5/5 candidate gate, smoke, determinism,
+  and negative replay pass. The regenerated golden is byte-identical twice at
+  `8fee3db9b5cf01f2...`; all 664 hashes differ from the prior runtime with zero
+  non-hash changes. An old-checkpoint diagnostic cannot promote; V24 requires a
+  governed from-scratch retrain under the corrected decision sequence.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

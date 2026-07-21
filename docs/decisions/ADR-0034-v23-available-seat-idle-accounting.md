@@ -79,3 +79,43 @@ SHA-256 is
 adversary report SHA-256 is
 `e2043acefb24a0163dc3645a56a44175cca33d1aa122d6f473b49186fb9a0e5b`.
 No V23 model work began before this precommit.
+
+## Outcome
+
+Two admissible pinned replicas reproduced the selected update 5 exactly: 10/10
+construction wins, mean idle `0.09043677244837968`, checkpoint
+`2ae62cc31c86731ad6a872e5b49771c9135e63b9fc2a316df67f44900f4db74f`,
+model state `c5f7356d9744f33aeb4768ecbe7bd4105f82a90de0ff2d6d6784dc77e29db24e`,
+replay `8beec67724d3591e16354775015971ba6ffda968b3cd84d34aef6f8a2be578cb`,
+and full-run digest
+`85dfb4e2596cd653371b1744abdb3d92be73ed8cfcf99b7e17e55bf89d058f3c`.
+Direct lineage digest is
+`b532f8cb8df8e3c14a9a231dc59a0c676f2633634e106c28259b9feace43f578`;
+the lineage manifest hashes to
+`6d18eb9b81dffafb28a880251d2cb0f66e3d68561cbf939c4ff274681a580474`.
+Two earlier computationally exact replicas are excluded from lineage because
+native WSL Git reported CRLF-normalized tracked files as dirty; they were not
+rewritten or used as admissible evidence.
+
+Reusable dev-v1 preflight rejected V23 before dev-v19. The candidate was 10/10
+versus permanent random 4/10 and permanent greedy 8/10, but abandonment was
+definitively worse by `0.0449074718` against permanent greedy (95% CI
+`+0.0376731515..+0.0510866284`) and matched greedy (95% CI
+`+0.0378287761..+0.0510808326`). Permanent idle was also definitively worse by
+`0.0399970137` (95% CI `+0.0141883594..+0.0662634911`). The preflight report
+hashes to
+`4237a8503bb4bff41e494b77a0976970f8b7b0e7183af2074a5637e25b692243`.
+Dev-v19 remains unopened and is retired; held-out-v4 remains sealed.
+
+Trace review found 31 of 32 non-forced abandons alternating between resource-
+short `SUPPLY_TURRET` targets every two ticks. The single target-local retry
+slot let each new target overwrite the prior holdoff. The corrected runtime
+retains an ordered set of holdoffs and scopes `CORE_SHORT`/`RESOURCES_SHORT`
+holdoffs to task type while leaving other failures target-local. A live fixture
+proves both supply targets are masked from tick 432 through the exact due tick
+492, direct bypass returns `retry_not_due`, and unrelated work remains legal.
+The resource-scoped diagnostic is inference-only evidence: the old V23
+checkpoint reaches 6/10, mean idle `0.08986094`, and abandonment `0.03270660`;
+it cannot be promoted under the changed decision sequence. Its report hashes to
+`8088302b6afdf05b8369378d8bd80b45b95455e799afe6caf45bd93d7f2693a1`.
+A fresh governed successor retrain is required.

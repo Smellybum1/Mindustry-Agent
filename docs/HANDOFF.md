@@ -482,9 +482,26 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `191001..191160` and remains unopened. All 44 exact reward adversaries, 145
   Python tests, pinned build, five-seed availability ledger, smoke, determinism,
   and negative replay pass. Config hash is `17e741e63f9862bc...`; adversary
-  report hash is `e2043acefb24a016...`. No V23 model work has started.
-- **What is broken**: nothing known in the governed V23 runtime packet; learned
-  promotion remains unproven.
+  report hash is `e2043acefb24a016...`.
+- **V23 rejected on reusable dev-v1**: two admissible pinned replicas reproduce
+  update 5 at 10/10 construction wins and `0.09043677` idle (checkpoint
+  `2ae62cc31c86731a...`, full run `85dfb4e2596cd653...`, direct lineage
+  `b532f8cb8df8e3c...`). Preflight rejects it because abandonment is
+  definitively `+0.04490747` worse than both permanent and matched greedy, and
+  permanent idle is definitively `+0.03999701` worse. Report hash is
+  `4237a8503bb4bff4...`; dev-v19 was never opened and is retired; held-out-v4
+  remains sealed.
+- **Post-V23 runtime correction**: 31/32 non-forced abandons alternated between
+  resource-short supply targets every two ticks. The adapter now retains an
+  ordered, canonical-hashed set of retry holdoffs. `CORE_SHORT` and
+  `RESOURCES_SHORT` apply across the task type; other failures remain
+  target-local. The two-target fixture proves tick 432 -> 492 masking, direct
+  bypass rejection, unrelated-work legality, and exact due-tick reopening. The
+  pinned build, 145 Python tests, 5/5 gate, smoke, determinism, and negative
+  replay pass; final golden hash is `8fee3db9b5cf01f2...` with zero non-hash
+  replay changes. The V23 diagnostic is inference-only and cannot promote.
+- **What is broken**: V23 was trained under the superseded target-local retry
+  decision sequence. A governed V24 from-scratch retrain is required.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
@@ -646,18 +663,19 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Train two exact V23 replicas sequentially.** Use only the frozen config and
+1. **Precommit V24 before model work.** Freeze a new runtime contract for the
+   resource-scoped retry decision sequence and a new unopened, globally
+   disjoint dev confirmation set; retire dev-v19 unopened.
+2. **Train two exact V24 replicas sequentially.** Use only the frozen config and
    pinned toolchain. Require checkpoint/frontier/model/replay/full-run/direct-
-   lineage reproduction; a rejected gate must retain its frontier. Dev-v19 must
-   remain unopened.
-2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
+   lineage reproduction; a rejected gate must retain its frontier.
+3. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
    confirmation. Never inspect dev-v14/dev-v15/dev-v16/dev-v17 or
    held-out-v1/v2/v3 outcomes for tuning; held-out-v4 remains sealed.
-3. **M9.1 remains gated.** The roadmap says to begin only after the single
+4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
-4. **M9.2 partner population** remains behind M9.1.
-5. **M9.3 communication ablation** remains behind M9.2.
+5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
 
 ## Decisions
 
