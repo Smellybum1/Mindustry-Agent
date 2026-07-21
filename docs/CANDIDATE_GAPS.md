@@ -58,9 +58,11 @@ resource recovery were not selectable through `SELECT_CANDIDATE_TASK`.
    and cannot claim new work. The public five-seed gate observes 12 such releases
    and surviving seats still win every episode.
 10. **Regenerated blocked work ignored its skill retry boundary.** The adapter
-    now retains and hashes `next_retry_tick`, masks only equivalent type/target
-    work before it is due, rejects a direct bypass as `retry_not_due`, leaves
-    alternative work selectable, and reopens the candidate at the exact tick.
+    now retains and hashes every active `next_retry_tick`, rejects a direct
+    bypass as `retry_not_due`, and reopens held work at the exact tick. Resource-
+    and core-short failures are task-type scoped so a seat cannot alternate
+    equivalent targets; other failures remain target-local and unrelated task
+    types stay selectable.
 
 ## Fixed-scenario evidence
 

@@ -163,6 +163,162 @@ def _check_retry_eligibility(env, seed: int) -> tuple[int, int, int, str]:
     return block_tick, retry_tick, agent_id, str(task["task_type"])
 
 
+def _check_resource_scoped_retry_eligibility(env, seed: int) -> tuple[int, int, int]:
+    episode = UtilityExpertEpisode(env, seed, require_win=False)
+    schematic = episode.layout.metadata["reference_schematic"]
+    anchor_x, anchor_y = (int(value) for value in schematic["anchor"])
+    builds = [
+        {
+            "type": "BUILD",
+            "block": block["block"],
+            "tile_x": anchor_x + int(block["offset"][0]),
+            "tile_y": anchor_y + int(block["offset"][1]),
+            "rotation": int(block["rotation"]),
+        }
+        for block in schematic["blocks"]
+    ]
+    core_x, core_y = episode.layout.core_tile
+    wall_tiles = (
+        [(core_x - 2, y) for y in range(core_y - 2, core_y + 3)]
+        + [(core_x + 2, y) for y in range(core_y - 2, core_y + 1)]
+        + [(x, core_y - 2) for x in range(core_x - 1, core_x + 2)]
+        + [(x, core_y + 2) for x in range(core_x - 1, core_x + 1)]
+        + [(core_x + 3, y) for y in range(core_y - 3, core_y + 2)]
+        + [(core_x + 4, core_y)]
+        + [(core_x - 3, y) for y in range(core_y - 3, core_y + 3)]
+    )
+    builds.extend(
+        {
+            "type": "BUILD",
+            "block": "copper-wall",
+            "tile_x": tile_x,
+            "tile_y": tile_y,
+            "rotation": 0,
+        }
+        for tile_x, tile_y in wall_tiles
+    )
+    for start in range(0, len(builds), 3):
+        episode._drive_commands(
+            {
+                agent_id: command
+                for agent_id, command in enumerate(builds[start : start + 3])
+            }
+        )
+    team = episode.observations[0]["team"]
+    if int(team["copper"]) != 0 or len(team["turrets"]) != 2:
+        raise AssertionError(
+            "resource-scoped retry fixture setup drifted: "
+            f"copper={team['copper']} turrets={len(team['turrets'])}"
+        )
+
+    agent_id = 0
+
+    def supply_candidates() -> list[dict[str, Any]]:
+        return [
+            candidate
+            for candidate in episode.observations[agent_id]["task_candidates"]
+            if candidate.get("task_type") == "SUPPLY_TURRET"
+        ]
+
+    def block(candidate: dict[str, Any]) -> tuple[dict[str, Any], int, int]:
+        response = episode.step(
+            1,
+            [
+                {
+                    "agent_id": agent_id,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": int(candidate["index"]),
+                    },
+                }
+            ],
+            event_driven=True,
+        )
+        if len(response.action_results) != 1 or not response.action_results[0].get(
+            "accepted", False
+        ):
+            raise AssertionError(
+                f"resource-scoped retry selection failed: {response.action_results}"
+            )
+        blocked = _blocked_assignment(response, episode.observations)
+        while blocked is None and episode.tick < 1200:
+            response = episode.step(30, event_driven=True)
+            blocked = _blocked_assignment(response, episode.observations)
+        if blocked is None or blocked[0] != agent_id:
+            raise AssertionError("resource-scoped retry fixture did not block supply")
+        return blocked[1], blocked[2], episode.tick
+
+    candidates = supply_candidates()
+    if len(candidates) != 2:
+        raise AssertionError(f"expected two supply targets, got {candidates}")
+    first_task, first_due, first_block = block(candidates[0])
+    episode.step(
+        1,
+        [
+            {
+                "agent_id": agent_id,
+                "task_action": {
+                    "type": "ABANDON",
+                    "reason": "resources_short_replan",
+                },
+            }
+        ],
+        event_driven=True,
+    )
+    candidates = supply_candidates()
+    if len(candidates) != 2:
+        raise AssertionError(f"expected two regenerated supply targets, got {candidates}")
+    for candidate in candidates:
+        if episode.action_masks[agent_id]["candidate_task"][int(candidate["index"])]:
+            raise AssertionError(
+                f"shared resource-short holdoff did not mask {candidate}"
+            )
+    other_legal = any(
+        episode.action_masks[agent_id]["candidate_task"][int(candidate["index"])]
+        and candidate.get("task_type") not in {"SUPPLY_TURRET", "WAIT"}
+        for candidate in episode.observations[agent_id]["task_candidates"]
+    )
+    if not other_legal:
+        raise AssertionError("resource-scoped holdoff masked unrelated work")
+    second = next(
+        candidate
+        for candidate in candidates
+        if candidate.get("target") != first_task.get("target")
+    )
+    rejected = episode.step(
+        1,
+        [
+            {
+                "agent_id": agent_id,
+                "task_action": {
+                    "type": "SELECT_CANDIDATE_TASK",
+                    "candidate_index": int(second["index"]),
+                },
+            }
+        ],
+    )
+    if len(rejected.action_results) != 1 or rejected.action_results[0].get(
+        "reason"
+    ) != "retry_not_due":
+        raise AssertionError(
+            f"alternate resource-short target bypass was not rejected: "
+            f"{rejected.action_results}"
+        )
+    if episode.tick < first_due:
+        episode.step(first_due - episode.tick)
+    if episode.tick != first_due:
+        raise AssertionError(
+            f"resource-scoped retry advanced to {episode.tick}, expected {first_due}"
+        )
+    reopened = supply_candidates()
+    if len(reopened) != 2 or not all(
+        episode.action_masks[agent_id]["candidate_task"][int(candidate["index"])]
+        for candidate in reopened
+    ):
+        raise AssertionError(f"supply targets did not reopen together: {reopened}")
+    return first_block, first_due, len(reopened)
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Check the adaptive public candidate policy")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
@@ -175,6 +331,7 @@ def main(argv=None) -> int:
     policy = GreedyUtilityPolicy()
     rows = []
     retry_row = None
+    resource_retry_row = None
     loss_releases = 0
     try:
         with RlServerProcess(LaunchConfig(port=args.port, java=args.java)) as env:
@@ -273,6 +430,9 @@ def main(argv=None) -> int:
                     )
                 )
             retry_row = _check_retry_eligibility(env, args.seeds[0])
+            resource_retry_row = _check_resource_scoped_retry_eligibility(
+                env, args.seeds[0]
+            )
     except Exception as exc:
         print(f"CANDIDATE-POLICY FAIL: {exc}", file=sys.stderr)
         traceback.print_exc()
@@ -291,6 +451,8 @@ def main(argv=None) -> int:
         return 1
     if retry_row is None:
         raise AssertionError("retry eligibility check did not run")
+    if resource_retry_row is None:
+        raise AssertionError("resource-scoped retry eligibility check did not run")
     if 34567 in args.seeds and loss_releases <= 0:
         print(
             "CANDIDATE-POLICY FAIL: fixed loss seed emitted no structured task release",
@@ -303,6 +465,11 @@ def main(argv=None) -> int:
         f"blocked={retry_row[0]} due={retry_row[1]}"
     )
     print(f"agent-loss releases: {loss_releases}")
+    print(
+        "resource-scoped retry eligibility: "
+        f"block={resource_retry_row[0]} due={resource_retry_row[1]} "
+        f"targets={resource_retry_row[2]}"
+    )
     print(f"CANDIDATE-POLICY OK: wins={wins}/{len(rows)}")
     return 0
 

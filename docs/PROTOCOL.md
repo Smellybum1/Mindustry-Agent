@@ -276,9 +276,11 @@ different recurring ID is masked while the same semantic target is active.
 `out_of_range`). `action_masks[agent_id].candidate_task` is aligned by candidate
 index and is stricter: it also checks current assignment, board status, task
 dependencies, and the skill-authoritative retry boundary. After blocked work is
-abandoned, the same task type/target is masked while `tick < next_retry_tick`;
-an attempted mask bypass is rejected with `retry_not_due`, and the candidate
-reopens exactly at the reported tick. Other targets remain independently legal.
+abandoned, `CORE_SHORT` and `RESOURCES_SHORT` holdoffs mask every target of the
+same task type while `tick < next_retry_tick`, because resource feasibility is
+shared across those targets. Other block reasons remain task type/target local.
+An attempted mask bypass is rejected with `retry_not_due`; held work reopens
+exactly at the reported tick, and unrelated task types remain legal.
 For backward-compatible scripted clients the catalog WAIT row
 remains selectable; `selector_features_v1` masks that SELECT logit and uses
 `action_masks[].wait` as its single canonical WAIT action, which remains legal

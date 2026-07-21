@@ -58,7 +58,7 @@ public final class CoordinationAdapter{
     private long[] previousTaskTicks = new long[0];
     private TaskSpec[] blockedTasks = new TaskSpec[0];
     private long[] blockedTaskTicks = new long[0];
-    private long[] blockedTaskRetryTicks = new long[0];
+    private final ArrayList<ArrayList<RetryHoldoff>> retryHoldoffs = new ArrayList<>();
     private long decisionRevision;
     private String lastDecisionReason = "";
     private int copperReservationCapacity;
@@ -115,10 +115,10 @@ public final class CoordinationAdapter{
         previousTaskTicks = new long[agentCount];
         blockedTasks = new TaskSpec[agentCount];
         blockedTaskTicks = new long[agentCount];
-        blockedTaskRetryTicks = new long[agentCount];
+        retryHoldoffs.clear();
+        for(int i = 0; i < agentCount; i++) retryHoldoffs.add(new ArrayList<>());
         Arrays.fill(previousTaskTicks, Long.MIN_VALUE);
         Arrays.fill(blockedTaskTicks, Long.MIN_VALUE);
-        Arrays.fill(blockedTaskRetryTicks, Long.MIN_VALUE);
         decisionRevision = 0L;
         lastDecisionReason = "";
         if(sharedExpertEnabled){
@@ -265,6 +265,7 @@ public final class CoordinationAdapter{
 
     /** Advance lifecycle/leases after each engine tick. */
     public void tick(long tick){
+        expireRetryHoldoffs(tick);
         if(sharedExpert != null){
             int enemies = 0;
             for(Unit unit : Groups.unit){
@@ -843,7 +844,10 @@ public final class CoordinationAdapter{
             assignment.blockedReason = reason;
             blockedTasks[agent.index] = assignment.spec;
             blockedTaskTicks[agent.index] = tick;
-            blockedTaskRetryTicks[agent.index] = skill.nextRetryTick();
+            rememberRetryHoldoff(
+                agent.index, assignment.spec, tick, skill.nextRetryTick(),
+                skill.reason() == SkillReason.RESOURCES_SHORT
+                    || skill.reason() == SkillReason.CORE_SHORT);
             markDecision("task_blocked");
         }
         if(tick - assignment.lastHeartbeatTick >= HEARTBEAT_INTERVAL){
@@ -1097,7 +1101,14 @@ public final class CoordinationAdapter{
                 out.writeLong(previousTaskTicks[i]);
                 writeTask(out, blockedTasks[i]);
                 out.writeLong(blockedTaskTicks[i]);
-                out.writeLong(blockedTaskRetryTicks[i]);
+                ArrayList<RetryHoldoff> holdoffs = retryHoldoffs.get(i);
+                out.writeInt(holdoffs.size());
+                for(RetryHoldoff holdoff : holdoffs){
+                    writeTask(out, holdoff.task());
+                    out.writeLong(holdoff.blockedTick());
+                    out.writeLong(holdoff.retryTick());
+                    out.writeBoolean(holdoff.taskTypeScoped());
+                }
             }
             out.flush();
             return bytes.toByteArray();
@@ -1123,11 +1134,12 @@ public final class CoordinationAdapter{
     }
 
     private boolean retryNotDue(int agentIndex, TaskSpec task, long tick){
-        if(agentIndex < 0 || agentIndex >= blockedTasks.length) return false;
-        TaskSpec blocked = blockedTasks[agentIndex];
-        long retryTick = blockedTaskRetryTicks[agentIndex];
-        return blocked != null && retryTick >= 0 && tick < retryTick
-            && sameWork(blocked, task);
+        if(agentIndex < 0 || agentIndex >= retryHoldoffs.size()) return false;
+        for(RetryHoldoff holdoff : retryHoldoffs.get(agentIndex)){
+            if(tick < holdoff.retryTick() && holdoff.task().type() == task.type()
+                && (holdoff.taskTypeScoped() || sameWork(holdoff.task(), task))) return true;
+        }
+        return false;
     }
 
     /** Whether equivalent work already has a live board entry at this boundary. */
@@ -1153,11 +1165,38 @@ public final class CoordinationAdapter{
         previousTasks[agentIndex] = task;
         previousTaskTicks[agentIndex] = tick;
         if(failed){
-            boolean preserveRetry = blockedTasks[agentIndex] != null
-                && sameWork(blockedTasks[agentIndex], task);
             blockedTasks[agentIndex] = task;
             blockedTaskTicks[agentIndex] = tick;
-            if(!preserveRetry) blockedTaskRetryTicks[agentIndex] = Long.MIN_VALUE;
+        }
+    }
+
+    private void rememberRetryHoldoff(
+        int agentIndex,
+        TaskSpec task,
+        long blockedTick,
+        long retryTick,
+        boolean taskTypeScoped
+    ){
+        if(agentIndex < 0 || agentIndex >= retryHoldoffs.size()
+            || task == null || retryTick < 0) return;
+        ArrayList<RetryHoldoff> holdoffs = retryHoldoffs.get(agentIndex);
+        if(taskTypeScoped){
+            holdoffs.removeIf(holdoff -> holdoff.task().type() == task.type());
+            holdoffs.add(new RetryHoldoff(task, blockedTick, retryTick, true));
+            return;
+        }
+        for(int i = 0; i < holdoffs.size(); i++){
+            if(sameWork(holdoffs.get(i).task(), task)){
+                holdoffs.set(i, new RetryHoldoff(task, blockedTick, retryTick, false));
+                return;
+            }
+        }
+        holdoffs.add(new RetryHoldoff(task, blockedTick, retryTick, false));
+    }
+
+    private void expireRetryHoldoffs(long tick){
+        for(ArrayList<RetryHoldoff> holdoffs : retryHoldoffs){
+            holdoffs.removeIf(holdoff -> tick >= holdoff.retryTick());
         }
     }
 
@@ -1302,6 +1341,13 @@ public final class CoordinationAdapter{
         RlAgentRegistry.Agent agent,
         TaskCandidate candidate,
         String actionType
+    ){}
+
+    private record RetryHoldoff(
+        TaskSpec task,
+        long blockedTick,
+        long retryTick,
+        boolean taskTypeScoped
     ){}
 
     private record ExecutableSchematic(

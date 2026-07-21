@@ -244,12 +244,14 @@ task to win instead of silently retrying the blocked skill. The adapter counts
 successful transitions in `resource_replans`. See `CANDIDATE_GAPS.md` for the
 fixed gaps and the intentionally deferred M7.4 work.
 
-The blocked skill's `nextRetryTick` is authoritative for equivalent regenerated
-work. `CoordinationAdapter` retains it with the blocked task, hashes it in the
-adaptive state, masks the same task type/target until that tick, and independently
-validates selection with `retry_not_due` so a client cannot bypass the mask. The
-holdoff is target-local: alternative non-WAIT work remains eligible, and the
-same work reopens exactly when due.
+The blocked skill's `nextRetryTick` is authoritative for regenerated work.
+`CoordinationAdapter` retains every active holdoff in deterministic insertion
+order, hashes the list in adaptive state, and independently validates selection
+with `retry_not_due` so a client cannot bypass the mask. `CORE_SHORT` and
+`RESOURCES_SHORT` are shared feasibility failures, so their holdoff is task-type
+scoped and prevents cycling through equivalent targets. Other block reasons are
+target-local. Unrelated task types remain eligible and held work reopens exactly
+when due.
 
 If a fixed registry unit becomes invalid or dies, the adapter immediately emits
 structured `ABANDON(reason=agent_death)`, releases its reservations, counts
