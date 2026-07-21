@@ -36,6 +36,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0029](ADR-0029-v18-scorecard-aligned-quality.md) | V18 scorecard-aligned quality reward |
 | [0030](ADR-0030-v19-unsaturated-idle-gradient.md) | V19 unsaturated idle gradient |
 | [0031](ADR-0031-v20-low-full-boundary-teacher.md) | V20 low full-boundary teacher regularization |
+| [0032](ADR-0032-v21-corrected-wait-release-boundary.md) | V21 corrected WAIT-release-boundary retraining |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

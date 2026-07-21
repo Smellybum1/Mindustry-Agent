@@ -1109,6 +1109,18 @@ pass. Previously trained checkpoints keep their recorded results; V21 must be a
 governed from-scratch retrain under the corrected decision sequence, with a new
 runtime contract and unopened dev-v17 precommitted before model work.
 
+ADR-0032 precommits V21 as an exact V20 retrain under runtime contract
+`successful_abandon_one_tick_wait_release_same_tick_v2`. Candidate ID, runtime
+contract, and confirmation path are the only config differences; retaining the
+frozen `0.05` teacher coefficient isolates this runtime correction rather than
+confounding it with another loss change. Dev-v16 is retired unopened. Dev-v17
+freezes 160 globally disjoint roots `171001..171160` for one exclusive
+confirmation only after exact replicas, reusable construction, and both
+permanent/matched scorecards pass; held-out-v4 remains sealed. The 44 exact
+reward adversaries, 142 Python tests, pinned build, smoke, and determinism pass.
+Config SHA-256 is `5567e1c1d79cae0f...`; adversary report SHA-256 is
+`732536ffcd358d25...`.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

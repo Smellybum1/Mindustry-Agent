@@ -1134,6 +1134,15 @@ repository-evidence mapping used for the M6 audit is:
   141 Python tests, smoke, determinism, and unchanged 664-checkpoint golden pass.
   Existing checkpoints were trained on the old decision sequence, so M8.5 still
   requires a governed from-scratch successor.
+- ADR-0032 precommits V21 as an exact V20 retrain under runtime contract
+  `successful_abandon_one_tick_wait_release_same_tick_v2`. Keeping V20's
+  teacher coefficient `0.05` fixed isolates the runtime correction and closes,
+  rather than reopens, teacher tuning. Dev-v16 is retired unopened; dev-v17
+  freezes globally disjoint roots `171001..171160` for one confirmation only
+  after reusable construction and both scorecards pass. Held-out-v4 remains
+  sealed. All 44 exact reward adversaries, 142 Python tests, pinned build,
+  smoke, and determinism pass. Config and adversary report SHA-256 are
+  `5567e1c1d79cae0...` and `732536ffcd358d25...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -686,3 +686,47 @@ def test_v20_low_teacher_regularization_and_dev_v16_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v16"] == path.name
+
+
+def test_v21_corrected_wait_boundary_and_dev_v17_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v17.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v17"
+    assert confirmation["seed_set_version"] == 17
+    assert confirmation["seeds"] == list(range(171001, 171161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v20 = json.loads(
+        (training_dir / "m8-selector-v20-low-teacher-regularized.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    v21 = json.loads(
+        (training_dir / "m8-selector-v21-corrected-wait-boundary.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert v21.pop("candidate_version") == "v21"
+    assert v21.pop("runtime_contract") == (
+        "successful_abandon_one_tick_wait_release_same_tick_v2"
+    )
+    assert v21.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v17.json"
+    )
+    assert v20.pop("candidate_version") == "v20"
+    assert v20.pop("runtime_contract") == (
+        "successful_abandon_task_terminal_one_tick_v1"
+    )
+    assert v20.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v16.json"
+    )
+    assert v21 == v20
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v17"] == path.name

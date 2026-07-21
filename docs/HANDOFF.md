@@ -426,6 +426,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   141 Python tests, smoke, determinism, and the unchanged 664-checkpoint golden
   pass. Existing candidates retain their recorded results; the corrected
   decision sequence requires a governed from-scratch successor.
+- **V21 precommit**: ADR-0032 freezes an exact V20 retrain under runtime contract
+  `successful_abandon_one_tick_wait_release_same_tick_v2`; only candidate ID,
+  runtime contract, and confirmation path differ. Keeping teacher coefficient
+  `0.05` fixed isolates the WAIT-boundary correction instead of confounding it
+  with another loss change. Dev-v16 is retired unopened; dev-v17 freezes
+  globally disjoint roots `171001..171160`, and held-out-v4 remains sealed. All
+  44 exact adversaries, 142 Python tests, pinned build, smoke, and determinism
+  pass. Config hash is `5567e1c1d79cae0f...`; adversary report hash is
+  `732536ffcd358d25...`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -588,14 +597,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Precommit V21 under the corrected automatic-WAIT boundary.** Hold the
-   learning recipe to a previously governed candidate, record a new runtime
-   contract, and freeze fresh disjoint dev-v17 before any model work. V20 closed
-   the teacher-coefficient line; dev-v16 is retired unopened.
-2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
+1. **Train two pinned V21 replicas from the committed pretraining packet.**
+   Require exact selected checkpoint/frontier, model, replay, full-run, and
+   direct-lineage reproduction before evaluation.
+2. **Use corrected preflight parity.** Require reusable dev-v1 construction
    and both permanent-greedy and matched-greedy scorecards before any one-way
-   confirmation. Never inspect dev-v14/dev-v15 or held-out-v1/v2/v3 outcomes
-   for tuning; held-out-v4 remains sealed.
+   dev-v17 confirmation. Never inspect dev-v14/dev-v15/dev-v16 or
+   held-out-v1/v2/v3 outcomes for tuning; held-out-v4 remains sealed.
 3. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 4. **M9.2 partner population** remains behind M9.1.
