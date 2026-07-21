@@ -980,6 +980,11 @@ repository-evidence mapping used for the M6 audit is:
   1.0; successful supplies average 0.144 resource cost. Behavior-neutral
   selected-candidate diagnostics now record the bounded evidence needed to
   audit a successor without entering the action/state replay digest.
+- ADR-0024 precommits scorecard v2 after reusable dev-v1 evidence proves that
+  v1 counts forced wave/lifecycle preemption as policy abandonment despite
+  reward v2's accepted exclusions. Future records will separate forced from
+  non-forced abandonment and expose per-agent idle ticks. Consumed records and
+  V13's rejection remain immutable; implementation is pending.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

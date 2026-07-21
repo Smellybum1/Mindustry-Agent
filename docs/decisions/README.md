@@ -28,6 +28,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0021](ADR-0021-v11-v6-v10-blend.md) | V11 V6/V10 governed blend |
 | [0022](ADR-0022-v12-quality-aligned-reward.md) | V12 quality-aligned reward v2 |
 | [0023](ADR-0023-v13-quality-gated-checkpoint-selection.md) | V13 quality-gated checkpoint selection |
+| [0024](ADR-0024-scorecard-v2-forced-abandonment.md) | Scorecard v2 forced-abandonment semantics |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

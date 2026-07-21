@@ -285,6 +285,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   saturated-resource turret-supply selections. Selected-candidate diagnostics
   now expose bounded resource/urgency/switching evidence without changing the
   replay action/state digest. Do not inspect dev-v9 episode records for tuning.
+- **Scorecard v2 precommit**: ADR-0024 aligns future abandonment judgment with
+  reward v2 by excluding forced wave/readiness/death/lease/human/terminal/
+  cleanup reasons from the rate while retaining separate counters. It also
+  precommits per-agent idle telemetry. No consumed result is rerun or changed;
+  implementation is pending.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

@@ -540,6 +540,12 @@ Dev-v9 completes once at V13 152/160, permanent random 62/160, permanent greedy
 scorecard gates pass. Permanent-greedy duplicates pass; announcements, idle,
 recovery, and abandonment fail. V13 is rejected and held-out-v4 stays sealed.
 
+ADR-0024 freezes scorecard v2 before any successor confirmation. Future
+abandonment rates count structured non-forced ABANDON events only, using the
+same safety/lifecycle exclusions as reward v2, while reporting forced and
+non-forced counts separately. Simulation telemetry also exposes per-agent idle
+ticks. Prior records and decisions remain v1 and are never recomputed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one
