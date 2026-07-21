@@ -60,3 +60,8 @@ CI-beat both permanent baselines, but failed teammate-quality gates, so it is
 not promoted. Do not rerun v2 or inspect individual outcomes. ADR-0017 freezes
 held-out-v3 (80 roots) before any new model work; the next candidate must name
 v3 and use newly governed train/dev confirmation evidence. M9 remains gated.
+
+ADR-0018 now precommits V9 as one additional `-0.25` WAIT-bias child of V8,
+for `-0.50` total from V7. Construct it twice from the V8 A/B artifacts and
+require exact lineage, then run dev-v1. Dev-v5 is frozen as an 80-root one-way
+confirmation; held-out-v3 stays sealed until every gate passes.

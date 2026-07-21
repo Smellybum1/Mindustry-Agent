@@ -22,6 +22,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0015](ADR-0015-v7-cross-commit-blend.md) | V7 cross-commit blend and one-way confirmation |
 | [0016](ADR-0016-v8-wait-logit-adjustment.md) | V8 WAIT-logit adjustment and one-way confirmation |
 | [0017](ADR-0017-second-post-failure-renewal.md) | Second post-failure held-out renewal |
+| [0018](ADR-0018-v9-final-wait-bias.md) | V9 final WAIT-bias step and enlarged confirmation |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

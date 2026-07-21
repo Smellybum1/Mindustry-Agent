@@ -59,3 +59,20 @@ class TestCheckpointAdjustment(unittest.TestCase):
         self.assertEqual(
             config["held_out_seed_set_id"], "bootstrap-defense-v1-held-out-v2"
         )
+
+        v9 = json.loads(
+            (
+                repo_root()
+                / "configs/training/m8-selector-v9-wait-adjustment.json"
+            ).read_text()
+        )
+        self.assertEqual(v9["schema"], ADJUSTMENT_LINEAGE_SCHEMA)
+        self.assertEqual(v9["adjustment"], config["adjustment"])
+        self.assertEqual(
+            v9["parent"]["checkpoint_sha256"],
+            "1f3c4525fb5fd10da6b9e8f0cb6c28b52e82fd39f92b1c0cc349399fac9e66f1",
+        )
+        self.assertEqual(
+            v9["held_out_seed_set_id"], "bootstrap-defense-v1-held-out-v3"
+        )
+        self.assertEqual(v9["held_out_seed_set_version"], 3)

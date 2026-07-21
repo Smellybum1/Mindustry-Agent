@@ -1,0 +1,21 @@
+{
+  "schema": "selector_checkpoint_logit_adjustment_v1",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "held_out_seed_set_id": "bootstrap-defense-v1-held-out-v3",
+  "held_out_seed_set_version": 3,
+  "model_init_seed": 8601,
+  "action_sampling_seed": 8602,
+  "torch_threads": 1,
+  "parent": {
+    "config": "configs/training/m8-selector-v8-wait-adjustment.json",
+    "checkpoint_sha256": "1f3c4525fb5fd10da6b9e8f0cb6c28b52e82fd39f92b1c0cc349399fac9e66f1",
+    "lineage_reproducibility_sha256": "8bc6ee1a9719e78dea071f8a90b68040ed346abec815f2f2bfb407f031d1adf2"
+  },
+  "adjustment": {
+    "tensor": "special_head.2.bias",
+    "index": 1,
+    "action": "WAIT",
+    "delta": -0.25
+  }
+}

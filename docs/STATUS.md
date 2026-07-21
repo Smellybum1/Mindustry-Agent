@@ -893,6 +893,10 @@ repository-evidence mapping used for the M6 audit is:
 - ADR-0017 freezes an 80-root, globally disjoint held-out-v3 contract before
   further model work. Development loaders refuse it and it permits one future
   exclusive final after a newly governed candidate/confirmation path.
+- ADR-0018 freezes V9 before construction as one additional `-0.25` WAIT-bias
+  child of V8 (`-0.50` total from V7). All other tensors and behavior remain
+  fixed, and its config names held-out-v3. A globally disjoint 80-root dev-v5
+  set is frozen for one confirmation after dev-v1. V9 has not been constructed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -410,6 +410,20 @@ ADR-0017 freezes held-out-v3 before any new model work: 80 globally disjoint
 roots, development-loader refusal, and one future exclusive final only after a
 new candidate passes newly governed confirmation. Held-out-v2 is consumed.
 
+## V9 governed successor
+
+ADR-0018 precommits one final WAIT-bias step from train/dev evidence before V9
+construction. V9 subtracts another 0.25 from `special_head.2.bias[1]`, making
+the total V7→V9 WAIT adjustment `-0.50`. Every other tensor, reward, feature,
+mask, and lifecycle rule remains fixed. This is not a coefficient sweep: the
+single continuation follows V8's fully passing dev-v4 scorecards.
+
+Two V8-parent constructions must match exactly. V9 names held-out-v3 in its
+immutable config and must pass dev-v1 observed win gates before one exclusive
+80-root dev-v5 confirmation. A started attempt consumes dev-v5. Only full
+eligibility may authorize held-out-v3; all earlier confirmation/final sets stay
+consumed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -854,6 +854,12 @@ ADR-0017 freezes `bootstrap-defense-v1-held-out-v3` before further model work:
 name v3 and use newly governed train/dev confirmation evidence. M8.5 remains
 unmet and M9 remains gated.
 
+ADR-0018 precommits V9 as the final WAIT-bias step: one additional `-0.25`
+child adjustment from V8 (`-0.50` total from V7), with every other model and
+behavior field fixed. Its config names held-out-v3. A new globally disjoint
+80-root dev-v5 set is frozen for one confirmation after dev-v1 qualification.
+V9 has not yet been constructed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

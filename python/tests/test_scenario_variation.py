@@ -211,3 +211,19 @@ def test_post_v8_held_out_v3_is_sealed_exact_and_globally_disjoint():
             continue
         document = json.loads(other.read_text(encoding="utf-8"))
         assert held_out_seeds.isdisjoint(document["seeds"]), other.name
+
+
+def test_v9_confirmation_dev_v5_is_exact_and_globally_disjoint():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v5.json")
+    confirmation = json.loads(path.read_text(encoding="utf-8"))
+
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v5"
+    assert confirmation["seed_set_version"] == 5
+    assert confirmation["split"] == "dev"
+    assert confirmation["seeds"] == list(range(51001, 51081))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other == path:
+            continue
+        document = json.loads(other.read_text(encoding="utf-8"))
+        assert confirmation_seeds.isdisjoint(document["seeds"]), other.name

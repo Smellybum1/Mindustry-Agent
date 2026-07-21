@@ -220,6 +220,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   consumed and individual outcomes must not guide future policy changes.
 - **Post-V8 governance**: ADR-0017 freezes 80 disjoint held-out-v3 roots before
   further model work. A successor must name v3 and use a new confirmation path.
+- **V9 precommit**: ADR-0018 freezes one additional `-0.25` WAIT-bias child of
+  V8 (`-0.50` total from V7), with all other behavior fixed. It names
+  held-out-v3. Dev-v5 is a new disjoint 80-root, one-way confirmation set. V9
+  has not yet been constructed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -393,7 +397,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0017` (do not relitigate).
+See `docs/decisions/ADR-0001..0018` (do not relitigate).
 
 ## Deviations from the brief in this scaffold
 
