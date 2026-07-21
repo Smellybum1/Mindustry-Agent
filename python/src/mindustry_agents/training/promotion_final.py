@@ -185,6 +185,7 @@ def _validate_dev_preflight(
         raise ValueError("dev preflight reward adversaries did not pass")
     for source, hash_key in (
         ("baseline_aggregate", "baseline_aggregate_sha256"),
+        ("baseline_records", "baseline_records_sha256"),
         ("reward_report", "reward_report_sha256"),
     ):
         path = Path(preflight["sources"][source])

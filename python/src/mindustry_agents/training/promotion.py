@@ -267,6 +267,35 @@ def _load_baselines(path: Path, seed_set: dict[str, Any]) -> list[dict[str, Any]
     ]
 
 
+def _load_baseline_records(
+    path: Path, seed_set: dict[str, Any]
+) -> list[dict[str, Any]]:
+    records = [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    selected = [
+        item
+        for item in records
+        if item["manifest"]["policy"] in PERMANENT_BASELINES
+        and item["seed_set"]["id"] == seed_set["seed_set_id"]
+        and int(item["seed_set"]["version"])
+        == int(seed_set["seed_set_version"])
+    ]
+    expected_pairs = {
+        (policy, int(seed))
+        for policy in PERMANENT_BASELINES
+        for seed in seed_set["seeds"]
+    }
+    actual_pairs = {
+        (item["manifest"]["policy"], int(item["seed"])) for item in selected
+    }
+    if len(selected) != len(expected_pairs) or actual_pairs != expected_pairs:
+        raise RuntimeError("permanent dev baseline records are missing or stale")
+    return selected
+
+
 def _create_exclusive_attempt(path: Path, evidence: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("x", encoding="utf-8", newline="\n") as stream:
@@ -288,6 +317,11 @@ def main(argv: list[str] | None = None) -> int:
         "--baseline-aggregate",
         type=Path,
         default=root / "runs/evaluation-ladder-aggregate.json",
+    )
+    parser.add_argument(
+        "--baseline-records",
+        type=Path,
+        default=root / "runs/evaluation-ladder.jsonl",
     )
     parser.add_argument(
         "--reward-report",
@@ -337,6 +371,7 @@ def main(argv: list[str] | None = None) -> int:
     baseline_aggregates = _load_baselines(args.baseline_aggregate, seed_set)
     if len(baseline_aggregates) != len(PERMANENT_BASELINES):
         raise RuntimeError("permanent dev baselines are missing or stale")
+    baseline_records = _load_baseline_records(args.baseline_records, seed_set)
     repository = _git_evidence(root)
     unexpected_dirty = [
         line
@@ -406,11 +441,11 @@ def main(argv: list[str] | None = None) -> int:
 
     mixed_aggregates = aggregate_records(records)
     preflight = promotion_preflight(
-        records,
+        [*baseline_records, *records],
         [*baseline_aggregates, *mixed_aggregates],
         candidate_policy=CANDIDATE_POLICY,
         win_rate_baselines=(*PERMANENT_BASELINES, RANDOM_MIXED, GREEDY_MIXED),
-        scorecard_baseline=GREEDY_MIXED,
+        scorecard_baselines=("greedy-utility", GREEDY_MIXED),
         reward_adversaries_passed=reward_passed,
     )
     preflight.update(
@@ -430,6 +465,8 @@ def main(argv: list[str] | None = None) -> int:
             "sources": {
                 "baseline_aggregate": str(args.baseline_aggregate.resolve()),
                 "baseline_aggregate_sha256": _sha256(args.baseline_aggregate.resolve()),
+                "baseline_records": str(args.baseline_records.resolve()),
+                "baseline_records_sha256": _sha256(args.baseline_records.resolve()),
                 "reward_report": str(args.reward_report.resolve()),
                 "reward_report_sha256": _sha256(args.reward_report.resolve()),
             },

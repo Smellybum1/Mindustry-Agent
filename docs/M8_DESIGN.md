@@ -418,11 +418,35 @@ the total V7→V9 WAIT adjustment `-0.50`. Every other tensor, reward, feature,
 mask, and lifecycle rule remains fixed. This is not a coefficient sweep: the
 single continuation follows V8's fully passing dev-v4 scorecards.
 
-Two V8-parent constructions must match exactly. V9 names held-out-v3 in its
-immutable config and must pass dev-v1 observed win gates before one exclusive
-80-root dev-v5 confirmation. A started attempt consumes dev-v5. Only full
-eligibility may authorize held-out-v3; all earlier confirmation/final sets stay
-consumed.
+Two V8-parent constructions match checkpoint
+`3ae49108c913b0783300744d906eda0ca2b7846115f3919378fc7ab9e8d2c998`,
+model state `a62210ed1716cba6f2f869afe571373815ee4b25fddc18cacff25e93ca729af3`,
+and lineage `c329bfc096122a13b2b5b18c4f1ff90bbaafa30fde621e70a7c25302ccc7f88c`.
+After beating every dev-v1 win comparator, V9 completed the exclusive 80-root
+dev-v5 confirmation at 65/80 wins. It passed the then-implemented matched-control
+scorecard and all observed win gates, so held-out-v3 was opened once.
+
+The held-out-v3 final completed at 70/80 wins (`0.875`, 95% CI
+`[0.8,0.9375]`) versus permanent random 33/80 (`0.4125`,
+`[0.3,0.525]`), permanent greedy 49/80 (`0.6125`, `[0.5,0.7125]`),
+and matched greedy 5/80 (`0.0625`). Every win gate passed, but V9 is **not
+promoted**. Versus permanent greedy, announcements, idle, and abandonment
+regressed; recovery was uncertain. Versus matched greedy, idle was uncertain.
+The final records, aggregate, and report SHA-256 values are respectively
+`20d77ea9dc98057080b0ddba2d519c6ee12421b1b4c93aba5b40b857106b508d`,
+`4f3ad4372798656ef8e6d2ee7b7f2ecf26a9ed6191aa88437b4f626545f58760`,
+and `eff86e5d718addc968ff02fcf9a458a1f5f098b25b6192782780e050559ced30`.
+Held-out-v3 is consumed; individual outcomes and traces remain quarantined.
+
+The result exposed a governance mismatch: development preflight checked
+teammate scorecards only against matched greedy, while the final also required
+non-regression against permanent greedy. ADR-0019 makes the gates identical.
+Preflight now loads and hashes exact seed-level permanent records and requires
+both permanent-greedy and matched-greedy scorecards to pass. It also freezes
+the 160-root, globally disjoint `bootstrap-defense-v1-held-out-v4` contract
+before any future candidate work. Development tools refuse v4, which permits
+one exclusive future final only after a newly governed candidate passes the
+corrected dual-scorecard preflight.
 
 ## M8.1 acceptance review
 

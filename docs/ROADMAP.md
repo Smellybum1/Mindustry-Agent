@@ -858,7 +858,24 @@ ADR-0018 precommits V9 as the final WAIT-bias step: one additional `-0.25`
 child adjustment from V8 (`-0.50` total from V7), with every other model and
 behavior field fixed. Its config names held-out-v3. A new globally disjoint
 80-root dev-v5 set is frozen for one confirmation after dev-v1 qualification.
-V9 has not yet been constructed.
+V9 constructs exactly at checkpoint `3ae49108c913b078...` with lineage
+`c329bfc096122a13...`, beats all dev-v1 win comparators, and completes dev-v5
+at 65/80 wins. Under the then-implemented matched-only development scorecard it
+qualified for held-out-v3.
+
+Held-out-v3 completes exactly once: V9 70/80, permanent random 33/80,
+permanent greedy 49/80, matched greedy 5/80. All strict win gates pass, but V9
+is **not promoted** because announcements, idle, and abandonment regress versus
+permanent greedy, permanent-greedy recovery is uncertain, and matched-greedy
+idle is uncertain. Held-out-v3 is consumed and its individual outcomes remain
+quarantined.
+
+ADR-0019 corrects the development/final parity defect: preflight now requires
+paired non-regression versus both seed-level permanent greedy and matched
+greedy, and hashes the permanent record source for final validation. It freezes
+`bootstrap-defense-v1-held-out-v4` before further candidate work: 160 globally
+disjoint roots, development-loader refusal, and one future exclusive final only
+after the corrected gate passes. M8.5 remains unmet and M9 remains gated.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

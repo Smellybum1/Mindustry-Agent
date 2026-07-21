@@ -1,3 +1,4 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -66,6 +67,40 @@ class TestPromotion(unittest.TestCase):
             with self.assertRaises(FileExistsError):
                 _create_exclusive_attempt(path, {"status": "started"})
 
+    def test_baseline_record_loader_requires_every_policy_seed_pair(self):
+        from mindustry_agents.training.promotion import (
+            PERMANENT_BASELINES,
+            _load_baseline_records,
+        )
+
+        seed_set = {
+            "seed_set_id": "dev",
+            "seed_set_version": 1,
+            "seeds": [10, 11],
+        }
+        records = [
+            _record(policy, seed, False, 0.0)
+            for policy in PERMANENT_BASELINES
+            for seed in seed_set["seeds"]
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "baselines.jsonl"
+            path.write_text(
+                "".join(json.dumps(record) + "\n" for record in records),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                len(_load_baseline_records(path, seed_set)), len(records)
+            )
+
+            records[-1] = records[-2]
+            path.write_text(
+                "".join(json.dumps(record) + "\n" for record in records),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(RuntimeError, "missing or stale"):
+                _load_baseline_records(path, seed_set)
+
     def test_preflight_requires_all_win_comparators_and_paired_scorecard(self):
         records = []
         for seed in range(10):
@@ -107,6 +142,31 @@ class TestPromotion(unittest.TestCase):
             "not_better_observed_rate",
         )
         self.assertFalse(report["scorecard_non_regression"]["passed"])
+
+    def test_preflight_requires_permanent_and_matched_scorecard_parity(self):
+        records = []
+        for seed in range(10):
+            records.append(_record("learned", seed, True, 0.0))
+            records.append(_record("permanent-greedy", seed, seed < 5, -1.0))
+            records.append(_record("greedy-mixed", seed, seed < 2, 1.0))
+        report = promotion_preflight(
+            records,
+            aggregate_records(records),
+            candidate_policy="learned",
+            win_rate_baselines=("permanent-greedy", "greedy-mixed"),
+            scorecard_baselines=("permanent-greedy", "greedy-mixed"),
+            reward_adversaries_passed=True,
+        )
+
+        self.assertFalse(report["eligible_for_held_out"])
+        scorecards = report["scorecard_non_regressions"]
+        self.assertEqual(
+            [item["baseline"] for item in scorecards],
+            ["permanent-greedy", "greedy-mixed"],
+        )
+        self.assertFalse(scorecards[0]["passed"])
+        self.assertTrue(scorecards[1]["passed"])
+        self.assertIs(report["scorecard_non_regression"], scorecards[-1])
 
     def test_dev_screen_can_improve_before_held_out_ci_is_separated(self):
         records = []

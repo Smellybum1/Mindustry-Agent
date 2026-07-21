@@ -896,7 +896,24 @@ repository-evidence mapping used for the M6 audit is:
 - ADR-0018 freezes V9 before construction as one additional `-0.25` WAIT-bias
   child of V8 (`-0.50` total from V7). All other tensors and behavior remain
   fixed, and its config names held-out-v3. A globally disjoint 80-root dev-v5
-  set is frozen for one confirmation after dev-v1. V9 has not been constructed.
+  set is frozen for one confirmation after dev-v1.
+- V9 constructions match checkpoint `3ae49108c913b078...`, model state
+  `a62210ed1716cba6...`, and lineage `c329bfc096122a13...`. V9 beats every
+  dev-v1 win comparator and completes exclusive dev-v5 at 65/80 wins. The
+  then-implemented matched-only development scorecard passes.
+- Held-out-v3 completes once: V9 70/80 (95% CI `[0.8,0.9375]`), permanent
+  random 33/80 (`[0.3,0.525]`), permanent greedy 49/80 (`[0.5,0.7125]`), and
+  matched greedy 5/80. Win gates pass, but permanent-greedy announcements,
+  idle, and abandonment regress; permanent recovery and matched idle are
+  uncertain. V9 is **not promoted**, held-out-v3 is consumed, and its
+  individual outcomes/traces remain quarantined.
+- Final v3 records, aggregate, and report SHA-256 values are
+  `20d77ea9dc980570...`, `4f3ad4372798656e...`, and `eff86e5d718addc96...`.
+- ADR-0019 fixes development/final parity. Preflight now loads exact seed-level
+  permanent records, requires scorecards against both permanent and matched
+  greedy, hashes the permanent record source, and has the final revalidate it.
+  Held-out-v4 is frozen before future model work as 160 globally disjoint roots
+  refused by development tools and available for at most one exclusive final.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -907,8 +924,8 @@ repository-evidence mapping used for the M6 audit is:
   helper fulfilment, live reservations, lease recovery, announcements, and
   metrics are wired through M5.6; the shared M7.2 expert uses that surface.
   M8.4 selector rewards/training and the complete M8.5 lineage/dev/one-way-final
-  machinery are implemented. The v1 candidate failed promotion; the consumed
-  held-out gate cannot be rerun.
+  machinery are implemented. V1, V8, and V9 failed promotion; their consumed
+  held-out gates cannot be rerun. The next governed final set is held-out-v4.
 - **`agent-plugin`** is no longer a stub. Its scripted M6 path is implemented;
   future M10 human goals/overrides and study instrumentation remain outside M6.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code

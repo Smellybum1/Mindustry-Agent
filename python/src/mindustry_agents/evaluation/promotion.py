@@ -115,7 +115,8 @@ def promotion_preflight(
     *,
     candidate_policy: str,
     win_rate_baselines: tuple[str, ...],
-    scorecard_baseline: str,
+    scorecard_baseline: str | None = None,
+    scorecard_baselines: tuple[str, ...] = (),
     reward_adversaries_passed: bool,
 ) -> dict[str, Any]:
     """Apply the dev-only qualification screen before freezing held-out inputs."""
@@ -136,22 +137,33 @@ def promotion_preflight(
                 candidate, baseline, require_ci_separation=False
             )
         )
-    scorecard = paired_scorecard_non_regression(
-        records,
-        candidate_policy=candidate_policy,
-        baseline_policy=scorecard_baseline,
+    if scorecard_baseline is not None and scorecard_baselines:
+        raise ValueError("provide one scorecard baseline form")
+    active_scorecard_baselines = scorecard_baselines or (
+        (scorecard_baseline,) if scorecard_baseline is not None else ()
     )
+    if not active_scorecard_baselines:
+        raise ValueError("at least one scorecard baseline is required")
+    scorecards = [
+        paired_scorecard_non_regression(
+            records,
+            candidate_policy=candidate_policy,
+            baseline_policy=baseline_policy,
+        )
+        for baseline_policy in active_scorecard_baselines
+    ]
     eligible = (
         reward_adversaries_passed
         and all(item["passed"] for item in comparisons)
-        and scorecard["passed"]
+        and all(item["passed"] for item in scorecards)
     )
     return {
         "schema": "selector_promotion_preflight_v1",
         "candidate": candidate_policy,
         "split": candidate["seed_set"]["split"],
         "win_rate_comparisons": comparisons,
-        "scorecard_non_regression": scorecard,
+        "scorecard_non_regression": scorecards[-1],
+        "scorecard_non_regressions": scorecards,
         "reward_adversaries_passed": reward_adversaries_passed,
         "eligible_for_held_out": eligible,
     }

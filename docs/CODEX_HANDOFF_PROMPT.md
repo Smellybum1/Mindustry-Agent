@@ -1,67 +1,47 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, after the failed M8.5 one-way final.
+`coop-agent/v159.7`, after the failed V9 held-out-v3 final and ADR-0019 parity
+correction.
 
 Read first, in order:
 
 1. `AGENTS.md` in full; obey the no-subagent rule.
 2. `docs/codex-handoffs/2026-07-21-m8-5.md` in full.
 3. Only M8.5 and the M8 exit criteria in `docs/ROADMAP.md` initially.
-4. `docs/M8_DESIGN.md`, `docs/REWARD_AUDIT.md`, ADR-0011, ADR-0012, and
-   ADR-0013.
+4. `docs/M8_DESIGN.md`, `docs/REWARD_AUDIT.md`, and ADR-0011 through ADR-0019.
 
-Run `bash scripts/codex-status.sh`, preserve the user's modified `AGENTS.md`,
-and never stage generated `annotations/src/main/resources/classids.properties`.
-Then run the baseline from the dated handoff.
+Run `bash scripts/codex-status.sh`. Preserve and never stage the user-modified
+`AGENTS.md`, generated `annotations/src/main/resources/classids.properties`, or
+the two protected stat-only upstream files `core/src/mindustry/ai/BlockIndexer.java`
+and `core/src/mindustry/entities/Units.java`. Then run the baseline from the
+dated handoff.
 
-M8.5's frozen 75/25 candidate passed dev preflight but was not promoted by the
-one-way held-out-v1 final. The completed attempt marker forbids any rerun. Do not
-inspect individual held-out episodes or choose behavior from their outcomes.
-M9.1 is explicitly gated on a promoted single learned seat, so do not bypass it.
-ADR-0013 has frozen the 40-root `bootstrap-defense-v1-held-out-v2` contract
-before successor model work; development tools must refuse it and it permits
-one exclusive future final. Choose any next M8 candidate using train/dev
-evidence only and make its immutable config name v2 before training. Preserve
-engine pins, fixed-step determinism, simulation-thread ownership,
+V9 is the exact checkpoint
+`3ae49108c913b0783300744d906eda0ca2b7846115f3919378fc7ab9e8d2c998`
+with lineage
+`c329bfc096122a13b2b5b18c4f1ff90bbaafa30fde621e70a7c25302ccc7f88c`.
+It completed exclusive dev-v5 at 65/80, then consumed held-out-v3 exactly once.
+The final was V9 70/80, permanent random 33/80, permanent greedy 49/80, and
+matched greedy 5/80. Win gates passed, but permanent-greedy announcements,
+idle, and abandonment regressed; permanent recovery and matched idle were
+uncertain. V9 is not promoted. Never rerun v3 or inspect its individual
+outcomes/traces for policy work.
+
+The final exposed a real governance defect: development preflight had required
+the paired teammate scorecard only against matched greedy, while final also
+required permanent greedy. ADR-0019 corrects that mismatch. Future preflight
+must load exact seed-level permanent records, require scorecard non-regression
+against both permanent greedy and matched greedy, hash the permanent record
+source, and have final revalidate it.
+
+ADR-0019 freezes the 160-root, globally disjoint
+`bootstrap-defense-v1-held-out-v4` contract before further model work.
+Development tools refuse it. It permits one exclusive future final only after
+a new immutable candidate names v4 and passes a newly governed confirmation
+under the corrected dual-scorecard gate. Choose future behavior from train/dev
+evidence only. M9.1 remains gated on an M8 promotion.
+
+Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.
-
-The first successor diversity hypothesis, `m8-selector-v3-diverse`, reproduced
-exactly but achieved only 3/10 dev wins and was rejected before preflight. Do
-not open v2 for it.
-
-V6 restores 32 visits per each of 64 train roots. Two pinned runs reproduce
-exactly and selected update 31 at 9/10 dev wins; direct-checkpoint lineage is
-implemented. Construct lineage and run the full frozen dev scorecard preflight
-before deciding whether v2 is eligible. Do not treat the 9/10 screen alone as
-held-out authorization.
-
-The dev-v1 preflight passed all win-rate comparisons but failed scorecard
-certainty. ADR-0014 now freezes `bootstrap-defense-v1-dev-v2` as a 40-root
-one-way V6 confirmation with an exclusive attempt. Refresh permanent baselines
-on dev-v2 and run that confirmation before considering held-out-v2.
-
-That exclusive attempt was created but aborted before result artifacts on a
-matched-control catalog-WAIT indexing bug. ADR-0014 consumes the attempt, so do
-not rerun dev-v2 and do not open held-out-v2 for V6. The control bug is fixed;
-the next step requires a newly governed successor candidate/confirmation path.
-
-ADR-0015 precommitted V7 as a 90/10 V6 update-31 / V4 update-5 blend with
-explicit cross-commit lineage. Its two constructions matched and its dev-v3
-result is recorded below; held-out-v2 stayed sealed.
-
-V7 completed dev-v3 at 35/40 but failed idle certainty, so it is rejected and
-dev-v3 consumed. ADR-0016 precommitted V8 as exactly one `-0.25` WAIT-logit bias
-adjustment to V7; its completed result is recorded below.
-
-V8 qualified on dev-v4 and consumed held-out-v2 exactly once. It won 36/40 and
-CI-beat both permanent baselines, but failed teammate-quality gates, so it is
-not promoted. Do not rerun v2 or inspect individual outcomes. ADR-0017 freezes
-held-out-v3 (80 roots) before any new model work; the next candidate must name
-v3 and use newly governed train/dev confirmation evidence. M9 remains gated.
-
-ADR-0018 now precommits V9 as one additional `-0.25` WAIT-bias child of V8,
-for `-0.50` total from V7. Construct it twice from the V8 A/B artifacts and
-require exact lineage, then run dev-v1. Dev-v5 is frozen as an 80-root one-way
-confirmation; held-out-v3 stays sealed until every gate passes.

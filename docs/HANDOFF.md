@@ -223,7 +223,19 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 - **V9 precommit**: ADR-0018 freezes one additional `-0.25` WAIT-bias child of
   V8 (`-0.50` total from V7), with all other behavior fixed. It names
   held-out-v3. Dev-v5 is a new disjoint 80-root, one-way confirmation set. V9
-  has not yet been constructed.
+  constructs exactly at checkpoint `3ae49108c913b078...`, model state
+  `a62210ed1716cba6...`, and lineage `c329bfc096122a13...`.
+- **V9 result**: after beating every dev-v1 win comparator, V9 completed
+  dev-v5 at 65/80 and qualified under the then-implemented matched-only
+  scorecard. Held-out-v3 then completed once: V9 70/80, random 33/80, greedy
+  49/80, matched greedy 5/80. Every win gate passes, but permanent-greedy
+  announcements/idle/abandonment regress, permanent recovery is uncertain,
+  and matched idle is uncertain. V9 is not promoted; v3 is consumed.
+- **Post-V9 governance**: ADR-0019 fixes the preflight/final mismatch by
+  requiring paired scorecards against both seed-level permanent greedy and
+  matched greedy, hashing the permanent record source, and revalidating it at
+  final time. It freezes 160 globally disjoint held-out-v4 roots before future
+  candidate work; development tools refuse v4 and only one final is allowed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -231,9 +243,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
 - **Uncommitted changes intentionally preserved**: the user's modified
-  `AGENTS.md` and generated
-  `annotations/src/main/resources/classids.properties`. Neither belongs to the
-  project commits; never stage the generated file.
+  `AGENTS.md`, generated `annotations/src/main/resources/classids.properties`,
+  and stat-only upstream files `core/src/mindustry/ai/BlockIndexer.java` plus
+  `core/src/mindustry/entities/Units.java`. None belongs to project commits;
+  never stage them.
 
 ## Exact commands
 
@@ -385,11 +398,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Choose the next M8 candidate from train/dev evidence only.** ADR-0013 and
-   held-out-v2 are frozen; the candidate config must name v2 before training.
-   Never inspect or tune against individual held-out-v1 outcomes.
-2. **M8.5 remains unmet.** The v1 one-seat selector was not promoted and its
-   held-out attempt cannot be rerun.
+1. **Choose the next M8 candidate from train/dev evidence only.** ADR-0019 and
+   held-out-v4 are frozen; the candidate config must name v4 before work begins.
+   Never inspect or tune against individual held-out-v1/v2/v3 outcomes.
+2. **Use corrected preflight parity.** Refresh exact permanent aggregate and
+   seed-level records on a newly governed dev set, then require both permanent-
+   greedy and matched-greedy scorecards before any held-out authorization.
 3. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 4. **M9.2 partner population** remains behind M9.1.
@@ -397,7 +411,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0018` (do not relitigate).
+See `docs/decisions/ADR-0001..0019` (do not relitigate).
 
 ## Deviations from the brief in this scaffold
 
