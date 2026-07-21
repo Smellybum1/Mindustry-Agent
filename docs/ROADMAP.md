@@ -919,6 +919,16 @@ The implementation passes 128 Python tests plus build, smoke, determinism, and
 live counter reconciliation. All consumed results remain immutable and V13
 stays rejected.
 
+Reusable dev-v1 transition-duration analysis also found that successful policy
+abandonment was not visible to stop-on-event stepping: the server sampled the
+decision revision after applying actions, so 30 V13 abandons consumed 23,371
+ticks while waiting for unrelated boundaries. Successful `ABANDON` now marks
+`task_terminal`, the step samples revision before the action bundle, and the
+live reservation check requires exactly one fixed tick before replanning. The
+semantically unchanged two-win/16,200-tick golden was regenerated for the
+corrected state hashes; 128 Python tests, build, smoke, determinism, and the
+negative replay check pass. V13 remains rejected and dev-v9 remains consumed.
+
 ADR-0022 precommits V12 as V6's 64-root/32-cycle recipe under
 `selector_reward_v2`. Four capped negative-only components target the exact
 remaining gates: idle ticks, duplicate work, announcements, and non-forced team

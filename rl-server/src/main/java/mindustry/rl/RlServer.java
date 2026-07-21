@@ -399,11 +399,15 @@ public final class RlServer{
         //M3 (D5): decode + apply the per-agent action bundle on the sim thread BEFORE
         //advancing; invalid actions are rejected into action_results, never crash.
         coordination.tick((long)state.tick);
-        Jval actionResults = applyActions(req);
         long decisionRevision = coordination.decisionRevision();
+        Jval actionResults = applyActions(req);
         int previousEnemies = waveEnemyCount();
         float previousCoreHealth = coreHealth();
         LinkedHashSet<String> decisionReasons = new LinkedHashSet<>();
+        if(coordination.decisionRevision() != decisionRevision){
+            decisionReasons.add(coordination.lastDecisionReason());
+            decisionRevision = coordination.decisionRevision();
+        }
 
         long t0 = System.nanoTime();
         app.graphics.setDeltaSeconds(1f / 60f);

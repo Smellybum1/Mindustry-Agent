@@ -41,13 +41,19 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
         observations = rr.initial_observations
         transcript.append({"reset_hash": rr.state_hash, "masks": rr.action_masks})
 
-        def step(ticks: int = 0, actions=None):
+        def step(
+            ticks: int = 0,
+            actions=None,
+            *,
+            stop_on_decision_event: bool = False,
+        ):
             nonlocal tick, observations
             response = env.step(
                 episode,
                 expected_tick=tick,
                 ticks_to_advance=ticks,
                 agent_actions=actions or [],
+                stop_on_decision_event=stop_on_decision_event,
             )
             tick = response.tick
             observations = response.observations
@@ -59,6 +65,7 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
                     "board": response.task_board,
                     "events": response.task_events,
                     "metrics": response.coordination_metrics,
+                    "decision_boundary": response.decision_boundary,
                 }
             )
             return response
@@ -107,13 +114,18 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
         assert observations[loser]["unit"]["build_queue_depth"] == 0
 
         abandoned = step(
+            30,
             actions=[
                 {
                     "agent_id": expected_winner,
                     "task_action": {"type": "ABANDON", "reason": "release_probe"},
                 }
-            ]
+            ],
+            stop_on_decision_event=True,
         )
+        assert abandoned.decision_boundary["triggered"] is True
+        assert abandoned.decision_boundary["advanced_ticks"] == 1
+        assert "task_terminal" in abandoned.decision_boundary["reasons"]
         abandoned_task = next(
             task for task in abandoned.task_board if task["index"] == running["index"]
         )

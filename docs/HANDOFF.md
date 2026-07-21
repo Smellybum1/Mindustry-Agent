@@ -291,6 +291,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   adds per-agent idle telemetry. Schema v2 and the server counters are
   implemented; 128 Python tests, build, smoke, determinism, and live metric
   reconciliation pass. No consumed result is rerun or changed.
+- **Immediate-abandon boundary fix**: reusable dev-v1 traces showed that 30
+  learned-seat abandon actions consumed 23,371 ticks because `RlServer` sampled
+  the coordination decision revision after applying actions. A successful
+  `ABANDON` now marks `task_terminal`; pre-action revision sampling makes
+  stop-on-event advance exactly one fixed tick and return for immediate
+  replanning. The reservation check covers the live path. The regenerated
+  golden remains two wins/16,200 ticks/664 checkpoints and two recordings match
+  at SHA-256 `f386e056e3b21cbf...`; only decision-revision-dependent state hashes
+  changed. Python tests, build, smoke, determinism, and negative replay pass.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

@@ -130,6 +130,10 @@ leaves both options unset and uses external task actions.
 When `stop_on_decision_event=false`, `tick` advances by exactly
 `ticks_to_advance`. With the flag enabled it advances by at most that amount;
 the response reports the actual count and reasons in `decision_boundary`.
+A successful `ABANDON` is an authoritative `task_terminal` event. When at least
+one tick was requested with stop-on-event enabled, the server applies the
+abandonment, advances exactly one fixed engine tick, and returns the new
+decision boundary so the agent can replan immediately.
 
 **`agent_actions[]` entry (M3, additive — docs/M3_DESIGN.md D5):**
 

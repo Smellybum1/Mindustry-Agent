@@ -244,6 +244,11 @@ task to win instead of silently retrying the blocked skill. The adapter counts
 successful transitions in `resource_replans`. See `CANDIDATE_GAPS.md` for the
 fixed gaps and the intentionally deferred M7.4 work.
 
+A successful policy `ABANDON` marks `task_terminal` during the atomic action
+bundle. Event-driven stepping still advances one fixed engine tick before
+returning, then exposes that boundary immediately; it must not leave the newly
+idle agent waiting for an unrelated later event.
+
 ## Utility scaffold (brief §11.1)
 
 `HandTunedUtility` implements the additive utility:

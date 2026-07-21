@@ -202,7 +202,7 @@ Measure each layer separately; do not conflate them.
 
 | Gate | Target | Stretch | Status |
 |---|---|---|---|
-| 1. Deterministic stepping | Identical hash ≥10,000 ticks; exact tick advance; no wall-clock dep | — | **PASS** (current M7.4 golden: 16,200 ticks / 670 checkpoints across two complete expert episodes; legacy 79-boundary replay also passes) |
+| 1. Deterministic stepping | Identical hash ≥10,000 ticks; exact tick advance; no wall-clock dep | — | **PASS** (current golden: 16,200 ticks / 664 checkpoints across two complete expert episodes; legacy 79-boundary replay also passes) |
 | 2. Reset | <250 ms reset, no JVM restart, no stale state | <100 ms | **PASS** (median ~0.8 ms over 1000 resets, no restart) |
 | 3. Single-env speed | ≥10× real-time on small scenario | ≥30× | **PASS** (engine ~1,270× real-time; wrapper ~900×) |
 | 4. Aggregate parallel | Stable scaling under governed JVM cap; ≥100× aggregate | more | **PASS** for the accepted four-JVM cap (293.5× aggregate with inference; 1/2/4 measured) |

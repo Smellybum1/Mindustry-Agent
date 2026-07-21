@@ -987,6 +987,16 @@ repository-evidence mapping used for the M6 audit is:
   V13's rejection remain immutable. Schema v2, shared reason semantics,
   simulation-thread counters, protocol docs, and live reconciliation checks are
   implemented; 128 Python tests, build, smoke, and determinism pass.
+- The same reusable V13 dev-v1 traces exposed a fixed-step scheduling defect:
+  30 learned-seat `ABANDON` decisions advanced 23,371 ticks because the server
+  captured the decision revision after applying the action bundle. Successful
+  abandonment now marks `task_terminal`, the step captures the pre-action
+  revision, and stop-on-event returns after exactly one fixed engine tick. The
+  live reservation check asserts that boundary. The regenerated 664-checkpoint
+  golden is semantically identical to the prior two-win/16,200-tick trace apart
+  from the corrected decision-revision state hashes; two independent recordings
+  match at SHA-256 `f386e056e3b21cbf...`. The 128-test suite, build, smoke,
+  determinism, and deliberate replay-mutation check pass.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -583,6 +583,7 @@ public final class CoordinationAdapter{
                         reason.equals("resources_short_replan")
                             || reason.startsWith("blocked_replan:"));
                     clearAssignment(agent.index, agent);
+                    markDecision("task_terminal");
                 }
                 yield result(agent.index, op.ok(), op.reason(), type, assignment.taskId);
             }
