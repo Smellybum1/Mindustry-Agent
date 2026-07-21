@@ -368,3 +368,6 @@ def test_v13_quality_selection_and_dev_v9_are_precommitted():
             "update_asc",
         ],
     }
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v9"] == path.name

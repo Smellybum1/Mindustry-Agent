@@ -530,6 +530,11 @@ wins/return/core-health/earlier-update ranking. V13 must rerun twice rather than
 retroactively relabeling a V12 artifact. Dev-v8 is retired unopened and dev-v9
 is frozen as 160 disjoint roots `91001..91160` for one exclusive confirmation.
 
+Two exact V13 runs reproduce the full idle-aware frontier and select update 24
+at 10/10 dev-v1 wins with mean idle 0.24980951. Checkpoint
+`ff5c21bc6644d903...`, full-run digest `842ac034e91e84ae...`, and lineage
+`8aff4629be3090b3...` pass, authorizing dev-v9 only.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

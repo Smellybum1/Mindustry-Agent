@@ -961,8 +961,12 @@ repository-evidence mapping used for the M6 audit is:
   frontier motivates the rule, but V12 remains rejected and its update 24 is
   not relabeled. Dev-v8 is retired unopened; dev-v9 freezes 160 globally
   disjoint roots `91001..91160`. The strict selector, per-checkpoint idle
-  evidence, manifest compatibility, and failure path are implemented; all 126
-  Python tests pass. V13 has not been trained.
+  evidence, manifest compatibility, and failure path are implemented. Two
+  exact 2,048-episode runs reproduce and select eligible update 24 at 10/10
+  dev-v1 wins and mean idle 0.24980951. Checkpoint/model-state/replay/full-run
+  hashes are `ff5c21bc6644d903...`, `6695f8ffb690f635...`,
+  `c556d3ec24f06c8a...`, and `842ac034e91e84ae...`; lineage is
+  `8aff4629be3090b3...`. V13 is authorized for dev-v9 only.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

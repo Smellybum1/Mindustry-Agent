@@ -934,8 +934,11 @@ selector that first requires at least 9/10 wins and idle `<0.25`, then uses the
 existing ranking. V12 artifacts are not retroactively relabeled. Dev-v8 is
 retired unopened; a disjoint 160-root dev-v9 set is frozen for one exclusive
 ADR-0019 confirmation. The strict gate, per-checkpoint idle evidence, and
-version-compatible reproducibility evidence are implemented with 126 passing
-Python tests. V13 training has not started; held-out-v4 remains sealed.
+version-compatible reproducibility evidence are implemented. Two exact V13
+runs select update 24 at 10/10 dev-v1 wins and mean idle 0.24980951. Checkpoint
+`ff5c21bc6644d903...`, replay `c556d3ec24f06c8a...`, full-run digest
+`842ac034e91e84ae...`, and lineage `8aff4629be3090b3...` reproduce. V13 is
+authorized for dev-v9 only; held-out-v4 remains sealed.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

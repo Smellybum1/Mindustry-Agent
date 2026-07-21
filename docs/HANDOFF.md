@@ -270,7 +270,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   V12 update 24 is not retroactively promoted. Dev-v8 is retired unopened and
   dev-v9 is frozen at disjoint roots `91001..91160` for one exclusive
   dual-scorecard confirmation. The selector and version-compatible manifest
-  evidence are implemented and all 126 Python tests pass. V13 is not trained.
+  evidence are implemented. Two exact 2,048-episode runs select eligible update
+  24 at 10/10 wins and idle 0.24980951. Checkpoint `ff5c21bc6644d903...`,
+  model state `6695f8ffb690f635...`, replay `c556d3ec24f06c8a...`, full-run
+  digest `842ac034e91e84ae...`, and lineage `8aff4629be3090b3...` reproduce.
+  V13 is authorized for dev-v9 only.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
