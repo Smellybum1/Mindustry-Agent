@@ -1143,6 +1143,18 @@ repository-evidence mapping used for the M6 audit is:
   sealed. All 44 exact reward adversaries, 142 Python tests, pinned build,
   smoke, and determinism pass. Config and adversary report SHA-256 are
   `5567e1c1d79cae0...` and `732536ffcd358d25...`.
+- V21's two pinned 2,048-episode replicas reproduce exactly and select update 29
+  at 9/10 construction wins with mean idle 0.04383598. Checkpoint/model/replay/
+  full-run/lineage hashes are `68c3dfba722e0b75...`, `5c09bf859571ac2c...`,
+  `81ca21dfe5d634b4...`, `5d5831a59032c57e...`, and
+  `df5af947a70f6a8c...`. The corrected boundary removes the definitive
+  permanent-idle regression (mean -0.00047581, CI crosses zero) and decisively
+  improves matched idle/recovery, but reusable preflight still rejects V21.
+  Task abandonment is definitively worse by 0.04347388 against both scorecards:
+  six episodes repeat a resource-short supply target three times before a fourth
+  selection succeeds, producing 18 avoidable non-forced replans. Announcements,
+  duplicates, and permanent recovery remain uncertain. Dev-v17 is unopened,
+  held-out-v4 is sealed, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

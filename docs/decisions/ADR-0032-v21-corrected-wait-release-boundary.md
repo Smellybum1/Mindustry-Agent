@@ -64,3 +64,21 @@ SHA-256 is
 `5567e1c1d79cae0f2ffe276df0534abe0d42299a9fa56347fa063d875092cc1a`;
 adversary report SHA-256 is
 `732536ffcd358d25a03f27fb48807ac15d4b9ed78ad107ee8f5c55683718d836`.
+
+The two pinned replicas reproduce exactly and select update 29 at 9/10 wins
+with mean idle 0.04383598. Checkpoint `68c3dfba722e0b75...`, model state
+`5c09bf859571ac2c...`, replay `81ca21dfe5d634b4...`, full run
+`5d5831a59032c57e...`, and direct lineage `df5af947a70f6a8c...` match.
+
+Reusable dev-v1 rejects V21 before confirmation. The corrected boundary closes
+the permanent-idle gap to -0.00047581 (95% CI
+-0.00999458..+0.01044892) and decisively improves matched idle and recovery.
+However, non-forced task abandonment is definitively worse by 0.04347388
+against both permanent greedy (95% CI +0.02043040..+0.06680916) and matched
+greedy (95% CI +0.01956487..+0.06757326). Six episodes each select the same
+resource-short supply target, abandon it, and repeat three times at two-tick
+cadence before the fourth selection succeeds: 18 non-forced replans that the
+matched greedy control avoids. Announcements, duplicates, and permanent
+recovery also remain uncertain. Dev-v17 stays unopened and held-out-v4 stays
+sealed. Preflight report SHA-256 is
+`f1a8e47d4cd771793b89eafd6677bcb791572649066aaef4a61be1807b299b5c`.

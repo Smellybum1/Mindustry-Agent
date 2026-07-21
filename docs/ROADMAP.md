@@ -1121,6 +1121,23 @@ reward adversaries, 142 Python tests, pinned build, smoke, and determinism pass.
 Config SHA-256 is `5567e1c1d79cae0f...`; adversary report SHA-256 is
 `732536ffcd358d25...`.
 
+V21's two pinned 2,048-episode replicas reproduce exactly and select update 29
+at 9/10 construction wins with mean idle 0.04383598. Checkpoint
+`68c3dfba722e0b75...`, model state `5c09bf859571ac2c...`, replay
+`81ca21dfe5d634b4...`, full run `5d5831a59032c57e...`, and direct lineage
+`df5af947a70f6a8c...` match. The runtime correction removes the definitive
+permanent-idle regression: candidate-minus-greedy is -0.00047581 (95% CI
+-0.00999458..+0.01044892), while matched idle and recovery improve decisively.
+Reusable preflight nevertheless rejects V21 because task abandonment is
+definitively worse by 0.04347388 against both permanent greedy (95% CI
++0.02043040..+0.06680916) and matched greedy (95% CI
++0.01956487..+0.06757326). In six episodes the learned seat selects one
+resource-short supply target, abandons it, and repeats the same target three
+times at two-tick cadence before the fourth selection succeeds: 18 non-forced
+replans absent from matched greedy. Announcements, duplicates, and permanent
+recovery remain uncertain. Dev-v17 remains unopened, held-out-v4 remains
+sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -435,6 +435,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   44 exact adversaries, 142 Python tests, pinned build, smoke, and determinism
   pass. Config hash is `5567e1c1d79cae0f...`; adversary report hash is
   `732536ffcd358d25...`.
+- **V21 rejected on reusable dev-v1**: two pinned replicas reproduce update 29
+  at 9/10 wins and mean idle 0.04383598. Checkpoint `68c3dfba722e0b75...`,
+  model `5c09bf859571ac2c...`, replay `81ca21dfe5d634b4...`, full run
+  `5d5831a59032c57e...`, and lineage `df5af947a70f6a8c...` match. Permanent
+  idle is now essentially parity at -0.00047581 (CI crosses zero), and matched
+  idle/recovery improve decisively. V21 still fails because task abandonment is
+  definitively +0.04347388 worse against both scorecards. Six episodes each
+  retry one resource-short supply target three times at two-tick cadence before
+  the fourth succeeds, totaling 18 non-forced replans; matched greedy has none.
+  Announcements, duplicates, and permanent recovery remain uncertain. Dev-v17
+  is unopened and held-out-v4 remains sealed. Preflight hash is
+  `f1a8e47d4cd771793...`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -597,12 +609,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Train two pinned V21 replicas from the committed pretraining packet.**
-   Require exact selected checkpoint/frontier, model, replay, full-run, and
-   direct-lineage reproduction before evaluation.
-2. **Use corrected preflight parity.** Require reusable dev-v1 construction
+1. **Choose V22 from reusable V21 evidence only.** Target the exact repeated
+   resource-short same-target supply retry sequence without reopening the idle,
+   reward-cap, or teacher-coefficient lines. Precommit the causal intervention
+   and fresh disjoint dev-v18 before model work; dev-v17 is retired unopened.
+2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
-   dev-v17 confirmation. Never inspect dev-v14/dev-v15/dev-v16 or
+   confirmation. Never inspect dev-v14/dev-v15/dev-v16/dev-v17 or
    held-out-v1/v2/v3 outcomes for tuning; held-out-v4 remains sealed.
 3. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
