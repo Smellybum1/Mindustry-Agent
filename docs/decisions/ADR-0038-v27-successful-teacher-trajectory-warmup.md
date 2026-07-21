@@ -80,3 +80,19 @@ and golden determinism including the negative replay. Config SHA-256 is
 `189ef438574524946d41828b168c60ee850a4fc997c2f513613cc11c89091124`;
 adversary report SHA-256 is
 `d1c1da02ed7d3a4ed6ca5c6e82bce8fa942f9844b8ec2dd43b53027861e6ea6b`.
+
+## Outcome
+
+Replica A completed the 64 teacher-controlled warmup episodes and all 2,048 PPO
+episodes/32 updates, then failed the frozen construction gate. The warmup
+reproduced 5/64 wins, 121 eligible transitions, eight batches, and 968 sample
+presentations at mean cross-entropy `1.41309718788`. Model state changed from
+`dbae4c605e52b962...` to `ce95e9b0aa8ab34a...`; the atomic warmup report hashes
+to `b4ca44db858a84a88d706b9a026b673fcc11a22fbb4776ac60317965794140e0`.
+
+No checkpoint reached 9/10. Eighteen of 32 updates reached 8/10; the best-ranked
+row is update 20 with mean return `1.10996`, mean core health `601.9`, and mean
+idle `0.07044212`. The complete frontier hashes to
+`d23df387d15966f1728840772cde2362cec1c38ce3c2b58684f5f7940af51d6b`.
+Replica B did not start, dev-v23 remained unopened, and held-out-v4 remained
+sealed. V27 is rejected before reusable preflight.

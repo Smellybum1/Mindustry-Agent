@@ -561,7 +561,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   pretraining gates pass: 44 exact-config adversaries, 152 Python tests, pinned
   build, 5/5 candidate gate, smoke, determinism, and negative replay. Config/
   adversary hashes are `189ef43857452494...` and `d1c1da02ed7d3a4e...`.
-  Commit this packet before replica A.
+  The packet was committed before replica A.
+- **V27 rejected at construction**: replica A completed the 64-episode warmup
+  and 2,048 PPO episodes/32 updates. Warmup reproduces 5/64 teacher wins, 121
+  eligible labels, 968 presentations, and model-state movement
+  `dbae4c605e52b962... -> ce95e9b0aa8ab34a...`; its report hash is
+  `b4ca44db858a84a8...`. Eighteen updates reach 8/10 but none reaches 9/10;
+  best-ranked update 20 has idle `0.07044212`, and the frontier hashes to
+  `d23df387d15966f17...`. Replica B did not start, dev-v23 is retired unopened,
+  held-out-v4 stays sealed, and V27 stops before reusable preflight.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).

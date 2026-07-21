@@ -1283,6 +1283,14 @@ repository-evidence mapping used for the M6 audit is:
   All 44 exact-config adversaries, 152 Python tests, pinned build, 5/5 candidate
   gate, smoke, determinism, and negative replay pass. Config/adversary hashes
   are `189ef43857452494...` and `d1c1da02ed7d3a4e...`.
+- V27 replica A completed its 64-episode warmup and all 2,048 PPO episodes/32
+  updates but failed construction. Warmup evidence matches the precommit: 5/64
+  wins, 121 eligible transitions, and 968 presentations; model state changes
+  `dbae4c605e52b962... -> ce95e9b0aa8ab34a...`, and the report hashes to
+  `b4ca44db858a84a8...`. Eighteen updates reach 8/10 but none reaches 9/10.
+  Best-ranked update 20 has idle `0.07044212`; complete frontier hash is
+  `d23df387d15966f17...`. Replica B did not start, dev-v23 remains unopened and
+  is retired, held-out-v4 stays sealed, and V27 is rejected before preflight.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

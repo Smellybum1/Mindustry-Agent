@@ -1294,6 +1294,16 @@ gate, smoke, determinism, and negative replay. Config/adversary hashes are
 `189ef43857452494...` and `d1c1da02ed7d3a4e...`. A committed packet is required
 before replica A; M8.5 remains unmet.
 
+V27 replica A completed its 64 teacher-controlled episodes and all 2,048 PPO
+episodes/32 updates but failed construction. The warmup exactly exposes 5/64
+wins, 121 eligible labels, and 968 sample presentations; model state changes
+`dbae4c605e52b962... -> ce95e9b0aa8ab34a...`, with report hash
+`b4ca44db858a84a8...`. Eighteen updates reach 8/10, but none reaches 9/10. Best-
+ranked update 20 has mean return `1.10996`, core health `601.9`, and idle
+`0.07044212`; the complete frontier hashes to `d23df387d15966f17...`. Replica B
+did not start, dev-v23 remained unopened and is retired, held-out-v4 stays
+sealed, and V27 is rejected before reusable preflight. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
