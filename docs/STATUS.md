@@ -967,6 +967,13 @@ repository-evidence mapping used for the M6 audit is:
   hashes are `ff5c21bc6644d903...`, `6695f8ffb690f635...`,
   `c556d3ec24f06c8a...`, and `842ac034e91e84ae...`; lineage is
   `8aff4629be3090b3...`. V13 is authorized for dev-v9 only.
+- Exclusive dev-v9 completes once: V13 152/160, permanent random 62/160,
+  permanent greedy 92/160, matched random 13/160, and matched greedy 15/160.
+  Every win gate and matched-greedy scorecard passes. Versus permanent greedy,
+  duplicates pass, while announcements, idle, recovery, and abandonment fail.
+  V13 is rejected, dev-v9 is consumed, and held-out-v4 remains sealed.
+  Records/aggregate/report hashes are `b4caeaba900f047a...`,
+  `46f940a8361b4dad...`, and `a4dd2ecad7c485de...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

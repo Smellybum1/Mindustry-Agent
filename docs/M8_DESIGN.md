@@ -535,6 +535,11 @@ at 10/10 dev-v1 wins with mean idle 0.24980951. Checkpoint
 `ff5c21bc6644d903...`, full-run digest `842ac034e91e84ae...`, and lineage
 `8aff4629be3090b3...` pass, authorizing dev-v9 only.
 
+Dev-v9 completes once at V13 152/160, permanent random 62/160, permanent greedy
+92/160, matched random 13/160, and matched greedy 15/160. All win and matched
+scorecard gates pass. Permanent-greedy duplicates pass; announcements, idle,
+recovery, and abandonment fail. V13 is rejected and held-out-v4 stays sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

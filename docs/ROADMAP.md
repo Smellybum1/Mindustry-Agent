@@ -940,6 +940,12 @@ runs select update 24 at 10/10 dev-v1 wins and mean idle 0.24980951. Checkpoint
 `842ac034e91e84ae...`, and lineage `8aff4629be3090b3...` reproduce. V13 is
 authorized for dev-v9 only; held-out-v4 remains sealed.
 
+Dev-v9 completes once at V13 152/160, permanent random 62/160, permanent greedy
+92/160, matched random 13/160, and matched greedy 15/160. Every win gate and
+matched-greedy scorecard passes. Permanent-greedy duplicates pass, but
+announcements, idle, recovery, and abandonment fail. V13 is rejected, dev-v9
+is consumed, held-out-v4 remains sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

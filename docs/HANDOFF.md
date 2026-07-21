@@ -274,7 +274,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   24 at 10/10 wins and idle 0.24980951. Checkpoint `ff5c21bc6644d903...`,
   model state `6695f8ffb690f635...`, replay `c556d3ec24f06c8a...`, full-run
   digest `842ac034e91e84ae...`, and lineage `8aff4629be3090b3...` reproduce.
-  V13 is authorized for dev-v9 only.
+  Dev-v9 then completes once at V13 152/160, permanent random 62/160,
+  permanent greedy 92/160, matched random 13/160, and matched greedy 15/160.
+  All win and matched scorecard gates pass; permanent announcements, idle,
+  recovery, and abandonment fail. V13 is rejected, dev-v9 is consumed, and
+  held-out-v4 remains sealed. Records/aggregate/report hashes are
+  `b4caeaba900f047a...`, `46f940a8361b4dad...`, and `a4dd2ecad7c485de...`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

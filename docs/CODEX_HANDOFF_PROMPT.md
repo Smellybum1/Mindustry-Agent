@@ -77,7 +77,11 @@ construction with a strict 9/10-win and `<0.25`-idle checkpoint gate. Two exact
 V13 runs select update 24 at 10/10 and idle 0.24980951; checkpoint
 `ff5c21bc6644d903...`, full-run digest `842ac034e91e84ae...`, and lineage
 `8aff4629be3090b3...` reproduce. Dev-v9 is frozen at roots `91001..91160` for
-one exclusive dual-scorecard confirmation. Held-out-v4 remains sealed.
+one exclusive dual-scorecard confirmation. It completes at V13 152/160,
+permanent random 62/160, permanent greedy 92/160, matched random 13/160, and
+matched greedy 15/160. All win and matched scorecards pass; permanent
+announcements, idle, recovery, and abandonment fail. V13 is rejected and
+held-out-v4 remains sealed. Precommit any successor before construction.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
