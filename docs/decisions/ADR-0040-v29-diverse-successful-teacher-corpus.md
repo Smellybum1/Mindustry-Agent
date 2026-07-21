@@ -78,3 +78,24 @@ and golden determinism including the negative replay. Config SHA-256 is
 `a40a8772ef5392fb20d1184c6f543b53efc431368fa5e7acd352bce5034bcd95`;
 adversary report SHA-256 is
 `cac12af7f0861deabb92733cd30c4451f9b58e5152d25c41193df0afe3ccd015`.
+
+## Outcome
+
+Replica A completed all 256 teacher episodes, 2,048 PPO episodes, and 32
+rehearsal-bearing updates, then failed the frozen construction gate. The
+precommitted teacher set yielded 37 wins and 860 eligible transitions. Eight
+warmup epochs presented 6,880 samples at mean cross-entropy `1.38471070` and
+changed model state
+`dbae4c605e52b962... -> 90d6b964b2d85666...`. The complete warmup report
+hashes to
+`582f362322e4aa43916f0e80c65bcfec3fe1e33e713e2bf590f02ad7e96fe736`.
+
+Rehearsal mean cross-entropy fell from `1.32362124` on update 1 to
+`0.46930411` on update 32. The complete 32-update report hashes to
+`b5c089bf4d85acd238f8c8cc3d0ed1b42e7916e877dbd3b8eb4b8c5391e0efcc`.
+No checkpoint exceeded 4/10 wins. The best-ranked row is update 5 with mean
+return `-10.68702`, mean core health `182.6`, and mean idle `0.21429663`.
+The complete frontier hashes to
+`26c6270efca0c85210fb4c4fb9486ecd6cfe9e4fc7fe71618c33bb811bb31c1a`.
+Replica B did not start, dev-v25 remained unopened, and held-out-v4 remained
+sealed. V29 is rejected before reusable preflight.

@@ -1319,10 +1319,19 @@ repository-evidence mapping used for the M6 audit is:
   and inference remain exact. All 256 outcomes are archived; only successful
   trajectories enter CE. Dev-v24 is retired unopened; dev-v25 freezes roots
   `251001..251160` and remains unopened; held-out-v4 stays sealed. V29
-  teacher outcomes/model work remain unobserved. All 44 exact-config
+  teacher outcomes/model work were unobserved at precommit. All 44 exact-config
   adversaries, 154 Python tests, pinned build, 5/5 candidate gate, smoke,
   determinism, and negative replay pass. Config/adversary hashes are
   `a40a8772ef5392fb...` and `cac12af7f0861dea...`.
+- V29 replica A completed all 256 teacher episodes and 32 rehearsal-bearing
+  updates but failed construction. The frozen teacher set yields 37 wins and
+  860 eligible transitions; warmup report hash is `582f362322e4aa43...`.
+  Rehearsal CE falls `1.32362124 -> 0.46930411`, with report hash
+  `b5c089bf4d85acd2...`, but no checkpoint exceeds 4/10. Best-ranked update 5
+  has mean return `-10.68702`, core health `182.6`, and idle `0.21429663`;
+  frontier hash is `26c6270efca0c852...`. Replica B did not start, dev-v25 is
+  retired unopened, held-out-v4 stays sealed, and V29 is rejected before
+  reusable preflight.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

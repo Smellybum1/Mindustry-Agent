@@ -1340,11 +1340,23 @@ eight-epoch warmup and one-epoch-per-update rehearsal. PPO remains exactly V28:
 the original 64 roots, 2,048 episodes, 32 updates, reward, runtime, model,
 optimizer values, RNG values, online coefficient, selection, and inference.
 Dev-v24 is retired unopened. Dev-v25 freezes disjoint roots `251001..251160` and
-remains unopened; held-out-v4 stays sealed. No teacher outcomes/model work have
-been observed. All 44 exact-config adversaries, 154 Python tests, pinned build,
+remains unopened; held-out-v4 stays sealed. No teacher outcomes/model work had
+been observed at precommit. All 44 exact-config adversaries, 154 Python tests,
+pinned build,
 5/5 candidate gate, smoke, determinism, and negative replay pass. Config/
 adversary hashes are `a40a8772ef5392fb...` and `cac12af7f0861dea...`. A committed
 packet is required before V29 collection/model work; M8.5 remains unmet.
+
+V29 replica A completed all 256 teacher episodes, 2,048 PPO episodes, and 32
+rehearsal-bearing updates but failed construction. The frozen teacher set yields
+37 wins and 860 eligible transitions; eight warmup epochs have mean CE
+`1.38471070` and report hash `582f362322e4aa43...`. Rehearsal CE falls
+`1.32362124 -> 0.46930411`, with report hash `b5c089bf4d85acd2...`, but no
+checkpoint exceeds 4/10. Best-ranked update 5 has mean return `-10.68702`, core
+health `182.6`, and idle `0.21429663`; complete frontier hash is
+`26c6270efca0c852...`. Replica B did not start, dev-v25 remained unopened and is
+retired, held-out-v4 stays sealed, and V29 is rejected before reusable preflight.
+M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
