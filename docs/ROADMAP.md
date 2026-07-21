@@ -743,9 +743,20 @@ Not the destination — the proof that learning plugs into the seam.
   episodes winning and the same final hash. The long gate completed 10,000
   in-process resets with zero hash mismatches, 0.93 ms median / 1.27 ms p95,
   338.3 MiB peak RSS below the 650 MiB ceiling, and no orphan process.
+
 ### 8.4 PPO selector + run manifests
 - Feed-forward first, recent-history features; run manifest per brief §21.1;
   checkpoints reproduce evaluation bit-exactly (eval mode deterministic).
+- **DONE (verified 2026-07-21):** the framework-neutral 8x37/56 feature adapter,
+  audited five-component reward, one learned selector seat, masked PPO trainer,
+  checkpoint chain, training JSONL, complete replay traces, and exact manifests
+  are implemented. All 27 reward adversaries pass before training. Two
+  independent pinned WSL2 runs selected update 3 with identical checkpoint
+  `0b2bd8ac904a9e21...`, replay digest `87ba273f376c47de...`, full-run digest
+  `56cc7b54bc9b01b5...`, and dev action/state aggregate
+  `52aecddf4c96bab6...`. The checkpoint is 0/10 on dev,
+  so M8.5 promotion has not begun and held-out remains sealed.
+
 ### 8.5 Promotion gate
 - Beats random-valid AND greedy-utility with CI separation on HELD-OUT variant
   seeds; scorecard v0 not worse than greedy-utility (a selector that wins
@@ -753,10 +764,10 @@ Not the destination — the proof that learning plugs into the seam.
   behavioural traces (task Gantt from event log) reviewed and archived.
 
 Exit criteria:
-- [ ] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
-- [ ] Training runs reproducible (manifest + seeds + lockfile)
+- [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
+- [x] Training runs reproducible (manifest + seeds + lockfile)
 - [ ] Learned seat CI-beats greedy-utility on held-out; scorecard non-regressing
-- [ ] No known reward exploit; adversarial scripts in CI-runnable form
+- [x] No known reward exploit; adversarial scripts in CI-runnable form
 
 ## Milestone 9: Multi-agent learning + partner robustness
 

@@ -152,6 +152,25 @@ The JSON evidence is `runs/m8-stress-reset.json`. Gate 5 is now complete for
 the governed one-environment-per-JVM runtime; no crash, hash drift, leak, or
 orphan was observed.
 
+## M8.4 final deterministic training gate — observed (2026-07-21)
+
+The accepted reverse-tile sleeping-building order and synchronous async runtime
+were remeasured with the same pinned WSL2/JDK/lock boundary:
+
+| JVMs | Aggregate ticks/sec | Aggregate real-time | Inference ms/batch |
+|---:|---:|---:|---:|
+| 1 | 13,497 | 225.0x | 0.259 |
+| 2 | 18,911 | 315.2x | 0.377 |
+| 4 | 22,507 | **375.1x** | 0.553 |
+
+All seven scripted episodes won. The following 10,000-reset cell recorded zero
+hash mismatches, 0.85 ms median / 1.20 ms p95 reset latency, 335.8 MiB peak RSS
+under the 650 MiB ceiling, and no orphan. Two independent M8.4 PPO runs then
+matched checkpoint, replay, dev action/state, and full-run digests exactly.
+These figures supersede
+the M8.3 shadow-path numbers for current runtime capacity; they do not establish
+policy quality or promotion.
+
 ## Environment (record for every run)
 
 | Field | Value |

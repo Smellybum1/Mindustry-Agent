@@ -763,6 +763,36 @@ repository-evidence mapping used for the M6 audit is:
   Next: M8.4 feature adapter, audited reward implementation, PPO selector, and
   exact run/checkpoint manifests. Held-out remains sealed.
 
+## Milestone 8.4 — one-seat PPO selector (DONE, verified 2026-07-21)
+
+- `selector_features_v1` exposes the pinned 8x37 candidate table, 56 scalar
+  context values, masks, forced-action attribution, and exact boundary history
+  without importing torch outside `mindustry_agents.training`.
+- `selector_reward_v1` implements all five audited components separately. The
+  noninteractive gate passes 27 adversarial cases before training.
+- The trainer runs one learned selector seat with two adaptive scripted seats,
+  writes chained checkpoints, per-transition training JSONL, complete fresh
+  replay JSONL, reward totals, scorecard, seeds/lock/runtime evidence, and exact
+  path-independent manifests.
+- Two independent pinned WSL2 runs selected update 3 with identical checkpoint
+  SHA `0b2bd8ac904a9e21...`, complete replay digest `87ba273f376c47de...`,
+  full-run reproducibility digest `56cc7b54bc9b01b5...`, and dev action/state
+  aggregate `52aecddf4c96bab6...`.
+- The selected checkpoint won **0/10 dev episodes**. M8.4 proves the learning
+  and reproducibility path; it does not meet M8.5 quality/promotion criteria.
+  Held-out has not been opened.
+- Determinism hardening keeps async phases on the simulation thread, seeds
+  physics, disables/joins pathfinder workers, canonicalizes building
+  proximity/sleep ordering, enumerates authoritative tile-backed buildings,
+  and removes headless placement RNG. All upstream edits are catalogued.
+- Final gates: 77 Python tests; Java/JUnit plus plugin compile green; smoke
+  green; 79-boundary cross-JVM determinism; 664-checkpoint/16,200-tick golden
+  and negative mutation green; 65-episode fixed/dev ladder green; 27 reward
+  adversaries; paired PPO reproducibility; 10,000 reset hashes with no drift,
+  0.85/1.20 ms median/p95, 335.8 MiB peak, no leak/orphan; 4-JVM throughput
+  375.1x real-time. Adaptive-v1 is 2/5 fixed and 9/10 dev in the current
+  descriptive ladder; held-out remains sealed.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),
@@ -771,7 +801,7 @@ repository-evidence mapping used for the M6 audit is:
   deterministic M5.1 candidate catalog. Board-to-skill wiring and measurable
   helper fulfilment, live reservations, lease recovery, announcements, and
   metrics are wired through M5.6; the shared M7.2 expert uses that surface.
-  Training reward design remains gated behind M8.
+  M8.4 selector rewards/training are implemented; M8.5 promotion remains gated.
 - **`agent-plugin`** is no longer a stub. Its scripted M6 path is implemented;
   future M10 human goals/overrides and study instrumentation remain outside M6.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
@@ -779,9 +809,10 @@ repository-evidence mapping used for the M6 audit is:
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,
   shared_policy_check}.py` plus the reservation/chaos/announcement checks).
   `evaluation` now contains the real dependency-free M6 summaries and M7.6
-  ladder/bootstrap machinery. `training` contains the M8.3 shadow inference
-  throughput gate but no optimizer or learned policy; `telemetry` remains a
-  documented skeleton.
+  ladder/bootstrap machinery. `training` contains the M8.3 throughput gate and
+  M8.4 feature/tensor adapter, audited reward, model, PPO optimizer,
+  checkpoint/replay, and manifest path; `telemetry` remains a documented
+  skeleton.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and
   reference schematic), plus the delayed-loadout adaptive probe. M5.1 turns

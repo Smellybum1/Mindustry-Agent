@@ -1,7 +1,7 @@
 # M8 design — one learned task-selector seat
 
-**Status:** M8.1 design accepted; implementation remains gated by M8.2/M8.3.
-**Feature schema:** `selector_features_v1`. **Reward schema:** `selector_reward_v1-draft`.
+**Status:** M8.1 design accepted; M8.4 implementation verified 2026-07-21.
+**Feature schema:** `selector_features_v1`. **Reward schema:** `selector_reward_v1`.
 
 ## Scope and success condition
 
@@ -84,7 +84,7 @@ separate `candidate_present[8]` marks real rows. Each row is:
   dependency count / 4, exclusive bit, semantic task already active bit, and
   semantic task owned by another seat bit.
 
-Every numeric term is finite and clipped to `[0,1]`. M8.4 must expose the raw
+Every numeric term is finite and clipped to `[0,1]`. M8.4 exposes the raw
 13-term feature breakdown and the two semantic-board bits at the same immutable
 observation boundary that produced the candidate; Python must not reconstruct
 them from prose or unstable ids. WAIT has a normal task-type row and zero-valued
@@ -158,9 +158,9 @@ or forced boundary. Same-tick claim losses remain ordinary typed action results.
 The trajectory retains structured task/game events so reward and scorecard
 derivations are replayable independently of the summed reward.
 
-## Reward v1 draft and hard gate
+## Reward v1 implementation and hard gate
 
-`selector_reward_v1-draft` contains only:
+`selector_reward_v1` contains only:
 
 - team milestone high-water rewards: working line `+1`, full defense readiness
   `+1`, and first clear of each of three scheduled waves `+2` (maximum `+8`);
@@ -177,9 +177,9 @@ Components are stored separately. Raw mining, delivery, building, repair,
 damage, survival time, messages, offers, task count, and utility score have zero
 reward. Discounting may value earlier real milestones, but high-water rewards
 cannot repeat after damage/rebuild or task-id regeneration. The detailed audit
-and adversarial cases live in `docs/REWARD_AUDIT.md`. Reward emission and PPO
-training are forbidden until every listed implementation test is green and the
-row status changes from `drafted-not-implemented`.
+and adversarial cases live in `docs/REWARD_AUDIT.md`. The 27-case gate now runs
+before either PPO run and all five rows are approved for M8.4. Promotion remains
+separately gated by M8.5 and ADR-0012.
 
 ## Run and checkpoint manifest
 
@@ -201,6 +201,16 @@ A checkpoint is loadable only with an exact feature/reward/model schema match.
 Evaluation mode disables sampling and optimizer state. The final held-out run
 stores its exact JSONL/aggregate manifests and cannot be rerun to select another
 checkpoint.
+
+M8.4 writes a per-transition training JSONL, two complete fresh-checkpoint
+replay traces, every update checkpoint, per-update dev selection evidence, and
+a path-independent full-run digest. Two independent pinned WSL2 runs selected
+update 3 with checkpoint SHA-256 `0b2bd8ac904a9e21...`, complete replay digest
+`87ba273f376c47de...`, full-run reproducibility digest
+`56cc7b54bc9b01b5...`, and dev action/state aggregate
+`52aecddf4c96bab6...`.
+The checkpoint won 0/10 dev episodes, so it is an implementation artifact, not
+a promotion candidate. Held-out remained sealed.
 
 ## M8.1 acceptance review
 

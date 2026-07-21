@@ -4,7 +4,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Project state
 
-- **What currently works** (M0–M6, M7.1–M7.6, and M8.1–M8.3 complete, verified
+- **What currently works** (M0–M6, M7.1–M7.6, and M8.1–M8.4 complete, verified
   2026-07-21): the
   fixed-step headless `rl-server` (reset/step/hash over loopback JSON, smoke +
   determinism + 1000-reset stress all green), the `agent-core` coordination
@@ -13,7 +13,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 55 pytest
+  crash-replacement, PettingZoo-shaped facade, vector collector; 77 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
   `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
   east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
@@ -156,13 +156,24 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   certified WSL2 result is 122.4×/212.7×/293.5× aggregate real-time at 1/2/4
   JVMs, with identical winning hashes. The same command passed 10,000 resets
   with zero drift, 338.3 MiB peak RSS, and no orphan.
-- **What is stubbed**: training rewards remain empty pending the M8 reward-audit
-  gate; learned training code and the
-  M10 human goal/override/study surface remain future work.
+- **M8.4 evidence**: the exact one-seat selector seam is implemented with
+  framework-neutral 8x37/56 features, five separately audited reward
+  components, masked feed-forward PPO, chained checkpoints,
+  training/replay JSONL, and complete run manifests. All 27 reward adversaries
+  pass. Two independent pinned runs match checkpoint `0b2bd8ac904a9e21...`,
+  complete replay `87ba273f376c47de...`, full-run digest
+  `56cc7b54bc9b01b5...`, and dev action/state aggregate
+  `52aecddf4c96bab6...`. The selected checkpoint is 0/10 on dev and is not
+  promotable; held-out remains sealed. Current final capacity is 375.1x at four
+  JVMs and 10,000 resets with zero drift/no leak/no orphan. The golden is 664
+  checkpoints over 16,200 ticks and two wins.
+- **What is stubbed**: M8.5 ablation/promotion logic and the M10 human
+  goal/override/study surface remain future work. M8.4 training/rewards are real.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
-- **Next roadmap item**: M8.4, implement the pinned selector feature adapter,
-  audited rewards, PPO seat, and exact run/checkpoint manifests.
+- **Next roadmap item**: M8.5, improve/freeze a candidate using train/dev only,
+  run required ablations, then open held-out exactly once only when every
+  promotion precondition is satisfied.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -180,18 +191,19 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (55 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (77 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
-| `make training-gate` | On WSL2 with pinned `UV`/`JAVA`, reconstructs the RL environment, runs the 1/2/4-JVM shadow-inference collector gate, then 10,000 resets. Current 4-JVM result 293.5× real-time; zero reset drift/leak/orphans; ends `TRAINING-GATE OK`. Verified 2026-07-21. |
-| `make test-java` | `gradlew agent-core:test` (108 tests) + compile checks for `rl-server`/`agent-plugin`; ends `test-java: OK`, exit 0. Verified 2026-07-21. |
+| `make training-gate` | On WSL2 with pinned `UV`/`JAVA`, reconstructs the RL environment, runs the 1/2/4-JVM shadow-inference collector gate, then 10,000 resets. Current 4-JVM result 375.1x real-time; zero reset drift/leak/orphans; ends `TRAINING-GATE OK`. Verified 2026-07-21. |
+| `bash scripts/train-selector.sh` | Runs 27 reward adversaries, two independent train/dev PPO runs, two complete fresh-checkpoint replays, and exact manifest comparison. Current checkpoint `0b2bd8ac...`, full digest `56cc7b54...`, dev 0/10; ends `TRAIN-SELECTOR OK`. Held-out is not read. |
+| `make test-java` | Runs the `agent-core` (108 tests) and `rl-server` JUnit suites plus the `agent-plugin` compile check; ends `test-java: OK`, exit 0. Verified 2026-07-21. |
 | `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-21. |
-| `make determinism` | Runs the legacy 79-boundary cross-process replay, reset purity with deterministic unique episode IDs, seed sensitivity, then the checked-in golden (670 checkpoints / 16,200 ticks / two wins). Exit 0. Verified 2026-07-21; `REPLAY_NEGATIVE=1` also passes. |
+| `make determinism` | Runs the legacy 79-boundary cross-process replay, reset purity with deterministic unique episode IDs, seed sensitivity, then the checked-in golden (664 checkpoints / 16,200 ticks / two wins). Exit 0. Verified 2026-07-21; `REPLAY_NEGATIVE=1` also passes. |
 | `make candidate-policy-check` | Runs the pure public greedy selector over all five pinned seeds; requires 5/5 wins through the ordinary candidate/mask/task-action seam. Verified 2026-07-21. |
 | `make coordination-parity` | Compares two complete recorded decision sequences, runs the fixed-step shared expert, then boots the no-port plugin and requires identical live-opening digest/count. Current result: 356 recorded decisions; live digest `1571…a6c2`, 43 selections. Verified 2026-07-21. |
 | `make adaptive-planning-check` | Runs adaptive-v1 and frozen M6 on fixed+delayed-loadout scenarios. Requires adaptive 2/2 wins, fixed frozen win, probe frozen loss, all four decision-event reasons, lower mean idle fraction (0.125 < 0.878), and lower defense-ready tick (817 < 5251). Verified 2026-07-21. |
 | `make scenario-variation-check` | Validates all scenario-v2 axes, disjoint seed governance, same-seed repeated/fresh-JVM reset and idle-through-wave hashes, frozen-dev adaptive survival, and an undefended v2 pathing/loss run. Current result: 8/10 wins (80%); held-out sets are refused. Verified 2026-07-21. |
-| `make evaluate-ladder` | Runs 65 fixed/dev episodes across five versioned baselines, writes episode JSONL plus deterministic bootstrap aggregates, and leaves held-out sealed. Certified one-JVM result is byte-repeatable; adaptive-v1 is 5/5 fixed and 8/10 dev. Verified 2026-07-21. |
+| `make evaluate-ladder` | Runs 65 fixed/dev episodes across five versioned baselines, writes episode JSONL plus deterministic bootstrap aggregates, and leaves held-out sealed. Current adaptive-v1 result is 2/5 fixed and 9/10 dev. Verified 2026-07-21. |
 | `make stress-reset` | Boots one persistent JVM, resets 1000× (same seed) with no restart; latest M7.1 run: zero hash mismatches, median 1.31 ms, p95 2.60 ms, peak 298.3 MiB, no leak; ends `STRESS-RESET OK`, exit 0. Verified 2026-07-20. |
 | `make benchmark` | Measures single-env engine ticks/sec + reset latency, protocol overhead, and 1/2/4-JVM aggregate scaling; prints a markdown report; ends `BENCHMARK OK`, exit 0. ~5 s of stepping + JVM boots, well under 10 min. Verified 2026-07-20. |
 | `make scripted-demo` | Runs adaptive-v1 and the legal post-reservation resource-pressure fixture; both end at tick 8100, and the fixture records a real `resources_short_replan`. Verified 2026-07-21. |
@@ -317,15 +329,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Next five issues
 
-**Authoritative work queue: `docs/ROADMAP.md` M8 item 8.4.
+**Authoritative work queue: `docs/ROADMAP.md` M8 item 8.5.
 Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M8.4: one learned selector seat.** Implement the pinned adapter/rewards,
-   PPO, manifests, and deterministic checkpoint evaluation.
-2. **M8.5: ablations + held-out promotion gate.** Run held-out only once the
-   policy and code are frozen.
+1. **M8.5: improve/freeze candidate and run ablations.** Use train/dev only;
+   the current 0/10 dev checkpoint is not eligible for promotion.
+2. **M8.5: held-out promotion gate.** Open held-out exactly once only after the
+   policy/code and all comparator/scorecard preconditions are frozen.
 3. **M9.1: M9 design gate.** Begin only after the single learned seat promotes.
 4. **M9.2: partner population.** Begin only after the M9 design gate.
 5. **M9.3: communication ablation.** Begin only after partner population exists.

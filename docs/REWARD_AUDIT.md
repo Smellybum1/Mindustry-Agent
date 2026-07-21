@@ -1,7 +1,8 @@
 # Reward audit
 
-**Status: no rewards implemented yet.** This document is the standing audit for
-every reward component. Per brief §17.5/§28, no reward component may influence
+**Status: selector reward v1 implemented and adversarially verified.** This
+document is the standing audit for every reward component. Per brief §17.5/§28,
+no reward component may influence
 training until it has an entry here with: definition, scale, state variables,
 intended behaviour, **at least three exploit hypotheses**, automated adversarial
 tests, and example graphs/events.
@@ -62,11 +63,12 @@ Each of these must be mitigated before the corresponding signal is used.
 
 Adversarial tests for each row land before reward activation (roadmap M8.4).
 
-## M8 selector reward v1 draft
+## M8 selector reward v1
 
-No component below is implemented or approved for training. The definitions are
-complete enough to implement adversarial tests first. `drafted-not-implemented`
-is a hard stop, not an approval state.
+All five components below are implemented by `SelectorReward`, stored
+separately in trajectories/manifests, and approved for M8.4 training only. The
+27-case `reward_adversary` gate runs before either independent PPO run. This is
+not an M8.5 promotion approval and does not authorize held-out evaluation.
 
 ### `reward.team.milestone_highwater`
 
@@ -81,7 +83,7 @@ is a hard stop, not an approval state.
 | Exploit hypothesis 3 | Manipulate enemy count or task events to fake a wave clear. Mitigation: require a scheduled native wave to have spawned and the authoritative enemy group to transition nonzero→zero; task completion/messages never count. |
 | Adversarial tests | `reward_adversary --case rebuild-loop`; `--case wait-only`; `--case fake-wave-clear`. Assert each high-water id pays once, WAIT-only return is lower, and unscheduled/enemy-free transitions pay zero. |
 | Telemetry key | `reward.team.milestone_highwater` plus `reward.team.milestone_ids[]`. |
-| Status | drafted-not-implemented |
+| Status | implemented-approved-m8.4; adversaries pass 2026-07-21 |
 
 ### `reward.team.terminal_outcome`
 
@@ -96,7 +98,7 @@ is a hard stop, not an approval state.
 | Exploit hypothesis 3 | Achieve a minimal win while sacrificing teammate quality/core margin. Mitigation: scorecard CI non-regression is a separate hard promotion gate; terminal reward cannot override it. |
 | Adversarial tests | `reward_adversary --case survival-only`; `--case forced-truncation`; `--case reckless-minimal-win`. Assert no nonterminal survival pays, truncation equals loss, and the reckless trace fails promotion despite reward. |
 | Telemetry key | `reward.team.terminal_outcome`. |
-| Status | drafted-not-implemented |
+| Status | implemented-approved-m8.4; adversaries pass 2026-07-21 |
 
 ### `reward.team.unresolved_tick_cost`
 
@@ -111,7 +113,7 @@ is a hard stop, not an approval state.
 | Exploit hypothesis 3 | Superficially trip readiness then abandon the objective to stop cost. Mitigation: high-water trigger uses physical predicates and terminal/scorecard gates punish subsequent collapse. |
 | Adversarial tests | `reward_adversary --case early-suicide`; `--case chunk-size`; `--case readiness-then-abandon`. Assert early/late losses have equal tick-cost horizon, chunkings match exactly, and superficial task events do not stop cost. |
 | Telemetry key | `reward.team.unresolved_tick_cost`, `reward.team.charged_ticks`. |
-| Status | drafted-not-implemented |
+| Status | implemented-approved-m8.4; adversaries pass 2026-07-21 |
 
 ### `reward.penalty.invalid_action`
 
@@ -126,7 +128,7 @@ is a hard stop, not an approval state.
 | Exploit hypothesis 3 | Use invalid probes to gain state or an alternate valid action. Mitigation: no retry or new observation; exactly WAIT and one structured diagnostic. |
 | Adversarial tests | `reward_adversary --case invalid-spam`; `--case mask-corruption`; `--case invalid-probe`. Assert cap/fallback, environment fault classification, and no extra action/state transition. |
 | Telemetry key | `reward.penalty.invalid_action`, `reward.invalid_action_count`. |
-| Status | drafted-not-implemented |
+| Status | implemented-approved-m8.4; adversaries pass 2026-07-21 |
 
 ### `reward.penalty.abandonment_liability`
 
@@ -141,7 +143,7 @@ is a hard stop, not an approval state.
 | Exploit hypothesis 3 | Cause a forced safety/death/human abandon to be charged or farmed. Mitigation: reason allowlist and accepted-selection attribution; excluded reasons always pay zero. |
 | Adversarial tests | `reward_adversary --case claim-abandon-churn`; `--case blocked-never-release`; `--case forced-abandon-exclusions`. Assert capped liability, safety recovery, and exact zero for exclusions. |
 | Telemetry key | `reward.penalty.abandonment_liability`, `reward.abandonment_reason_counts`. |
-| Status | drafted-not-implemented |
+| Status | implemented-approved-m8.4; adversaries pass 2026-07-21 |
 
 ## Cross-component adversarial matrix
 
@@ -158,6 +160,9 @@ These CI-runnable cases are mandatory before changing any status to approved:
 | Build/rebuild loop | Repeatedly damage/rebuild an already credited plan. | High-water id pays exactly once and repair/build quantities pay zero. |
 | Chunk manipulation | Replay one action trace using different requested step chunk sizes. | Per-component rewards and charged tick totals match exactly. |
 
-The implementation must emit a machine-readable report containing action/state
+The implementation emits `runs/m8-selector-v1/reward-adversaries.json` with
+27 passing component and cross-component cases, including the eight mandatory
+matrix rows plus mask corruption, early suicide, readiness loss, unsafe
+telemetry, and farming exclusions. It contains action/state
 hashes, structured events, every component, total return, and pass/fail reason.
 Reward totals alone are insufficient evidence.
