@@ -385,6 +385,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   Config hash is `4d9911a8f6dda1bb...`; adversary report is
   `23262f5332cc9f52...`. Dev-v14 is retired unopened; dev-v15 is frozen at
   disjoint roots `151001..151160`; held-out-v4 remains sealed.
+- **V19 rejected on reusable dev-v1**: two pinned replicas reproduce update 24
+  at 9/10 construction wins and mean idle 0.09911830. Checkpoint
+  `1a9376a331b3aadc...`, model state `510e07d964c84de0...`, replay
+  `75bf5fb9cc34d5a6...`, full run `4d15c3a728f33d4c...`, and lineage
+  `121a7400b241ce77...` reproduce. Idle-cap hits fall from V18's 8/10 selected
+  dev episodes to 2/10 and the permanent-idle gap improves to 0.05480651, but
+  remains definitively worse (95% CI +0.02786525..+0.08510262). Recovery stays
+  uncertain against both scorecards and non-forced abandonment regresses by
+  0.00131579. Dev-v15 is unopened, held-out-v4 is sealed, and M8.5 remains
+  unmet. Preflight report SHA-256 is `cc7bfa34d06b4007...`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -547,14 +557,14 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run V19 exactly twice, sequentially.** Use
-   `configs/training/m8-selector-v19-unsaturated-idle-gradient.json`, preserve
-   the pretraining commit as lineage, and require exact checkpoint/frontier,
-   model-state, replay, and full-run reproducibility before evaluation.
-2. **Use corrected preflight parity.** Run reusable dev-v1 against the frozen
-   permanent records and both permanent-greedy and matched-greedy scorecards.
-   Open dev-v15 exactly once only if every reusable gate passes. Never inspect
-   dev-v14 or held-out-v1/v2/v3 outcomes for tuning; held-out-v4 remains sealed.
+1. **Choose V20 from reusable train/dev evidence only.** V19 improved cap
+   saturation and permanent idle but still failed idle, recovery, and
+   abandonment gates. Precommit one causal hypothesis and a fresh disjoint
+   dev-v16 before training; dev-v15 is retired unopened.
+2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
+   and both permanent-greedy and matched-greedy scorecards before any one-way
+   confirmation. Never inspect dev-v14/dev-v15 or held-out-v1/v2/v3 outcomes
+   for tuning; held-out-v4 remains sealed.
 3. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 4. **M9.2 partner population** remains behind M9.1.

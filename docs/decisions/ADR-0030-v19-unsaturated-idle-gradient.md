@@ -74,3 +74,14 @@ Pretraining validation passes all 44 exact-config adversaries, the full
 `4d9911a8f6dda1bb8c6a6f6a38f82bc4f64d18836a399e860ca1941db50f733f`;
 adversary report SHA-256 is
 `23262f5332cc9f52b9c1a58e835f6059075da5f1f7686771216f51e4df2e33f9`.
+
+The two pinned replicas reproduce exactly and select update 24 at 9/10 wins
+with mean idle 0.09911830. Checkpoint `1a9376a331b3aadc...`, model state
+`510e07d964c84de0...`, replay `75bf5fb9cc34d5a6...`, full run
+`4d15c3a728f33d4c...`, and direct lineage `121a7400b241ce77...` match. Cap hits
+fall from V18's 8/10 selected dev episodes to 2/10 and the reusable
+permanent-idle gap improves to 0.05480651, but remains definitively worse (95%
+CI +0.02786525..+0.08510262). Recovery is uncertain against both scorecards and
+non-forced abandonment regresses by 0.00131579. Dev-v15 therefore remains
+unopened and held-out-v4 remains sealed. Reusable preflight report SHA-256 is
+`cc7bfa34d06b400701530acc47fc976c9ec18af0492035ee29d90f8fc5edc16b`.

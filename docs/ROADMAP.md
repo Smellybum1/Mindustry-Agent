@@ -1061,6 +1061,17 @@ pass. Dev-v14 is retired unopened; dev-v15 freezes 160 disjoint roots
 `151001..151160` for one confirmation only after reusable dual scorecards pass.
 Held-out-v4 remains sealed.
 
+V19's two pinned 2,048-episode replicas reproduce exactly and select update 24
+at 9/10 construction wins with mean idle 0.09911830. Checkpoint
+`1a9376a331b3aadc...`, model state `510e07d964c84de0...`, replay
+`75bf5fb9cc34d5a6...`, full run `4d15c3a728f33d4c...`, and direct lineage
+`121a7400b241ce77...` reproduce. The longer cap reduces selected-dev saturation
+from 8/10 to 2/10 episodes and improves permanent idle from a 0.06547793 gap to
+0.05480651, but it remains definitively worse (95% CI
++0.02786525..+0.08510262). Recovery remains uncertain against both scorecards,
+and non-forced abandonment regresses slightly by 0.00131579. Dev-v15 remains
+unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
