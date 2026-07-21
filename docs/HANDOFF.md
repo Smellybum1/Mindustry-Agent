@@ -551,6 +551,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   dev-v22 is retired unopened, and held-out-v4 stays sealed. The final `0.20`
   step reversed V25's early gain, so no coefficient-only successor is
   authorized.
+- **V27 precommit**: ADR-0038 returns to V24's exact `0.05`
+  online-teacher construction and adds one separate success-only teacher-
+  trajectory warmup before PPO. A train-v2 census found 5/64 adaptive wins and
+  121 unforced labels on those winning sequences; eight CE epochs present 968
+  samples without consuming ordinary action/PPO RNG state. Losing trajectories
+  remain archived evidence. Dev-v22 is retired unopened; dev-v23 freezes roots
+  `231001..231160` and remains unopened; held-out-v4 stays sealed. Complete
+  pretraining gates pass: 44 exact-config adversaries, 152 Python tests, pinned
+  build, 5/5 candidate gate, smoke, determinism, and negative replay. Config/
+  adversary hashes are `189ef43857452494...` and `d1c1da02ed7d3a4e...`.
+  Commit this packet before replica A.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).

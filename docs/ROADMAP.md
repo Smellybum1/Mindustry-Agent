@@ -1279,6 +1279,21 @@ sealed. The final `0.20` step reverses V25's early gain, so the fixed full-
 boundary teacher-strength line is closed. No coefficient-only successor is
 authorized; M8.5 remains unmet.
 
+ADR-0038 precommits V27 as a trajectory-quality intervention rather than a
+coefficient step. It returns to V24's exact low `0.05` online-teacher recipe and
+adds one separately seeded adaptive-v1 cycle over all 64 train-v2 roots before
+PPO. The current runtime teacher wins 5/64; only the 121 unforced transitions
+from those successful complete sequences enter eight deterministic CE epochs
+(968 sample presentations), while all episode summaries remain reproducibility
+evidence. Reward, runtime, model, PPO budget, ordinary RNGs, roots, checkpoint
+selection, and evaluation remain exact. Dev-v22 is retired unopened. Dev-v23
+freezes disjoint roots `231001..231160` and remains unopened; held-out-v4 stays
+sealed. No V27 model work preceded the precommit. Complete pretraining gates
+pass: 44 exact-config adversaries, 152 Python tests, pinned build, 5/5 candidate
+gate, smoke, determinism, and negative replay. Config/adversary hashes are
+`189ef43857452494...` and `d1c1da02ed7d3a4e...`. A committed packet is required
+before replica A; M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

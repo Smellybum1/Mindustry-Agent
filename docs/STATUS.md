@@ -1271,6 +1271,18 @@ repository-evidence mapping used for the M6 audit is:
   is retired, and held-out-v4 stays sealed. The `0.20` coefficient reversed
   V25's early gain, so the fixed full-boundary teacher-strength line is closed
   and no further coefficient-only successor is authorized.
+- ADR-0038 precommits V27 as a non-coefficient successor based exactly on V24.
+  It keeps the low online teacher coefficient `0.05`, reward, runtime, roots,
+  model, PPO budget, ordinary RNGs, and selection fixed. Before PPO, adaptive-v1
+  controls one separately seeded train-v2 cycle; only the 121 unforced labels
+  from its five winning episodes enter eight deterministic CE epochs. All 64
+  episode summaries remain evidence. Warmup RNGs are `8605`/`8606`, and the
+  report plus pre/post model hashes join full-run reproducibility. Dev-v22 is
+  retired unopened; dev-v23 freezes disjoint roots `231001..231160` and remains
+  unopened; held-out-v4 stays sealed. No V27 model work preceded the precommit.
+  All 44 exact-config adversaries, 152 Python tests, pinned build, 5/5 candidate
+  gate, smoke, determinism, and negative replay pass. Config/adversary hashes
+  are `189ef43857452494...` and `d1c1da02ed7d3a4e...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
