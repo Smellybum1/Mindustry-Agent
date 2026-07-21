@@ -135,6 +135,12 @@ one tick was requested with stop-on-event enabled, the server applies the
 abandonment, advances exactly one fixed engine tick, and returns the new
 decision boundary so the agent can replan immediately.
 
+An automatically elapsed `WAIT` assignment emits structured `RELEASE`, reopens
+the board task, and is also authoritative `task_terminal` for the assignment.
+With stop-on-event enabled the response returns on that release tick; it must
+not advance until an unrelated wave, damage, or task event while the seat has no
+assignment.
+
 **`agent_actions[]` entry (M3, additive — docs/M3_DESIGN.md D5):**
 
 ```json

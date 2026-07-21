@@ -1122,6 +1122,18 @@ repository-evidence mapping used for the M6 audit is:
   +0.02812093..+0.08298135). Permanent announcements/duplicates and both
   recovery comparisons are uncertain. Dev-v16 remains unopened, held-out-v4
   remains sealed, and M8.5 remains unmet.
+- Reconstructing assignment occupancy exactly from V20's reusable structured
+  `START_TASK`/terminal events exposed a runtime boundary defect rather than a
+  reward gap: successful `WAIT` elapsed into `RELEASE`, cleared the assignment,
+  but did not increment the decision revision. Individual gaps reached 2,086
+  idle ticks while stop-on-event waited for an unrelated boundary. Successful
+  automatic wait release now marks assignment `task_terminal`; the board task
+  remains correctly `OPEN`. The live check proves the deterministic 60-tick
+  wait lifecycle returns on its release tick (61 advanced engine ticks including
+  initialization) and matches byte-for-byte across fresh JVMs. The pinned build,
+  141 Python tests, smoke, determinism, and unchanged 664-checkpoint golden pass.
+  Existing checkpoints were trained on the old decision sequence, so M8.5 still
+  requires a governed from-scratch successor.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

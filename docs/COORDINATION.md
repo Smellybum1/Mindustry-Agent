@@ -249,6 +249,11 @@ bundle. Event-driven stepping still advances one fixed engine tick before
 returning, then exposes that boundary immediately; it must not leave the newly
 idle agent waiting for an unrelated later event.
 
+The same immediate-replan rule applies when the `WAIT` skill succeeds. The
+board emits authoritative `RELEASE` and reopens the reusable wait task, while
+the adapter marks the ended assignment as `task_terminal`. The live reservation
+check requires the stop-on-event response to end on that exact release tick.
+
 ## Utility scaffold (brief §11.1)
 
 `HandTunedUtility` implements the additive utility:

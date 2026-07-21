@@ -851,7 +851,9 @@ public final class CoordinationAdapter{
         }
 
         if(assignment.spec.type() == TaskType.WAIT){
-            board.release(assignment.taskId, AgentId.of(agent.index), tick);
+            OpResult released = board.release(assignment.taskId,
+                AgentId.of(agent.index), tick);
+            if(released.ok()) markDecision("task_terminal");
         }else{
             OpResult completed = board.complete(assignment.taskId,
                 AgentId.of(agent.index), tick);

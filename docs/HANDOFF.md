@@ -414,6 +414,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   duplicates, and recovery are uncertain; matched recovery is also uncertain.
   Dev-v16 is unopened, held-out-v4 is sealed, and M8.5 remains unmet. Preflight
   report SHA-256 is `a4ae30d0be2a6ec2...`.
+- **Automatic-WAIT boundary correction**: exact structured-event reconstruction
+  of all ten reusable V20 episodes matches the runtime idle counters and locates
+  the largest gaps after `RELEASE:WAIT`; individual seats remained unassigned
+  for up to 2,086 ticks. `WAIT` success released and cleared the assignment but
+  did not advance the coordination revision, so stop-on-event waited for an
+  unrelated boundary. A successful automatic wait release now marks assignment
+  `task_terminal` while preserving the authoritative board `RELEASE` and `OPEN`
+  state. The live check returns on the release tick after the deterministic
+  61-tick lifecycle and reproduces byte-identically across JVMs. Pinned build,
+  141 Python tests, smoke, determinism, and the unchanged 664-checkpoint golden
+  pass. Existing candidates retain their recorded results; the corrected
+  decision sequence requires a governed from-scratch successor.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -576,10 +588,10 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Choose V21 from reusable train/dev evidence only.** V20 materially changed
-   teacher agreement but left permanent idle unchanged, so close the teacher
-   coefficient line. Precommit one new causal hypothesis and a fresh disjoint
-   dev-v17 before any model work; dev-v16 is retired unopened.
+1. **Precommit V21 under the corrected automatic-WAIT boundary.** Hold the
+   learning recipe to a previously governed candidate, record a new runtime
+   contract, and freeze fresh disjoint dev-v17 before any model work. V20 closed
+   the teacher-coefficient line; dev-v16 is retired unopened.
 2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
    confirmation. Never inspect dev-v14/dev-v15 or held-out-v1/v2/v3 outcomes

@@ -1095,6 +1095,20 @@ worse (95% CI +0.02812093..+0.08298135); permanent announcements/duplicates
 and both recovery comparisons are uncertain. Dev-v16 remains unopened,
 held-out-v4 remains sealed, and M8.5 remains unmet.
 
+Exact reconstruction of assignment occupancy from all ten reusable V20 traces
+matches the runtime idle counters and identifies a scheduling defect: automatic
+`WAIT` success emitted structured `RELEASE` and cleared the assignment without
+advancing the coordination decision revision. Stop-on-event could then leave a
+seat idle until an unrelated event; observed gaps reached 2,086 ticks. A
+successful wait release now marks the ended assignment `task_terminal` while
+the reusable board task correctly returns to `OPEN`. The live reservation gate
+requires the response to stop on the release tick after the deterministic
+61-tick lifecycle and reproduces byte-identically across fresh JVMs. The pinned
+build, 141 Python tests, smoke, determinism, and unchanged 664-checkpoint golden
+pass. Previously trained checkpoints keep their recorded results; V21 must be a
+governed from-scratch retrain under the corrected decision sequence, with a new
+runtime contract and unopened dev-v17 precommitted before model work.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

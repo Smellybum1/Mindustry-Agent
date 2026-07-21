@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import traceback
 from typing import Any
 
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
@@ -202,6 +203,40 @@ def _run_once(port: int, seed: int, java: str, verbose: bool) -> tuple[str, dict
         assert all(task["status"] == "COMPLETED" for task in supply_tasks)
         assert all(task["reservation_count"] == 0 for task in supply_tasks)
 
+        wait_candidate = next(
+            candidate
+            for candidate in observations[0]["task_candidates"]
+            if candidate["task_type"] == "WAIT"
+        )
+        wait_selected = step(
+            actions=[
+                {
+                    "agent_id": 0,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": int(wait_candidate["index"]),
+                    },
+                }
+            ]
+        )
+        assert wait_selected.action_results[0]["accepted"] is True
+        wait_task_id = str(wait_selected.action_results[0]["task_id"])
+        wait_finished = step(120, stop_on_decision_event=True)
+        assert wait_finished.decision_boundary["triggered"] is True
+        assert wait_finished.decision_boundary["advanced_ticks"] == 61
+        assert "task_terminal" in wait_finished.decision_boundary["reasons"]
+        wait_release = next(
+            event
+            for event in wait_finished.task_events
+            if event["task_id"] == wait_task_id and event["act"] == "RELEASE"
+        )
+        assert int(wait_release["tick"]) == wait_finished.tick
+        wait_task = next(
+            task for task in wait_finished.task_board if task["task_id"] == wait_task_id
+        )
+        assert wait_task["status"] == "OPEN"
+        assert wait_task["owner_agent_id"] == -1
+
         summary = {
             "winner": expected_winner,
             "conflict_tick": int(conflict["tick"]),
@@ -234,6 +269,7 @@ def main(argv=None) -> int:
         first, summary = _run_once(args.port, args.seed, args.java, True)
         second, _ = _run_once(args.port, args.seed, args.java, False)
     except Exception as exc:
+        traceback.print_exc()
         print(f"RESERVATION FAIL: {exc}", file=sys.stderr)
         return 1
 
