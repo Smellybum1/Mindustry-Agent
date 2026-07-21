@@ -628,6 +628,7 @@ class TestPpoSelector(unittest.TestCase):
             masked_logits=[1.0000001],
             log_probability=-0.5000001,
             value_prediction=0.2500001,
+            teacher_candidate_diagnostics={"task_type": "SUPPLY_TURRET"},
             task_events=[{"message_id": 1}],
         )
 

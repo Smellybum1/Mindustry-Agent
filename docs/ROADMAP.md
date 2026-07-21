@@ -1072,6 +1072,18 @@ from 8/10 to 2/10 episodes and improves permanent idle from a 0.06547793 gap to
 and non-forced abandonment regresses slightly by 0.00131579. Dev-v15 remains
 unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
 
+ADR-0031 closes the idle-cap line and precommits V20 from reusable train/dev
+evidence. The all-adaptive teacher wins 9/10 with a much smaller permanent-idle
+gap of 0.01737902 and zero abandonment difference, while V19 disagrees with its
+action on 529/607 unforced decisions. V20 holds V19 exact except
+`teacher_imitation_coefficient 0.0 -> 0.05` at every unforced boundary. This is
+well below V10's failed `1.0` coefficient and changes training loss only, not
+reward or inference. Teacher candidate diagnostics are added to traces without
+entering action/state digests. All 44 exact adversaries, 141 Python tests,
+smoke, and determinism pass. Dev-v15 is retired unopened; dev-v16 freezes 160
+disjoint roots `161001..161160` for one confirmation only after reusable dual
+scorecards pass. Held-out-v4 remains sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

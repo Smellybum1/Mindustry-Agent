@@ -395,6 +395,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   uncertain against both scorecards and non-forced abandonment regresses by
   0.00131579. Dev-v15 is unopened, held-out-v4 is sealed, and M8.5 remains
   unmet. Preflight report SHA-256 is `cc7bfa34d06b4007...`.
+- **V20 precommit**: ADR-0031 closes the cap line. Reusable all-adaptive wins
+  9/10 with permanent-idle gap 0.01737902 and zero abandonment difference;
+  V19 disagrees on 529/607 unforced decisions. V20 keeps V19 exact except a
+  low full-boundary teacher coefficient `0.05`, far below V10's failed `1.0`.
+  Teacher candidate diagnostics are behavior-neutral and excluded from
+  action/state digests. All 44 exact adversaries, 141 Python tests, smoke, and
+  determinism pass. Config hash is `22604e484c82601a...`; adversary report is
+  `b72ab95c45ec418f...`. Dev-v15 is retired unopened; dev-v16 is frozen at
+  disjoint roots `161001..161160`; held-out-v4 remains sealed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -557,10 +566,10 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Choose V20 from reusable train/dev evidence only.** V19 improved cap
-   saturation and permanent idle but still failed idle, recovery, and
-   abandonment gates. Precommit one causal hypothesis and a fresh disjoint
-   dev-v16 before training; dev-v15 is retired unopened.
+1. **Run V20 exactly twice, sequentially.** Use
+   `configs/training/m8-selector-v20-low-teacher-regularized.json`, preserve the
+   pretraining commit as lineage, and require exact checkpoint/frontier,
+   model-state, replay, and full-run reproducibility before evaluation.
 2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
    confirmation. Never inspect dev-v14/dev-v15 or held-out-v1/v2/v3 outcomes

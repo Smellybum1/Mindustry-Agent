@@ -494,6 +494,9 @@ def rollout_episode(
                 "action_index": selected_index,
                 "teacher_action": scripted_action["task_action"],
                 "teacher_action_index": teacher_index,
+                "teacher_candidate_diagnostics": _selected_candidate_diagnostics(
+                    observations[LEARNED_SEAT]["task_candidates"], teacher_index
+                ),
                 "selected_candidate_diagnostics": _selected_candidate_diagnostics(
                     observations[LEARNED_SEAT]["task_candidates"], selected_index
                 ),

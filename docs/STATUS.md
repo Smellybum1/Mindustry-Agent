@@ -1103,6 +1103,15 @@ repository-evidence mapping used for the M6 audit is:
   uncertain against both scorecards and non-forced abandonment regresses
   slightly by 0.00131579. Dev-v15 remains unopened, held-out-v4 remains sealed,
   and M8.5 remains unmet.
+- ADR-0031 closes the idle-cap line and precommits V20 from reusable evidence.
+  The all-adaptive teacher wins 9/10 with permanent-idle gap 0.01737902 and zero
+  abandonment difference, while V19 disagrees with it on 529/607 unforced
+  decisions. V20 keeps V19 exact except a low full-boundary teacher coefficient
+  `0.05`; unlike V10's failed `1.0`, this is bounded at the V4-proven scale.
+  Behavior-neutral teacher candidate diagnostics are archived without entering
+  action/state digests. All 44 exact adversaries, 141 Python tests, smoke, and
+  determinism pass. Dev-v15 is retired unopened; dev-v16 freezes disjoint roots
+  `161001..161160`. Held-out-v4 remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

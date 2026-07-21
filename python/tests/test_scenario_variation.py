@@ -640,3 +640,49 @@ def test_v19_unsaturated_idle_gradient_and_dev_v15_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v15"] == path.name
+
+
+def test_v20_low_teacher_regularization_and_dev_v16_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v16.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v16"
+    assert confirmation["seed_set_version"] == 16
+    assert confirmation["seeds"] == list(range(161001, 161161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v19 = json.loads(
+        (training_dir / "m8-selector-v19-unsaturated-idle-gradient.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    v20 = json.loads(
+        (training_dir / "m8-selector-v20-low-teacher-regularized.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert v20.pop("candidate_version") == "v20"
+    assert v20.pop("quality_intervention") == (
+        "unsaturated_idle_plus_low_full_teacher_v1"
+    )
+    assert v20.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v16.json"
+    )
+    assert v19.pop("candidate_version") == "v19"
+    assert v19.pop("quality_intervention") == "unsaturated_idle_gradient_v1"
+    assert v19.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v15.json"
+    )
+    assert v20.pop("teacher_imitation_coefficient") == 0.05
+    assert v19.pop("teacher_imitation_coefficient") == 0.0
+    assert v20["optimizer_ppo"].pop("teacher_imitation_coefficient") == 0.05
+    assert v19["optimizer_ppo"].pop("teacher_imitation_coefficient") == 0.0
+    assert v20 == v19
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v16"] == path.name
