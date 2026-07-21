@@ -828,6 +828,12 @@ ADR-0014 the attempt is consumed, V6 is rejected, and dev-v2 will not be rerun.
 The control path is fixed and regression-tested for future candidates.
 Held-out-v2 remains unopened; M8.5 is still unmet.
 
+ADR-0015 precommits V7 as a deterministic 90/10 blend of reproducible V6
+update 31 and teacher-regularized V4 update 5. Cross-commit parent hashes are
+explicitly validated. The 40-root, globally disjoint dev-v3 confirmation set is
+frozen before construction and permits one V7 attempt only after dev-v1
+qualification. V7 has not yet been constructed; held-out-v2 remains sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

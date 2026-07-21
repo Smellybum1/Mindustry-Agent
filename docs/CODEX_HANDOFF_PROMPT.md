@@ -46,3 +46,8 @@ That exclusive attempt was created but aborted before result artifacts on a
 matched-control catalog-WAIT indexing bug. ADR-0014 consumes the attempt, so do
 not rerun dev-v2 and do not open held-out-v2 for V6. The control bug is fixed;
 the next step requires a newly governed successor candidate/confirmation path.
+
+ADR-0015 now precommits that successor: V7 is a 90/10 V6 update-31 / V4
+update-5 blend with explicit cross-commit lineage. Construct it twice from the
+A/B parent replicas and require exact equality, then run dev-v1. Dev-v3 is
+frozen for one confirmation only if V7 qualifies; held-out-v2 stays sealed.

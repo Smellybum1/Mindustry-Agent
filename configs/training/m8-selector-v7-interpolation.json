@@ -1,0 +1,38 @@
+{
+  "schema": "selector_checkpoint_interpolation_v1",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "held_out_seed_set_id": "bootstrap-defense-v1-held-out-v2",
+  "held_out_seed_set_version": 2,
+  "model_init_seed": 8601,
+  "action_sampling_seed": 8602,
+  "torch_threads": 1,
+  "model_architecture": {
+    "schema": "selector_actor_critic_v1",
+    "candidate_encoder": [37, 64, 64],
+    "scalar_encoder": [56, 64, 64],
+    "select_head": [128, 64, 1],
+    "special_head": [64, 64, 2],
+    "critic": [128, 64, 1],
+    "activation": "Tanh"
+  },
+  "checkpoint_construction": {
+    "schema": "weighted_model_interpolation_v1",
+    "parents": [
+      {
+        "role": "base",
+        "training_config": "configs/training/m8-selector-v6-diverse-long.json",
+        "training_repository_commit": "4d3cacb8dd7bc0e8d952c4164134d7214033bee0",
+        "update": 31,
+        "weight": 0.9
+      },
+      {
+        "role": "auxiliary",
+        "training_config": "configs/training/m8-selector-v4-teacher-regularized.json",
+        "training_repository_commit": "8f25b0cc91cdaffa325abfe019c62176e5f560b6",
+        "update": 5,
+        "weight": 0.1
+      }
+    ]
+  }
+}

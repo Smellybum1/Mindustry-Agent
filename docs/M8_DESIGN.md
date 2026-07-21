@@ -354,6 +354,21 @@ Matched controls now canonicalize every lifecycle/selector action before index
 use and fail explicitly on a genuinely out-of-range SELECT. The regression is
 covered without weakening the exclusive-attempt rule.
 
+## V7 governed successor
+
+ADR-0015 precommits V7 before construction as a 90/10 interpolation of aligned
+V6 update 31 and V4 update 5 parents. V6 contributes its 9/10 dev capacity;
+V4 contributes the successful-episode adaptive-teacher prior. Both parent runs
+are independently reproducible and use only train/dev evidence. Cross-commit
+construction records and validates each full training commit rather than
+pretending historical runs came from the active construction commit.
+
+Two A/B constructions must match exactly. V7 then faces dev-v1 before any new
+confirmation. If it beats all observed comparators, the already frozen,
+globally disjoint 40-root dev-v3 set is its single confirmation attempt. A
+started attempt consumes dev-v3. Only an eligible confirmation can authorize
+held-out-v2; dev-v2 remains consumed and V7 cannot use its outcomes.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -868,6 +868,10 @@ repository-evidence mapping used for the M6 audit is:
   the attempt will not be rerun. The control path now canonicalizes WAIT before
   indexing and rejects genuine out-of-range SELECT actions explicitly.
   Held-out-v2 remains unopened.
+- ADR-0015 freezes V7 before construction as a 90/10 V6-update-31 / V4-update-5
+  interpolation. Cross-commit parent lineage now requires each full training
+  commit. A new disjoint 40-root dev-v3 set is frozen for one confirmation only
+  after dev-v1 qualification. V7 has not been constructed; v2 remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

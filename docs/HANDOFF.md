@@ -203,6 +203,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   aborted before result files on a matched-control catalog-WAIT indexing bug.
   ADR-0014 consumes any started attempt, so V6 is rejected and dev-v2 must not
   be rerun. The bug is fixed/regression-tested. Held-out-v2 remains unopened.
+- **V7 precommit**: ADR-0015 freezes a 90/10 V6 update-31 / V4 update-5 blend,
+  with explicit cross-commit parent validation. Dev-v3 is a new disjoint
+  40-root, one-way confirmation set available only after V7 passes dev-v1. V7
+  is not yet constructed; dev-v2 remains consumed and held-out-v2 sealed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -376,7 +380,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0014` (do not relitigate).
+See `docs/decisions/ADR-0001..0015` (do not relitigate).
 
 ## Deviations from the brief in this scaffold
 

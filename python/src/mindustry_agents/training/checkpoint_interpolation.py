@@ -85,6 +85,13 @@ def _validate_construction_config(config: dict[str, Any]) -> list[dict[str, Any]
         raise ValueError("interpolation parent weights must sum to 1")
     if any(int(item.get("update", 0)) < 1 for item in parents):
         raise ValueError("interpolation parent updates must be positive")
+    commits = [item.get("training_repository_commit") for item in parents]
+    if any(commits) and not all(
+        isinstance(commit, str) and len(commit) == 40 for commit in commits
+    ):
+        raise ValueError(
+            "cross-commit interpolation requires both full training commits"
+        )
     return parents
 
 
@@ -144,7 +151,10 @@ def _load_parent(
     if manifest.get("model_architecture") != construction.get("model_architecture"):
         raise ValueError(f"{role} model architecture mismatch")
     repository = manifest.get("repository", {})
-    if repository.get("commit") != construction["active_repository_commit"]:
+    expected_repository_commit = spec.get(
+        "training_repository_commit", construction["active_repository_commit"]
+    )
+    if repository.get("commit") != expected_repository_commit:
         raise ValueError(f"{role} repository commit mismatch")
     unexpected_dirty = _unexpected_dirty(list(repository.get("status", [])))
     if unexpected_dirty:
@@ -208,7 +218,7 @@ def _lineage_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
         "model_init_seed": manifest["model_init_seed"],
         "initial_model_state_sha256": manifest["initial_model_state_sha256"],
         "parents": [
-            {
+            ({
                 key: parent[key]
                 for key in (
                     "role",
@@ -219,7 +229,15 @@ def _lineage_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
                     "manifest_reproducibility_sha256",
                     "training_config_sha256",
                 )
-            }
+            } | (
+                {
+                    "training_repository_commit": parent[
+                        "training_repository_commit"
+                    ]
+                }
+                if "training_repository_commit" in parent
+                else {}
+            ))
             for parent in manifest["parents"]
         ],
         "checkpoint_model_state_sha256": manifest["checkpoint"][
@@ -287,6 +305,7 @@ def construct_checkpoint(
                 parent.manifest_reproducibility_sha256
             ),
             "training_config_sha256": parent.training_config_sha256,
+            "training_repository_commit": parent.repository_commit,
         }
         for parent in parents
     ]

@@ -99,6 +99,15 @@ class TestCheckpointInterpolation(unittest.TestCase):
             },
         }
         self.assertEqual(len(_validate_construction_config(config)), 2)
+        config["checkpoint_construction"]["parents"][0][
+            "training_repository_commit"
+        ] = "a" * 40
+        with self.assertRaisesRegex(ValueError, "both full training commits"):
+            _validate_construction_config(config)
+        config["checkpoint_construction"]["parents"][1][
+            "training_repository_commit"
+        ] = "b" * 40
+        self.assertEqual(len(_validate_construction_config(config)), 2)
         config["checkpoint_construction"]["parents"][1]["weight"] = 0.2
         with self.assertRaisesRegex(ValueError, "sum to 1"):
             _validate_construction_config(config)
@@ -130,6 +139,22 @@ class TestCheckpointInterpolation(unittest.TestCase):
         self.assertEqual(
             [(item["role"], item["update"], item["weight"]) for item in construction],
             [("base", 2, 0.75), ("auxiliary", 2, 0.25)],
+        )
+
+        v7 = json.loads(
+            (
+                root / "configs/training/m8-selector-v7-interpolation.json"
+            ).read_text()
+        )
+        self.assertEqual(
+            v7["held_out_seed_set_id"], "bootstrap-defense-v1-held-out-v2"
+        )
+        self.assertEqual(
+            [
+                (item["role"], item["update"], item["weight"])
+                for item in v7["checkpoint_construction"]["parents"]
+            ],
+            [("base", 31, 0.9), ("auxiliary", 5, 0.1)],
         )
 
 

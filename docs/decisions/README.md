@@ -19,6 +19,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0012](ADR-0012-scenario-variation-and-seed-governance.md) | Bounded scenario variation and seed governance |
 | [0013](ADR-0013-post-failure-held-out-renewal.md) | Post-failure held-out renewal |
 | [0014](ADR-0014-one-way-dev-confirmation.md) | One-way development confirmation after uncertain scorecards |
+| [0015](ADR-0015-v7-cross-commit-blend.md) | V7 cross-commit blend and one-way confirmation |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.
