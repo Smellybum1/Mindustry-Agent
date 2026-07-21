@@ -457,6 +457,7 @@ def rollout_episode(
             tick_cap=int(metadata["tick_cap"]),
             outcome=response.outcome,
             task_events=response.task_events,
+            game_events=response.game_events,
             boundary_reasons=reasons,
             raw_action_valid=raw_action_valid,
             coordination_metrics=response.coordination_metrics,

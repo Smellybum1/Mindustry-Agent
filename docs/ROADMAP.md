@@ -1022,6 +1022,20 @@ comparisons are uncertain. Non-forced abandonment remains zero and matched
 idle improves by 0.14385630. Dev-v13 remains unopened, held-out-v4 remains
 sealed, and M8.5 remains unmet.
 
+V17's paired idle and recovery gaps have approximately -0.08 correlation, and
+idle-only pressure did not resolve recovery. ADR-0029 therefore precommits V18
+as a scorecard-aligned reward extension. Idle cost becomes `0.004` with the
+`5.0` cap fixed; announcement cost becomes `0.01` with its `1.0` cap fixed; and
+an optional recovery-delay component charges `0.001` per deterministic tick,
+capped at `3.0`, until a different agent resumes a lost agent's prior structured
+task type. Unrecovered roles continue charging, so the signal cannot be evaded
+by refusing takeover. Duplicate cap becomes `4.0` solely to retain the exact
+busywork ordering. Historical configs omit the recovery fields and remain
+exact. All 43 exact-config adversaries and 138 Python tests pass. Dev-v13 is
+retired unopened; dev-v14 freezes 160 disjoint roots `141001..141160` for one
+confirmation only after reusable dual scorecards pass. Held-out-v4 remains
+sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

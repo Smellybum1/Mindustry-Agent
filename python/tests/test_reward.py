@@ -3,6 +3,7 @@ import unittest
 from mindustry_agents.training.reward import (
     COMPONENT_KEYS,
     QUALITY_COMPONENT_KEYS,
+    RECOVERY_COMPONENT_KEY,
     RewardAuditError,
     SelectorReward,
 )
@@ -16,7 +17,7 @@ QUALITY = {
     "team_abandonment_cost": 0.1,
     "team_abandonment_cap": 2.0,
 }
-from mindustry_agents.training.reward_adversary import CASES, run_case
+from mindustry_agents.training.reward_adversary import CASES, RECOVERY_CASES, run_case
 
 
 def team(tick=0, *, line=False, readiness=0.0, enemies=0, wave=1):
@@ -199,6 +200,59 @@ class TestSelectorRewardAdversaries(unittest.TestCase):
             for case in CASES
         ]
         self.assertTrue(all(report["pass"] for report in reports))
+
+    def test_quality_adversaries_accept_v18_scorecard_reward(self):
+        v18 = {
+            **QUALITY,
+            "idle_agent_tick_cost": 0.004,
+            "idle_agent_tick_cap": 5.0,
+            "duplicate_work_cap": 4.0,
+            "announcement_cost": 0.01,
+            "team_abandonment_cost": 0.25,
+            "recovery_delay_tick_cost": 0.001,
+            "recovery_delay_tick_cap": 3.0,
+        }
+        reports = [
+            run_case(case, quality_reward_override=v18)
+            for case in (*CASES, *RECOVERY_CASES)
+        ]
+        self.assertTrue(all(report["pass"] for report in reports))
+        recovery_reports = [
+            report for report in reports if report["case"] in RECOVERY_CASES
+        ]
+        self.assertTrue(
+            all(
+                RECOVERY_COMPONENT_KEY in report["components"]
+                for report in recovery_reports
+            )
+        )
+
+    def test_recovery_reward_rejects_incomplete_or_negative_config(self):
+        metrics = {
+            "agent_ticks": 3,
+            "idle_agent_ticks": 0,
+            "duplicate_work_incidents": 0,
+            "announced_messages": 0,
+        }
+        for quality, message in (
+            ({**QUALITY, "recovery_delay_tick_cost": 0.001}, "incomplete"),
+            (
+                {
+                    **QUALITY,
+                    "recovery_delay_tick_cost": -0.001,
+                    "recovery_delay_tick_cap": 3.0,
+                },
+                "recovery cost/cap",
+            ),
+        ):
+            with self.assertRaisesRegex(RewardAuditError, message):
+                SelectorReward(quality_reward=quality).observe(
+                    team(),
+                    team(1),
+                    advanced_ticks=1,
+                    tick_cap=9000,
+                    coordination_metrics=metrics,
+                )
 
     def test_reward_v2_breakdown_exposes_auditable_counters_and_totals(self):
         result = SelectorReward(quality_reward=QUALITY).observe(

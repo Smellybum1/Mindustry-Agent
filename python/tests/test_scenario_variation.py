@@ -544,3 +544,53 @@ def test_v17_doubled_capped_idle_slope_and_dev_v13_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v13"] == path.name
+
+
+def test_v18_scorecard_quality_and_dev_v14_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v14.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v14"
+    assert confirmation["seed_set_version"] == 14
+    assert confirmation["seeds"] == list(range(141001, 141161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v17 = json.loads(
+        (
+            training_dir / "m8-selector-v17-doubled-capped-idle-pressure.json"
+        ).read_text(encoding="utf-8")
+    )
+    v18 = json.loads(
+        (training_dir / "m8-selector-v18-scorecard-aligned-quality.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert v18.pop("candidate_version") == "v18"
+    assert v18.pop("quality_intervention") == "scorecard_aligned_quality_v1"
+    assert v18.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v14.json"
+    )
+    assert v17.pop("candidate_version") == "v17"
+    assert v17.pop("quality_intervention") == (
+        "doubled_capped_idle_with_busywork_guard_v1"
+    )
+    assert v17.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v13.json"
+    )
+    assert v18["quality_reward"].pop("idle_agent_tick_cost") == 0.004
+    assert v17["quality_reward"].pop("idle_agent_tick_cost") == 0.002
+    assert v18["quality_reward"].pop("duplicate_work_cap") == 4.0
+    assert v17["quality_reward"].pop("duplicate_work_cap") == 2.0
+    assert v18["quality_reward"].pop("announcement_cost") == 0.01
+    assert v17["quality_reward"].pop("announcement_cost") == 0.005
+    assert v18["quality_reward"].pop("recovery_delay_tick_cost") == 0.001
+    assert v18["quality_reward"].pop("recovery_delay_tick_cap") == 3.0
+    assert v18 == v17
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v14"] == path.name

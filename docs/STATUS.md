@@ -1061,6 +1061,16 @@ repository-evidence mapping used for the M6 audit is:
   greedy. Non-forced abandonment remains zero and matched idle improves by
   0.14385630. Dev-v13 remains unopened, held-out-v4 remains sealed, and M8.5
   remains unmet.
+- V17's idle and recovery gaps are empirically independent (paired-root
+  correlation about -0.08), so ADR-0029 precommits V18 against all remaining
+  blockers. V18 uses idle cost `0.004` capped at `5.0`, announcement cost
+  `0.01` capped at `1.0`, and an optional backward-compatible recovery-delay
+  penalty `0.001` per tick capped at `3.0`; duplicate cap rises to `4.0` solely
+  to preserve the exact busywork ordering. Recovery mirrors the governed
+  structured-event definition and charges unrecovered roles, so neither loss
+  nor non-recovery can farm reward. All 43 exact-config adversaries and 138
+  Python tests pass. Dev-v13 is retired unopened; dev-v14 freezes 160 disjoint
+  roots `141001..141160`. Held-out-v4 remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

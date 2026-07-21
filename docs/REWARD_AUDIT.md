@@ -267,6 +267,27 @@ The exact reward contract stays adversary-approved, while the V17 training
 intervention stops before dev-v13. Status: implemented-approved reward /
 rejected candidate, 2026-07-21.
 
+## V18 recovery-delay and remaining scorecard pressure
+
+ADR-0029 adds optional `recovery_delay_tick_cost` and
+`recovery_delay_tick_cap` fields to reward v2. When absent, historical reward
+component keys and behavior remain exact. V18 alone emits
+`reward.penalty.recovery_delay_ticks`: at the first authoritative unit-destroy
+event it snapshots the lost agent's prior structured task types and charges
+elapsed ticks until a different agent starts a matching type. Same-agent and
+unrelated starts do not recover the role; an unrecovered role continues
+charging. The component is penalty-only and capped at `-3.0`, so agent loss or
+refusing takeover cannot create positive reward.
+
+V18 also changes idle cost `-0.002 -> -0.004` with cap fixed at `-5.0`,
+announcement cost `-0.005 -> -0.01` with cap fixed at `-1.0`, and duplicate cap
+`-2.0 -> -4.0` to keep capped duplicate/abandon busywork (`-6.0`) worse than
+honest idle (`-5.0`). All other terms remain V17-exact. Config SHA-256 is
+`fa6cdcfe3820da06...`; report `96058a7e7c9dd6f0...` passes 43 cases, including
+recovery exactness, exclusions, chunk invariance, and post-cap behavior. The
+full 138-test Python suite passes. Status: implemented-approved-v18
+pre-training, 2026-07-21.
+
 ## Cross-component adversarial matrix
 
 These CI-runnable cases are mandatory before changing any status to approved:

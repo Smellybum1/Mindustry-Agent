@@ -338,6 +338,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   preflight rejects V15 because permanent-greedy idle is definitively worse;
   recovery and matched idle are uncertain. Dev-v11 is unopened, held-out-v4 is
   sealed, and M8.5 remains unmet.
+- **V18 precommit**: V17 idle/recovery gaps have only about -0.08 paired-root
+  correlation, so ADR-0029 targets all remaining scorecards. V18 uses idle cost
+  `0.004` capped at `5.0`, announcement cost `0.01` capped at `1.0`, and a new
+  backward-compatible recovery-delay penalty `0.001` per tick capped at `3.0`.
+  Duplicate cap `4.0` preserves busywork ordering. Exact structured/game events
+  mirror the governed recovery definition; pending roles continue charging, so
+  non-recovery cannot evade cost. All 43 adversaries and 138 Python tests pass.
+  Dev-v13 is retired unopened; dev-v14 is frozen at disjoint roots
+  `141001..141160`. Held-out-v4 remains sealed.
 - **V16 rejected on reusable dev-v1**: two pinned replicas reproduce update 23
   at 9/10 construction wins and mean idle 0.10050130. Checkpoint
   `6db48a03427edfa2...`, model state `91c3364b793d7091...`, replay

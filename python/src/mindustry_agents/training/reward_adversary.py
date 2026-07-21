@@ -13,6 +13,7 @@ from mindustry_agents.process.launcher import repo_root
 from mindustry_agents.training.reward import (
     COMPONENT_KEYS,
     QUALITY_COMPONENT_KEYS,
+    RECOVERY_COMPONENT_KEY,
     RewardAuditError,
     SelectorReward,
 )
@@ -30,6 +31,12 @@ QUALITY_CASES = (
     "routine-message-zero",
     "team-abandon-quality-cap",
     "team-forced-abandon-zero",
+)
+RECOVERY_CASES = (
+    "recovery-delay",
+    "recovery-unrelated",
+    "recovery-chunk-size",
+    "recovery-after-cap",
 )
 
 CASES = (
@@ -120,10 +127,10 @@ def run_case(
 ) -> dict[str, Any]:
     """Run one deterministic synthetic trace through the production accumulator."""
 
-    if case not in CASES:
+    if case not in (*CASES, *RECOVERY_CASES):
         raise ValueError(f"unknown reward adversary: {case}")
     quality_reward = None
-    if case in QUALITY_CASES:
+    if case in (*QUALITY_CASES, *RECOVERY_CASES):
         if quality_reward_override is None:
             config_path = (
                 repo_root()
@@ -137,6 +144,11 @@ def run_case(
             quality_reward = dict(config["quality_reward"])
         else:
             quality_reward = dict(quality_reward_override)
+        if case in RECOVERY_CASES and (
+            "recovery_delay_tick_cost" not in quality_reward
+            or "recovery_delay_tick_cap" not in quality_reward
+        ):
+            raise RewardAuditError("recovery adversary config is incomplete")
     reward = SelectorReward(quality_reward=quality_reward)
     transitions: list[dict[str, Any]] = []
     totals = {key: 0.0 for key in reward.component_keys}
@@ -147,6 +159,7 @@ def run_case(
             "current": current,
             "action": kwargs.pop("action", {"type": "WAIT"}),
             "task_events": kwargs.get("task_events", []),
+            "game_events": kwargs.get("game_events", []),
             "coordination_metrics": kwargs.get("coordination_metrics"),
         }
         transitions.append(transition)
@@ -594,6 +607,254 @@ def run_case(
         )
         assert result.components["reward.penalty.team_abandonment"] == 0.0
         reason = "all forced team abandonments remained exact-zero exclusions"
+    elif case == "recovery-delay":
+        apply(
+            _team(0),
+            _team(10),
+            advanced_ticks=10,
+            coordination_metrics={
+                "agent_ticks": 30,
+                "idle_agent_ticks": 0,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+            task_events=[
+                {
+                    "tick": 10,
+                    "act": "START_TASK",
+                    "agent_id": 1,
+                    "task_type": "HARVEST_RESOURCE",
+                }
+            ],
+        )
+        result = apply(
+            _team(10),
+            _team(50),
+            advanced_ticks=40,
+            coordination_metrics={
+                "agent_ticks": 150,
+                "idle_agent_ticks": 0,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+            game_events=[{"tick": 20, "type": "unit_destroy", "agent_id": 1}],
+            task_events=[
+                {
+                    "tick": 50,
+                    "act": "START_TASK",
+                    "agent_id": 0,
+                    "task_type": "HARVEST_RESOURCE",
+                }
+            ],
+        )
+        expected = -min(
+            30 * float(quality_reward["recovery_delay_tick_cost"]),
+            float(quality_reward["recovery_delay_tick_cap"]),
+        )
+        assert result.components[RECOVERY_COMPONENT_KEY] == expected
+        reason = "post-loss role recovery charged its exact deterministic latency"
+    elif case == "recovery-unrelated":
+        apply(
+            _team(0),
+            _team(10),
+            advanced_ticks=10,
+            coordination_metrics={
+                "agent_ticks": 30,
+                "idle_agent_ticks": 0,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+            task_events=[
+                {
+                    "tick": 10,
+                    "act": "START_TASK",
+                    "agent_id": 1,
+                    "task_type": "HARVEST_RESOURCE",
+                }
+            ],
+        )
+        apply(
+            _team(10),
+            _team(50),
+            advanced_ticks=40,
+            coordination_metrics={
+                "agent_ticks": 150,
+                "idle_agent_ticks": 0,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+            game_events=[{"tick": 20, "type": "unit_destroy", "agent_id": 1}],
+            task_events=[
+                {
+                    "tick": 30,
+                    "act": "START_TASK",
+                    "agent_id": 0,
+                    "task_type": "DEFEND_REGION",
+                }
+            ],
+        )
+        apply(
+            _team(50),
+            _team(70),
+            advanced_ticks=20,
+            coordination_metrics={
+                "agent_ticks": 210,
+                "idle_agent_ticks": 0,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+            task_events=[
+                {
+                    "tick": 60,
+                    "act": "START_TASK",
+                    "agent_id": 1,
+                    "task_type": "HARVEST_RESOURCE",
+                }
+            ],
+        )
+        result = apply(
+            _team(70),
+            _team(80),
+            advanced_ticks=10,
+            coordination_metrics={
+                "agent_ticks": 240,
+                "idle_agent_ticks": 0,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+            task_events=[
+                {
+                    "tick": 80,
+                    "act": "START_TASK",
+                    "agent_id": 2,
+                    "task_type": "HARVEST_RESOURCE",
+                }
+            ],
+        )
+        assert reward.recovery_delay_ticks == 60
+        assert not reward.pending_recoveries
+        assert result.components[RECOVERY_COMPONENT_KEY] <= 0.0
+        reason = "unrelated and same-agent starts did not fake role recovery"
+    elif case == "recovery-chunk-size":
+        whole = SelectorReward(quality_reward=quality_reward)
+        split = SelectorReward(quality_reward=quality_reward)
+        initial_events = [
+            {
+                "tick": 10,
+                "act": "START_TASK",
+                "agent_id": 1,
+                "task_type": "HARVEST_RESOURCE",
+            }
+        ]
+        initial_metrics = {
+            "agent_ticks": 30,
+            "idle_agent_ticks": 0,
+            "duplicate_work_incidents": 0,
+            "announced_messages": 0,
+        }
+        for accumulator in (whole, split):
+            accumulator.observe(
+                _team(0),
+                _team(10),
+                advanced_ticks=10,
+                tick_cap=9000,
+                coordination_metrics=initial_metrics,
+                task_events=initial_events,
+            )
+        whole_result = whole.observe(
+            _team(10),
+            _team(100),
+            advanced_ticks=90,
+            tick_cap=9000,
+            coordination_metrics={**initial_metrics, "agent_ticks": 300},
+            game_events=[{"tick": 20, "type": "unit_destroy", "agent_id": 1}],
+            task_events=[
+                {
+                    "tick": 80,
+                    "act": "START_TASK",
+                    "agent_id": 0,
+                    "task_type": "HARVEST_RESOURCE",
+                }
+            ],
+        )
+        first = split.observe(
+            _team(10),
+            _team(40),
+            advanced_ticks=30,
+            tick_cap=9000,
+            coordination_metrics={**initial_metrics, "agent_ticks": 120},
+            game_events=[{"tick": 20, "type": "unit_destroy", "agent_id": 1}],
+        )
+        second = split.observe(
+            _team(40),
+            _team(100),
+            advanced_ticks=60,
+            tick_cap=9000,
+            coordination_metrics={**initial_metrics, "agent_ticks": 300},
+            task_events=[
+                {
+                    "tick": 80,
+                    "act": "START_TASK",
+                    "agent_id": 0,
+                    "task_type": "HARVEST_RESOURCE",
+                }
+            ],
+        )
+        assert whole.recovery_delay_ticks == split.recovery_delay_ticks == 60
+        assert abs(
+            whole_result.components[RECOVERY_COMPONENT_KEY]
+            - first.components[RECOVERY_COMPONENT_KEY]
+            - second.components[RECOVERY_COMPONENT_KEY]
+        ) < 1e-12
+        reason = "recovery latency matched across cumulative step chunkings"
+    elif case == "recovery-after-cap":
+        apply(
+            _team(0),
+            _team(1),
+            advanced_ticks=1,
+            coordination_metrics={
+                "agent_ticks": 3,
+                "idle_agent_ticks": 0,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+            task_events=[
+                {
+                    "tick": 0,
+                    "act": "START_TASK",
+                    "agent_id": 1,
+                    "task_type": "HARVEST_RESOURCE",
+                }
+            ],
+            game_events=[{"tick": 1, "type": "unit_destroy", "agent_id": 1}],
+        )
+        first = apply(
+            _team(1),
+            _team(4001),
+            advanced_ticks=4000,
+            coordination_metrics={
+                "agent_ticks": 12003,
+                "idle_agent_ticks": 0,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+        )
+        after = apply(
+            _team(4001),
+            _team(5001),
+            advanced_ticks=1000,
+            coordination_metrics={
+                "agent_ticks": 15003,
+                "idle_agent_ticks": 0,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+        )
+        assert first.components[RECOVERY_COMPONENT_KEY] == -float(
+            quality_reward["recovery_delay_tick_cap"]
+        )
+        assert after.components[RECOVERY_COMPONENT_KEY] == 0.0
+        reason = "post-cap recovery delay produced no repeated cost"
     else:
         raise AssertionError(f"unhandled reward adversary: {case}")
     return _report(
@@ -608,7 +869,9 @@ def run_case(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="M8.4 selector reward adversaries")
-    parser.add_argument("--case", action="append", choices=CASES)
+    parser.add_argument(
+        "--case", action="append", choices=(*CASES, *RECOVERY_CASES)
+    )
     parser.add_argument(
         "--config",
         type=Path,
@@ -625,12 +888,19 @@ def main(argv: list[str] | None = None) -> int:
         default=repo_root() / "runs" / "m8-reward-adversaries.json",
     )
     args = parser.parse_args(argv)
-    selected = args.case or list(CASES)
     config_path = args.config.resolve()
     config = json.loads(config_path.read_text(encoding="utf-8"))
     if config.get("reward_schema") != "selector_reward_v2":
         raise RewardAuditError("quality adversary config is not reward v2")
     quality_reward = dict(config["quality_reward"])
+    selected = args.case or [
+        *CASES,
+        *(
+            RECOVERY_CASES
+            if "recovery_delay_tick_cost" in quality_reward
+            else ()
+        ),
+    ]
     reports = [
         run_case(case, quality_reward_override=quality_reward) for case in selected
     ]

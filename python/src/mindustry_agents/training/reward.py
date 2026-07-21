@@ -25,6 +25,7 @@ QUALITY_COMPONENT_KEYS = (
     "reward.penalty.communication",
     "reward.penalty.team_abandonment",
 )
+RECOVERY_COMPONENT_KEY = "reward.penalty.recovery_delay_ticks"
 MILESTONE_VALUES = {
     "line_operational": 1.0,
     "defense_ready": 1.0,
@@ -71,6 +72,10 @@ class SelectorReward:
     quality_reward: dict[str, float] | None = None
     prior_quality_counters: dict[str, int] = field(default_factory=dict)
     quality_penalty_totals: dict[str, float] = field(default_factory=dict)
+    task_type_history: dict[int, set[str]] = field(default_factory=dict)
+    pending_recoveries: dict[int, dict[str, Any]] = field(default_factory=dict)
+    loss_agents_seen: set[int] = field(default_factory=set)
+    recovery_delay_ticks: int = 0
 
     @property
     def schema(self) -> str:
@@ -78,7 +83,16 @@ class SelectorReward:
 
     @property
     def component_keys(self) -> tuple[str, ...]:
-        return COMPONENT_KEYS + (QUALITY_COMPONENT_KEYS if self.quality_reward is not None else ())
+        quality_keys = (
+            QUALITY_COMPONENT_KEYS if self.quality_reward is not None else ()
+        )
+        recovery_keys = (
+            (RECOVERY_COMPONENT_KEY,)
+            if self.quality_reward is not None
+            and "recovery_delay_tick_cost" in self.quality_reward
+            else ()
+        )
+        return COMPONENT_KEYS + quality_keys + recovery_keys
 
     def record_learned_selection(self, task_id: str) -> None:
         if task_id:
@@ -93,6 +107,7 @@ class SelectorReward:
         tick_cap: int,
         outcome: str = "running",
         task_events: list[dict[str, Any]] | None = None,
+        game_events: list[dict[str, Any]] | None = None,
         boundary_reasons: list[str] | tuple[str, ...] = (),
         raw_action_valid: bool = True,
         environment_mask_valid: bool = True,
@@ -175,6 +190,8 @@ class SelectorReward:
                 components,
                 coordination_metrics,
                 task_events or [],
+                game_events or [],
+                current_tick=int(current_team.get("tick", 0)),
                 tick_cap=tick_cap,
             )
 
@@ -193,11 +210,21 @@ class SelectorReward:
         components: dict[str, float],
         metrics: dict[str, Any] | None,
         task_events: list[dict[str, Any]],
+        game_events: list[dict[str, Any]],
         *,
+        current_tick: int,
         tick_cap: int,
     ) -> None:
         if metrics is None:
             raise RewardAuditError("reward v2 requires coordination metrics")
+        recovery_fields = (
+            "recovery_delay_tick_cost",
+            "recovery_delay_tick_cap",
+        )
+        if any(key in self.quality_reward for key in recovery_fields) and not all(
+            key in self.quality_reward for key in recovery_fields
+        ):
+            raise RewardAuditError("reward v2 recovery config is incomplete")
         required = (
             "agent_ticks",
             "idle_agent_ticks",
@@ -207,6 +234,13 @@ class SelectorReward:
         if any(key not in metrics for key in required):
             raise RewardAuditError("reward v2 coordination metrics are incomplete")
         counters = {key: int(metrics[key]) for key in required}
+        if "recovery_delay_tick_cost" in self.quality_reward:
+            self._observe_recovery_delay(
+                task_events,
+                game_events,
+                current_tick=current_tick,
+            )
+            counters["recovery_delay_ticks"] = self.recovery_delay_ticks
         if (
             any(value < 0 for value in counters.values())
             or counters["idle_agent_ticks"] > counters["agent_ticks"]
@@ -265,7 +299,82 @@ class SelectorReward:
             abandonments * float(self.quality_reward["team_abandonment_cost"]),
             cap=float(self.quality_reward["team_abandonment_cap"]),
         )
+        if "recovery_delay_tick_cost" in self.quality_reward:
+            recovery_cost = float(self.quality_reward["recovery_delay_tick_cost"])
+            recovery_cap = float(self.quality_reward["recovery_delay_tick_cap"])
+            if recovery_cost < 0.0 or recovery_cap < 0.0:
+                raise RewardAuditError("reward v2 recovery cost/cap is invalid")
+            recovery_delta = counters["recovery_delay_ticks"] - (
+                self.prior_quality_counters.get("recovery_delay_ticks", 0)
+            )
+            self._quality_charge(
+                components,
+                RECOVERY_COMPONENT_KEY,
+                recovery_delta * recovery_cost,
+                cap=recovery_cap,
+            )
         self.prior_quality_counters = counters
+
+    def _observe_recovery_delay(
+        self,
+        task_events: list[dict[str, Any]],
+        game_events: list[dict[str, Any]],
+        *,
+        current_tick: int,
+    ) -> None:
+        """Accumulate exact ticks until another agent resumes a lost role."""
+
+        if current_tick < 0:
+            raise RewardAuditError("reward v2 recovery tick is invalid")
+        ordered: list[tuple[int, int, dict[str, Any]]] = []
+        for event in task_events:
+            tick = int(event.get("tick", current_tick))
+            ordered.append((tick, 0, event))
+        for event in game_events:
+            if event.get("type") == "unit_destroy":
+                tick = int(event.get("tick", current_tick))
+                ordered.append((tick, 1, event))
+        if any(tick < 0 or tick > current_tick for tick, _, _ in ordered):
+            raise RewardAuditError("reward v2 recovery event tick is invalid")
+
+        tracked_acts = {"START_TASK", "PROGRESS", "BLOCKED", "HEARTBEAT"}
+        for tick, kind, event in sorted(ordered, key=lambda item: (item[0], item[1])):
+            agent_id = int(event.get("agent_id", -1))
+            if kind == 0:
+                task_type = str(event.get("task_type", ""))
+                act = str(event.get("act", ""))
+                if agent_id >= 0 and task_type and act in tracked_acts:
+                    self.task_type_history.setdefault(agent_id, set()).add(task_type)
+                if act != "START_TASK" or not task_type:
+                    continue
+                recovered = []
+                for lost_agent, pending in sorted(self.pending_recoveries.items()):
+                    if (
+                        agent_id != lost_agent
+                        and tick > int(pending["loss_tick"])
+                        and task_type in pending["prior_types"]
+                    ):
+                        self.recovery_delay_ticks += max(
+                            0, tick - int(pending["charged_until"])
+                        )
+                        recovered.append(lost_agent)
+                for lost_agent in recovered:
+                    self.pending_recoveries.pop(lost_agent)
+            elif agent_id >= 0 and agent_id not in self.loss_agents_seen:
+                self.loss_agents_seen.add(agent_id)
+                self.pending_recoveries[agent_id] = {
+                    "loss_tick": tick,
+                    "charged_until": tick,
+                    "prior_types": frozenset(
+                        self.task_type_history.get(agent_id, set())
+                    ),
+                }
+
+        for pending in self.pending_recoveries.values():
+            charged_until = int(pending["charged_until"])
+            if current_tick > charged_until:
+                self.recovery_delay_ticks += current_tick - charged_until
+                pending["charged_until"] = current_tick
 
     def _quality_charge(
         self,
