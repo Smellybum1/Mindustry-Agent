@@ -5,6 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from mindustry_agents.coordination_semantics import (
+    FORCED_ABANDON_REASON_TOKENS,
+    is_forced_abandon_reason,
+)
+
 REWARD_SCHEMA = "selector_reward_v1"
 REWARD_SCHEMA_V2 = "selector_reward_v2"
 COMPONENT_KEYS = (
@@ -27,15 +32,7 @@ MILESTONE_VALUES = {
     "wave_clear_2": 2.0,
     "wave_clear_3": 2.0,
 }
-ABANDON_EXCLUSIONS = (
-    "wave",
-    "readiness",
-    "death",
-    "lease",
-    "human",
-    "terminal",
-    "cleanup",
-)
+ABANDON_EXCLUSIONS = FORCED_ABANDON_REASON_TOKENS
 
 
 class RewardAuditError(ValueError):
@@ -167,7 +164,7 @@ class SelectorReward:
             self.abandonment_reason_counts[reason] = (
                 self.abandonment_reason_counts.get(reason, 0) + 1
             )
-            if any(token in reason for token in ABANDON_EXCLUSIONS):
+            if is_forced_abandon_reason(reason):
                 continue
             if self.abandonment_count < 10:
                 self.abandonment_count += 1
@@ -253,10 +250,7 @@ class SelectorReward:
 
         abandonments = sum(
             event.get("act") == "ABANDON"
-            and not any(
-                token in str(event.get("reason_code", "")).lower()
-                for token in ABANDON_EXCLUSIONS
-            )
+            and not is_forced_abandon_reason(event.get("reason_code", ""))
             for event in task_events
         )
         self._quality_charge(

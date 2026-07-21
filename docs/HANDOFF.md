@@ -288,8 +288,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 - **Scorecard v2 precommit**: ADR-0024 aligns future abandonment judgment with
   reward v2 by excluding forced wave/readiness/death/lease/human/terminal/
   cleanup reasons from the rate while retaining separate counters. It also
-  precommits per-agent idle telemetry. No consumed result is rerun or changed;
-  implementation is pending.
+  adds per-agent idle telemetry. Schema v2 and the server counters are
+  implemented; 128 Python tests, build, smoke, determinism, and live metric
+  reconciliation pass. No consumed result is rerun or changed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

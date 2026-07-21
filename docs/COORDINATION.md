@@ -197,9 +197,11 @@ the renderer stays purely structural.
 
 Each step also exposes cumulative episode `coordination_metrics`: prevented
 duplicate-work incidents, completed/abandoned tasks, agent ticks, idle agent
-ticks, idle fraction, and structured/announced message counts. Occupancy is
+ticks in total and stable per-agent order, idle fraction, forced/non-forced
+abandonment counts, and structured/announced message counts. Occupancy is
 sampled exactly once per externally advanced engine tick on the simulation
-thread; these metrics are telemetry only and never affect reward or state.
+thread. Reward v1 ignores these counters; audited reward v2 consumes exact
+cumulative deltas. They do not enter state hashing.
 
 ## Shared expert coordination driver (M7.2)
 

@@ -915,7 +915,9 @@ ADR-0024 precommits scorecard v2 for future evidence only. V1's abandonment
 rate incorrectly includes forced safety/lifecycle preemption that reward v2
 explicitly excludes. V2 derives the rate from structured non-forced ABANDON
 events, retains forced/non-forced counts, and adds per-agent idle telemetry.
-All consumed results remain immutable and V13 stays rejected.
+The implementation passes 128 Python tests plus build, smoke, determinism, and
+live counter reconciliation. All consumed results remain immutable and V13
+stays rejected.
 
 ADR-0022 precommits V12 as V6's 64-root/32-cycle recipe under
 `selector_reward_v2`. Four capped negative-only components target the exact

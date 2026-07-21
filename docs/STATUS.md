@@ -984,7 +984,9 @@ repository-evidence mapping used for the M6 audit is:
   v1 counts forced wave/lifecycle preemption as policy abandonment despite
   reward v2's accepted exclusions. Future records will separate forced from
   non-forced abandonment and expose per-agent idle ticks. Consumed records and
-  V13's rejection remain immutable; implementation is pending.
+  V13's rejection remain immutable. Schema v2, shared reason semantics,
+  simulation-thread counters, protocol docs, and live reconciliation checks are
+  implemented; 128 Python tests, build, smoke, and determinism pass.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

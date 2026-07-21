@@ -39,6 +39,7 @@ def test_scorecard_derives_help_announcements_abandonment_and_recovery():
             _event(20, "REQUEST_HELP"),
             _event(35, "PROGRESS", reason_code="help_fulfilled", agent_id=1),
             _event(40, "PROGRESS"),
+            _event(45, "ABANDON", reason_code="resources_short_replan"),
             _event(60, "START_TASK", task="task-b", agent_id=1, from_status="CLAIMED"),
         ],
         agent_loss_ticks={0: 50},
@@ -54,6 +55,8 @@ def test_scorecard_derives_help_announcements_abandonment_and_recovery():
         "meaningful_transitions": 2,
         "announced_messages": 1,
         "task_abandonment_rate": 0.25,
+        "forced_task_abandonments": 0,
+        "nonforced_task_abandonments": 1,
         "recovery_time_after_agent_loss_ticks": 10.0,
         "agent_losses_observed": 1,
         "agent_loss_recoveries_observed": 1,
@@ -66,6 +69,37 @@ def test_scorecard_uses_null_for_unobserved_help_and_loss_recovery():
     )
     assert scorecard["time_to_help_ticks"] is None
     assert scorecard["recovery_time_after_agent_loss_ticks"] is None
+
+
+def test_scorecard_excludes_every_forced_abandon_reason_but_keeps_unknowns():
+    forced = (
+        "wave_preempt",
+        "readiness_rebalance",
+        "death",
+        "lease_failure",
+        "human_override",
+        "terminal",
+        "cleanup",
+    )
+    result = EpisodeResult(
+        seed=2,
+        outcome="win",
+        tick=50,
+        core_health=1000,
+        metrics={"tasks_completed": 3, "tasks_abandoned": len(forced) + 2},
+        task_events=[
+            *[
+                _event(index, "ABANDON", reason_code=reason)
+                for index, reason in enumerate(forced)
+            ],
+            _event(10, "ABANDON", reason_code="resources_short_replan"),
+            _event(11, "ABANDON", reason_code=""),
+        ],
+    )
+    scorecard = teammate_scorecard(result)
+    assert scorecard["forced_task_abandonments"] == len(forced)
+    assert scorecard["nonforced_task_abandonments"] == 2
+    assert scorecard["task_abandonment_rate"] == 2 / 5
 
 
 def test_bootstrap_and_aggregate_are_byte_stable():

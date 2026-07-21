@@ -41,9 +41,12 @@ public final class CoordinationAdapter{
     private boolean failureApplied;
     private long agentTicks;
     private long idleAgentTicks;
+    private long[] idleAgentTicksByAgent = new long[0];
     private int duplicateWorkIncidents;
     private int tasksCompleted;
     private int tasksAbandoned;
+    private int forcedTasksAbandoned;
+    private int nonforcedTasksAbandoned;
     private int resourceReplans;
     private int adaptiveReplans;
     private int policySwitches;
@@ -92,9 +95,12 @@ public final class CoordinationAdapter{
         failureApplied = false;
         agentTicks = 0L;
         idleAgentTicks = 0L;
+        idleAgentTicksByAgent = new long[agentCount];
         duplicateWorkIncidents = 0;
         tasksCompleted = 0;
         tasksAbandoned = 0;
+        forcedTasksAbandoned = 0;
+        nonforcedTasksAbandoned = 0;
         resourceReplans = 0;
         adaptiveReplans = 0;
         policySwitches = 0;
@@ -338,7 +344,10 @@ public final class CoordinationAdapter{
     public void recordMetricsTick(){
         agentTicks += assignments.length;
         for(int i = 0; i < assignments.length; i++){
-            if(assignments[i] == null) idleAgentTicks++;
+            if(assignments[i] == null){
+                idleAgentTicks++;
+                idleAgentTicksByAgent[i]++;
+            }
         }
     }
 
@@ -451,12 +460,17 @@ public final class CoordinationAdapter{
         out.put("duplicate_work_incidents", duplicateWorkIncidents);
         out.put("tasks_completed", tasksCompleted);
         out.put("tasks_abandoned", tasksAbandoned);
+        out.put("forced_tasks_abandoned", forcedTasksAbandoned);
+        out.put("nonforced_tasks_abandoned", nonforcedTasksAbandoned);
         out.put("resource_replans", resourceReplans);
         out.put("adaptive_replans", adaptiveReplans);
         out.put("policy_switches", policySwitches);
         out.put("decision_events", decisionRevision);
         out.put("agent_ticks", agentTicks);
         out.put("idle_agent_ticks", idleAgentTicks);
+        Jval idleByAgent = Jval.newArray();
+        for(long ticks : idleAgentTicksByAgent) idleByAgent.add(ticks);
+        out.add("idle_agent_ticks_by_agent", idleByAgent);
         out.put("idle_fraction", agentTicks == 0L ? 0.0
             : idleAgentTicks / (double)agentTicks);
         out.put("structured_messages", structuredMessages);
@@ -558,6 +572,8 @@ public final class CoordinationAdapter{
                 OpResult op = board.abandon(assignment.taskId, id, reason, tick);
                 if(op.ok()){
                     tasksAbandoned++;
+                    if(isForcedAbandonReason(reason)) forcedTasksAbandoned++;
+                    else nonforcedTasksAbandoned++;
                     if(reason.equals("resources_short_replan")) resourceReplans++;
                     if(reason.equals("resources_short_replan")
                         || reason.startsWith("blocked_replan:")) adaptiveReplans++;
@@ -581,6 +597,17 @@ public final class CoordinationAdapter{
             case "DECLINE_HELP" -> decideHelp(agent, action, type, false, tick);
             default -> result(agent.index, false, "unknown_task_action", type);
         };
+    }
+
+    private static boolean isForcedAbandonReason(String reason){
+        String normalized = reason == null ? "" : reason.toLowerCase(Locale.ROOT);
+        return normalized.contains("wave")
+            || normalized.contains("readiness")
+            || normalized.contains("death")
+            || normalized.contains("lease")
+            || normalized.contains("human")
+            || normalized.contains("terminal")
+            || normalized.contains("cleanup");
     }
 
     private Jval offerHelp(RlAgentRegistry.Agent agent, Jval action, String type, long tick){

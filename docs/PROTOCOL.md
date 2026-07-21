@@ -289,13 +289,17 @@ agent, and `announce`. M5.6 adds `announcement`, which is non-empty only when
 Human text is not authoritative (ADR-0005).
 
 `coordination_metrics` contains `{duplicate_work_incidents, tasks_completed,
-tasks_abandoned, resource_replans, agent_ticks, idle_agent_ticks, idle_fraction,
-structured_messages, announced_messages}`. When the validation-only shared
+tasks_abandoned, forced_tasks_abandoned, nonforced_tasks_abandoned,
+resource_replans, agent_ticks, idle_agent_ticks, idle_agent_ticks_by_agent,
+idle_fraction, structured_messages, announced_messages}`. The per-agent idle
+array follows stable agent-id order and sums to `idle_agent_ticks`. When the
+validation-only shared
 expert is enabled it additionally contains `shared_decision_count`,
 `shared_decision_digest`, `shared_policy_phase`, `shared_policy_name`,
 `shared_first_line_block_tick`, `shared_resources_short_blocks`, and
 `shared_resources_short_replans`. Metrics are cumulative from reset and copied
-into every agent's Python `info`; they never contribute to reward.
+into every agent's Python `info`. Reward v1 ignores them; audited reward v2
+uses only their monotonic cumulative deltas.
 
 An accepted `deliver copper` helper contract is fulfilled only after that
 helper issues a legal `DELIVER_CORE` skill carrying copper and the observed

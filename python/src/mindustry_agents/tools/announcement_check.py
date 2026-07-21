@@ -72,8 +72,12 @@ def _validate(raw: str, *, print_lines: bool) -> dict[str, Any]:
     assert metrics["announced_messages"] == len(announcements)
     assert metrics["tasks_completed"] == 1
     assert metrics["tasks_abandoned"] == 0
+    assert metrics["forced_tasks_abandoned"] == 0
+    assert metrics["nonforced_tasks_abandoned"] == 0
     assert metrics["duplicate_work_incidents"] == 0
     assert metrics["agent_ticks"] == int(final["tick"]) * 3
+    assert len(metrics["idle_agent_ticks_by_agent"]) == 3
+    assert sum(metrics["idle_agent_ticks_by_agent"]) == metrics["idle_agent_ticks"]
     assert 0.0 <= float(metrics["idle_fraction"]) <= 1.0
 
     if print_lines:

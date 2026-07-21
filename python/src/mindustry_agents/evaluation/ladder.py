@@ -8,10 +8,11 @@ from collections import defaultdict, deque
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
+from mindustry_agents.coordination_semantics import is_forced_abandon_reason
 from mindustry_agents.evaluation.scripted import episode_summary
 from mindustry_agents.tools.expert_common import EpisodeResult
 
-LADDER_SCHEMA_VERSION = 1
+LADDER_SCHEMA_VERSION = 2
 BOOTSTRAP_RESAMPLES = 10_000
 POLICY_ORDER = (
     "random-valid",
@@ -52,6 +53,8 @@ def teammate_scorecard(result: EpisodeResult) -> dict[str, Any]:
     help_times: list[int] = []
     meaningful = 0
     announced = 0
+    forced_abandons = 0
+    nonforced_abandons = 0
     for event in events:
         tick = int(event.get("tick", 0))
         task_id = str(event.get("task_id", ""))
@@ -66,6 +69,11 @@ def teammate_scorecard(result: EpisodeResult) -> dict[str, Any]:
             requests[task_id].append(tick)
         elif event.get("reason_code") == "help_fulfilled" and requests[task_id]:
             help_times.append(tick - requests[task_id].popleft())
+        if act == "ABANDON":
+            if is_forced_abandon_reason(event.get("reason_code", "")):
+                forced_abandons += 1
+            else:
+                nonforced_abandons += 1
 
     recovery_times: list[int] = []
     for lost_agent, loss_tick in sorted(result.agent_loss_ticks.items()):
@@ -93,8 +101,7 @@ def teammate_scorecard(result: EpisodeResult) -> dict[str, Any]:
 
     metrics = result.metrics
     completed = int(metrics.get("tasks_completed", 0))
-    abandoned = int(metrics.get("tasks_abandoned", 0))
-    terminal_tasks = completed + abandoned
+    terminal_tasks = completed + nonforced_abandons
     return {
         "idle_fraction": float(metrics.get("idle_fraction", 0.0)),
         "duplicate_work_incidents": int(metrics.get("duplicate_work_incidents", 0)),
@@ -109,7 +116,11 @@ def teammate_scorecard(result: EpisodeResult) -> dict[str, Any]:
         ),
         "meaningful_transitions": meaningful,
         "announced_messages": announced,
-        "task_abandonment_rate": abandoned / terminal_tasks if terminal_tasks else 0.0,
+        "task_abandonment_rate": (
+            nonforced_abandons / terminal_tasks if terminal_tasks else 0.0
+        ),
+        "forced_task_abandonments": forced_abandons,
+        "nonforced_task_abandonments": nonforced_abandons,
         "recovery_time_after_agent_loss_ticks": (
             sum(recovery_times) / len(recovery_times) if recovery_times else None
         ),
