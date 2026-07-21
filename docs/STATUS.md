@@ -954,6 +954,13 @@ repository-evidence mapping used for the M6 audit is:
   `a10752ccf12b513c...`, `64846932b7e2d948...`, `6f99df0a3243de3f...`,
   and `6d8912cbc00766c6...`. Dev-v8 remains unopened and held-out-v4 remains
   sealed.
+- ADR-0023 precommits V13 as an exact V12 rerun with a quality-gated checkpoint
+  selector. Each dev checkpoint must record mean idle; eligibility requires at
+  least 9/10 wins and idle strictly below 0.25 before the existing
+  wins/return/core-health/earlier-update ranking applies. The permitted dev-v1
+  frontier motivates the rule, but V12 remains rejected and its update 24 is
+  not relabeled. Dev-v8 is retired unopened; dev-v9 freezes 160 globally
+  disjoint roots `91001..91160`. V13 has not been implemented or trained.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

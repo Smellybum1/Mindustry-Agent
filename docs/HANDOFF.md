@@ -264,6 +264,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `6f99df0a3243de3f...`, and full-run digest `6d8912cbc00766c6...`.
   Mean idle is 0.26628148, missing the precommitted `<0.25` bar, so V12 is
   rejected. Dev-v8 is unopened and held-out-v4 remains sealed.
+- **V13 precommit**: ADR-0023 keeps V12's exact training/reward construction
+  but gates checkpoint selection at 9/10 dev-v1 wins and mean idle `<0.25`
+  before applying the existing ranking. Two fresh exact runs are required;
+  V12 update 24 is not retroactively promoted. Dev-v8 is retired unopened and
+  dev-v9 is frozen at disjoint roots `91001..91160` for one exclusive
+  dual-scorecard confirmation. V13 is not implemented or trained.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

@@ -522,6 +522,14 @@ idle below 0.25. Dev-v8 is frozen as a new globally disjoint 160-root one-way
 confirmation under ADR-0019. No V12 training may begin until all four reward
 audit rows and their adversarial tests pass.
 
+V12 later reproduces at update 28 with 10/10 dev-v1 wins but mean idle
+0.26628148, so it is rejected before dev-v8. ADR-0023 precommits V13 as the
+same training construction with a quality-gated checkpoint selector: require
+at least 9/10 wins and mean idle strictly below 0.25, then apply the existing
+wins/return/core-health/earlier-update ranking. V13 must rerun twice rather than
+retroactively relabeling a V12 artifact. Dev-v8 is retired unopened and dev-v9
+is frozen as 160 disjoint roots `91001..91160` for one exclusive confirmation.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

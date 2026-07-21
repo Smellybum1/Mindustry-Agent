@@ -334,3 +334,37 @@ def test_v12_quality_reward_and_dev_v8_are_precommitted():
         "team_abandonment_cost": 0.1,
         "team_abandonment_cap": 2.0,
     }
+
+
+def test_v13_quality_selection_and_dev_v9_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v9.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v9"
+    assert confirmation["seed_set_version"] == 9
+    assert confirmation["seeds"] == list(range(91001, 91161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    config = json.loads(
+        (
+            DEFAULT_SEED_SET.parents[1]
+            / "training"
+            / "m8-selector-v13-quality-gated-selection.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert config["reward_schema"] == "selector_reward_v2"
+    assert config["held_out_seed_set_id"] == "bootstrap-defense-v1-held-out-v4"
+    assert config["dev_checkpoint_selection"] == {
+        "schema": "quality_gate_v1",
+        "minimum_wins": 9,
+        "maximum_mean_idle_fraction_exclusive": 0.25,
+        "ranking": [
+            "wins_desc",
+            "mean_return_desc",
+            "mean_core_health_desc",
+            "update_asc",
+        ],
+    }

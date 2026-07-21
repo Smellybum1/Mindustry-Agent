@@ -927,6 +927,14 @@ suite. Two exact 2,048-episode V12 runs then reproduce bit-for-bit at update 28:
 0.26628148, which misses the precommitted `<0.25` continuation bar. V12 is
 rejected before confirmation; dev-v8 and held-out-v4 remain unopened.
 
+ADR-0023 precommits V13 after permitted dev-v1 frontier analysis shows that
+checkpoint selection, rather than reward construction, excluded a 10/10,
+0.24980951-idle update. V13 must rerun the exact V12 construction twice with a
+selector that first requires at least 9/10 wins and idle `<0.25`, then uses the
+existing ranking. V12 artifacts are not retroactively relabeled. Dev-v8 is
+retired unopened; a disjoint 160-root dev-v9 set is frozen for one exclusive
+ADR-0019 confirmation. Held-out-v4 remains sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
