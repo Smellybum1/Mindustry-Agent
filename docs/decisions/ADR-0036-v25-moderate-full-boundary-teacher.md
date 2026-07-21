@@ -70,3 +70,21 @@ and golden determinism including the negative replay. Config SHA-256 is
 `90b50d1b7add7fd0cf02a4ea9b225b701cb1e965c77f78b8a0388284c303687a`;
 adversary report SHA-256 is
 `8faa7834e426678e6da452d69f9b4b2ec0d99dd55d7f47140a3c9d433756254a`.
+
+## Outcome
+
+Replica A completed all 2,048 episodes and 32 updates, then correctly failed
+the frozen construction gate. No checkpoint reached 9/10. Updates 16 and 17
+were best at 8/10; update 16 has mean return `1.2083000000000041`, mean core
+health `693.7`, and mean idle `0.06516475136727648`. The retained complete
+frontier hashes to
+`0ad699ece62ab94b75bfe19c704460611dc3ba7af653e3293d7d99591491f56e`.
+Replica B did not start, dev-v21 remained unopened, and held-out-v4 remained
+sealed.
+
+The stronger coefficient changed optimization but not the best policy's
+discrete behavior. V25 update 1 improved to 7/10 from V24's 1/10. At the best
+checkpoint, the mean selected-minus-teacher logit gap over disagreement
+boundaries fell from V24's `1.49301094` to `1.07148486`, but both candidates
+still disagree on 73 unforced decisions and lose seeds 2004 and 2005. V25 is
+rejected and dev-v21 is retired unopened.

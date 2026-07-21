@@ -1251,6 +1251,14 @@ candidate gate, smoke, determinism, and negative replay pass. Config/adversary
 SHA-256 are `90b50d1b7add7fd0...` and `8faa7834e426678e...`. Exact replicas
 are next; M8.5 remains unmet.
 
+V25 replica A completed 2,048 episodes/32 updates but again peaked at 8/10, so
+replica B did not start and dev-v21 remains unopened and is retired. Best update
+16 has mean return `1.20830`, core health `693.7`, and idle `0.06516475`; the
+retained frontier hashes to `0ad699ece62ab94b...`. The coefficient did move
+optimization: update 1 rose from V24's 1/10 to 7/10, and the mean disagreement
+logit gap fell from `1.49301094` to `1.07148486`. It did not flip the 73
+disagreements or losses on seeds 2004/2005. V25 is rejected; M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

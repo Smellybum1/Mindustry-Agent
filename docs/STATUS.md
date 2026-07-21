@@ -1247,6 +1247,13 @@ repository-evidence mapping used for the M6 audit is:
   config reward adversaries, 147 Python tests, pinned build, 5/5 candidate gate,
   smoke, determinism, and negative replay pass. Config/adversary hashes are
   `90b50d1b7add7fd0...` and `8faa7834e426678e...`.
+- V25 replica A completed 2,048 episodes/32 updates but no checkpoint reached
+  9/10. Best update 16 is 8/10 with idle `0.06516475`; retained frontier hash is
+  `0ad699ece62ab94b...`. Replica B did not start, dev-v21 remained unopened and
+  is retired, and held-out-v4 stays sealed. The coefficient accelerated early
+  learning (update 1: 1/10 -> 7/10) and reduced mean disagreement logit gap
+  `1.49301094 -> 1.07148486`, but the best policy still has 73 disagreements and
+  the same losses on seeds 2004/2005. V25 is rejected.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
