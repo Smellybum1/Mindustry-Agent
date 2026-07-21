@@ -1265,6 +1265,12 @@ repository-evidence mapping used for the M6 audit is:
   Python tests, pinned build, 5/5 candidate gate, smoke, determinism, and
   negative replay pass. Config/adversary hashes are `b5e3bf17a1dc1ace...` and
   `202e71a48bf8a05f...`.
+- V26 replica A completed 2,048 episodes/32 updates but peaked at only 5/10.
+  Best update 10 has idle `0.06423822`; retained frontier hash is
+  `0f67cf4484c09ad7...`. Replica B did not start, dev-v22 remained unopened and
+  is retired, and held-out-v4 stays sealed. The `0.20` coefficient reversed
+  V25's early gain, so the fixed full-boundary teacher-strength line is closed
+  and no further coefficient-only successor is authorized.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -63,3 +63,18 @@ and golden determinism including the negative replay. Config SHA-256 is
 `b5e3bf17a1dc1acede170abd59b6adc86a4916fce13871254bef0abef4f6bae3`;
 adversary report SHA-256 is
 `202e71a48bf8a05fe88cf6f226cb0907b37c1e92a4a118e9fb9419467c03713b`.
+
+## Outcome
+
+Replica A completed all 2,048 episodes and 32 updates, then failed the frozen
+construction gate. The best checkpoint was update 10 at only 5/10 wins, mean
+return `-5.012319999999997`, mean core health `533.8`, and mean idle
+`0.06423822307018623`. The retained complete frontier hashes to
+`0f67cf4484c09ad712413be4af289dc9c5823bfe4cc8b3a6bf301855ac863eab`.
+Replica B did not start, dev-v22 remained unopened, and held-out-v4 remained
+sealed.
+
+The `0.20` step reverses V25's early gain and reduces the frontier maximum from
+8/10 to 5/10. V26 is rejected, dev-v22 is retired unopened, and the fixed full-
+boundary teacher-strength line is closed. No further coefficient-only successor
+is authorized by this evidence.

@@ -1271,6 +1271,14 @@ gate, smoke, determinism, and negative replay pass. Config/adversary hashes are
 `b5e3bf17a1dc1ace...` and `202e71a48bf8a05f...`. Replica A is next;
 M8.5 remains unmet.
 
+V26 replica A completed 2,048 episodes/32 updates but regressed to a maximum of
+5/10. Best update 10 has mean return `-5.01232`, core health `533.8`, and idle
+`0.06423822`; the retained frontier hashes to `0f67cf4484c09ad7...`. Replica B
+did not start, dev-v22 remained unopened and is retired, and held-out-v4 stays
+sealed. The final `0.20` step reverses V25's early gain, so the fixed full-
+boundary teacher-strength line is closed. No coefficient-only successor is
+authorized; M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

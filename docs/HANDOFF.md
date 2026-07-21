@@ -545,6 +545,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   packet. All 44 exact-config adversaries, 148 Python tests, pinned build, 5/5
   candidate gate, smoke, determinism, and negative replay pass. Config/adversary
   hashes are `b5e3bf17a1dc1ace...` and `202e71a48bf8a05f...`.
+- **V26 rejected; coefficient line closed**: replica A completed 2,048
+  episodes/32 updates but peaked at 5/10. Best update 10 has idle `0.06423822`;
+  retained frontier hash is `0f67cf4484c09ad7...`. Replica B did not start,
+  dev-v22 is retired unopened, and held-out-v4 stays sealed. The final `0.20`
+  step reversed V25's early gain, so no coefficient-only successor is
+  authorized.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
