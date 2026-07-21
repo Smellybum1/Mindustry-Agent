@@ -28,6 +28,9 @@ from mindustry_agents.process.launcher import (
 )
 from mindustry_agents.tools.expert_common import EpisodeResult
 from mindustry_agents.training.model import SelectorActorCritic
+from mindustry_agents.training.checkpoint_interpolation import (
+    validate_lineage_manifest,
+)
 from mindustry_agents.training.ppo_selector import (
     LEARNED_SEAT,
     EpisodeRollout,
@@ -256,6 +259,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="M8.5 mixed-seat dev preflight")
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--config", type=Path, required=True)
+    parser.add_argument("--lineage-manifest", type=Path, required=True)
     parser.add_argument(
         "--seed-set",
         type=Path,
@@ -300,6 +304,11 @@ def main(argv: list[str] | None = None) -> int:
     checkpoint_sha256 = _sha256(args.checkpoint.resolve())
     checkpoint_config_match = checkpoint_payload.get("config_sha256") == _sha256(
         args.config.resolve()
+    )
+    lineage = validate_lineage_manifest(
+        manifest_path=args.lineage_manifest,
+        config_path=args.config,
+        checkpoint_path=args.checkpoint,
     )
     reward_report = json.loads(args.reward_report.read_text(encoding="utf-8"))
     reward_passed = bool(reward_report.get("pass", False)) and all(
@@ -367,6 +376,7 @@ def main(argv: list[str] | None = None) -> int:
                 "config_sha256": checkpoint_payload.get("config_sha256"),
                 "config_match": checkpoint_config_match,
             },
+            "lineage": lineage,
             "repository": {
                 **repository,
                 "unexpected_dirty": unexpected_dirty,

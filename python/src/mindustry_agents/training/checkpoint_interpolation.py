@@ -372,6 +372,50 @@ def compare_lineage_manifests(first: Path, second: Path) -> str:
     return digests[0]
 
 
+def validate_lineage_manifest(
+    *,
+    manifest_path: Path,
+    config_path: Path,
+    checkpoint_path: Path,
+) -> dict[str, Any]:
+    """Validate a frozen derived checkpoint against its governed lineage."""
+
+    manifest_path = manifest_path.resolve()
+    config_path = config_path.resolve()
+    checkpoint_path = checkpoint_path.resolve()
+    manifest = _load_json(manifest_path)
+    if manifest.get("schema") != INTERPOLATION_SCHEMA:
+        raise ValueError("checkpoint lineage manifest schema mismatch")
+    evidence = _lineage_evidence(manifest)
+    digest = _json_digest(evidence)
+    recorded = manifest.get("lineage_reproducibility", {}).get("digest")
+    if recorded != digest:
+        raise ValueError("checkpoint lineage reproducibility digest mismatch")
+    config_sha256 = _sha256(config_path)
+    if manifest.get("source_config", {}).get("sha256") != config_sha256:
+        raise ValueError("checkpoint lineage config hash mismatch")
+    checkpoint_sha256 = _sha256(checkpoint_path)
+    if manifest.get("checkpoint", {}).get("sha256") != checkpoint_sha256:
+        raise ValueError("checkpoint lineage artifact hash mismatch")
+    model = SelectorActorCritic(int(manifest["model_init_seed"]))
+    checkpoint = load_checkpoint(checkpoint_path, model)
+    if checkpoint.get("config_sha256") != config_sha256:
+        raise ValueError("derived checkpoint config hash mismatch")
+    model_state_sha256 = _model_state_digest(checkpoint["model_state"])
+    if manifest["checkpoint"].get("model_state_sha256") != model_state_sha256:
+        raise ValueError("checkpoint lineage model state hash mismatch")
+    return {
+        "manifest_path": str(manifest_path),
+        "manifest_sha256": _sha256(manifest_path),
+        "lineage_reproducibility_sha256": digest,
+        "checkpoint_sha256": checkpoint_sha256,
+        "checkpoint_model_state_sha256": model_state_sha256,
+        "source_config_sha256": config_sha256,
+        "repository_commit": manifest["repository"]["commit"],
+        "parents": manifest["parents"],
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     root = repo_root()
     parser = argparse.ArgumentParser(description="Construct the M8.5 checkpoint")
