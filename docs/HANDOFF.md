@@ -174,7 +174,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   permanent and matched controls. Learned 8/10 beats permanent random-valid
   3/10, matched random 2/10, and matched greedy 1/10; paired observed scorecard
   metrics pass, but permanent greedy-utility is also 8/10. The candidate is not
-  frozen or eligible, and held-out remains sealed.
+  frozen or eligible. An exploratory 75/25 same-initialization weight
+  interpolation reaches 9/10 and passes every dev comparator/scorecard check,
+  but its auxiliary parent recipe was removed and its lineage is not yet
+  reproducible from committed code. It is not eligible; held-out remains sealed.
 - **What is stubbed**: the one-way held-out final and the M10 human
   goal/override/study surface remain future work. M8.4 training/rewards and the
   M8.5 dev ablation/preflight path are real.
@@ -344,9 +347,9 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M8.5: improve/freeze candidate.** Use train/dev only; the current best
-   exploratory checkpoint is 8/10 and ties permanent greedy, so it is not
-   eligible for promotion.
+1. **M8.5: reproduce/freeze the 9/10 interpolation.** Restore the optional
+   auxiliary training recipe, govern both parent configs plus the 75/25
+   interpolation manifest, and require exact reruns before eligibility.
 2. **M8.5: held-out promotion gate.** Open held-out exactly once only after the
    policy/code and all comparator/scorecard preconditions are frozen.
 3. **M9.1: M9 design gate.** Begin only after the single learned seat promotes.

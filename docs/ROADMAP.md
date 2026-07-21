@@ -769,7 +769,10 @@ scorecard preflight are implemented. The strongest exploratory learned
 checkpoint wins 8/10 dev episodes and beats permanent random-valid (3/10),
 matched random (2/10), and matched greedy (1/10), with observed scorecard
 non-regression. It ties permanent greedy-utility at 8/10, so it is not eligible
-to freeze or open held-out. Held-out remains sealed.
+to freeze. A later 75/25 same-initialization weight interpolation reaches 9/10
+and passes the dev screen, but one parent uses a removed auxiliary recipe and
+the derived artifact has no reproducible frozen lineage. Held-out remains
+sealed until that construction is implemented and reproduced.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

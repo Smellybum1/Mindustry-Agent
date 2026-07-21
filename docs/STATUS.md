@@ -813,6 +813,12 @@ repository-evidence mapping used for the M6 audit is:
   observed scorecard metric is non-regressing versus matched greedy, but the
   learned candidate only ties permanent greedy. It is therefore not frozen or
   eligible for held-out. The held-out seed file has not been opened or run.
+- A post-preflight same-initialization weight interpolation (75% of the 8/10
+  checkpoint, 25% of a rejected auxiliary-run checkpoint) reaches 9/10 and
+  passes all observed dev comparator and scorecard checks. It is a direction,
+  not a candidate: the auxiliary recipe was removed, the two parent runs have
+  not been reproduced from the committed tree, and the derived checkpoint has
+  no frozen config/lineage manifest. Those gaps must close before eligibility.
 - The dev preflight is deliberately a strict observed-rate improvement screen.
   The roadmap's stricter 95% CI-separation claim remains reserved for the
   one-way held-out final after code, config, checkpoint, and comparators freeze.

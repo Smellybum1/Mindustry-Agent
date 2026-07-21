@@ -243,6 +243,15 @@ permanent greedy-utility, 2/10 matched random, and 1/10 matched greedy. Observed
 paired scorecard metrics pass, but the permanent-greedy tie makes the candidate
 ineligible. No artifact is frozen and held-out remains sealed.
 
+A subsequent same-initialization interpolation, 75% of that update-2 model and
+25% of the rejected successful-trajectory-imitation update-2 model, wins 9/10
+dev episodes and passes every observed-rate comparator plus the paired
+scorecard screen. This is exploratory evidence only. The auxiliary algorithm
+is not in the committed trainer, neither parent has been regenerated from the
+current canonical-WAIT tree, and the derived checkpoint lacks a governed
+interpolation config and lineage manifest. Promotion remains blocked until the
+complete two-parent construction is implemented and reproduced exactly.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one
