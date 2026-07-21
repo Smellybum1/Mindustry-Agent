@@ -893,6 +893,12 @@ dev-v1 wins (checkpoint `a20f44d6ec093076...`, full-run digest
 teacher term therefore fails its screen and is rejected before dev-v6. Dev-v6
 and held-out-v4 remain unopened.
 
+ADR-0021 precommits V11 as a fixed 90/10 blend of reproducible V6 update 31
+and V10 update 6. This tests V10's stronger teacher state at the V7-established
+blend weight without another training run or sweep. V11 must reproduce and
+reach at least 9/10 dev-v1 wins. Dev-v6 remains retired unopened; a disjoint
+160-root dev-v7 set is frozen for one corrected dual-scorecard confirmation.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

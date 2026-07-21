@@ -244,6 +244,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   Two pinned runs reproduce exactly but select update 6 at only 1/10 dev wins
   (`a20f44d6ec093076...`; full run `787b5d4bd6548eea...`). V10 is rejected
   before dev-v6; dev-v6 and held-out-v4 remain unopened.
+- **V11 precommit**: ADR-0021 freezes a 90/10 V6 update-31 / V10 update-6
+  blend using V7's established weight. It names held-out-v4 and must reach
+  9/10 dev-v1. Dev-v6 is retired unopened; dev-v7 is a new disjoint 160-root
+  one-way confirmation set. V11 is not yet constructed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

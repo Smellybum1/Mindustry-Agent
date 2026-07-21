@@ -926,6 +926,11 @@ repository-evidence mapping used for the M6 audit is:
   `5d5cd3bd8395855f...`, replay `045854f0a9e58712...`, and full-run digest
   `787b5d4bd6548eea...`. Mean dev idle is about 0.361. V10 is rejected before
   dev-v6; dev-v6 and held-out-v4 remain unopened.
+- ADR-0021 precommits V11 as a fixed 90/10 V6-update-31/V10-update-6 blend,
+  using V7's established weight. Its config names held-out-v4 and requires at
+  least 9/10 dev-v1 wins. Dev-v6 is retired unopened; a globally disjoint
+  160-root dev-v7 set is frozen for one corrected dual-scorecard confirmation.
+  V11 has not yet been constructed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

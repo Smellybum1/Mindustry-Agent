@@ -478,6 +478,16 @@ Mean dev idle rises to about 0.361. Full-boundary coefficient 1.0 collapses win
 capacity despite reducing teacher loss, so V10 stops before dev-v6; dev-v6 and
 held-out-v4 remain unopened.
 
+## V11 governed successor
+
+ADR-0021 precommits a 90/10 interpolation of reproducible V6 update 31 and V10
+update 6. This reuses the V7 weight that preserved 9/10 dev capacity while
+testing V10's stronger all-boundary teacher state at bounded strength. No
+reward, feature, mask, lifecycle, architecture, or inference behavior changes.
+V11 names held-out-v4 and must reach at least 9/10 dev-v1 wins. Dev-v6 stays
+reserved to rejected V10; a new disjoint 160-root dev-v7 set is frozen for one
+ADR-0019 dual-scorecard confirmation only after V11 qualifies.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

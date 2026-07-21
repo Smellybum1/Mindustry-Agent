@@ -275,3 +275,30 @@ def test_v10_config_precommits_full_teacher_and_held_out_v4():
     assert config["teacher_imitation_coefficient"] == 1.0
     assert config["successful_teacher_imitation_coefficient"] == 0.0
     assert config["optimizer_ppo"]["teacher_imitation_coefficient"] == 1.0
+
+
+def test_v11_confirmation_and_blend_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v7.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v7"
+    assert confirmation["seed_set_version"] == 7
+    assert confirmation["seeds"] == list(range(71001, 71161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    config = json.loads(
+        (
+            DEFAULT_SEED_SET.parents[1]
+            / "training"
+            / "m8-selector-v11-interpolation.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert config["held_out_seed_set_id"] == "bootstrap-defense-v1-held-out-v4"
+    parents = config["checkpoint_construction"]["parents"]
+    assert [(item["role"], item["update"], item["weight"]) for item in parents] == [
+        ("base", 31, 0.9),
+        ("auxiliary", 6, 0.1),
+    ]
