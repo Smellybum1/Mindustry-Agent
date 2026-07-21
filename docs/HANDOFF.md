@@ -241,7 +241,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   coefficient `1.0` adaptive-v1 cross-entropy on every unforced transition;
   reward/inference are unchanged. Its config names held-out-v4. A new disjoint
   160-root dev-v6 set is frozen for one corrected dual-scorecard confirmation.
-  V10 is not yet trained.
+  Two pinned runs reproduce exactly but select update 6 at only 1/10 dev wins
+  (`a20f44d6ec093076...`; full run `787b5d4bd6548eea...`). V10 is rejected
+  before dev-v6; dev-v6 and held-out-v4 remain unopened.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

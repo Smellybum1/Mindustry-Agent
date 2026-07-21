@@ -920,7 +920,12 @@ repository-evidence mapping used for the M6 audit is:
   reduced idle/abandonment, whereas role assignment lost win capacity and
   increased duplicates. Reward and inference behavior remain unchanged. The
   config names held-out-v4 and a disjoint 160-root dev-v6 one-way confirmation
-  is frozen for the corrected dual-scorecard gate. V10 is not yet trained.
+  is frozen for the corrected dual-scorecard gate.
+- Two pinned V10 runs reproduce exactly and select update 6 at only 1/10
+  dev-v1 wins: checkpoint `a20f44d6ec093076...`, model state
+  `5d5cd3bd8395855f...`, replay `045854f0a9e58712...`, and full-run digest
+  `787b5d4bd6548eea...`. Mean dev idle is about 0.361. V10 is rejected before
+  dev-v6; dev-v6 and held-out-v4 remain unopened.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

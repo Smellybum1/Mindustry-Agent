@@ -467,6 +467,17 @@ dev-v6 confirmation. Exact permanent records must be refreshed on dev-v6, and
 both permanent-greedy and matched-greedy paired scorecards must pass before
 held-out-v4 can be authorized.
 
+Two pinned V10 runs reproduce exactly but reject the hypothesis on the dev-v1
+screen. Both select update 6 at 1/10 wins with checkpoint
+`a20f44d6ec0930768202da33c3833bebfbe46c6025547abc2ea31296cce4c6a8`,
+model state `5d5cd3bd8395855f31abc8304583ca9ece70d1c2f78037c2a21596adb8b5e4c6`,
+replay digest `045854f0a9e587128702e5538c36965e2d226be3f4ee7563e909c2b05479ddb2`,
+and full-run digest
+`787b5d4bd6548eea73c972c081fb72e031f9c516562f08eeb72538d8266769b1`.
+Mean dev idle rises to about 0.361. Full-boundary coefficient 1.0 collapses win
+capacity despite reducing teacher loss, so V10 stops before dev-v6; dev-v6 and
+held-out-v4 remain unopened.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

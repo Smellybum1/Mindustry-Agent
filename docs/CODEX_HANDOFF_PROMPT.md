@@ -44,12 +44,12 @@ evidence only. M9.1 remains gated on an M8 promotion.
 
 ADR-0020 precommits that next candidate as V10. It uses V6's 64-root, 32-cycle
 PPO recipe and adds one training-only coefficient: `1.0` adaptive-v1
-cross-entropy on every unforced transition. Reward, features, model, masks,
-lifecycle, RNGs, and inference remain unchanged. Its config already names
-held-out-v4. Implement zero-default telemetry compatibility, reproduce two
-pinned runs, screen dev-v1, then use the frozen 160-root dev-v6 set for one
-corrected dual-scorecard confirmation. Do not open held-out-v4 unless every
-gate passes.
+cross-entropy on every unforced transition. Reward and inference remain
+unchanged. The implementation and zero-default telemetry are complete. Two
+pinned runs reproduce exactly but select update 6 at only 1/10 dev wins
+(`a20f44d6ec093076...`; full run `787b5d4bd6548eea...`), so V10 is rejected.
+Dev-v6 and held-out-v4 remain unopened. Choose the next candidate from existing
+train/dev evidence and precommit it before implementation or execution.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

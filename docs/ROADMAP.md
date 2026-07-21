@@ -887,6 +887,12 @@ config names held-out-v4. A globally disjoint 160-root dev-v6 set is frozen for
 one corrected dual-scorecard confirmation after reproducible construction and
 dev-v1 screening.
 
+V10 reproduces exactly across two pinned runs but selects update 6 at only 1/10
+dev-v1 wins (checkpoint `a20f44d6ec093076...`, full-run digest
+`787b5d4bd6548eea...`). Mean dev idle is about 0.361. The full-boundary 1.0
+teacher term therefore fails its screen and is rejected before dev-v6. Dev-v6
+and held-out-v4 remain unopened.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
