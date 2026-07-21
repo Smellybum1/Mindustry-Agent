@@ -1169,6 +1169,17 @@ repository-evidence mapping used for the M6 audit is:
   while every non-hash record remains identical. The negative replay still
   diverges. Previously trained checkpoints remain historical evidence; a V22
   precommit and from-scratch retrain are still required.
+- ADR-0033 now precommits V22 as the exact V21 training packet under runtime
+  contract `abandon_wait_retry_and_agent_death_boundaries_v3`. Candidate ID,
+  runtime contract, and confirmation path are the only config differences;
+  reward, teacher coefficient `0.05`, train/dev roots, model, optimizer, RNGs,
+  schedule, and checkpoint selection stay frozen. Dev-v17 is retired unopened.
+  Dev-v18 freezes 160 globally disjoint roots `181001..181160` and remains
+  unopened; held-out-v4 remains sealed. All 44 exact reward adversaries, 143
+  Python tests, pinned build, five-seed candidate policy, smoke, determinism,
+  and negative replay pass. Config/adversary SHA-256 are
+  `95bc200596718170...` and `18f337ac3ca54700...`. No V22 model work preceded
+  this precommit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1154,6 +1154,18 @@ all non-hash records remain identical and the negative mutation still diverges.
 V22 still requires a precommitted runtime contract, fresh unopened dev-v18, and
 a from-scratch exact-replica training run; M8.5 remains unmet.
 
+ADR-0033 now supplies that precommit. V22 is an exact V21 retrain under runtime
+contract `abandon_wait_retry_and_agent_death_boundaries_v3`; candidate ID,
+runtime contract, and confirmation path are the only config differences. Reward,
+teacher coefficient `0.05`, train/dev roots, model, optimizer, RNGs, schedule,
+and checkpoint selection remain frozen. Dev-v17 is retired unopened; dev-v18
+freezes globally disjoint roots `181001..181160` and remains unopened; held-out-v4
+remains sealed. The 44 exact-config reward adversaries, 143 Python tests, pinned
+build, five-seed candidate gate, smoke, determinism, and negative replay pass.
+Config/adversary SHA-256 are `95bc200596718170...` and
+`18f337ac3ca54700...`. No V22 model work began before this packet; exact twin
+replicas and reusable preflight are next, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

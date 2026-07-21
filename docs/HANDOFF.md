@@ -458,6 +458,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   releases. The regenerated two-win/16,200-tick/664-checkpoint golden reproduces
   twice at `f08c5af6b6ea4e25...`; only hashes changed, and the negative mutation
   still diverges. No V22 model or governed confirmation set has been opened.
+- **V22 precommit**: ADR-0033 freezes an exact V21 retrain under runtime contract
+  `abandon_wait_retry_and_agent_death_boundaries_v3`; only candidate ID,
+  runtime contract, and confirmation path differ. Dev-v17 is retired unopened;
+  dev-v18 freezes disjoint roots `181001..181160` and remains unopened, while
+  held-out-v4 stays sealed. The 44 exact reward adversaries, 143 Python tests,
+  pinned build, five-seed candidate gate, smoke, determinism, and negative replay
+  pass. Config hash is `95bc200596718170...`; adversary report hash is
+  `18f337ac3ca54700...`. Training has not started.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -620,10 +628,10 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Precommit V22 under the corrected runtime.** Use the now-verified
-   retry-eligibility and dead-seat-release contract without reopening the idle,
-   reward-cap, or teacher-coefficient lines. Freeze a fresh disjoint dev-v18
-   before model work; dev-v17 is retired unopened.
+1. **Train two exact V22 replicas.** Use the precommitted corrected runtime and
+   frozen config without reopening the idle, reward-cap, or teacher-coefficient
+   lines. Require exact checkpoint/frontier/model/replay/full-run/direct-lineage
+   reproduction before reusable preflight; dev-v18 must remain unopened.
 2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
    confirmation. Never inspect dev-v14/dev-v15/dev-v16/dev-v17 or
