@@ -307,9 +307,14 @@ Human text is not authoritative (ADR-0005).
 `coordination_metrics` contains `{duplicate_work_incidents, tasks_completed,
 tasks_abandoned, forced_tasks_abandoned, nonforced_tasks_abandoned,
 resource_replans, agent_ticks, idle_agent_ticks, idle_agent_ticks_by_agent,
-idle_fraction, structured_messages, announced_messages}`. The per-agent idle
-array follows stable agent-id order and sums to `idle_agent_ticks`. When the
-validation-only shared
+unavailable_agent_ticks, unavailable_agent_ticks_by_agent, idle_fraction,
+structured_messages, announced_messages}`. `agent_ticks` counts only ticks in
+which the fixed registry seat is alive and available; unavailable seat-ticks are
+reported separately and never count as idle. `idle_fraction` is therefore
+`idle_agent_ticks / agent_ticks`, not a penalty for a seat that can no longer
+act. Both per-agent arrays follow stable agent-id order and sum to their
+respective team counters. At every recorded boundary, `agent_ticks +
+unavailable_agent_ticks == tick * agent_count`. When the validation-only shared
 expert is enabled it additionally contains `shared_decision_count`,
 `shared_decision_digest`, `shared_policy_phase`, `shared_policy_name`,
 `shared_first_line_block_tick`, `shared_resources_short_blocks`, and

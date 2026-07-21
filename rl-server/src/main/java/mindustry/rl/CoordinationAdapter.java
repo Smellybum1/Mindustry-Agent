@@ -42,6 +42,8 @@ public final class CoordinationAdapter{
     private long agentTicks;
     private long idleAgentTicks;
     private long[] idleAgentTicksByAgent = new long[0];
+    private long unavailableAgentTicks;
+    private long[] unavailableAgentTicksByAgent = new long[0];
     private int duplicateWorkIncidents;
     private int tasksCompleted;
     private int tasksAbandoned;
@@ -97,6 +99,8 @@ public final class CoordinationAdapter{
         agentTicks = 0L;
         idleAgentTicks = 0L;
         idleAgentTicksByAgent = new long[agentCount];
+        unavailableAgentTicks = 0L;
+        unavailableAgentTicksByAgent = new long[agentCount];
         duplicateWorkIncidents = 0;
         tasksCompleted = 0;
         tasksAbandoned = 0;
@@ -358,8 +362,13 @@ public final class CoordinationAdapter{
 
     /** Record exactly one engine tick of assignment occupancy for episode metrics. */
     public void recordMetricsTick(){
-        agentTicks += assignments.length;
         for(int i = 0; i < assignments.length; i++){
+            if(!agentAvailable(registry.get(i))){
+                unavailableAgentTicks++;
+                unavailableAgentTicksByAgent[i]++;
+                continue;
+            }
+            agentTicks++;
             if(assignments[i] == null){
                 idleAgentTicks++;
                 idleAgentTicksByAgent[i]++;
@@ -490,6 +499,10 @@ public final class CoordinationAdapter{
         Jval idleByAgent = Jval.newArray();
         for(long ticks : idleAgentTicksByAgent) idleByAgent.add(ticks);
         out.add("idle_agent_ticks_by_agent", idleByAgent);
+        out.put("unavailable_agent_ticks", unavailableAgentTicks);
+        Jval unavailableByAgent = Jval.newArray();
+        for(long ticks : unavailableAgentTicksByAgent) unavailableByAgent.add(ticks);
+        out.add("unavailable_agent_ticks_by_agent", unavailableByAgent);
         out.put("idle_fraction", agentTicks == 0L ? 0.0
             : idleAgentTicks / (double)agentTicks);
         out.put("structured_messages", structuredMessages);

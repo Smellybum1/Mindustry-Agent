@@ -218,6 +218,23 @@ def main(argv=None) -> int:
                     tick = response.tick
                     observations = response.observations
                     masks = response.action_masks
+                    metrics = response.coordination_metrics
+                    if int(metrics.get("agent_ticks", -1)) + int(
+                        metrics.get("unavailable_agent_ticks", -1)
+                    ) != tick * len(observations):
+                        raise AssertionError(
+                            f"agent availability ledger mismatch at tick {tick}: {metrics}"
+                        )
+                    if sum(metrics.get("idle_agent_ticks_by_agent", [])) != int(
+                        metrics.get("idle_agent_ticks", -1)
+                    ) or sum(
+                        metrics.get("unavailable_agent_ticks_by_agent", [])
+                    ) != int(
+                        metrics.get("unavailable_agent_ticks", -1)
+                    ):
+                        raise AssertionError(
+                            f"per-agent availability ledger mismatch at tick {tick}: {metrics}"
+                        )
                     for agent_id, observation in enumerate(observations):
                         if not observation.get("unit", {}).get("dead", False):
                             continue

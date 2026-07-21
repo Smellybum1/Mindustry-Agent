@@ -257,6 +257,12 @@ the abandonment as forced, clears its assignment, and marks `task_terminal` so
 surviving seats can replan on that tick. The unavailable seat cannot claim work;
 its only legal action is the board-neutral `WAIT` no-op.
 
+Episode occupancy metrics use the same availability boundary. An unavailable
+seat increments `unavailable_agent_ticks` rather than `agent_ticks` or
+`idle_agent_ticks`; the idle fraction measures unassigned time only while a seat
+could act. Per-agent idle and unavailable counters make the partition auditable,
+and their team totals reconcile to the fixed registry size on every tick.
+
 A successful policy `ABANDON` marks `task_terminal` during the atomic action
 bundle. Event-driven stepping still advances one fixed engine tick before
 returning, then exposes that boundary immediately; it must not leave the newly

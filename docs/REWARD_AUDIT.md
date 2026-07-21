@@ -155,16 +155,16 @@ may influence V12 after the production tests and expanded adversary gate pass.
 
 | Field | Value |
 |---|---|
-| Definition | `-0.0001` for each monotonic increase in cumulative `idle_agent_ticks`. |
+| Definition | `-0.0001` for each monotonic increase in cumulative `idle_agent_ticks`, which accumulates only while a fixed registry seat is alive/available and unassigned. Unavailable seat-ticks are reported separately and never treated as idle. |
 | Scale / range | `[-2.7,0]` for three agents and the 9,000-tick cap. |
-| State variables read | Structured cumulative `idle_agent_ticks`, `agent_ticks`, scenario tick/agent cap, prior counters. |
+| State variables read | Structured cumulative `idle_agent_ticks`, available `agent_ticks`, `unavailable_agent_ticks`, scenario tick/agent cap, prior counters. |
 | Intended behaviour | Prefer action traces that keep the whole mixed team doing useful work. |
-| Exploit hypothesis 1 | Lose early to avoid idle cost. Mitigation: terminal loss plus full-horizon unresolved cost dominates. |
+| Exploit hypothesis 1 | Deliberately lose a seat to stop its idle charge. Mitigation: agent loss forces structured abandonment/recovery, removes useful capacity, and remains subject to terminal win, survival, and scorecard gates; an unavailable seat is not falsely charged for impossible work. |
 | Exploit hypothesis 2 | Manipulate step chunking. Mitigation: charge exact cumulative delta and fail counter rollback. |
 | Exploit hypothesis 3 | Perform churn/busywork instead of idling. Mitigation: duplicate/abandon penalties plus milestone, win, and scorecard gates. |
-| Adversarial tests | `idle-early-loss`; `quality-chunk-size`; `idle-busywork`. |
-| Telemetry key | `reward.penalty.team_idle_ticks`, `reward_quality_counters.idle_agent_ticks`, `reward_quality_penalty_totals`. |
-| Status | implemented-approved-v12; adversaries pass 2026-07-21 |
+| Adversarial tests | `idle-early-loss`; `quality-chunk-size`; `idle-busywork`; live candidate-policy availability-ledger reconciliation. |
+| Telemetry key | `reward.penalty.team_idle_ticks`, `reward_quality_counters.idle_agent_ticks`, `coordination_metrics.unavailable_agent_ticks`, per-agent idle/unavailable arrays, `reward_quality_penalty_totals`. |
+| Status | implemented-approved-v12; availability semantics corrected 2026-07-22 after V22 rejection; governed retrain required |
 
 ### `reward.penalty.duplicate_work`
 
