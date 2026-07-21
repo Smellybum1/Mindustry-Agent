@@ -34,6 +34,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0027](ADR-0027-v16-high-slope-capped-idle.md) | V16 high-slope capped idle pressure |
 | [0028](ADR-0028-v17-doubled-capped-idle-slope.md) | V17 doubled capped idle slope |
 | [0029](ADR-0029-v18-scorecard-aligned-quality.md) | V18 scorecard-aligned quality reward |
+| [0030](ADR-0030-v19-unsaturated-idle-gradient.md) | V19 unsaturated idle gradient |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

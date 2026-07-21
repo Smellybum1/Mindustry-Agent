@@ -17,7 +17,12 @@ QUALITY = {
     "team_abandonment_cost": 0.1,
     "team_abandonment_cap": 2.0,
 }
-from mindustry_agents.training.reward_adversary import CASES, RECOVERY_CASES, run_case
+from mindustry_agents.training.reward_adversary import (
+    CASES,
+    FULL_HORIZON_BUSYWORK_CASE,
+    RECOVERY_CASES,
+    run_case,
+)
 
 
 def team(tick=0, *, line=False, readiness=0.0, enemies=0, wave=1):
@@ -184,8 +189,14 @@ class TestSelectorRewardAdversaries(unittest.TestCase):
         reports = [
             run_case(case, quality_reward_override=stronger)
             for case in CASES
+            if case != FULL_HORIZON_BUSYWORK_CASE
         ]
         self.assertTrue(all(report["pass"] for report in reports))
+        with self.assertRaises(AssertionError):
+            run_case(
+                FULL_HORIZON_BUSYWORK_CASE,
+                quality_reward_override=stronger,
+            )
 
     def test_quality_adversaries_accept_v17_idle_and_duplicate_caps(self):
         v17 = {
@@ -198,8 +209,14 @@ class TestSelectorRewardAdversaries(unittest.TestCase):
         reports = [
             run_case(case, quality_reward_override=v17)
             for case in CASES
+            if case != FULL_HORIZON_BUSYWORK_CASE
         ]
         self.assertTrue(all(report["pass"] for report in reports))
+        with self.assertRaises(AssertionError):
+            run_case(
+                FULL_HORIZON_BUSYWORK_CASE,
+                quality_reward_override=v17,
+            )
 
     def test_quality_adversaries_accept_v18_scorecard_reward(self):
         v18 = {
@@ -226,6 +243,23 @@ class TestSelectorRewardAdversaries(unittest.TestCase):
                 for report in recovery_reports
             )
         )
+
+    def test_quality_adversaries_accept_v19_unsaturated_idle_gradient(self):
+        v19 = {
+            **QUALITY,
+            "idle_agent_tick_cost": 0.002,
+            "idle_agent_tick_cap": 8.0,
+            "duplicate_work_cap": 7.0,
+            "announcement_cost": 0.01,
+            "team_abandonment_cost": 0.25,
+            "recovery_delay_tick_cost": 0.001,
+            "recovery_delay_tick_cap": 3.0,
+        }
+        reports = [
+            run_case(case, quality_reward_override=v19)
+            for case in (*CASES, *RECOVERY_CASES)
+        ]
+        self.assertTrue(all(report["pass"] for report in reports))
 
     def test_recovery_reward_rejects_incomplete_or_negative_config(self):
         metrics = {

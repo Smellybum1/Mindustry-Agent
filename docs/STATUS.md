@@ -1082,6 +1082,16 @@ repository-evidence mapping used for the M6 audit is:
   (-42.52 ticks, 95% CI -214.79..+118.93). Announcements, duplicate work, and
   abandonment non-regress; matched idle improves by 0.12000735. Dev-v14
   remains unopened, held-out-v4 remains sealed, and M8.5 remains unmet.
+- ADR-0030 precommits V19 after reusable per-agent diagnostics identify reward
+  saturation as the causal gap: V18 reaches its idle cap in 8/10 dev episodes,
+  and excess idle is dominated by downstream seat 1 (`0.174262` versus
+  permanent greedy `0.031523`), not explicit learned-seat WAIT. V19 restores
+  idle cost `0.002`, raises its cap to `8.0` (4,000 differentiating idle-agent
+  ticks), and raises duplicate cap to `7.0` so duplicate plus abandonment churn
+  remains worse at the full horizon. All other V18 fields remain exact. The new
+  full-horizon adversary and all 44 exact cases pass, as do 140 Python tests,
+  smoke, and determinism. Dev-v14 is retired unopened; dev-v15 freezes disjoint
+  roots `151001..151160`. Held-out-v4 remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1048,6 +1048,19 @@ greedy (-6.85 ticks, 95% CI -93.62..+114.80) and matched greedy (-42.52 ticks,
 non-regress, and matched idle improves by 0.12000735. Dev-v14 remains unopened,
 held-out-v4 remains sealed, and M8.5 remains unmet.
 
+ADR-0030 precommits V19 from reusable diagnostics only. V18 reaches its idle
+cap in 8/10 selected dev episodes, after just 1,250 idle-agent ticks, and
+per-agent counters show downstream seat 1 dominates the permanent-idle gap
+(`0.174262` versus `0.031523`). V19 restores idle cost `0.002` and raises its
+cap to `8.0`, preserving differentiation through 4,000 idle-agent ticks. The
+duplicate cap rises to `7.0`, so capped duplicate plus abandonment churn
+(`-9.0`) remains strictly worse than capped honest idle (`-8.0`). All other V18
+fields remain exact. A new full-horizon busywork adversary closes the prior
+cap-ordering gap; all 44 exact cases, 140 Python tests, smoke, and determinism
+pass. Dev-v14 is retired unopened; dev-v15 freezes 160 disjoint roots
+`151001..151160` for one confirmation only after reusable dual scorecards pass.
+Held-out-v4 remains sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

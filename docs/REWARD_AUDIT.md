@@ -288,6 +288,24 @@ recovery exactness, exclusions, chunk invariance, and post-cap behavior. The
 full 138-test Python suite passes. Status: implemented-approved-v18
 pre-training, 2026-07-21.
 
+## V19 unsaturated idle-gradient override
+
+ADR-0030 retains V18's audited reward components but restores the V17 idle
+slope `-0.002` and extends its cap from `-5.0` to `-8.0`. This keeps the
+component differentiating through 4,000 cumulative idle-agent ticks instead of
+V18's 1,250. The duplicate-work cap becomes `-7.0`; together with the unchanged
+team-abandon cap `-2.0`, full-horizon churn is bounded at `-9.0` and remains
+strictly worse than capped honest idle. Per-incident costs, authoritative
+counters, exclusions, and all other components remain V18-exact.
+
+The new `full-horizon-idle-busywork` adversary proves that ordering at the
+scenario cap, and duplicate-cap saturation now derives the event count from
+the configured cost and cap. Config SHA-256 is
+`4d9911a8f6dda1bb8c6a6f6a38f82bc4f64d18836a399e860ca1941db50f733f`;
+report `23262f5332cc9f52b9c1a58e835f6059075da5f1f7686771216f51e4df2e33f9`
+passes 44 exact cases. The full 140-test Python suite, smoke, and determinism
+also pass. Status: implemented-approved-v19 pre-training, 2026-07-22.
+
 ## Cross-component adversarial matrix
 
 These CI-runnable cases are mandatory before changing any status to approved:
@@ -304,10 +322,11 @@ These CI-runnable cases are mandatory before changing any status to approved:
 | Chunk manipulation | Replay one action trace using different requested step chunk sizes. | Per-component rewards and charged tick totals match exactly. |
 
 The implementation emits `reward-adversaries.json` in the selected run
-directory with 37 passing component and cross-component cases: the original
-27 v1 cases plus all ten precommitted v2 cases. It includes the eight mandatory
-matrix rows, cap and post-cap checks, counter rollback, chunk invariance, early
-loss, busywork, mask corruption, readiness loss, unsafe telemetry, and farming
+directory with every case applicable to the exact selected config. V19 emits
+44 passing cases: the original v1/v2 matrix, extended cap and post-cap checks,
+the four recovery cases, and the full-horizon idle/busywork ordering. It
+includes the eight mandatory matrix rows, counter rollback, chunk invariance,
+early loss, mask corruption, readiness loss, unsafe telemetry, and farming
 exclusions. Each case records its reward schema, action/state hashes,
 structured events, coordination counters, every applicable component, total
 return, and pass/fail reason. Reward totals alone are insufficient evidence.

@@ -18,12 +18,15 @@ from mindustry_agents.training.reward import (
     SelectorReward,
 )
 
+FULL_HORIZON_BUSYWORK_CASE = "full-horizon-idle-busywork"
+
 QUALITY_CASES = (
     "idle-early-loss",
     "idle-quality-cap",
     "idle-after-cap",
     "quality-chunk-size",
     "idle-busywork",
+    FULL_HORIZON_BUSYWORK_CASE,
     "duplicate-quality-cap",
     "duplicate-after-cap",
     "quality-counter-rollback",
@@ -459,8 +462,51 @@ def run_case(
         assert busy.total < idle.total < 0.0
         assert busy.components["reward.team.milestone_highwater"] == 0.0
         reason = "duplicate/abandon busywork was worse than honest idle and paid no credit"
+    elif case == FULL_HORIZON_BUSYWORK_CASE:
+        idle = SelectorReward(quality_reward=quality_reward).observe(
+            _team(0),
+            _team(9000),
+            advanced_ticks=9000,
+            tick_cap=9000,
+            coordination_metrics={
+                "agent_ticks": 27000,
+                "idle_agent_ticks": 27000,
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+        )
+        events = [
+            {
+                "act": "ABANDON",
+                "agent_id": index % 3,
+                "reason_code": "blocked_replan",
+            }
+            for index in range(100)
+        ]
+        busy = apply(
+            _team(0),
+            _team(9000),
+            advanced_ticks=9000,
+            coordination_metrics={
+                "agent_ticks": 27000,
+                "idle_agent_ticks": 0,
+                "duplicate_work_incidents": 1000,
+                "announced_messages": 0,
+            },
+            task_events=events,
+        )
+        assert busy.total < idle.total < 0.0
+        assert idle.components["reward.penalty.team_idle_ticks"] == -float(
+            quality_reward.get(
+                "idle_agent_tick_cap",
+                27000 * float(quality_reward["idle_agent_tick_cost"]),
+            )
+        )
+        reason = "full-horizon capped churn remained worse than capped honest idle"
     elif case == "duplicate-quality-cap":
+        duplicate_cost = float(quality_reward["duplicate_work_cost"])
         duplicate_cap = float(quality_reward["duplicate_work_cap"])
+        saturation_incidents = max(1, math.ceil(duplicate_cap / duplicate_cost))
         result = apply(
             _team(0),
             _team(1),
@@ -468,7 +514,7 @@ def run_case(
             coordination_metrics={
                 "agent_ticks": 3,
                 "idle_agent_ticks": 0,
-                "duplicate_work_incidents": 100,
+                "duplicate_work_incidents": saturation_incidents,
                 "announced_messages": 0,
             },
         )

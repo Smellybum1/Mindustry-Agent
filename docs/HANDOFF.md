@@ -375,6 +375,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   (-42.52 ticks, 95% CI -214.79..+118.93). Announcements, duplicate work, and
   abandonment non-regress, while matched idle improves by 0.12000735. Dev-v14
   is unopened, held-out-v4 is sealed, and M8.5 remains unmet.
+- **V19 precommit**: reusable per-agent diagnostics show V18 reaches its idle
+  cap in 8/10 dev episodes and that downstream seat 1 dominates excess idle
+  (`0.174262` versus permanent greedy `0.031523`). ADR-0030 restores idle cost
+  `0.002`, raises its cap to `8.0` (4,000 differentiating idle-agent ticks),
+  and raises duplicate cap to `7.0` so capped duplicate plus abandonment churn
+  remains worse than capped honest idle. All other V18 fields remain exact.
+  All 44 exact adversaries, 140 Python tests, smoke, and determinism pass.
+  Config hash is `4d9911a8f6dda1bb...`; adversary report is
+  `23262f5332cc9f52...`. Dev-v14 is retired unopened; dev-v15 is frozen at
+  disjoint roots `151001..151160`; held-out-v4 remains sealed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -537,12 +547,14 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Choose the next M8 candidate from train/dev evidence only.** ADR-0019 and
-   held-out-v4 are frozen; the candidate config must name v4 before work begins.
-   Never inspect or tune against individual held-out-v1/v2/v3 outcomes.
-2. **Use corrected preflight parity.** Refresh exact permanent aggregate and
-   seed-level records on a newly governed dev set, then require both permanent-
-   greedy and matched-greedy scorecards before any held-out authorization.
+1. **Run V19 exactly twice, sequentially.** Use
+   `configs/training/m8-selector-v19-unsaturated-idle-gradient.json`, preserve
+   the pretraining commit as lineage, and require exact checkpoint/frontier,
+   model-state, replay, and full-run reproducibility before evaluation.
+2. **Use corrected preflight parity.** Run reusable dev-v1 against the frozen
+   permanent records and both permanent-greedy and matched-greedy scorecards.
+   Open dev-v15 exactly once only if every reusable gate passes. Never inspect
+   dev-v14 or held-out-v1/v2/v3 outcomes for tuning; held-out-v4 remains sealed.
 3. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 4. **M9.2 partner population** remains behind M9.1.
