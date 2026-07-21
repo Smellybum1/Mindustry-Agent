@@ -186,6 +186,20 @@ class TestSelectorRewardAdversaries(unittest.TestCase):
         ]
         self.assertTrue(all(report["pass"] for report in reports))
 
+    def test_quality_adversaries_accept_v17_idle_and_duplicate_caps(self):
+        v17 = {
+            **QUALITY,
+            "idle_agent_tick_cost": 0.002,
+            "idle_agent_tick_cap": 5.0,
+            "duplicate_work_cap": 2.0,
+            "team_abandonment_cost": 0.25,
+        }
+        reports = [
+            run_case(case, quality_reward_override=v17)
+            for case in CASES
+        ]
+        self.assertTrue(all(report["pass"] for report in reports))
+
     def test_reward_v2_breakdown_exposes_auditable_counters_and_totals(self):
         result = SelectorReward(quality_reward=QUALITY).observe(
             team(),

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -446,6 +447,7 @@ def run_case(
         assert busy.components["reward.team.milestone_highwater"] == 0.0
         reason = "duplicate/abandon busywork was worse than honest idle and paid no credit"
     elif case == "duplicate-quality-cap":
+        duplicate_cap = float(quality_reward["duplicate_work_cap"])
         result = apply(
             _team(0),
             _team(1),
@@ -457,9 +459,12 @@ def run_case(
                 "announced_messages": 0,
             },
         )
-        assert result.components["reward.penalty.duplicate_work"] == -1.0
-        reason = "duplicate-work quality cost stopped at its exact -1 cap"
+        assert result.components["reward.penalty.duplicate_work"] == -duplicate_cap
+        reason = "duplicate-work quality cost stopped at its exact configured cap"
     elif case == "duplicate-after-cap":
+        duplicate_cost = float(quality_reward["duplicate_work_cost"])
+        duplicate_cap = float(quality_reward["duplicate_work_cap"])
+        saturation_incidents = max(1, math.ceil(duplicate_cap / duplicate_cost))
         first = apply(
             _team(0),
             _team(1),
@@ -467,7 +472,7 @@ def run_case(
             coordination_metrics={
                 "agent_ticks": 3,
                 "idle_agent_ticks": 0,
-                "duplicate_work_incidents": 20,
+                "duplicate_work_incidents": saturation_incidents,
                 "announced_messages": 0,
             },
         )
@@ -478,11 +483,11 @@ def run_case(
             coordination_metrics={
                 "agent_ticks": 6,
                 "idle_agent_ticks": 0,
-                "duplicate_work_incidents": 100,
+                "duplicate_work_incidents": saturation_incidents + 100,
                 "announced_messages": 0,
             },
         )
-        assert first.components["reward.penalty.duplicate_work"] == -1.0
+        assert first.components["reward.penalty.duplicate_work"] == -duplicate_cap
         assert after.components["reward.penalty.duplicate_work"] == 0.0
         assert after.total <= 0.0
         reason = "post-cap duplicates produced neither repeated cost nor positive reward"

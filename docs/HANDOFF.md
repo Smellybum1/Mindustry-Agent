@@ -347,6 +347,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   0.05618951 (95% CI +0.03029619..+0.08042806); recovery is uncertain against
   both scorecards. Dev-v12 is unopened, held-out-v4 is sealed, and M8.5 remains
   unmet.
+- **V17 precommit**: V16's 14 reusable WAIT actions were all forced; every one
+  of 375 unforced decisions selected a task. ADR-0028 changes idle cost
+  `0.001 -> 0.002`, retains the `5.0` cap, and raises duplicate-work cap
+  `1.0 -> 2.0` only to keep the exact busywork adversary ordered; V16's observed
+  two incidents remain far below that cap. Every other construction field is
+  fixed. All 39 exact-config adversaries and 135 Python tests pass. Dev-v12 is
+  retired unopened; dev-v13 is frozen at disjoint roots `131001..131160`.
+  Held-out-v4 remains sealed.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

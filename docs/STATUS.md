@@ -1050,6 +1050,16 @@ repository-evidence mapping used for the M6 audit is:
   worse by 0.05618951 (95% CI +0.03029619..+0.08042806), and recovery remains
   uncertain against both scorecards. Dev-v12 remains unopened, held-out-v4
   remains sealed, and M8.5 remains unmet.
+- V16 made no discretionary WAIT decisions on reusable dev-v1: all 14 WAITs
+  were forced, while all 375 unforced decisions selected a task. ADR-0028
+  therefore precommits V17 as one task-quality intervention, changing idle cost
+  `0.001 -> 0.002` while retaining the explicit `5.0` cap. Its exact-config
+  busywork guard also raises duplicate-work cap `1.0 -> 2.0`, inactive at V16's
+  observed two incidents but required to keep pathological busywork worse than
+  honest idle. Every other V16 field remains fixed. All 39 exact-config
+  adversaries and 135 Python tests pass. Dev-v12 is retired unopened; dev-v13
+  freezes 160 globally disjoint roots `131001..131160`. Held-out-v4 remains
+  sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

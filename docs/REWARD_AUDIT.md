@@ -246,6 +246,20 @@ scorecards. The reward implementation remains adversary-approved; the V16
 training intervention is rejected before dev-v12. Status:
 implemented-approved reward / rejected candidate, 2026-07-21.
 
+## V17 doubled capped idle slope
+
+ADR-0028 changes V16's idle cost from `-0.001` to `-0.002` per team idle agent
+tick while retaining the explicit `-5.0` maximum. At that slope, the 600-tick
+idle adversary costs `-3.6`, so duplicate-work cap rises from `-1.0` to `-2.0`
+to keep capped duplicate/abandon busywork at `-4.0`, strictly worse than honest
+idle. V16's ordinary two duplicate incidents cost only `-0.1`, so the safety
+cap is inactive in the observed regime. Communication, abandonment, terminal,
+milestone, and unresolved-time terms are unchanged. V17 must pass the exact-
+config adversary matrix before training. The exact V17 config is SHA-256
+`71ffd120617ac860...`; adversary report `f716fc529c8aae8c...` passes all 39
+cases, and the full 135-test Python suite passes. Status: implemented-approved-
+v17 pre-training, 2026-07-21.
+
 ## Cross-component adversarial matrix
 
 These CI-runnable cases are mandatory before changing any status to approved:

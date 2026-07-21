@@ -498,3 +498,49 @@ def test_v16_capped_idle_pressure_and_dev_v12_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v12"] == path.name
+
+
+def test_v17_doubled_capped_idle_slope_and_dev_v13_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v13.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v13"
+    assert confirmation["seed_set_version"] == 13
+    assert confirmation["seeds"] == list(range(131001, 131161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v16 = json.loads(
+        (training_dir / "m8-selector-v16-capped-idle-pressure.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    v17 = json.loads(
+        (
+            training_dir / "m8-selector-v17-doubled-capped-idle-pressure.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert v17.pop("candidate_version") == "v17"
+    assert v17.pop("quality_intervention") == (
+        "doubled_capped_idle_with_busywork_guard_v1"
+    )
+    assert v17.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v13.json"
+    )
+    assert v16.pop("candidate_version") == "v16"
+    assert v16.pop("quality_intervention") == "high_slope_capped_idle_v1"
+    assert v16.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v12.json"
+    )
+    assert v17["quality_reward"].pop("idle_agent_tick_cost") == 0.002
+    assert v16["quality_reward"].pop("idle_agent_tick_cost") == 0.001
+    assert v17["quality_reward"].pop("duplicate_work_cap") == 2.0
+    assert v16["quality_reward"].pop("duplicate_work_cap") == 1.0
+    assert v17 == v16
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v13"] == path.name
