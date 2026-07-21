@@ -1259,6 +1259,18 @@ optimization: update 1 rose from V24's 1/10 to 7/10, and the mean disagreement
 logit gap fell from `1.49301094` to `1.07148486`. It did not flip the 73
 disagreements or losses on seeds 2004/2005. V25 is rejected; M8.5 remains unmet.
 
+ADR-0037 precommits V26 as the final fixed full-boundary teacher step. V25's
+directional logit movement authorizes `0.10 -> 0.20`, still fivefold below the
+failed `1.0`; failure to reach 9/10 closes this coefficient line. Runtime,
+reward, roots, model, optimizer, RNGs, schedule, and selection remain exact;
+only coefficient plus candidate/label/confirmation metadata change. Dev-v21 is
+retired unopened. Dev-v22 freezes disjoint roots `221001..221160` and remains
+unopened; held-out-v4 stays sealed. No V26 model work preceded this packet.
+All 44 exact-config adversaries, 148 Python tests, pinned build, 5/5 candidate
+gate, smoke, determinism, and negative replay pass. Config/adversary hashes are
+`b5e3bf17a1dc1ace...` and `202e71a48bf8a05f...`. Replica A is next;
+M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

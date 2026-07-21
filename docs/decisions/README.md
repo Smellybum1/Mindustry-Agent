@@ -41,6 +41,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0034](ADR-0034-v23-available-seat-idle-accounting.md) | V23 available-seat idle-accounting retraining |
 | [0035](ADR-0035-v24-resource-scoped-retry-boundary.md) | V24 resource-scoped retry-boundary retraining |
 | [0036](ADR-0036-v25-moderate-full-boundary-teacher.md) | V25 moderate full-boundary teacher regularization |
+| [0037](ADR-0037-v26-final-full-boundary-teacher-step.md) | V26 final full-boundary teacher step |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

@@ -1254,6 +1254,17 @@ repository-evidence mapping used for the M6 audit is:
   learning (update 1: 1/10 -> 7/10) and reduced mean disagreement logit gap
   `1.49301094 -> 1.07148486`, but the best policy still has 73 disagreements and
   the same losses on seeds 2004/2005. V25 is rejected.
+- ADR-0037 precommits V26 as the final fixed full-boundary teacher step:
+  coefficient `0.10 -> 0.20`, still fivefold below V10's failed `1.0`. The V25
+  logit trend authorizes this bounded test; a construction failure closes the
+  coefficient line. All runtime/reward/data/model/optimizer/RNG/schedule/
+  selection fields remain exact apart from the mirrored coefficient and
+  candidate/label/confirmation metadata. Dev-v21 is retired unopened; dev-v22
+  freezes roots `221001..221160` and remains unopened; held-out-v4 stays sealed.
+  No V26 model work preceded the packet. All 44 exact-config adversaries, 148
+  Python tests, pinned build, 5/5 candidate gate, smoke, determinism, and
+  negative replay pass. Config/adversary hashes are `b5e3bf17a1dc1ace...` and
+  `202e71a48bf8a05f...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

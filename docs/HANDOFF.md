@@ -535,6 +535,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   lifted update 1 from 1/10 to 7/10 and reduced mean disagreement logit gap
   `1.49301094 -> 1.07148486`, but the best policy keeps 73 disagreements and
   loses seeds 2004/2005. V25 is rejected.
+- **V26 precommit**: ADR-0037 freezes the final fixed full-boundary teacher
+  step, `0.10 -> 0.20`, based on V25's directional logit movement. It remains
+  fivefold below failed `1.0`; construction failure closes the coefficient
+  line. Runtime/reward/data/model/optimizer/RNG/schedule/selection stay exact
+  except the mirrored coefficient and candidate/label/confirmation metadata.
+  Dev-v21 is retired unopened; dev-v22 freezes roots `221001..221160` and
+  remains unopened; held-out-v4 stays sealed. No V26 model work preceded the
+  packet. All 44 exact-config adversaries, 148 Python tests, pinned build, 5/5
+  candidate gate, smoke, determinism, and negative replay pass. Config/adversary
+  hashes are `b5e3bf17a1dc1ace...` and `202e71a48bf8a05f...`.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
