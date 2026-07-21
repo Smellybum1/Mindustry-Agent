@@ -1084,6 +1084,17 @@ smoke, and determinism pass. Dev-v15 is retired unopened; dev-v16 freezes 160
 disjoint roots `161001..161160` for one confirmation only after reusable dual
 scorecards pass. Held-out-v4 remains sealed.
 
+V20's two pinned 2,048-episode replicas reproduce exactly and select update 32
+at 9/10 construction wins with mean idle 0.09850656. Checkpoint
+`6209f46876db0778...`, model state `1ba534267c67ff54...`, replay
+`a1bc0eec0c7f0002...`, full run `a407aa303e839844...`, and direct lineage
+`564f7fdca22f0ba9...` reproduce. Teacher disagreement drops from 529/607 to
+170/362 unforced decisions and abandonment returns to zero, proving the loss
+changed behavior. It does not improve permanent idle, which remains 0.05419477
+worse (95% CI +0.02812093..+0.08298135); permanent announcements/duplicates
+and both recovery comparisons are uncertain. Dev-v16 remains unopened,
+held-out-v4 remains sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

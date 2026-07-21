@@ -404,6 +404,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   determinism pass. Config hash is `22604e484c82601a...`; adversary report is
   `b72ab95c45ec418f...`. Dev-v15 is retired unopened; dev-v16 is frozen at
   disjoint roots `161001..161160`; held-out-v4 remains sealed.
+- **V20 rejected on reusable dev-v1**: two pinned replicas reproduce update 32
+  at 9/10 construction wins and mean idle 0.09850656. Checkpoint
+  `6209f46876db0778...`, model state `1ba534267c67ff54...`, replay
+  `a1bc0eec0c7f0002...`, full run `a407aa303e839844...`, and lineage
+  `564f7fdca22f0ba9...` reproduce. Teacher disagreement falls from 529/607 to
+  170/362 and abandonment returns to zero, but permanent idle remains
+  0.05419477 worse (95% CI +0.02812093..+0.08298135). Permanent announcements,
+  duplicates, and recovery are uncertain; matched recovery is also uncertain.
+  Dev-v16 is unopened, held-out-v4 is sealed, and M8.5 remains unmet. Preflight
+  report SHA-256 is `a4ae30d0be2a6ec2...`.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -566,10 +576,10 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run V20 exactly twice, sequentially.** Use
-   `configs/training/m8-selector-v20-low-teacher-regularized.json`, preserve the
-   pretraining commit as lineage, and require exact checkpoint/frontier,
-   model-state, replay, and full-run reproducibility before evaluation.
+1. **Choose V21 from reusable train/dev evidence only.** V20 materially changed
+   teacher agreement but left permanent idle unchanged, so close the teacher
+   coefficient line. Precommit one new causal hypothesis and a fresh disjoint
+   dev-v17 before any model work; dev-v16 is retired unopened.
 2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
    confirmation. Never inspect dev-v14/dev-v15 or held-out-v1/v2/v3 outcomes

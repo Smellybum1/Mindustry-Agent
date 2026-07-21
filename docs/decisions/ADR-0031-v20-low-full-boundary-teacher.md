@@ -69,3 +69,14 @@ Pretraining validation passes all 44 exact-config reward adversaries, the full
 `22604e484c82601aa6905ad55582f93936067583e6edfc539d5c5720462fe270`;
 adversary report SHA-256 is
 `b72ab95c45ec418fe79f17d5235fce54031e49f1eab792f52189191390aa37af`.
+
+The two pinned replicas reproduce exactly and select update 32 at 9/10 wins
+with mean idle 0.09850656. Checkpoint `6209f46876db0778...`, model state
+`1ba534267c67ff54...`, replay `a1bc0eec0c7f0002...`, full run
+`a407aa303e839844...`, and direct lineage `564f7fdca22f0ba9...` match. Teacher
+disagreement falls from 529/607 to 170/362 unforced decisions and abandonment
+returns to zero, but permanent idle remains 0.05419477 worse (95% CI
++0.02812093..+0.08298135). Permanent announcements/duplicates and both
+recovery comparisons are uncertain. Dev-v16 therefore remains unopened and
+held-out-v4 remains sealed. Reusable preflight report SHA-256 is
+`a4ae30d0be2a6ec258bf9375ef4b61baf9152e472a9d27edafa4190694c8f12b`.

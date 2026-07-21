@@ -1112,6 +1112,16 @@ repository-evidence mapping used for the M6 audit is:
   action/state digests. All 44 exact adversaries, 141 Python tests, smoke, and
   determinism pass. Dev-v15 is retired unopened; dev-v16 freezes disjoint roots
   `161001..161160`. Held-out-v4 remains sealed.
+- V20's two pinned 2,048-episode replicas reproduce exactly and select update
+  32 at 9/10 construction wins with mean idle 0.09850656. Checkpoint
+  `6209f46876db0778...`, model state `1ba534267c67ff54...`, replay
+  `a1bc0eec0c7f0002...`, full run `a407aa303e839844...`, and direct lineage
+  `564f7fdca22f0ba9...` all reproduce. Teacher disagreements fall from V19's
+  529/607 to 170/362 unforced decisions and abandonment returns to zero, but
+  permanent idle is essentially unchanged at +0.05419477 (95% CI
+  +0.02812093..+0.08298135). Permanent announcements/duplicates and both
+  recovery comparisons are uncertain. Dev-v16 remains unopened, held-out-v4
+  remains sealed, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
