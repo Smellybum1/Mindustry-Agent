@@ -158,6 +158,89 @@ class TestPpoSelector(unittest.TestCase):
                 policy,
             )
 
+    def test_rejected_quality_frontier_is_persisted_before_failure(self):
+        from mindustry_agents.training.ppo_selector import (
+            _write_dev_checkpoint_frontier,
+        )
+
+        policy = {
+            "schema": "quality_gate_v1",
+            "minimum_wins": 9,
+            "maximum_mean_idle_fraction_exclusive": 0.25,
+            "ranking": [
+                "wins_desc",
+                "mean_return_desc",
+                "mean_core_health_desc",
+                "update_asc",
+            ],
+        }
+        rows = [
+            {
+                "update": 1,
+                "wins": 10,
+                "mean_return": 10.0,
+                "mean_core_health": 1000.0,
+                "mean_idle_fraction": 0.25,
+            }
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            output_dir = root / "runs" / "rejected"
+            output_dir.mkdir(parents=True)
+            config_path = root / "config.json"
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "candidate_version": "v-test",
+                        "runtime_contract": "test-runtime-v1",
+                        "dev_checkpoint_selection": policy,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            dev_set = {
+                "seed_set_id": "dev-test",
+                "seed_set_version": 1,
+                "split": "dev",
+                "seeds": [101, 102],
+            }
+
+            with self.assertRaisesRegex(
+                RuntimeError, "precommitted dev quality gate"
+            ):
+                _write_dev_checkpoint_frontier(
+                    root,
+                    output_dir,
+                    config_path,
+                    json.loads(config_path.read_text(encoding="utf-8")),
+                    dev_set,
+                    rows,
+                )
+
+            report_path = output_dir / "selector-v1-dev-frontier.json"
+            self.assertTrue(report_path.is_file())
+            self.assertFalse(
+                (output_dir / "selector-v1-dev-frontier.json.tmp").exists()
+            )
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertEqual(report["schema"], "selector_dev_checkpoint_frontier_v1")
+            self.assertEqual(report["frontier"], rows)
+            self.assertEqual(report["dev_seed_set"], dev_set)
+            self.assertEqual(report["selection_policy"], policy)
+            self.assertEqual(
+                report["candidate"],
+                {"version": "v-test", "runtime_contract": "test-runtime-v1"},
+            )
+            self.assertEqual(
+                report["result"],
+                {
+                    "eligible": False,
+                    "selected_index": None,
+                    "selected_update": None,
+                    "reason": "no checkpoint passed the precommitted dev quality gate",
+                },
+            )
+
     def test_quality_selection_policy_validation_rejects_rule_drift(self):
         from mindustry_agents.training.ppo_selector import (
             _dev_checkpoint_selection_policy,

@@ -203,6 +203,65 @@ def _select_dev_checkpoint_index(
     )
 
 
+def _write_dev_checkpoint_frontier(
+    root: Path,
+    output_dir: Path,
+    config_path: Path,
+    config: dict[str, Any],
+    dev_set: dict[str, Any],
+    dev_selection: list[dict[str, Any]],
+) -> tuple[Path, int]:
+    """Persist the complete governed frontier before accepting or rejecting it."""
+
+    selection_policy = _dev_checkpoint_selection_policy(config)
+    selected_index: int | None = None
+    selection_error: ValueError | RuntimeError | None = None
+    try:
+        selected_index = _select_dev_checkpoint_index(
+            dev_selection, selection_policy
+        )
+    except (ValueError, RuntimeError) as exc:
+        selection_error = exc
+
+    report = {
+        "schema": "selector_dev_checkpoint_frontier_v1",
+        "source_config": {
+            "path": str(config_path.relative_to(root)),
+            "sha256": _sha256(config_path),
+        },
+        "candidate": {
+            "version": str(config.get("candidate_version", "")),
+            "runtime_contract": str(config.get("runtime_contract", "")),
+        },
+        "dev_seed_set": {
+            key: dev_set[key]
+            for key in ("seed_set_id", "seed_set_version", "split", "seeds")
+        },
+        "selection_policy": selection_policy,
+        "frontier": dev_selection,
+        "result": {
+            "eligible": selection_error is None,
+            "selected_index": selected_index,
+            "selected_update": (
+                int(dev_selection[selected_index]["update"])
+                if selected_index is not None
+                else None
+            ),
+            "reason": "passed" if selection_error is None else str(selection_error),
+        },
+    }
+    path = output_dir / "selector-v1-dev-frontier.json"
+    temporary_path = output_dir / "selector-v1-dev-frontier.json.tmp"
+    temporary_path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    temporary_path.replace(path)
+    if selection_error is not None:
+        raise selection_error
+    assert selected_index is not None
+    return path, selected_index
+
+
 def _configure_torch(config: dict[str, Any]) -> None:
     torch.use_deterministic_algorithms(True)
     try:
@@ -1168,7 +1227,14 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                 len(optimizer_updates), checkpoint, checkpoint_sha
             )
 
-    best_index = _select_dev_checkpoint_index(dev_selection, selection_policy)
+    dev_frontier_path, best_index = _write_dev_checkpoint_frontier(
+        root,
+        output_dir,
+        config_path,
+        config,
+        dev_set,
+        dev_selection,
+    )
     checkpoint_path = produced_checkpoints[best_index]
     checkpoint_sha = str(dev_selection[best_index]["checkpoint_sha256"])
     selected_payload = load_checkpoint(
@@ -1216,6 +1282,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     verification["trace_paths"] = [
         str(path.relative_to(root)) for path in verification_paths
     ]
+    verification_paths.append(dev_frontier_path)
 
     train_summaries = [_episode_summary(item) for item in train_episodes]
     dev_summaries = [_episode_summary(item) for item in dev_episodes]
