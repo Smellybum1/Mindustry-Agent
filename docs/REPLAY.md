@@ -3,7 +3,7 @@
 M6 records complete externally stepped action and coordination traces as compact
 JSONL. `tests/golden/bootstrap-defense-v0-scripted-v1.jsonl` is the pinned
 reference: two complete scripted-expert episodes, seeds 12345 and 23456, for
-**16,200 total advanced ticks** and 672 reset/step hash checkpoints.
+**16,200 total advanced ticks** and 664 reset/step hash checkpoints.
 
 The first row is a manifest containing the engine tag/commit, Arc hash, protocol
 and scenario versions, policy name, episode count, and total tick count. Each
@@ -37,5 +37,8 @@ M7.3 intentionally regenerated the checked-in trace in a separate commit.
 Recurring and retry task IDs now encode current board state so that repeated
 work is distinguishable at the protocol boundary; those IDs participate in the
 canonical coordination hash. The frozen macro still records two wins over
-16,200 ticks and 672 checkpoints, and the negative MINE mutation still forces a
-replay mismatch.
+16,200 ticks and 664 checkpoints, and the negative MINE mutation still forces a
+replay mismatch. M8.4 regenerated the trace for the accepted deterministic
+external runtime (synchronous async phases/pathfinding, authoritative
+tile-backed buildings, and canonical sleeping-building order); both episodes
+still win.
