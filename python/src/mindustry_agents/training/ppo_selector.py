@@ -43,6 +43,14 @@ from mindustry_agents.training.selector import (
     selector_action,
 )
 
+QUALITY_GATE_SELECTION_SCHEMA = "quality_gate_v1"
+QUALITY_GATE_RANKING = (
+    "wins_desc",
+    "mean_return_desc",
+    "mean_core_health_desc",
+    "update_asc",
+)
+
 ARC_HASH = "208a754044"
 LEARNED_SEAT = 0
 SCRIPTED_POLICY = "adaptive-v1"
@@ -138,6 +146,61 @@ def _training_seed_schedule(
         random.Random(shuffle_seed + cycle).shuffle(cycle_seeds)
         schedule.extend(cycle_seeds)
     return schedule
+
+
+def _dev_checkpoint_selection_policy(
+    config: dict[str, Any],
+) -> dict[str, Any] | None:
+    policy = config.get("dev_checkpoint_selection")
+    if policy is None:
+        return None
+    if (
+        not isinstance(policy, dict)
+        or policy.get("schema") != QUALITY_GATE_SELECTION_SCHEMA
+    ):
+        raise ValueError("unsupported dev checkpoint selection schema")
+    if tuple(policy.get("ranking", ())) != QUALITY_GATE_RANKING:
+        raise ValueError("unsupported dev checkpoint selection ranking")
+    minimum_wins = int(policy.get("minimum_wins", -1))
+    maximum_idle = float(
+        policy.get("maximum_mean_idle_fraction_exclusive", -1.0)
+    )
+    if minimum_wins < 1 or not 0.0 < maximum_idle <= 1.0:
+        raise ValueError("invalid dev checkpoint selection gate")
+    return {
+        "schema": QUALITY_GATE_SELECTION_SCHEMA,
+        "minimum_wins": minimum_wins,
+        "maximum_mean_idle_fraction_exclusive": maximum_idle,
+        "ranking": list(QUALITY_GATE_RANKING),
+    }
+
+
+def _select_dev_checkpoint_index(
+    dev_selection: list[dict[str, Any]],
+    policy: dict[str, Any] | None,
+) -> int:
+    if not dev_selection:
+        raise ValueError("dev checkpoint selection is empty")
+    eligible = list(range(len(dev_selection)))
+    if policy is not None:
+        eligible = [
+            index
+            for index, row in enumerate(dev_selection)
+            if int(row["wins"]) >= int(policy["minimum_wins"])
+            and float(row["mean_idle_fraction"])
+            < float(policy["maximum_mean_idle_fraction_exclusive"])
+        ]
+        if not eligible:
+            raise RuntimeError("no checkpoint passed the precommitted dev quality gate")
+    return max(
+        eligible,
+        key=lambda index: (
+            dev_selection[index]["wins"],
+            dev_selection[index]["mean_return"],
+            dev_selection[index]["mean_core_health"],
+            -dev_selection[index]["update"],
+        ),
+    )
 
 
 def _configure_torch(config: dict[str, Any]) -> None:
@@ -821,7 +884,8 @@ def _manifest(
     selected_update: int,
 ) -> dict[str, Any]:
     lock = root / "python" / "requirements-rl-linux-py312.lock"
-    return {
+    selection_policy = _dev_checkpoint_selection_policy(config)
+    manifest = {
         "schema": "selector_training_run_v1",
         "engine": {"tag": ENGINE_TAG, "commit": ENGINE_COMMIT, "arc": ARC_HASH},
         "protocol_version": PROTOCOL_VERSION,
@@ -916,12 +980,19 @@ def _manifest(
             str(checkpoint_path.with_suffix(".manifest.json").relative_to(root)),
         ],
     }
+    if selection_policy is not None:
+        manifest["dev_checkpoint_selection_policy"] = selection_policy
+    return manifest
 
 
 def _reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
     """Return the path-independent fields that define one complete training run."""
 
-    return {
+    selection_policy = manifest.get("dev_checkpoint_selection_policy")
+    selection_keys = ("update", "wins", "mean_return", "mean_core_health")
+    if selection_policy is not None:
+        selection_keys += ("mean_idle_fraction",)
+    evidence = {
         "source_config_sha256": manifest["source_config"]["sha256"],
         "jvm_args": manifest["runtime"]["jvm_args"],
         "rng_seeds": manifest["rng_seeds"],
@@ -934,7 +1005,7 @@ def _reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
         "dev_checkpoint_selection": [
             {
                 key: row[key]
-                for key in ("update", "wins", "mean_return", "mean_core_health")
+                for key in selection_keys
             }
             for row in manifest["dev_checkpoint_selection"]
         ],
@@ -947,6 +1018,9 @@ def _reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
             for key in ("seed", "fresh_runs", "trace_digest_a", "trace_digest_b", "bit_exact")
         },
     }
+    if selection_policy is not None:
+        evidence["dev_checkpoint_selection_policy"] = selection_policy
+    return evidence
 
 
 def compare_run_manifests(first: Path, second: Path) -> str:
@@ -974,6 +1048,7 @@ def compare_run_manifests(first: Path, second: Path) -> str:
 def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[str, Any]:
     root = repo_root()
     config = _load_json(config_path)
+    selection_policy = _dev_checkpoint_selection_policy(config)
     _configure_torch(config)
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
     dev_set = _seed_set(root, str(config["dev_seed_set"]), "dev")
@@ -1003,18 +1078,21 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         )
         dev_candidates.append(candidate_dev)
         summaries = [_episode_summary(item) for item in candidate_dev]
-        dev_selection.append(
-            {
-                "update": update,
-                "checkpoint_path": str(checkpoint.relative_to(root)),
-                "checkpoint_sha256": checkpoint_sha,
-                "wins": sum(item["outcome"] == "win" for item in summaries),
-                "mean_return": sum(item["return"] for item in summaries)
-                / len(summaries),
-                "mean_core_health": sum(item["core_health"] for item in summaries)
-                / len(summaries),
-            }
-        )
+        row = {
+            "update": update,
+            "checkpoint_path": str(checkpoint.relative_to(root)),
+            "checkpoint_sha256": checkpoint_sha,
+            "wins": sum(item["outcome"] == "win" for item in summaries),
+            "mean_return": sum(item["return"] for item in summaries)
+            / len(summaries),
+            "mean_core_health": sum(item["core_health"] for item in summaries)
+            / len(summaries),
+        }
+        if selection_policy is not None:
+            row["mean_idle_fraction"] = sum(
+                item["idle_fraction"] for item in summaries
+            ) / len(summaries)
+        dev_selection.append(row)
 
     with RlServerProcess(
         LaunchConfig(port=port, java=java, build_if_missing=False)
@@ -1057,15 +1135,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                 len(optimizer_updates), checkpoint, checkpoint_sha
             )
 
-    best_index = max(
-        range(len(dev_selection)),
-        key=lambda index: (
-            dev_selection[index]["wins"],
-            dev_selection[index]["mean_return"],
-            dev_selection[index]["mean_core_health"],
-            -dev_selection[index]["update"],
-        ),
-    )
+    best_index = _select_dev_checkpoint_index(dev_selection, selection_policy)
     checkpoint_path = produced_checkpoints[best_index]
     checkpoint_sha = str(dev_selection[best_index]["checkpoint_sha256"])
     selected_payload = load_checkpoint(

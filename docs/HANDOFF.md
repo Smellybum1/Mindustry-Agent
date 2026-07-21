@@ -269,7 +269,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   before applying the existing ranking. Two fresh exact runs are required;
   V12 update 24 is not retroactively promoted. Dev-v8 is retired unopened and
   dev-v9 is frozen at disjoint roots `91001..91160` for one exclusive
-  dual-scorecard confirmation. V13 is not implemented or trained.
+  dual-scorecard confirmation. The selector and version-compatible manifest
+  evidence are implemented and all 126 Python tests pass. V13 is not trained.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in

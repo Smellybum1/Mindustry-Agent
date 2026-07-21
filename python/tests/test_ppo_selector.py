@@ -76,6 +76,105 @@ class TestPpoSelector(unittest.TestCase):
                 train_set, {"shuffle_seed": 91, "training_cycles": 0}
             )
 
+    def test_quality_gated_checkpoint_selection_is_strict_and_ranked(self):
+        from mindustry_agents.training.ppo_selector import (
+            _dev_checkpoint_selection_policy,
+            _select_dev_checkpoint_index,
+        )
+
+        policy = _dev_checkpoint_selection_policy(
+            {
+                "dev_checkpoint_selection": {
+                    "schema": "quality_gate_v1",
+                    "minimum_wins": 9,
+                    "maximum_mean_idle_fraction_exclusive": 0.25,
+                    "ranking": [
+                        "wins_desc",
+                        "mean_return_desc",
+                        "mean_core_health_desc",
+                        "update_asc",
+                    ],
+                }
+            }
+        )
+        rows = [
+            {
+                "update": 1,
+                "wins": 10,
+                "mean_return": 10.0,
+                "mean_core_health": 1000.0,
+                "mean_idle_fraction": 0.25,
+            },
+            {
+                "update": 2,
+                "wins": 9,
+                "mean_return": 8.0,
+                "mean_core_health": 900.0,
+                "mean_idle_fraction": 0.20,
+            },
+            {
+                "update": 3,
+                "wins": 10,
+                "mean_return": 7.0,
+                "mean_core_health": 950.0,
+                "mean_idle_fraction": 0.24,
+            },
+        ]
+        self.assertEqual(_select_dev_checkpoint_index(rows, policy), 2)
+        self.assertEqual(_select_dev_checkpoint_index(rows, None), 0)
+
+    def test_quality_gated_checkpoint_selection_fails_without_eligible_row(self):
+        from mindustry_agents.training.ppo_selector import (
+            _dev_checkpoint_selection_policy,
+            _select_dev_checkpoint_index,
+        )
+
+        policy = _dev_checkpoint_selection_policy(
+            {
+                "dev_checkpoint_selection": {
+                    "schema": "quality_gate_v1",
+                    "minimum_wins": 9,
+                    "maximum_mean_idle_fraction_exclusive": 0.25,
+                    "ranking": [
+                        "wins_desc",
+                        "mean_return_desc",
+                        "mean_core_health_desc",
+                        "update_asc",
+                    ],
+                }
+            }
+        )
+        with self.assertRaisesRegex(RuntimeError, "precommitted dev quality gate"):
+            _select_dev_checkpoint_index(
+                [
+                    {
+                        "update": 1,
+                        "wins": 10,
+                        "mean_return": 10.0,
+                        "mean_core_health": 1000.0,
+                        "mean_idle_fraction": 0.25,
+                    }
+                ],
+                policy,
+            )
+
+    def test_quality_selection_policy_validation_rejects_rule_drift(self):
+        from mindustry_agents.training.ppo_selector import (
+            _dev_checkpoint_selection_policy,
+        )
+
+        with self.assertRaisesRegex(ValueError, "selection ranking"):
+            _dev_checkpoint_selection_policy(
+                {
+                    "dev_checkpoint_selection": {
+                        "schema": "quality_gate_v1",
+                        "minimum_wins": 9,
+                        "maximum_mean_idle_fraction_exclusive": 0.25,
+                        "ranking": ["mean_idle_fraction_asc"],
+                    }
+                }
+            )
+
     def test_teacher_wait_candidate_maps_to_canonical_wait_action(self):
         from mindustry_agents.training.ppo_selector import (
             _canonical_scripted_action,
@@ -443,6 +542,31 @@ class TestPpoSelector(unittest.TestCase):
             )
             with self.assertRaisesRegex(RuntimeError, "diverged"):
                 compare_run_manifests(first, second)
+
+    def test_quality_selection_frontier_is_reproducibility_evidence(self):
+        from mindustry_agents.training.ppo_selector import _reproducibility_evidence
+
+        manifest = self._repro_manifest()
+        manifest["dev_checkpoint_selection_policy"] = {
+            "schema": "quality_gate_v1",
+            "minimum_wins": 9,
+            "maximum_mean_idle_fraction_exclusive": 0.25,
+            "ranking": [
+                "wins_desc",
+                "mean_return_desc",
+                "mean_core_health_desc",
+                "update_asc",
+            ],
+        }
+        manifest["dev_checkpoint_selection"][0]["mean_idle_fraction"] = 0.24
+        first = _reproducibility_evidence(manifest)
+        manifest["dev_checkpoint_selection"][0]["mean_idle_fraction"] = 0.23
+        second = _reproducibility_evidence(manifest)
+        self.assertNotEqual(first, second)
+        self.assertNotIn(
+            "dev_checkpoint_selection_policy",
+            _reproducibility_evidence(self._repro_manifest()),
+        )
 
     def test_episode_summary_hashes_action_state_not_inference_diagnostics(self):
         from mindustry_agents.training.ppo_selector import (

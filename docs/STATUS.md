@@ -960,7 +960,9 @@ repository-evidence mapping used for the M6 audit is:
   wins/return/core-health/earlier-update ranking applies. The permitted dev-v1
   frontier motivates the rule, but V12 remains rejected and its update 24 is
   not relabeled. Dev-v8 is retired unopened; dev-v9 freezes 160 globally
-  disjoint roots `91001..91160`. V13 has not been implemented or trained.
+  disjoint roots `91001..91160`. The strict selector, per-checkpoint idle
+  evidence, manifest compatibility, and failure path are implemented; all 126
+  Python tests pass. V13 has not been trained.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

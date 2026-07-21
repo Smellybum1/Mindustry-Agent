@@ -933,7 +933,9 @@ checkpoint selection, rather than reward construction, excluded a 10/10,
 selector that first requires at least 9/10 wins and idle `<0.25`, then uses the
 existing ranking. V12 artifacts are not retroactively relabeled. Dev-v8 is
 retired unopened; a disjoint 160-root dev-v9 set is frozen for one exclusive
-ADR-0019 confirmation. Held-out-v4 remains sealed.
+ADR-0019 confirmation. The strict gate, per-checkpoint idle evidence, and
+version-compatible reproducibility evidence are implemented with 126 passing
+Python tests. V13 training has not started; held-out-v4 remains sealed.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
