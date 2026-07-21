@@ -1320,6 +1320,17 @@ replay pass. Config/adversary hashes are `ef58055e7da5566d...` and
 `2d672a7f0e816a41...`. A committed packet is required before replica A; M8.5
 remains unmet.
 
+V28 replica A completed all 64 warmup episodes, 2,048 PPO episodes, and 32
+rehearsal-bearing updates but failed construction. Rehearsal CE falls
+`1.39527905 -> 1.31666994`, with 32-update report hash `2bd187fea8635206...`.
+Ten updates reach 8/10 but none reaches 9/10. Best-ranked update 27 has mean
+return `1.11366`, core health `516.4`, idle `0.07046312`, and the same 134/401
+teacher disagreements and losses on 2004/2009 as V27's best. Mean disagreement
+margin improves `2.24436055 -> 1.81065121` but no action flips; complete frontier
+hash is `ba963bea1d0d303b...`. Replica B did not start, dev-v24 remained unopened
+and is retired, held-out-v4 stays sealed, and V28 is rejected before reusable
+preflight. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

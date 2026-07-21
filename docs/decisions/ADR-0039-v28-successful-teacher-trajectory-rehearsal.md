@@ -76,3 +76,21 @@ and golden determinism including the negative replay. Config SHA-256 is
 `ef58055e7da5566db94f72cd95fcc519f1f3b61beae5b88ffaafec18d3a33bee`;
 adversary report SHA-256 is
 `2d672a7f0e816a4163f887aa4f19a946985bcb9ec8fe34c79f3849ac1a26fe8a`.
+
+## Outcome
+
+Replica A completed all 64 warmup episodes, 2,048 PPO episodes, and 32
+rehearsal-bearing updates, then failed the frozen construction gate. The
+rehearsal corpus remained five episodes/121 transitions. Mean rehearsal CE fell
+from `1.39527905` on update 1 to `1.31666994` on update 32; the complete atomic
+report hashes to
+`2bd187fea8635206865e12a37104420c6c79489a2428515dea42d797b53aba33`.
+
+No checkpoint reached 9/10. Ten updates reached 8/10; the best-ranked row is
+update 27 with mean return `1.11366`, mean core health `516.4`, and mean idle
+`0.07046312`. Its reusable teacher disagreement remains 134/401, while mean
+disagreement margin improves from V27's `2.24436055` to `1.81065121`; losses
+remain seeds 2004 and 2009. The complete frontier hashes to
+`ba963bea1d0d303b3e11304e8bb1a0ae3d476465f787bc1fea92647dc67f8972`.
+Replica B did not start, dev-v24 remained unopened, and held-out-v4 remained
+sealed. V28 is rejected before reusable preflight.

@@ -581,7 +581,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   unopened; held-out-v4 stays sealed. All 44 exact-config adversaries, 153 Python
   tests, pinned build, 5/5 candidate gate, smoke, determinism, and negative
   replay pass. Config/adversary hashes are `ef58055e7da5566d...` and
-  `2d672a7f0e816a41...`. Commit the packet before replica A.
+  `2d672a7f0e816a41...`. The packet was committed before replica A.
+- **V28 rejected at construction**: replica A completed all 32 rehearsal-
+  bearing updates but never reached 9/10. Rehearsal CE falls
+  `1.39527905 -> 1.31666994`; report hash is `2bd187fea8635206...`. Ten updates
+  reach 8/10; best-ranked update 27 has idle `0.07046312`, 134/401 teacher
+  disagreements, and losses on 2004/2009. Rehearsal reduces the disagreement
+  margin `2.24436055 -> 1.81065121` but does not flip actions; frontier hash is
+  `ba963bea1d0d303b...`. Replica B did not start, dev-v24 is retired unopened,
+  held-out-v4 stays sealed, and V28 stops before reusable preflight.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).

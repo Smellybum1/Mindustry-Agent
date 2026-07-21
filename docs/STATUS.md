@@ -1303,6 +1303,14 @@ repository-evidence mapping used for the M6 audit is:
   44 exact-config adversaries, 153 Python tests, pinned build, 5/5 candidate
   gate, smoke, determinism, and negative replay pass. Config/adversary hashes
   are `ef58055e7da5566d...` and `2d672a7f0e816a41...`.
+- V28 replica A completed all 32 rehearsal-bearing updates but failed
+  construction. Rehearsal CE falls `1.39527905 -> 1.31666994`; its 32-update
+  report hashes to `2bd187fea8635206...`. Ten updates reach 8/10 but none reaches
+  9/10. Best-ranked update 27 has idle `0.07046312`; its 134/401 teacher
+  disagreements match V27, although mean margin improves
+  `2.24436055 -> 1.81065121`. Losses remain 2004/2009 and frontier hash is
+  `ba963bea1d0d303b...`. Replica B did not start, dev-v24 is retired unopened,
+  held-out-v4 stays sealed, and V28 is rejected before preflight.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
