@@ -11,6 +11,8 @@ JAVA="${JAVA:-java}"
 BASE_PORT="${RL_PORT:-47810}"
 LOCK="$ROOT/python/requirements-rl-linux-py312.lock"
 JAR="$ROOT/rl-server/build/libs/rl-server.jar"
+PRIMARY_OUT="$ROOT/runs/m8-selector-v1"
+REPRO_OUT="$ROOT/runs/m8-selector-v1-repro"
 
 if [[ "$(uname -s)" != "Linux" ]]; then
   echo "ERROR: M8.4 selector training requires Linux/WSL2" >&2
@@ -44,13 +46,26 @@ fi
 
 echo "== M8.4 reward adversaries =="
 "$VENV/bin/python" -m mindustry_agents.training.reward_adversary \
-  --output "$ROOT/runs/m8-selector-v1/reward-adversaries.json"
+  --output "$PRIMARY_OUT/reward-adversaries.json"
 
-echo "== M8.4 one-seat PPO =="
+echo "== M8.4 one-seat PPO: independent run A =="
 "$VENV/bin/python" -m mindustry_agents.training.ppo_selector \
   --config "$ROOT/configs/training/m8-selector-v1.json" \
-  --output-dir "$ROOT/runs/m8-selector-v1" \
+  --output-dir "$PRIMARY_OUT" \
   --java "$JAVA" \
   --port "$BASE_PORT"
+
+echo "== M8.4 one-seat PPO: independent run B =="
+"$VENV/bin/python" -m mindustry_agents.training.ppo_selector \
+  --config "$ROOT/configs/training/m8-selector-v1.json" \
+  --output-dir "$REPRO_OUT" \
+  --java "$JAVA" \
+  --port "$BASE_PORT"
+
+echo "== M8.4 full-run reproducibility =="
+"$VENV/bin/python" -m mindustry_agents.training.ppo_selector \
+  --compare-manifests \
+  "$PRIMARY_OUT/selector-v1-run.manifest.json" \
+  "$REPRO_OUT/selector-v1-run.manifest.json"
 
 echo "TRAIN-SELECTOR OK"

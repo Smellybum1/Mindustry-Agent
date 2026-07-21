@@ -18,7 +18,13 @@ import torch.nn.functional as functional
 
 from mindustry_agents import ENGINE_COMMIT, ENGINE_TAG, PROTOCOL_VERSION
 from mindustry_agents.policies import GreedyUtilityPolicy
-from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess, repo_root
+from mindustry_agents.process.launcher import (
+    DEFAULT_JVM_ARGS,
+    DEFAULT_PORT,
+    LaunchConfig,
+    RlServerProcess,
+    repo_root,
+)
 from mindustry_agents.training.model import MODEL_SCHEMA, SelectorActorCritic, feature_tensors
 from mindustry_agents.training.reward import REWARD_SCHEMA, SelectorReward
 from mindustry_agents.training.selector import (
@@ -74,6 +80,19 @@ def _json_digest(value: Any) -> str:
     return hashlib.sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
+
+
+def _model_state_digest(state: dict[str, torch.Tensor]) -> str:
+    """Hash tensor names, schemas, and bytes without torch serialization metadata."""
+
+    digest = hashlib.sha256()
+    for name in sorted(state):
+        tensor = state[name].detach().cpu().contiguous()
+        digest.update(name.encode())
+        digest.update(str(tensor.dtype).encode())
+        digest.update(json.dumps(list(tensor.shape), separators=(",", ":")).encode())
+        digest.update(tensor.numpy().tobytes())
+    return digest.hexdigest()
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -278,6 +297,7 @@ def rollout_episode(
                 "tick": tick,
                 "advanced_ticks": transitions[-1].advanced_ticks,
                 "action": learned_action["task_action"],
+                "agent_actions": bundle,
                 "action_index": selected_index,
                 "policy_loss_mask": transitions[-1].policy_loss_mask,
                 "raw_logits": [float(value) for value in raw_logits.tolist()],
@@ -417,6 +437,24 @@ def ppo_update(
 
 
 def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
+    action_state_trace = [
+        {
+            key: transition[key]
+            for key in (
+                "tick",
+                "advanced_ticks",
+                "action",
+                "agent_actions",
+                "action_index",
+                "policy_loss_mask",
+                "reward_components",
+                "boundary_reasons",
+                "state_hash",
+                "outcome",
+            )
+        }
+        for transition in episode.trace
+    ]
     return {
         "seed": episode.seed,
         "outcome": episode.outcome,
@@ -430,7 +468,7 @@ def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
         "duplicate_work_incidents": int(
             episode.coordination_metrics.get("duplicate_work_incidents", 0)
         ),
-        "trace_digest": _json_digest(episode.trace),
+        "trace_digest": _json_digest(action_state_trace),
     }
 
 
@@ -478,6 +516,7 @@ def save_checkpoint(
         "config_sha256": config_sha256,
         "parent_checkpoint": parent_checkpoint,
         "update": update,
+        "model_state_sha256": _model_state_digest(model.state_dict()),
         "model_state": model.state_dict(),
         "optimizer_state": optimizer.state_dict(),
     }
@@ -496,6 +535,10 @@ def load_checkpoint(path: Path, model: SelectorActorCritic) -> dict[str, Any]:
     )
     if actual != expected:
         raise ValueError(f"checkpoint schema mismatch: {actual} != {expected}")
+    model_digest = _model_state_digest(payload["model_state"])
+    recorded_digest = payload.get("model_state_sha256")
+    if recorded_digest is not None and recorded_digest != model_digest:
+        raise ValueError("checkpoint model state digest mismatch")
     model.load_state_dict(payload["model_state"])
     model.eval()
     return payload
@@ -538,6 +581,9 @@ def _manifest(
     parent_checkpoint: str,
     produced_checkpoints: list[Path],
     verification_paths: list[Path],
+    initial_model_state_sha256: str,
+    selected_model_state_sha256: str,
+    selected_update: int,
 ) -> dict[str, Any]:
     lock = root / "python" / "requirements-rl-linux-py312.lock"
     return {
@@ -556,6 +602,7 @@ def _manifest(
             "device": "cpu",
             "torch_threads": torch.get_num_threads(),
             "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+            "jvm_args": list(DEFAULT_JVM_ARGS),
             "rl_lockfile": str(lock.relative_to(root)),
             "rl_lock_sha256": _sha256(lock),
         },
@@ -597,7 +644,10 @@ def _manifest(
             "path": str(checkpoint_path.relative_to(root)),
             "sha256": checkpoint_sha256,
             "parent_checkpoint": parent_checkpoint,
+            "update": selected_update,
+            "model_state_sha256": selected_model_state_sha256,
         },
+        "initial_model_state_sha256": initial_model_state_sha256,
         "optimizer_updates": optimizer_updates,
         "dev_checkpoint_selection": dev_selection,
         "train": train_summaries,
@@ -627,6 +677,59 @@ def _manifest(
     }
 
 
+def _reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Return the path-independent fields that define one complete training run."""
+
+    return {
+        "source_config_sha256": manifest["source_config"]["sha256"],
+        "jvm_args": manifest["runtime"]["jvm_args"],
+        "rng_seeds": manifest["rng_seeds"],
+        "initial_model_state_sha256": manifest["initial_model_state_sha256"],
+        "selected_checkpoint": {
+            key: manifest["checkpoint"][key]
+            for key in ("update", "model_state_sha256")
+        },
+        "optimizer_updates": manifest["optimizer_updates"],
+        "dev_checkpoint_selection": [
+            {
+                key: row[key]
+                for key in ("update", "wins", "mean_return", "mean_core_health")
+            }
+            for row in manifest["dev_checkpoint_selection"]
+        ],
+        "train": manifest["train"],
+        "dev": manifest["dev"],
+        "scorecard": manifest["scorecard"],
+        "action_state_trace_digest": manifest["action_state_trace_digest"],
+        "deterministic_checkpoint_verification": {
+            key: manifest["deterministic_checkpoint_verification"][key]
+            for key in ("seed", "fresh_runs", "trace_digest_a", "trace_digest_b", "bit_exact")
+        },
+    }
+
+
+def compare_run_manifests(first: Path, second: Path) -> str:
+    """Require two independent full runs to have identical behavioral evidence."""
+
+    manifests = [_load_json(path) for path in (first, second)]
+    evidence = [_reproducibility_evidence(manifest) for manifest in manifests]
+    digests = [_json_digest(item) for item in evidence]
+    recorded = [
+        manifest.get("full_run_reproducibility", {}).get("digest")
+        for manifest in manifests
+    ]
+    if any(value != digest for value, digest in zip(recorded, digests)):
+        raise RuntimeError("manifest reproducibility digest is missing or invalid")
+    if evidence[0] != evidence[1]:
+        raise RuntimeError(
+            "independent full training runs diverged: "
+            f"{digests[0][:16]} != {digests[1][:16]}"
+        )
+    print(f"full_run_reproducibility={digests[0][:16]} bit_exact=True")
+    print("M8-PPO-REPRODUCIBILITY OK")
+    return digests[0]
+
+
 def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[str, Any]:
     root = repo_root()
     config = _load_json(config_path)
@@ -634,6 +737,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
     dev_set = _seed_set(root, str(config["dev_seed_set"]), "dev")
     model = SelectorActorCritic(int(config["model_init_seed"]))
+    initial_model_state_sha256 = _model_state_digest(model.state_dict())
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=float(config["learning_rate"]),
@@ -714,6 +818,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     checkpoint_path = produced_checkpoints[best_index]
     checkpoint_sha = str(dev_selection[best_index]["checkpoint_sha256"])
     selected_payload = load_checkpoint(checkpoint_path, model)
+    selected_model_state_sha256 = _model_state_digest(model.state_dict())
     dev_episodes = dev_candidates[best_index]
 
     verify_seed = int(dev_set["seeds"][0])
@@ -752,6 +857,21 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
 
     train_summaries = [_episode_summary(item) for item in train_episodes]
     dev_summaries = [_episode_summary(item) for item in dev_episodes]
+    training_trace_path = output_dir / "training-trace.jsonl"
+    training_trace_path.write_text(
+        "".join(
+            json.dumps(
+                {"seed": episode.seed, "transition": transition},
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n"
+            for episode in train_episodes
+            for transition in episode.trace
+        ),
+        encoding="utf-8",
+    )
+    verification_paths.append(training_trace_path)
     manifest = _manifest(
         root,
         config_path,
@@ -768,11 +888,20 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         str(selected_payload.get("parent_checkpoint", "")),
         produced_checkpoints,
         verification_paths,
+        initial_model_state_sha256,
+        selected_model_state_sha256,
+        int(selected_payload["update"]),
     )
+    reproducibility_digest = _json_digest(_reproducibility_evidence(manifest))
+    manifest["full_run_reproducibility"] = {
+        "schema": "selector_training_reproducibility_v1",
+        "digest": reproducibility_digest,
+    }
     manifest_path = checkpoint_path.with_suffix(".manifest.json")
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    stable_manifest_path = output_dir / "selector-v1-run.manifest.json"
+    rendered_manifest = json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+    manifest_path.write_text(rendered_manifest, encoding="utf-8")
+    stable_manifest_path.write_text(rendered_manifest, encoding="utf-8")
     print(
         f"train={len(train_summaries)} dev={len(dev_summaries)} "
         f"dev_wins={manifest['scorecard']['dev_wins']} checkpoint={checkpoint_sha[:16]}"
@@ -782,6 +911,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         f"bit_exact={verification['bit_exact']}"
     )
     print(f"manifest={manifest_path}")
+    print(f"full_run_reproducibility={reproducibility_digest[:16]}")
     print("M8-PPO OK")
     return manifest
 
@@ -799,7 +929,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--java", default="java")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
+    parser.add_argument("--compare-manifests", nargs=2, type=Path)
     args = parser.parse_args(argv)
+    if args.compare_manifests:
+        compare_run_manifests(*(path.resolve() for path in args.compare_manifests))
+        return 0
     train(args.config.resolve(), args.output_dir.resolve(), java=args.java, port=args.port)
     return 0
 
