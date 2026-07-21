@@ -21,7 +21,7 @@
   "ppo_epochs": 8,
   "minibatch_size": 128,
   "entropy_coefficient": 0.02,
-  "success_imitation_coefficient": 0.0,
+  "success_imitation_coefficient": 0.1,
   "value_coefficient": 0.5,
   "max_grad_norm": 0.5,
   "normalizers": {
@@ -48,7 +48,7 @@
     "ppo_epochs": 8,
     "minibatch_size": 128,
     "entropy_coefficient": 0.02,
-    "success_imitation_coefficient": 0.0,
+    "success_imitation_coefficient": 0.1,
     "value_coefficient": 0.5,
     "max_grad_norm": 0.5
   }

@@ -157,6 +157,72 @@ class TestPpoSelector(unittest.TestCase):
 
         self.assertAlmostEqual(float(whole[0]), float(chunked[0]), places=6)
 
+    def test_success_imitation_uses_only_unforced_winning_transitions(self):
+        import torch
+
+        from mindustry_agents.training.model import SelectorActorCritic
+        from mindustry_agents.training.ppo_selector import (
+            EpisodeRollout,
+            Transition,
+            ppo_update,
+        )
+
+        def transition(successful, policy_loss_mask=True):
+            return Transition(
+                candidates=torch.zeros((8, 37)),
+                scalars=torch.zeros(56),
+                candidate_present=torch.zeros(8, dtype=torch.bool),
+                action_mask=torch.ones(10, dtype=torch.bool),
+                action=9,
+                old_log_prob=0.0,
+                old_value=0.0,
+                reward=1.0,
+                advanced_ticks=60,
+                done=True,
+                policy_loss_mask=policy_loss_mask,
+                successful_episode=successful,
+            )
+
+        def rollout(item):
+            return EpisodeRollout(
+                seed=1,
+                outcome="win" if item.successful_episode else "loss",
+                tick=60,
+                core_health=1.0,
+                transitions=[item],
+                reward_components={},
+                trace=[],
+                coordination_metrics={},
+            )
+
+        model = SelectorActorCritic(1)
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.0)
+        config = {
+            "gamma_per_second": 0.99,
+            "gae_lambda": 0.95,
+            "minibatch_size": 3,
+            "ppo_epochs": 1,
+            "clip_ratio": 0.2,
+            "value_coefficient": 0.5,
+            "entropy_coefficient": 0.0,
+            "success_imitation_coefficient": 0.1,
+            "max_grad_norm": 0.5,
+        }
+        metrics = ppo_update(
+            model,
+            optimizer,
+            [
+                rollout(transition(True)),
+                rollout(transition(False)),
+                rollout(transition(True, policy_loss_mask=False)),
+            ],
+            config,
+            torch.Generator().manual_seed(3),
+        )
+
+        self.assertEqual(metrics["success_imitation_samples"], 1.0)
+        self.assertGreater(metrics["success_imitation_loss"], 0.0)
+
     def test_checkpoint_requires_exact_schema_match(self):
         import torch
 

@@ -58,6 +58,7 @@ class Transition:
     advanced_ticks: int
     done: bool
     policy_loss_mask: bool
+    successful_episode: bool = False
 
 
 @dataclass
@@ -403,6 +404,10 @@ def rollout_episode(
         outcome = response.outcome
         final_metrics = response.coordination_metrics
 
+    successful_episode = outcome == "win"
+    for transition in transitions:
+        transition.successful_episode = successful_episode
+
     return EpisodeRollout(
         seed=seed,
         outcome=outcome,
@@ -478,8 +483,19 @@ def ppo_update(
     actor_mask = torch.tensor(
         [item.policy_loss_mask for item in transitions], dtype=torch.bool
     )
+    successful_actor_mask = torch.tensor(
+        [item.policy_loss_mask and item.successful_episode for item in transitions],
+        dtype=torch.bool,
+    )
     batch_size = int(config["minibatch_size"])
-    metrics = {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0, "batches": 0.0}
+    metrics = {
+        "policy_loss": 0.0,
+        "value_loss": 0.0,
+        "entropy": 0.0,
+        "success_imitation_loss": 0.0,
+        "success_imitation_samples": 0.0,
+        "batches": 0.0,
+    }
     for _ in range(int(config["ppo_epochs"])):
         order = torch.randperm(len(transitions), generator=shuffle_generator)
         for start in range(0, len(transitions), batch_size):
@@ -508,11 +524,20 @@ def ppo_update(
             else:
                 policy_loss = values.sum() * 0.0
                 entropy_loss = values.sum() * 0.0
+            successful = successful_actor_mask[index]
+            if successful.any():
+                success_imitation_loss = -log_probs[successful].mean()
+                success_imitation_samples = float(successful.sum().item())
+            else:
+                success_imitation_loss = values.sum() * 0.0
+                success_imitation_samples = 0.0
             value_loss = functional.mse_loss(values, returns[index])
             loss = (
                 policy_loss
                 + float(config["value_coefficient"]) * value_loss
                 - float(config["entropy_coefficient"]) * entropy_loss
+                + float(config.get("success_imitation_coefficient", 0.0))
+                * success_imitation_loss
             )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -523,10 +548,16 @@ def ppo_update(
             metrics["policy_loss"] += float(policy_loss.item())
             metrics["value_loss"] += float(value_loss.item())
             metrics["entropy"] += float(entropy_loss.item())
+            metrics["success_imitation_loss"] += float(
+                success_imitation_loss.item()
+            )
+            metrics["success_imitation_samples"] += success_imitation_samples
             metrics["batches"] += 1.0
     divisor = max(1.0, metrics["batches"])
     return {
-        key: value / divisor if key != "batches" else value
+        key: value / divisor
+        if key not in {"batches", "success_imitation_samples"}
+        else value
         for key, value in metrics.items()
     }
 
