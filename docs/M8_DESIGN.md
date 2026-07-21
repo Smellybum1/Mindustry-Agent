@@ -330,6 +330,15 @@ digest. The rehearsal report joins full-run reproducibility evidence and
 survives a later construction-gate failure. Absent or zero rehearsal epochs
 preserve the warmup-only and historical trainer paths exactly.
 
+The warmup corpus may also name an explicit `teacher_warmup_seed_set`. That
+artifact must be a governed `train` split; dev and held-out files are rejected
+through the same loader used by ordinary PPO. It changes only teacher-controlled
+episode collection: PPO continues to use `train_seed_set`, and evaluation
+continues to use `dev_seed_set`. The auxiliary set identity, exact roots, and
+schedule are added to the manifest and warmup report. With the field absent,
+the ordinary PPO train set remains the warmup source and historical runs retain
+their exact manifest shape.
+
 This hypothesis addresses sparse successful diverse-root training evidence
 (49/512 v3 train episodes) with a structured coordination prior, without
 changing model capacity, roots, episode/update budget, RNGs, reward, dev set,

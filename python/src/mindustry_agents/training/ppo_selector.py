@@ -130,6 +130,19 @@ def _seed_set(root: Path, relative: str, required_split: str) -> dict[str, Any]:
     return document
 
 
+def _teacher_warmup_train_set(
+    root: Path,
+    train_set: dict[str, Any],
+    config: dict[str, Any],
+) -> dict[str, Any]:
+    """Load an optional train-only teacher corpus without changing PPO roots."""
+
+    relative = config.get("teacher_warmup_seed_set")
+    if relative is None:
+        return train_set
+    return _seed_set(root, str(relative), "train")
+
+
 def _training_seed_schedule(
     train_set: dict[str, Any], config: dict[str, Any]
 ) -> list[int]:
@@ -175,6 +188,8 @@ def _teacher_warmup_policy(config: dict[str, Any]) -> dict[str, Any] | None:
     if cycles < 0:
         raise ValueError("teacher_warmup_cycles cannot be negative")
     if cycles == 0:
+        if config.get("teacher_warmup_seed_set") is not None:
+            raise ValueError("teacher_warmup_seed_set requires teacher warmup")
         return None
     epochs = int(config["teacher_warmup_epochs"])
     batch_size = int(config["teacher_warmup_minibatch_size"])
@@ -1246,6 +1261,7 @@ def _manifest(
     config_path: Path,
     config: dict[str, Any],
     train_set: dict[str, Any],
+    teacher_warmup_set: dict[str, Any],
     dev_set: dict[str, Any],
     checkpoint_path: Path,
     checkpoint_sha256: str,
@@ -1372,6 +1388,14 @@ def _manifest(
         manifest["rng_seeds"]["teacher_warmup_minibatch_seed"] = config[
             "teacher_warmup_minibatch_seed"
         ]
+        if config.get("teacher_warmup_seed_set") is not None:
+            manifest["seed_sets"]["teacher_warmup"] = {
+                key: teacher_warmup_set[key]
+                for key in ("seed_set_id", "seed_set_version", "split")
+            }
+            manifest["rng_seeds"]["environment_root_seeds"][
+                "teacher_warmup"
+            ] = list(teacher_warmup_set["seeds"])
     if teacher_rehearsal is not None:
         manifest["teacher_rehearsal"] = teacher_rehearsal
         manifest["rollout_update_counts"]["teacher_rehearsal_updates"] = len(
@@ -1457,6 +1481,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     teacher_rehearsal_policy = _teacher_rehearsal_policy(config)
     _configure_torch(config)
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
+    teacher_warmup_set = _teacher_warmup_train_set(root, train_set, config)
     dev_set = _seed_set(root, str(config["dev_seed_set"]), "dev")
     model = SelectorActorCritic(int(config["model_init_seed"]))
     initial_model_state_sha256 = _model_state_digest(model.state_dict())
@@ -1480,7 +1505,9 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     train_episodes: list[EpisodeRollout] = []
     optimizer_updates: list[dict[str, Any]] = []
     seeds = _training_seed_schedule(train_set, config)
-    teacher_warmup_seeds = _teacher_warmup_seed_schedule(train_set, config)
+    teacher_warmup_seeds = _teacher_warmup_seed_schedule(
+        teacher_warmup_set, config
+    )
     teacher_warmup_report: dict[str, Any] | None = None
     teacher_warmup_path: Path | None = None
     teacher_rehearsal_episodes: list[EpisodeRollout] = []
@@ -1556,7 +1583,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     output_dir,
                     config_path,
                     config,
-                    train_set,
+                    teacher_warmup_set,
                     teacher_warmup_seeds,
                     warmup_summaries,
                     warmup_metrics,
@@ -1724,6 +1751,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         config_path,
         config,
         train_set,
+        teacher_warmup_set,
         dev_set,
         checkpoint_path,
         checkpoint_sha,

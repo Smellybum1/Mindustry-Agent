@@ -82,6 +82,7 @@ class TestPpoSelector(unittest.TestCase):
             _teacher_rehearsal_policy,
             _teacher_warmup_policy,
             _teacher_warmup_seed_schedule,
+            _teacher_warmup_train_set,
         )
 
         train_set = {"seeds": [1, 2, 3, 4]}
@@ -96,6 +97,44 @@ class TestPpoSelector(unittest.TestCase):
         self.assertEqual(sorted(first[:4]), [1, 2, 3, 4])
         self.assertEqual(sorted(first[4:]), [1, 2, 3, 4])
         self.assertEqual(_teacher_warmup_seed_schedule(train_set, {}), [])
+        self.assertIs(_teacher_warmup_train_set(Path.cwd(), train_set, {}), train_set)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            auxiliary_path = root / "auxiliary.json"
+            auxiliary_path.write_text(
+                json.dumps(
+                    {
+                        "seed_set_id": "teacher-train-v1",
+                        "seed_set_version": 1,
+                        "split": "train",
+                        "seeds": [11, 12],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            auxiliary = _teacher_warmup_train_set(
+                root,
+                train_set,
+                {"teacher_warmup_seed_set": "auxiliary.json"},
+            )
+            self.assertEqual(auxiliary["seeds"], [11, 12])
+            auxiliary_path.write_text(
+                json.dumps(
+                    {
+                        "seed_set_id": "teacher-dev-v1",
+                        "seed_set_version": 1,
+                        "split": "dev",
+                        "seeds": [11, 12],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "expected train"):
+                _teacher_warmup_train_set(
+                    root,
+                    train_set,
+                    {"teacher_warmup_seed_set": "auxiliary.json"},
+                )
         with self.assertRaisesRegex(ValueError, "cannot be negative"):
             _teacher_warmup_seed_schedule(
                 train_set, {"teacher_warmup_cycles": -1}
@@ -121,6 +160,10 @@ class TestPpoSelector(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "cannot be negative"):
             _teacher_rehearsal_policy(
                 {"teacher_rehearsal_epochs_per_update": -1}
+            )
+        with self.assertRaisesRegex(ValueError, "requires teacher warmup"):
+            _teacher_warmup_policy(
+                {"teacher_warmup_seed_set": "auxiliary.json"}
             )
 
     def test_quality_gated_checkpoint_selection_is_strict_and_ranked(self):
