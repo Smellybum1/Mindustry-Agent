@@ -13,7 +13,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   entities + skills in the exact engine (`RlAgentRegistry`, `SkillController`,
   `ActionDecoder`; agents mine copper and deliver it to the core with an exact
   balance ledger), the Python env/process layer (supervisor pool with
-  crash-replacement, PettingZoo-shaped facade, vector collector; 84 pytest
+  crash-replacement, PettingZoo-shaped facade, vector collector; 92 pytest
   green), benchmarks recorded in `docs/BENCHMARKS.md`, and — new — the **full
   `bootstrap-defense-v0` world loaded from `scenario.json`** (48×48, ore patches,
   east spawn, 250-copper loadout, deterministic 3-wave dagger schedule at
@@ -167,25 +167,21 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   promotable; held-out remains sealed. Current final capacity is 375.1x at four
   JVMs and 10,000 resets with zero drift/no leak/no orphan. The golden is 664
   checkpoints over 16,200 ticks and two wins.
-- **M8.5 progress**: the retained train/dev improvements are elapsed-time GAE,
-  deterministic repeated train cycles, and canonical WAIT mapping. The best
-  exploratory update (`e1fdab4ae229dffe...`, seed 8601) wins 8/10 dev episodes.
-  The mixed-seat preflight archives behavioural traces and compares against
-  permanent and matched controls. Learned 8/10 beats permanent random-valid
-  3/10, matched random 2/10, and matched greedy 1/10; paired observed scorecard
-  metrics pass, but permanent greedy-utility is also 8/10. The candidate is not
-  frozen or eligible. An exploratory 75/25 same-initialization weight
-  interpolation reaches 9/10 and passes every dev comparator/scorecard check,
-  but its auxiliary parent recipe was removed and its lineage is not yet
-  reproducible from committed code. It is not eligible; held-out remains sealed.
-- **What is stubbed**: the one-way held-out final and the M10 human
-  goal/override/study surface remain future work. M8.4 training/rewards and the
-  M8.5 dev ablation/preflight path are real.
+- **M8.5 final**: base and auxiliary parent pairs reproduce exactly; two 75/25
+  constructions match checkpoint `4fdad5cbd8476a8f...` and lineage
+  `995cb7d71fa21e4e...`. Frozen dev preflight passed at 9/10. The exclusive
+  held-out final then completed once and returned `not_promoted`: learned 4/10
+  `[0.1,0.7]`, random-valid 6/10 `[0.3,0.9]`, greedy-utility 6/10 `[0.3,0.9]`,
+  matched greedy 1/10 `[0.0,0.3]`. Permanent CI separation failed, and idle /
+  abandonment regressed versus permanent greedy. The attempt marker forbids a
+  rerun; held-out outcomes must not be used for policy revision.
+- **What is stubbed**: the M10 human goal/override/study surface remains future
+  work. M8.5 evaluation machinery is real, but the candidate did not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
-- **Next roadmap item**: M8.5, improve/freeze a candidate using train/dev only,
-  run required ablations, then open held-out exactly once only when every
-  promotion precondition is satisfied.
+- **Next roadmap decision**: govern the post-M8.5-failure path without using
+  held-out-v1 outcomes. M9.1 remains blocked by its explicit promotion
+  prerequisite.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -203,7 +199,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (84 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (92 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
 | `make training-gate` | On WSL2 with pinned `UV`/`JAVA`, reconstructs the RL environment, runs the 1/2/4-JVM shadow-inference collector gate, then 10,000 resets. Current 4-JVM result 375.1x real-time; zero reset drift/leak/orphans; ends `TRAINING-GATE OK`. Verified 2026-07-21. |
@@ -293,7 +289,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 84 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.6
+- **Passing**: 92 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.6
   action/board/event roundtrips, `test_supervisor.py`, `test_env.py`; fake-server
   subprocess, no JVM, fast) and 108 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
@@ -347,14 +343,15 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **M8.5: reproduce/freeze the 9/10 interpolation.** Restore the optional
-   auxiliary training recipe, govern both parent configs plus the 75/25
-   interpolation manifest, and require exact reruns before eligibility.
-2. **M8.5: held-out promotion gate.** Open held-out exactly once only after the
-   policy/code and all comparator/scorecard preconditions are frozen.
-3. **M9.1: M9 design gate.** Begin only after the single learned seat promotes.
-4. **M9.2: partner population.** Begin only after the M9 design gate.
-5. **M9.3: communication ablation.** Begin only after partner population exists.
+1. **Govern the post-failure path before more learning.** Do not inspect or tune
+   against individual held-out-v1 outcomes. Any new candidate/final evaluation
+   requires an explicit, separately versioned sealed contract or superseding ADR.
+2. **M8.5 remains unmet.** The v1 one-seat selector was not promoted and its
+   held-out attempt cannot be rerun.
+3. **M9.1 remains gated.** The roadmap says to begin only after the single
+   learned seat promotes; do not silently bypass that prerequisite.
+4. **M9.2 partner population** remains behind M9.1.
+5. **M9.3 communication ablation** remains behind M9.2.
 
 ## Decisions
 

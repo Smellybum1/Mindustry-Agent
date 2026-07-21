@@ -1,7 +1,7 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, and continue from M8.5.
+`coop-agent/v159.7`, after the failed M8.5 one-way final.
 
 Read first, in order:
 
@@ -14,11 +14,12 @@ Run `bash scripts/codex-status.sh`, preserve the user's modified `AGENTS.md`,
 and never stage generated `annotations/src/main/resources/classids.properties`.
 Then run the baseline from the dated handoff.
 
-M8.4 is complete but its selected checkpoint is 0/10 on dev and is not a
-promotion candidate. Improve/freeze candidates with train/dev only, run the
-required matched ablations and scorecard checks, and keep every reward change
-behind a renewed audit/adversary gate. Do **not** open held-out until all M8.5
-preconditions are satisfied and the code/checkpoint/comparators are frozen;
-held-out is a one-way final evaluation, not a tuning set. Preserve engine pins,
-fixed-step determinism, simulation-thread ownership, structured-authoritative
-communication, and the four-JVM cap. Do not push or make machine-global changes.
+M8.5's frozen 75/25 candidate passed dev preflight but was not promoted by the
+one-way held-out-v1 final. The completed attempt marker forbids any rerun. Do not
+inspect individual held-out episodes or choose behavior from their outcomes.
+M9.1 is explicitly gated on a promoted single learned seat, so do not bypass it.
+First govern an honest post-failure path—such as a separately versioned sealed
+contract or superseding ADR—before any more training or evaluation. Preserve
+engine pins, fixed-step determinism, simulation-thread ownership,
+structured-authoritative communication, and the four-JVM cap. Do not push or
+make machine-global changes.

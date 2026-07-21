@@ -785,7 +785,7 @@ repository-evidence mapping used for the M6 audit is:
   physics, disables/joins pathfinder workers, canonicalizes building
   proximity/sleep ordering, enumerates authoritative tile-backed buildings,
   and removes headless placement RNG. All upstream edits are catalogued.
-- Final gates: 84 Python tests; Java/JUnit plus plugin compile green; smoke
+- Final gates: 92 Python tests; Java/JUnit plus plugin compile green; smoke
   green; 79-boundary cross-JVM determinism; 664-checkpoint/16,200-tick golden
   and negative mutation green; 65-episode fixed/dev ladder green; 27 reward
   adversaries; paired PPO reproducibility; 10,000 reset hashes with no drift,
@@ -793,35 +793,39 @@ repository-evidence mapping used for the M6 audit is:
   375.1x real-time. Adaptive-v1 is 2/5 fixed and 9/10 dev in the current
   descriptive ladder; held-out remains sealed.
 
-## Milestone 8.5 — promotion preflight (IN PROGRESS, 2026-07-21)
+## Milestone 8.5 — one-way promotion result (NOT PROMOTED, 2026-07-21)
 
 - PPO credit assignment now decays both gamma and GAE lambda by elapsed engine
   seconds, so terminal credit is invariant to extra decision-event boundaries.
   The trainer also records a deterministic repeated train-seed schedule and
   canonicalizes the catalog WAIT row to the single WAIT action.
-- The best train/dev-only exploratory recipe uses 32 governed training cycles,
-  64 episodes per update, and model seed 8601. Its selected update 2 checkpoint
-  (`e1fdab4ae229dffe...`) wins 8/10 dev episodes. Bounded ablations of PPO epoch
-  count, batch size, successful-trajectory imitation, and additional model seeds
-  did not improve that result and were rejected.
+- The final candidate is a governed 75/25 interpolation of aligned update-2
+  parents: base PPO (8/10 dev, checkpoint `e9d83831b9cb5ca2...`, full-run digest
+  `39b465f5ad910807...`) and auxiliary successful-trajectory imitation (6/10,
+  `7aa12b17600cbe27...`, `bd6e52311a09adec...`). Two independent pinned runs
+  reproduce each parent exactly.
+- Two independent constructions produce identical derived checkpoint
+  `4fdad5cbd8476a8f...`, model-state digest `266c4acc5504dcda...`, and lineage
+  digest `995cb7d71fa21e4e...`. The constructor verifies parent configs, updates,
+  manifests, initial state, commit/status, schemas, and architecture.
 - The M8.5 preflight runner now evaluates the learned seat against refreshed
   permanent random-valid/greedy-utility aggregates and matched random/greedy
   seat-0 controls while keeping the same adaptive teammates and lifecycle. It
   archives decision traces and applies paired bootstrap scorecard checks.
-- Current dev evidence is learned 8/10, permanent random-valid 3/10, permanent
-  greedy-utility 8/10, matched random 2/10, and matched greedy 1/10. Every
-  observed scorecard metric is non-regressing versus matched greedy, but the
-  learned candidate only ties permanent greedy. It is therefore not frozen or
-  eligible for held-out. The held-out seed file has not been opened or run.
-- A post-preflight same-initialization weight interpolation (75% of the 8/10
-  checkpoint, 25% of a rejected auxiliary-run checkpoint) reaches 9/10 and
-  passes all observed dev comparator and scorecard checks. It is a direction,
-  not a candidate: the auxiliary recipe was removed, the two parent runs have
-  not been reproduced from the committed tree, and the derived checkpoint has
-  no frozen config/lineage manifest. Those gaps must close before eligibility.
-- The dev preflight is deliberately a strict observed-rate improvement screen.
-  The roadmap's stricter 95% CI-separation claim remains reserved for the
-  one-way held-out final after code, config, checkpoint, and comparators freeze.
+- Frozen-commit dev preflight at `7494396ce2` is eligible: learned 9/10 beats
+  permanent random-valid 3/10, permanent greedy-utility 8/10, matched random
+  2/10, and matched greedy 1/10; reward adversaries and paired scorecards pass.
+- The one-way runner created the exclusive attempt marker before first reading
+  held-out membership, then archived 40 episodes and refused future attempts.
+  Final held-out results are learned 4/10 (95% CI `[0.1,0.7]`), permanent
+  random-valid 6/10 (`[0.3,0.9]`), permanent greedy-utility 6/10
+  (`[0.3,0.9]`), and matched greedy 1/10 (`[0.0,0.3]`). There is no permanent
+  comparator CI separation. Idle fraction and abandonment regress versus
+  permanent greedy; recovery is uncertain. Status: **not promoted**.
+- Final evidence is local under `runs/m8-promotion-held-out-final*`: records
+  SHA `e8beeda83880cd4b...`, aggregate `c245c46227047600...`, report
+  `02d05e925cecf964...`. The completed attempt marker permanently forbids a
+  rerun. Individual held-out outcomes must not be used to revise behavior.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -831,9 +835,9 @@ repository-evidence mapping used for the M6 audit is:
   deterministic M5.1 candidate catalog. Board-to-skill wiring and measurable
   helper fulfilment, live reservations, lease recovery, announcements, and
   metrics are wired through M5.6; the shared M7.2 expert uses that surface.
-  M8.4 selector rewards/training and the M8.5 dev preflight/ablation runner are
-  implemented; candidate improvement and the final held-out promotion remain
-  gated.
+  M8.4 selector rewards/training and the complete M8.5 lineage/dev/one-way-final
+  machinery are implemented. The v1 candidate failed promotion; the consumed
+  held-out gate cannot be rerun.
 - **`agent-plugin`** is no longer a stub. Its scripted M6 path is implemented;
   future M10 human goals/overrides and study instrumentation remain outside M6.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
@@ -843,8 +847,9 @@ repository-evidence mapping used for the M6 audit is:
   `evaluation` now contains the real dependency-free M6 summaries and M7.6
   ladder/bootstrap machinery. `training` contains the M8.3 throughput gate and
   M8.4 feature/tensor adapter, audited reward, model, PPO optimizer,
-  checkpoint/replay, manifest path, mixed-seat ablations, and promotion
-  preflight; `telemetry` remains a documented
+  checkpoint/replay, manifest path, mixed-seat ablations, reproducible
+  checkpoint interpolation, dev preflight, and one-way final gate; `telemetry`
+  remains a documented
   skeleton.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and

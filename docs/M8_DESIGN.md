@@ -1,7 +1,7 @@
 # M8 design — one learned task-selector seat
 
-**Status:** M8.1 design accepted; M8.4 verified; M8.5 preflight in progress
-2026-07-21.
+**Status:** M8.1 design accepted; M8.4 verified; M8.5 one-way final completed
+without promotion 2026-07-21.
 **Feature schema:** `selector_features_v1`. **Reward schema:** `selector_reward_v1`.
 
 ## Scope and success condition
@@ -213,7 +213,7 @@ update 3 with checkpoint SHA-256 `0b2bd8ac904a9e21...`, complete replay digest
 The checkpoint won 0/10 dev episodes, so it is an implementation artifact, not
 a promotion candidate. Held-out remained sealed.
 
-## M8.5 dev preflight progress
+## M8.5 final evidence
 
 The first improvement pass fixes boundary-frequency-dependent GAE credit by
 raising both `gamma_per_second` and `gae_lambda` to elapsed engine seconds. It
@@ -222,12 +222,11 @@ catalog WAIT candidate to the one canonical WAIT action. These changes alter no
 reward component, environment state, inference action vocabulary, or scripted
 lifecycle rule.
 
-The strongest exploratory train/dev run uses 32 deterministic cycles over the
-16 governed train seeds, 64 episodes per update, eight PPO epochs, and model seed
-8601. Update 2 (`e1fdab4ae229dffe...`) wins 8/10 dev episodes. Lower PPO epochs,
-128-episode updates, successful-trajectory imitation, and bounded alternate
-initializations failed to improve that score and are not part of the retained
-algorithm.
+The frozen candidate uses two aligned model-seed-8601 parents. Base update 2
+uses ordinary PPO and wins 8/10 dev; auxiliary update 2 adds coefficient 0.1
+cross-entropy only over unforced decisions from successful on-policy train
+episodes and wins 6/10. The term is training-only and does not alter reward or
+evaluation. Two independent pinned runs reproduce each parent exactly.
 
 The dev-only promotion preflight evaluates permanent random-valid and
 greedy-utility aggregates plus matched seat-0 random and pure-greedy controls.
@@ -238,19 +237,27 @@ all reward adversaries must pass, and paired scorecard intervals must be
 non-regressing. The 95% CI-separation claim is made only by the one-way held-out
 final described above.
 
-Current dev results are 8/10 learned, 3/10 permanent random-valid, 8/10
-permanent greedy-utility, 2/10 matched random, and 1/10 matched greedy. Observed
-paired scorecard metrics pass, but the permanent-greedy tie makes the candidate
-ineligible. No artifact is frozen and held-out remains sealed.
+The governed constructor averages the aligned states 75% base / 25% auxiliary.
+Two independent constructions match checkpoint SHA-256
+`4fdad5cbd8476a8f...`, model-state digest `266c4acc5504dcda...`, and
+path-independent lineage digest `995cb7d71fa21e4e...`. Frozen dev preflight is
+9/10 learned versus 3/10 permanent random, 8/10 permanent greedy, 2/10 matched
+random, and 1/10 matched greedy, with reward and scorecard gates passing.
 
-A subsequent same-initialization interpolation, 75% of that update-2 model and
-25% of the rejected successful-trajectory-imitation update-2 model, wins 9/10
-dev episodes and passes every observed-rate comparator plus the paired
-scorecard screen. This is exploratory evidence only. The auxiliary algorithm
-is not in the committed trainer, neither parent has been regenerated from the
-current canonical-WAIT tree, and the derived checkpoint lacks a governed
-interpolation config and lineage manifest. Promotion remains blocked until the
-complete two-parent construction is implemented and reproduced exactly.
+The final runner validates checkpoint/config/lineage/dev-preflight/source
+hashes and frozen repository status, then creates an exclusive attempt file
+before loading held-out membership. It ran exactly once. Held-out aggregates:
+
+- learned selector: 4/10, 95% CI `[0.1,0.7]`;
+- permanent random-valid: 6/10, `[0.3,0.9]`;
+- permanent greedy-utility: 6/10, `[0.3,0.9]`;
+- matched greedy seat: 1/10, `[0.0,0.3]`.
+
+The learned interval does not clear either permanent upper bound. It beats the
+matched greedy observed rate, but idle fraction and abandonment regress versus
+permanent greedy and recovery is uncertain. The final decision is
+`not_promoted`. Exact local artifact hashes are recorded in `docs/STATUS.md` and
+the completed attempt marker forbids any rerun or outcome-driven policy tuning.
 
 ## M8.1 acceptance review
 

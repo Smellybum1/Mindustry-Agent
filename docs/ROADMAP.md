@@ -763,16 +763,17 @@ Not the destination — the proof that learning plugs into the seam.
   faster but teams worse fails); anti-exploit scripts show no reward farming;
   behavioural traces (task Gantt from event log) reviewed and archived.
 
-**IN PROGRESS (2026-07-21):** elapsed-time GAE, repeated governed train cycles,
-canonical WAIT, mixed-seat ablations, decision-trace archival, and paired
-scorecard preflight are implemented. The strongest exploratory learned
-checkpoint wins 8/10 dev episodes and beats permanent random-valid (3/10),
-matched random (2/10), and matched greedy (1/10), with observed scorecard
-non-regression. It ties permanent greedy-utility at 8/10, so it is not eligible
-to freeze. A later 75/25 same-initialization weight interpolation reaches 9/10
-and passes the dev screen, but one parent uses a removed auxiliary recipe and
-the derived artifact has no reproducible frozen lineage. Held-out remains
-sealed until that construction is implemented and reproduced.
+**FINAL V1 RESULT — NOT PROMOTED (2026-07-21):** elapsed-time GAE, repeated
+governed train cycles, canonical WAIT, mixed-seat ablations, paired scorecards,
+two reproducible parent runs per recipe, deterministic 75/25 checkpoint
+interpolation, lineage validation, and the exclusive one-way runner are
+implemented. The frozen derived checkpoint won 9/10 dev and passed every
+precondition. The one-way held-out result was learned 4/10 (95% CI
+`[0.1,0.7]`), permanent random-valid 6/10 (`[0.3,0.9]`), permanent
+greedy-utility 6/10 (`[0.3,0.9]`), and matched greedy 1/10 (`[0.0,0.3]`). It
+did not CI-beat either permanent baseline and regressed on permanent-greedy idle
+and abandonment scorecards. The completed attempt marker forbids rerunning this
+held-out set; individual outcomes must not inform policy changes.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
