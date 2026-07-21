@@ -244,6 +244,19 @@ task to win instead of silently retrying the blocked skill. The adapter counts
 successful transitions in `resource_replans`. See `CANDIDATE_GAPS.md` for the
 fixed gaps and the intentionally deferred M7.4 work.
 
+The blocked skill's `nextRetryTick` is authoritative for equivalent regenerated
+work. `CoordinationAdapter` retains it with the blocked task, hashes it in the
+adaptive state, masks the same task type/target until that tick, and independently
+validates selection with `retry_not_due` so a client cannot bypass the mask. The
+holdoff is target-local: alternative non-WAIT work remains eligible, and the
+same work reopens exactly when due.
+
+If a fixed registry unit becomes invalid or dies, the adapter immediately emits
+structured `ABANDON(reason=agent_death)`, releases its reservations, counts
+the abandonment as forced, clears its assignment, and marks `task_terminal` so
+surviving seats can replan on that tick. The unavailable seat cannot claim work;
+its only legal action is the board-neutral `WAIT` no-op.
+
 A successful policy `ABANDON` marks `task_terminal` during the atomic action
 bundle. Event-driven stepping still advances one fixed engine tick before
 returning, then exposes that boundary immediately; it must not leave the newly

@@ -198,7 +198,9 @@ Supported types are `SELECT_CANDIDATE_TASK {candidate_index}`,
 `ABANDON {reason?}`, `REQUEST_HELP {helpers_requested?}`, and `WAIT`. `WAIT` is
 the canonical repeatable no-op task action: it does not create or terminalize a
 board task. The M8 learned selector never selects the catalog's encoded WAIT
-row through `SELECT_CANDIDATE_TASK`. Candidate,
+row through `SELECT_CANDIDATE_TASK`. An unavailable/dead fixed registry seat has
+all work masks disabled and only this no-op `WAIT` enabled; any other submitted
+action is rejected with `agent_unavailable`. Candidate,
 task, and offer indices refer to the immediately preceding boundary. One entry
 per agent is allowed; duplicate, ambiguous, stale/invalid-index, dependency,
 ownership, and unsupported-target failures return `accepted=false` with a typed
@@ -272,8 +274,12 @@ boundary; policy actions must use that boundary's index. Exclusive work with a
 different recurring ID is masked while the same semantic target is active.
 `valid=false` carries a typed `invalid_reason` (`missing_capability:<name>` or
 `out_of_range`). `action_masks[agent_id].candidate_task` is aligned by candidate
-index and is stricter: it also checks current assignment, board status, and task
-dependencies. For backward-compatible scripted clients the catalog WAIT row
+index and is stricter: it also checks current assignment, board status, task
+dependencies, and the skill-authoritative retry boundary. After blocked work is
+abandoned, the same task type/target is masked while `tick < next_retry_tick`;
+an attempted mask bypass is rejected with `retry_not_due`, and the candidate
+reopens exactly at the reported tick. Other targets remain independently legal.
+For backward-compatible scripted clients the catalog WAIT row
 remains selectable; `selector_features_v1` masks that SELECT logit and uses
 `action_masks[].wait` as its single canonical WAIT action, which remains legal
 on every live idle boundary. Other M5.2 mask keys are `continue_current_task`, `abandon`,

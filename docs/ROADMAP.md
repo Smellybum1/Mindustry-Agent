@@ -1138,6 +1138,22 @@ replans absent from matched greedy. Announcements, duplicates, and permanent
 recovery remain uncertain. Dev-v17 remains unopened, held-out-v4 remains
 sealed, and M8.5 remains unmet.
 
+The repeated-retry cause is now corrected in the runtime before any V22 model
+work. The adapter retains and hashes the blocked skill's authoritative
+`nextRetryTick`, masks only equivalent type/target work while `tick` is earlier,
+rejects a direct selection bypass as `retry_not_due`, keeps alternative non-WAIT
+work legal, and reopens the same candidate exactly when due. The live fixture
+proves `BUILD_SCHEMATIC` block tick 607 -> retry tick 667. The broader public gate
+also exposed stale ownership after real unit loss; dead fixed seats now emit
+forced structured `ABANDON(agent_death)`, release reservations, wake
+`task_terminal`, and permit only no-op WAIT. All five fixed seeds win with 12
+loss releases. Two regenerated golden recordings match at SHA-256
+`f08c5af6b6ea4e25908da8b59e10ba7f4d10afdef7306529859ef726023dccd2`;
+all 664 hash fields change because retry eligibility joins canonical state, but
+all non-hash records remain identical and the negative mutation still diverges.
+V22 still requires a precommitted runtime contract, fresh unopened dev-v18, and
+a from-scratch exact-replica training run; M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

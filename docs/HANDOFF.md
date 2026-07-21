@@ -447,6 +447,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   Announcements, duplicates, and permanent recovery remain uncertain. Dev-v17
   is unopened and held-out-v4 remains sealed. Preflight hash is
   `f1a8e47d4cd771793...`.
+- **Post-V21 runtime correction**: the adapter now retains/hashes a blocked
+  skill's authoritative retry tick, masks only the same semantic work before it
+  is due, rejects direct bypass as `retry_not_due`, and reopens it exactly on the
+  due tick. The live fixture is `BUILD_SCHEMATIC` tick 607 -> 667 and proves an
+  alternative non-WAIT task stays legal. A full public-policy run also found and
+  fixed stale dead-seat ownership: it emits forced structured
+  `ABANDON(agent_death)`, releases reservations, wakes `task_terminal`, and
+  leaves only no-op WAIT legal for that seat. Fixed seeds are 5/5 with 12 loss
+  releases. The regenerated two-win/16,200-tick/664-checkpoint golden reproduces
+  twice at `f08c5af6b6ea4e25...`; only hashes changed, and the negative mutation
+  still diverges. No V22 model or governed confirmation set has been opened.
 - **What is broken**: nothing known.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
@@ -609,10 +620,10 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Choose V22 from reusable V21 evidence only.** Target the exact repeated
-   resource-short same-target supply retry sequence without reopening the idle,
-   reward-cap, or teacher-coefficient lines. Precommit the causal intervention
-   and fresh disjoint dev-v18 before model work; dev-v17 is retired unopened.
+1. **Precommit V22 under the corrected runtime.** Use the now-verified
+   retry-eligibility and dead-seat-release contract without reopening the idle,
+   reward-cap, or teacher-coefficient lines. Freeze a fresh disjoint dev-v18
+   before model work; dev-v17 is retired unopened.
 2. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
    confirmation. Never inspect dev-v14/dev-v15/dev-v16/dev-v17 or

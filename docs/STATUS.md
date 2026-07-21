@@ -1155,6 +1155,20 @@ repository-evidence mapping used for the M6 audit is:
   selection succeeds, producing 18 avoidable non-forced replans. Announcements,
   duplicates, and permanent recovery remain uncertain. Dev-v17 is unopened,
   held-out-v4 is sealed, and M8.5 remains unmet.
+- V21's reusable failure has now been corrected at its authoritative source.
+  `CoordinationAdapter` retains each blocked skill's `nextRetryTick`, hashes it,
+  masks only equivalent type/target work until due, and rejects a mask bypass as
+  `retry_not_due`. The live fixture blocks agent 1's `BUILD_SCHEMATIC` at tick
+  607, keeps alternative non-WAIT work legal, and reopens the same candidate at
+  tick 667. The wider gate also exposed that dead fixed-step seats kept stale
+  assignments alive: loss now emits `ABANDON(agent_death)`, releases
+  reservations, wakes `task_terminal`, and restricts that seat to no-op WAIT.
+  All five public greedy seeds win and expose 12 loss releases. Two independent
+  golden recordings match at SHA-256 `f08c5af6b6ea4e25908da8b59e10ba7f4d10afdef7306529859ef726023dccd2`;
+  all 664 state hashes change because retry eligibility joined canonical state,
+  while every non-hash record remains identical. The negative replay still
+  diverges. Previously trained checkpoints remain historical evidence; a V22
+  precommit and from-scratch retrain are still required.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

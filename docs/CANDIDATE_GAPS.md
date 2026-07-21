@@ -52,13 +52,23 @@ resource recovery were not selectable through `SELECT_CANDIDATE_TASK`.
 8. **A dead fixed registry slot could stall the shared demo driver.** Shared
    policy dispatch now skips unavailable agents and treats those maintenance
    seats as complete; surviving agents continue the plan.
+9. **The external adapter could heartbeat a dead seat forever.** A destroyed
+   fixed-step unit now structurally abandons its task as `agent_death`,
+   releases reservations, wakes the decision boundary, exposes only no-op WAIT,
+   and cannot claim new work. The public five-seed gate observes 12 such releases
+   and surviving seats still win every episode.
+10. **Regenerated blocked work ignored its skill retry boundary.** The adapter
+    now retains and hashes `next_retry_tick`, masks only equivalent type/target
+    work before it is due, rejects a direct bypass as `retry_not_due`, leaves
+    alternative work selectable, and reopens the candidate at the exact tick.
 
 ## Fixed-scenario evidence
 
 `make candidate-policy-check` drives only public observations, masks,
 `SELECT_CANDIDATE_TASK`, board claims/reservations, and task actions. The pinned
-five seeds win at tick 8100. `make evaluate-scripted` uses the same path and
-records minimum/mean final core health 1082/1096.4. First-drill, opening-line,
+five seeds win at tick 8100. Under the corrected wait/loss lifecycle their
+current minimum/mean final core health is 236/761.6; this is survival evidence,
+not a claim that the old scorecard remains numerically unchanged. First-drill, opening-line,
 initial-turret, and initial-supply ticks remain identical because the scenario
 is deliberately seed-independent before wave 1. Native seeded spawn spread
 then produces genuine differences: wave-clear ticks, message counts, unit

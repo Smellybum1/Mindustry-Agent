@@ -351,6 +351,15 @@ frozen macro remains two wins over 16,200 ticks and 672 checkpoints; the
 separately regenerated golden replays exactly in a fresh JVM and the deliberate
 one-line MINE mutation still diverges.
 
+The post-V21 retry-eligibility correction deliberately regenerates the same
+two-win, 16,200-tick, 664-checkpoint frozen trace because `nextRetryTick` is now
+part of canonical adaptive state. Two recordings are byte-identical at SHA-256
+`f08c5af6b6ea4e25908da8b59e10ba7f4d10afdef7306529859ef726023dccd2`.
+Comparing parsed records after removing `state_hash` yields zero semantic
+changes; the deliberate MINE mutation still diverges. The public candidate gate
+remains 5/5 and its loss lifecycle check observes 12 structured
+`agent_death` releases.
+
 ## M7.6 evaluation ladder and teammate scorecard (2026-07-21)
 
 Command: `make evaluate-ladder` (equivalently
