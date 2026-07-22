@@ -8,6 +8,7 @@ import agentcore.task.*;
 import arc.*;
 import arc.struct.*;
 import arc.util.*;
+import arc.util.serialization.*;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
 import mindustry.entities.*;
@@ -24,9 +25,11 @@ final class DemoCoordinator{
     private final boolean probe;
     private final boolean waitForPlayer;
     private final boolean survivalProbe;
+    private final boolean publicPolicy;
     private final AnnouncementRenderer renderer = new AnnouncementRenderer();
     private final DemoAgentRegistry registry;
     private final ExpertCoordinationDriver driver;
+    private final PublicCandidateDemo publicDemo;
 
     private boolean paused;
     private boolean stopped;
@@ -40,9 +43,11 @@ final class DemoCoordinator{
         this.waitForPlayer = waitForPlayer;
         this.survivalProbe = System.getProperty(AgentPlugin.modeProperty, "")
             .equalsIgnoreCase("survival");
+        this.publicPolicy = Boolean.getBoolean(AgentPlugin.publicPolicyProperty);
         this.registry = new DemoAgentRegistry(scenario);
         this.driver = new ExpertCoordinationDriver(
             ExpertCoordinationPlans.fromScenario(scenario), new DemoPort());
+        this.publicDemo = new PublicCandidateDemo(scenario, registry);
         driver.reset(1L);
     }
 
@@ -61,14 +66,35 @@ final class DemoCoordinator{
     }
 
     void startOpening(){
-        if(driver.started() || stopped) return;
-        driver.startOpening((long)state.tick);
-        drainAnnouncements();
+        if(started() || stopped) return;
+        if(publicPolicy){
+            publicDemo.start();
+            drainPublicAnnouncements();
+        }else{
+            driver.startOpening((long)state.tick);
+            drainAnnouncements();
+        }
     }
 
     void update(){
-        if(!driver.started() || paused || stopped || !state.isPlaying()) return;
+        if(!started() || paused || stopped || !state.isPlaying()) return;
         long tick = (long)state.tick;
+        if(publicPolicy){
+            publicDemo.update();
+            drainPublicAnnouncements();
+            if(survivalProbe && !survivalReported && tick >= scenario.winTick){
+                Building core = scenario.coreTeam.core();
+                if(core == null || core.health <= 0f){
+                    throw new IllegalStateException("demo core did not survive to win tick");
+                }
+                survivalReported = true;
+                Log.info("AGENT-DEMO SURVIVAL OK tick=@ core_health=@", tick, Math.round(core.health));
+                Core.app.exit();
+                return;
+            }
+            finishProbeIfReady();
+            return;
+        }
         int enemies = 0;
         for(Unit unit : Groups.unit){
             if(unit.team == scenario.waveTeam && !unit.dead()) enemies++;
@@ -101,7 +127,7 @@ final class DemoCoordinator{
 
     String resume(){
         if(stopped) return "agents: stopped (start a new demo world to resume)";
-        if(!driver.started()){
+        if(!started()){
             startOpening();
             if(waitForPlayer && state.isPaused()) state.set(State.playing);
         }
@@ -115,22 +141,24 @@ final class DemoCoordinator{
         stopped = true;
         paused = false;
         long tick = (long)state.tick;
-        driver.stop(tick, "human_emergency_stop");
+        if(publicPolicy) publicDemo.stop("human_emergency_stop");
+        else driver.stop(tick, "human_emergency_stop");
         for(DemoAgentRegistry.Agent agent : registry.agents()) agent.controller().stopNow();
-        drainAnnouncements();
+        if(publicPolicy) drainPublicAnnouncements();
+        else drainAnnouncements();
         return "agents: emergency stop complete at tick " + tick;
     }
 
     String status(){
         String mode = stopped ? "stopped" : paused ? "paused"
-            : driver.started() ? "running" : "waiting";
+            : started() ? "running" : "waiting";
         int active = 0;
         for(DemoAgentRegistry.Agent agent : registry.agents()){
             if(agent.controller().activeSkill() != null) active++;
         }
         return "agents: " + mode + " tick=" + (long)state.tick + " active=" + active
-            + "/" + registry.size() + " tasks=" + driver.board().tasks().size()
-            + " announcements=" + announcements + " phase=" + driver.phase();
+            + "/" + registry.size() + " tasks=" + taskCount()
+            + " announcements=" + announcements + " phase=" + phase();
     }
 
     private void drainSignals(){
@@ -183,7 +211,24 @@ final class DemoCoordinator{
         }
     }
 
+    private void drainPublicAnnouncements(){
+        for(Jval event : publicDemo.drainEvents().asArray()){
+            if(!event.getBool("announce", false)) continue;
+            String line = event.getString("announcement", "");
+            if(line.isBlank()) continue;
+            announcements++;
+            Log.info("AGENT-DEMO CHAT @", line);
+            for(Player player : Groups.player){
+                if(player.team() == scenario.coreTeam) player.sendMessage("[accent]" + line);
+            }
+        }
+    }
+
     private void finishProbeIfReady(){
+        if(publicPolicy){
+            finishPublicProbeIfReady();
+            return;
+        }
         if(!probe || probeReported || !driver.preparationComplete()) return;
 
         List<String> expectedLine = blockNames(scenario.schematic(scenario.buildLineId));
@@ -229,6 +274,64 @@ final class DemoCoordinator{
         Log.info("AGENT-DEMO PROBE OK tick=@ announcements=@", (long)state.tick, announcements);
         Core.app.exit();
     }
+
+    private void finishPublicProbeIfReady(){
+        if(!probe || probeReported || !publicDemo.preparationComplete()) return;
+        requireSchematic(scenario.schematic(scenario.buildLineId),
+            scenario.buildLineAnchorX, scenario.buildLineAnchorY);
+        requireSchematic(scenario.schematic(scenario.referenceSchematicId),
+            scenario.referenceAnchorX, scenario.referenceAnchorY);
+
+        probeReported = true;
+        Log.info("AGENT-DEMO EXPERT READY tick=@ public_candidates=true", (long)state.tick);
+        Log.info("AGENT-DEMO RESERVE MINING tick=@ reason=public_policy", (long)state.tick);
+        Log.info("AGENT-DEMO DECISION DIGEST digest=@ selections=@",
+            publicDemo.selectionDigest(), publicDemo.selectionCount());
+        Log.info("AGENT-DEMO PARITY OK decisions=@ path=public-candidates",
+            publicDemo.selectionCount());
+        verifyControlsAndExit();
+    }
+
+    private void requireSchematic(Scenario.SchematicSpec spec, int anchorX, int anchorY){
+        for(BuildSpec block : spec.blocks()){
+            Building building = world.build(anchorX + block.offsetX(), anchorY + block.offsetY());
+            if(building == null || !building.block.name.equals(block.block())
+                || building.rotation != block.rotation()){
+                throw new IllegalStateException("public policy schematic incomplete: " + spec.name());
+            }
+        }
+    }
+
+    private void verifyControlsAndExit(){
+        pause();
+        for(DemoAgentRegistry.Agent agent : registry.agents()){
+            if(agent.controller().enabled() || !agent.unit().vel.isZero()){
+                throw new IllegalStateException("pause did not halt agent " + agent.index());
+            }
+        }
+        resume();
+        for(DemoAgentRegistry.Agent agent : registry.agents()){
+            if(!agent.controller().enabled()){
+                throw new IllegalStateException("resume did not enable agent " + agent.index());
+            }
+        }
+        stop();
+        for(DemoAgentRegistry.Agent agent : registry.agents()){
+            if(agent.controller().enabled() || agent.controller().activeSkill() != null){
+                throw new IllegalStateException("stop did not cancel agent " + agent.index());
+            }
+        }
+        Log.info("AGENT-DEMO CONTROLS OK pause/resume/stop halted all three agents");
+        Log.info("AGENT-DEMO PROBE OK tick=@ announcements=public:@",
+            (long)state.tick, announcements);
+        Core.app.exit();
+    }
+
+    private boolean started(){ return publicPolicy ? publicDemo.started() : driver.started(); }
+    private int taskCount(){
+        return publicPolicy ? publicDemo.taskCount() : driver.board().tasks().size();
+    }
+    private String phase(){ return publicPolicy ? publicDemo.phase() : driver.phase(); }
 
     private static List<String> blockNames(Scenario.SchematicSpec spec){
         ArrayList<String> result = new ArrayList<>();

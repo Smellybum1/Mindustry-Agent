@@ -1,6 +1,6 @@
 # M10 design — human command and teammate surface
 
-**Status:** architecture accepted; implementation not started (2026-07-23).
+**Status:** architecture accepted; implementation in progress (2026-07-23).
 **Decision:** ADR-0057.
 
 ## Scope and sequencing
@@ -24,6 +24,15 @@ The implementation order is therefore:
 2. add the structured human-control state and candidate overlay;
 3. expose the command grammar through queued simulation-thread application;
 4. add opt-in session capture and only later learned-policy demo inference.
+
+Current implementation state: the shared runtime-registry seam, real-time
+registry, and engine-neutral Java greedy fallback are complete. An explicit
+`DEMO_PUBLIC_POLICY=1` no-port path now runs that fallback through
+`EngineCandidates`, masks, typed actions, `CoordinationAdapter`, the board,
+reservations, and skills. Its probe has reached full readiness after ordinary
+wave-damage recovery and agent rebind. It remains opt-in while public-path
+survival telemetry, deterministic parity evidence, and combat logistics churn
+are closed; human commands are not implemented.
 
 ## Command grammar
 

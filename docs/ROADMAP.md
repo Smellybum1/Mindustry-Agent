@@ -1978,15 +1978,18 @@ thread queue, autonomy/quiet semantics, telemetry, and acceptance gates. They
 also make the existing `docs/CANDIDATE_GAPS.md` seam a hard prerequisite: the
 real-time plugin must move from `ExpertCoordinationDriver`'s stage-local
 candidates to the public `EngineCandidates` / typed-action path before human
-goals are applied. No M10 implementation exists yet; this packet does not start
-M9, authorize V43, or access any governed seed membership. The first
+goals are applied. M10 implementation has begun only on that prerequisite; it
+does not start M9, authorize V43, or access any governed seed membership. The first
 behavior-neutral prerequisite now exists: `AgentRuntimeRegistry` removes the
 public candidate/coordination adapters' concrete training-registry dependency;
 `DemoAgentRegistry` implements that boundary for deterministic spawn/rebind, but
 the plugin policy port itself remains pending. A tested engine-neutral Java
 `GreedyUtilityPolicy` now mirrors selection, replan throttling, wave preemption,
-and combat logistics preference over public candidates/masks; it is not yet the
-active demo policy.
+and combat logistics preference over public candidates/masks. The opt-in
+`DEMO_PUBLIC_POLICY=1` no-port probe now runs the full candidate -> mask -> typed
+action -> board -> reservation -> skill path and reached readiness after ordinary
+wave-damage recovery and rebind; default promotion, public-path survival/parity,
+and combat logistics churn remain open.
 
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,
   `/agents assign <agent> <task>`, `/agents release <agent>`,

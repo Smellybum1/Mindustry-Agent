@@ -67,7 +67,10 @@ action decoding, and coordination from the training registry while preserving
 `RlAgentRegistry` as the existing runtime facade. `DemoAgentRegistry` now
 implements that contract and owns deterministic demo spawn/rebind lifecycle;
 the engine-neutral Java `GreedyUtilityPolicy` mirrors the accepted fallback's
-candidate/mask decisions, but the demo policy still awaits wiring to that path.
+candidate/mask decisions. The opt-in `PublicCandidateDemo` now wires the
+real-time plugin through public candidates, masks, typed actions, board,
+reservations, and skills; the accepted default remains unchanged until its
+survival/parity/telemetry gates close.
 
 ## Module responsibilities
 

@@ -33,6 +33,12 @@ tasks.register('dist', Jar){
         include "mindustry/rl/Scenario*.class"
         include "mindustry/rl/ExpertCoordinationPlans*.class"
         include "mindustry/rl/AgentRuntimeRegistry*.class"
+        include "mindustry/rl/ActionDecoder*.class"
+        include "mindustry/rl/AdaptiveWorldFacts*.class"
+        include "mindustry/rl/CoordinationAdapter*.class"
+        include "mindustry/rl/EngineCandidates*.class"
+        include "mindustry/rl/EngineFeatureSource*.class"
+        include "mindustry/rl/StateHasher*.class"
         include "mindustry/rl/SkillController*.class"
     }
 

@@ -14,6 +14,7 @@ for required in \
     mindustry/agentplugin/AgentPlugin.class \
     mindustry/agentplugin/DemoAgentRegistry.class \
     mindustry/agentplugin/DemoAgentController.class \
+    mindustry/agentplugin/PublicCandidateDemo.class \
     mindustry/agentplugin/FixedProbeGraphics.class \
     agentcore/board/TaskBoard.class \
     agentcore/skill/ExecuteSchematic.class \
@@ -45,13 +46,17 @@ cp "$PLUGIN_JAR" \
 
 JAVA_BIN="${JAVA_BIN:-java}"
 DEMO_PORT="${DEMO_PORT:-6567}"
+POLICY_ARGS=()
+if [[ "${DEMO_PUBLIC_POLICY:-0}" == "1" ]]; then
+    POLICY_ARGS=(-Dmindustry.agents.demo.public-policy=true)
+fi
 
 if [[ "${DEMO_SURVIVAL:-0}" == "1" ]]; then
     LOG="$ROOT/runs/demo-server-survival.log"
     echo "demo-server: real-time three-wave survival probe (no network port)"
     cd "$RUNTIME"
     set +e
-    "$JAVA_BIN" -Dmindustry.agents.demo.mode=survival -jar server.jar 2>&1 | tee "$LOG"
+    "$JAVA_BIN" "${POLICY_ARGS[@]}" -Dmindustry.agents.demo.mode=survival -jar server.jar 2>&1 | tee "$LOG"
     server_status=${PIPESTATUS[0]}
     set -e
     cd "$ROOT"
@@ -97,7 +102,7 @@ PY
     echo "demo-server: explicit join mode; opening private game port $DEMO_PORT"
     echo "demo-server: connect a stock v159.7 client to localhost:$DEMO_PORT"
     cd "$RUNTIME"
-    "$JAVA_BIN" \
+    "$JAVA_BIN" "${POLICY_ARGS[@]}" \
         -Dmindustry.agents.demo.mode=join \
         -Dmindustry.agents.demo.port="$DEMO_PORT" \
         -jar server.jar
@@ -108,7 +113,7 @@ LOG="$ROOT/runs/demo-server-probe.log"
 echo "demo-server: isolated acceptance probe (no network port will be opened)"
 cd "$RUNTIME"
 set +e
-"$JAVA_BIN" -Dmindustry.agents.demo.mode=probe -jar server.jar 2>&1 | tee "$LOG"
+"$JAVA_BIN" "${POLICY_ARGS[@]}" -Dmindustry.agents.demo.mode=probe -jar server.jar 2>&1 | tee "$LOG"
 server_status=${PIPESTATUS[0]}
 set -e
 cd "$ROOT"

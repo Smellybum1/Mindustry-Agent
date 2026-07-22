@@ -1874,7 +1874,14 @@ repository-evidence mapping used for the M6 audit is:
   and no command behavior has changed. The engine-neutral Java
   `GreedyUtilityPolicy` fallback is implemented and tested over public
   candidates/masks, including deterministic ties, replan throttling, wave
-  preemption, and combat supply/defense preference, but is not yet wired live.
+  preemption, and combat supply/defense preference. The opt-in
+  `DEMO_PUBLIC_POLICY=1` no-port runtime now uses `EngineCandidates`, masks,
+  typed actions, `CoordinationAdapter`, board, reservations, and skills end to
+  end; the latest stock-clock probe reached readiness at tick 5664 after
+  wave-damage recovery and one rebind (89 accepted selections). These real-time
+  counts are diagnostic, not a deterministic parity baseline. The accepted
+  default stays on the shared driver until public-path survival/parity telemetry
+  and repeated combat logistics rebalance are closed.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,

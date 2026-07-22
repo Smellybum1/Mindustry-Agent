@@ -181,8 +181,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   commands are added. The behavior-neutral `AgentRuntimeRegistry` prerequisite
   is implemented and tested, and `DemoAgentRegistry` now owns real-time spawn/
   rebind behind it. The tested Java `GreedyUtilityPolicy` fallback exists over
-  public candidates/masks, but plugin wiring is still incomplete. M8.5
-  evaluation machinery is real, but the candidate did not promote.
+  public candidates/masks. `DEMO_PUBLIC_POLICY=1` wires an opt-in no-port probe
+  through the complete public typed-action path and has reached readiness after
+  wave damage/rebind, but default promotion, survival telemetry/parity, and
+  combat logistics cleanup remain. M8.5 evaluation machinery is real, but the
+  candidate did not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
 - **Post-failure governance**: ADR-0013 freezes the 40-root, globally disjoint
