@@ -1813,11 +1813,21 @@ repository-evidence mapping used for the M6 audit is:
   relabel only. Config/umbrella hashes are `3fcb0c8800c638a3...` /
   `c1644d2dd6dde231...`. Dev-v38 is reserved primary-only in `[6B,7B)` but is
   not constructed; held-out-v6 remains sealed/unconsumed. The implementation
-  now separates original/effective labels, applies the shared V42 rule to all
-  three generic teacher paths, and records deterministic relabel/fallback/
-  schedule telemetry. The full Python suite passes 238 tests. Public/runtime/
-  Java/replay/reward pretraining gates are next; no model work, confirmation
-  membership read, or restricted episode has begun.
+  separates original/effective labels, applies the shared V42 rule to all three
+  generic teacher paths, and records deterministic relabel/fallback/schedule
+  telemetry. The production diagnostic reproduces the exact 752/682/70 split
+  over 34,898 transitions and 3,956 eligible labels; its report/payload/action-
+  state hashes are `83f8dd6904e5356d...` / `e92436ffb3773b80...` /
+  `0e609742ba171c60...`. The 2026-07-23 pretraining boundary is green: 243
+  Python tests and the Java gate pass; public policy is 5/5 with 10 proactive
+  staging starts; secondary-claim and owned-schematic checks pass; smoke passes;
+  cross-process/reset/alternate-seed determinism hashes are
+  `20a97f3640716759...` / `a2cf4a73ee901c84...` /
+  `495ba05fa71697bd...`; golden replay is 664 checkpoints / 16,200 ticks / two
+  wins and negative replay detects the mutation. All 44 reward adversaries pass
+  under the exact config; report SHA is `272ac291ef143fa6...`. No model work,
+  dev-v38 construction or membership read, confirmation episode, or held-out-v6
+  access has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1,10 +1,9 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, after ADR-0056 precommits V42's training-only
-partner-intent teacher-conflict relabel. The production/test packet is complete;
-public/pretraining gates are next. No V42 model work or dev-v38 membership
-construction has begun.
+`coop-agent/v159.7`, after ADR-0056 precommits and implements V42's training-only
+partner-intent teacher-conflict relabel. The complete public/pretraining boundary
+is green. No V42 model work or dev-v38 membership construction has begun.
 
 Read first, in order:
 
@@ -349,11 +348,17 @@ and generic PPO teacher imitation. The original scripted action still drives the
 trajectory and state. Runtime actions/masks, reward, features, model, optimizer,
 roots, budget, RNGs, and engine pins remain V40-exact. Config/umbrella hashes are
 `3fcb0c8800c638a3...` / `c1644d2dd6dde231...`. The implementation keeps
-original/effective labels separate, covers all three generic teacher paths and
-deterministic telemetry, and passes 238 Python tests. Run the complete public/
-runtime/Java/replay/reward pretraining boundary next. Dev-v38 is reserved
-primary-only in `[6B,7B)` but must not be constructed until that green boundary
-is committed. Held-out-v6 remains sealed and unconsumed.
+original/effective labels separate and covers all three generic teacher paths
+plus deterministic telemetry. The live diagnostic reproduces 752 conflicts,
+682 relabels, and 70 fallbacks; report/payload/action-state hashes are
+`83f8dd6904e5356d...` / `e92436ffb3773b80...` /
+`0e609742ba171c60...`. The complete 2026-07-23 boundary passes 243 Python tests,
+Java, public policy (5/5, 10 proactive starts), both focused checks, smoke,
+determinism, the 664-checkpoint/16,200-tick golden and negative replay, and all
+44 exact-config reward adversaries (`272ac291ef143fa6...`). Commit and preserve
+that green boundary, then prepare and review the primary-only dev-v38 value-free
+freezer before any seed construction or model work. Held-out-v6 remains sealed
+and unconsumed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

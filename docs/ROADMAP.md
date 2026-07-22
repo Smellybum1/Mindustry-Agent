@@ -1887,9 +1887,17 @@ implementation and complete public/pretraining gates pass. Held-out-v6 remains
 sealed/unconsumed. No V42 model work or restricted membership access preceded
 the precommit. The production/test packet now implements separate original and
 effective teacher labels, pure adaptive-preference relabeling, V40 fallback,
-all-three-path CE handling, and deterministic telemetry. The full Python suite
-passes 238 tests. Complete public/runtime/Java/replay/reward pretraining gates
-are next; dev-v38 remains unconstructed and M8.5 remains unmet.
+all-three-path CE handling, and deterministic telemetry. The complete public/
+runtime/Java/replay/reward boundary passed on 2026-07-23. The production
+diagnostic reproduces 752 conflicts, 682 relabels, and 70 fallbacks over 34,898
+transitions; report/payload/action-state hashes are `83f8dd6904e5356d...` /
+`e92436ffb3773b80...` / `0e609742ba171c60...`. The boundary passes 243 Python
+tests and Java; public policy is 5/5 with 10 proactive staging starts; both
+focused coordination checks and smoke pass; deterministic replay yields 664
+checkpoints / 16,200 ticks / two wins and the negative mutation is detected;
+all 44 exact-config reward adversaries pass with report SHA
+`272ac291ef143fa6...`. Dev-v38 remains unconstructed, no model work or
+restricted access has begun, and M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

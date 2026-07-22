@@ -855,7 +855,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   recovery remain uncertain; report SHA is `ca7b39c84a9f51d1...`. V41 is
   rejected before confirmation. Dev-v37 is retired unopened/unconsumed;
   held-out-v6 remains sealed/unconsumed.
-- **V42 relabel implemented; pretraining gates next**: public trace
+- **V42 relabel implemented; pretraining boundary green**: public trace
   diagnosis closes learned WAIT-logit and danger-label interventions. The exact
   optimizer-free teacher diagnostic reproduces V40's 752 conflicts and finds
   deterministic nonconflicting alternates for 682, including all 256 tick-zero
@@ -865,16 +865,21 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   actions, masks, reward, model, roots, budget, or RNGs. Config/umbrella hashes
   are `3fcb0c8800c638a3...` / `c1644d2dd6dde231...`. Dev-v38 is reserved
   primary-only in `[6B,7B)` but has not been constructed. The production/test
-  packet keeps original/effective labels separate, implements all three generic
-  teacher paths and deterministic telemetry, and passes the full 238-test Python
-  suite. Held-out-v6 remains sealed/unconsumed; no live pretraining gate, V42
-  model work, or restricted access has begun.
+  packet keeps original/effective labels separate and implements all three
+  generic teacher paths plus deterministic telemetry. Its live diagnostic
+  reproduces 752 conflicts, 682 relabels, and 70 fallbacks; report/payload/
+  action-state hashes are `83f8dd6904e5356d...` / `e92436ffb3773b80...` /
+  `0e609742ba171c60...`. The 2026-07-23 boundary passes 243 Python tests, Java,
+  public policy (5/5, 10 proactive starts), both focused coordination checks,
+  smoke, determinism, the 664-checkpoint/16,200-tick golden and negative replay,
+  and all 44 exact-config reward adversaries (`272ac291ef143fa6...`). Held-out-v6
+  remains sealed/unconsumed; no V42 model work or restricted access has begun.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
   `AGENTS.md` source of truth.
-- **Current repository checkpoint**:
-  `30e16e99b852f2f90141e174e9806978fc6a365b` (V40 training parents remain
+- **Current V42 implementation checkpoint**:
+  `2aae0bee39bf3efa83deb6916f3338b664fa162d` (V40 training parents remain
   bound to `c288483436c1003d25dc64ce7aba968600d45f3a`).
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
@@ -890,15 +895,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (176 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (243 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
 | `make training-gate` | On WSL2 with pinned `UV`/`JAVA`, reconstructs the RL environment, runs the 1/2/4-JVM shadow-inference collector gate, then 10,000 resets. Current 4-JVM result 375.1x real-time; zero reset drift/leak/orphans; ends `TRAINING-GATE OK`. Verified 2026-07-21. |
 | `bash scripts/train-selector.sh` | Runs 27 reward adversaries, two independent train/dev PPO runs, two complete fresh-checkpoint replays, and exact manifest comparison. Current checkpoint `0b2bd8ac...`, full digest `56cc7b54...`, dev 0/10; ends `TRAIN-SELECTOR OK`. Held-out is not read. |
-| `make test-java` | Runs the `agent-core` (108 tests) and `rl-server` JUnit suites plus the `agent-plugin` compile check; ends `test-java: OK`, exit 0. Verified 2026-07-21. |
+| `make test-java` | Runs the `agent-core` (108 tests) and `rl-server` JUnit suites plus the `agent-plugin` compile check; ends `test-java: OK`, exit 0. Verified 2026-07-23. |
 | `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-21. |
 | `make determinism` | Runs the legacy 79-boundary cross-process replay, reset purity with deterministic unique episode IDs, seed sensitivity, then the checked-in golden (664 checkpoints / 16,200 ticks / two wins). Exit 0. Verified 2026-07-21; `REPLAY_NEGATIVE=1` also passes. |
-| `make candidate-policy-check` | Runs the pure public greedy selector over all five pinned seeds; requires 5/5 wins through the ordinary candidate/mask/task-action seam. Verified 2026-07-21. |
+| `make candidate-policy-check` | Runs the pure public greedy selector over all five pinned seeds; requires 5/5 wins through the ordinary candidate/mask/task-action seam. Verified 2026-07-23. |
 | `make secondary-claim-wake-check` | Proves V35 wakes fixed scripted seat 1 after atomic claim loss while preserving learned-seat scheduling. Verified 2026-07-22. |
 | `make coordination-parity` | Compares two complete recorded decision sequences, runs the fixed-step shared expert, then boots the no-port plugin and requires identical live-opening digest/count. Current result: 356 recorded decisions; live digest `1571…a6c2`, 43 selections. Verified 2026-07-21. |
 | `make adaptive-planning-check` | Runs adaptive-v1 and frozen M6 on fixed+delayed-loadout scenarios. Requires adaptive 2/2 wins, fixed frozen win, probe frozen loss, all four decision-event reasons, lower mean idle fraction (0.125 < 0.878), and lower defense-ready tick (817 < 5251). Verified 2026-07-21. |
@@ -1035,18 +1040,19 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run ADR-0056's complete public/runtime pretraining boundary.** Include
-   public survival/staging, smoke, determinism, and golden/negative replay.
-2. **Run pinned Java/Python and all 44 exact-config reward gates.** Review and
-   commit the complete evidence before any seed freeze or model work.
-3. **Only after that committed green boundary, prepare primary-only dev-v38
-   value-free construction before replica A.** No membership may be rendered or
-   delegated. Dev-v38 access still requires exact replicas and reusable gates.
-   Do not begin model work before the value-free freeze is committed.
-   Held-out-v6 remains sealed.
-4. **M9.1 remains gated.** The roadmap says to begin only after the single
+1. **Preserve the committed green ADR-0056 pretraining boundary.** Do not alter
+   runtime behavior, reward, model, roots, budgets, RNGs, or engine pins.
+2. **Prepare and review the primary-only dev-v38 value-free freezer.** Test it
+   without constructing, reading, rendering, or delegating membership.
+3. **Only after the freezer implementation is committed, construct dev-v38
+   value-free before replica A.** No membership may be rendered or delegated.
+   Dev-v38 access still requires exact replicas and reusable gates. Do not begin
+   model work before the value-free freeze is committed. Held-out-v6 remains
+   sealed.
+4. **Construct V42 replicas A/B and require exact checkpoint/model/lineage
+   identity before reusable scorecards or any confirmation access.**
+5. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
-5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
 
 ## Decisions
 

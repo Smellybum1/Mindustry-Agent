@@ -129,6 +129,21 @@ alternate selector, separate original/effective teacher labels, the shared
 warmup/rehearsal/PPO effective-label rule, fail-closed config validation, and
 V42-only conflict/relabel/fallback/schedule telemetry. Historical omitted-config
 and V40 filter paths retain their existing keys and selection populations. The
-full Python suite passes 238 tests. No live episode, optimizer run, dev-v38
-membership construction, confirmation access, or held-out-v6 access occurred.
-The complete public/runtime/Java/replay/reward pretraining boundary remains next.
+live production diagnostic reproduces 752 conflicts, 682 relabels, and 70
+fallbacks over 34,898 transitions and 3,956 eligible labels. Its report,
+canonical payload, and action/state hashes are
+`83f8dd6904e5356dc4819c937f941c783652d06487a4c9524558bb67938c80ea`,
+`e92436ffb3773b8066b2ce0eb005ace23947f4eebb2db72683334131cb21478e`, and
+`0e609742ba171c60fbff1f1f825c4eb071eab18c3bec0a5171702501308d8d87`.
+
+The complete 2026-07-23 public/runtime pretraining boundary passes 243 Python
+tests and the Java gate; public policy passes 5/5 with 10 proactive staging
+starts; secondary-claim and owned-schematic checks pass; smoke passes;
+cross-process, reset, and alternate-seed determinism hashes are
+`20a97f36407167597981e77c`, `a2cf4a73ee901c844f30f486`, and
+`495ba05fa71697bdc8ff2951`; golden replay passes 664 checkpoints / 16,200 ticks /
+two wins and negative replay detects the mutation. All 44 exact-config reward
+adversaries pass; report SHA is
+`272ac291ef143fa65170c06ddcd7b245b6602e99dfaf232d1fc35bb757f5268a`.
+No optimizer run, dev-v38 membership construction, confirmation access, or
+held-out-v6 access occurred.

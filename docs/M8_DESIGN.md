@@ -759,8 +759,18 @@ uses one shared effective-label rule in warmup, rehearsal, and PPO teacher CE,
 and emits V42-only relabel/fallback/schedule evidence. Pure selection tests cover
 state nonmutation, adaptive preference, stable ties, invalid/masked/WAIT
 exclusion, and no-alternate fallback; historical V40 sampling fixtures remain
-exact. The full Python suite passes 238 tests. No live/pretraining gate, seed
-freeze, or model work has begun.
+exact. The live production diagnostic reproduces 752 conflicts, 682 relabels,
+and 70 fallbacks over 34,898 transitions. Its report/payload/action-state hashes
+are `83f8dd6904e5356d...` / `e92436ffb3773b80...` /
+`0e609742ba171c60...`.
+
+The complete 2026-07-23 pretraining boundary passes 243 Python tests and the
+Java gate, public 5/5 survival with 10 proactive staging starts, secondary-claim
+and owned-schematic checks, smoke, deterministic cross-process/reset/seed
+checks, the 664-checkpoint/16,200-tick golden plus negative replay, and all 44
+exact-config reward adversaries. The reward report SHA is
+`272ac291ef143fa6...`. Dev-v38 remains unconstructed; no seed membership was
+read or rendered, no model work began, and held-out-v6 remains sealed.
 
 ## M8.1 acceptance review
 
