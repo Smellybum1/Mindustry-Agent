@@ -1885,7 +1885,11 @@ RNGs, and engine pins remain V40-exact. Config/umbrella hashes are
 primary-only in `[6B,7B)` but may not be constructed until the committed
 implementation and complete public/pretraining gates pass. Held-out-v6 remains
 sealed/unconsumed. No V42 model work or restricted membership access preceded
-the precommit; M8.5 remains unmet.
+the precommit. The production/test packet now implements separate original and
+effective teacher labels, pure adaptive-preference relabeling, V40 fallback,
+all-three-path CE handling, and deterministic telemetry. The full Python suite
+passes 238 tests. Complete public/runtime/Java/replay/reward pretraining gates
+are next; dev-v38 remains unconstructed and M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

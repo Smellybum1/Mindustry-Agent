@@ -754,6 +754,14 @@ not be constructed until the committed implementation and complete public/
 pretraining boundary pass. Held-out-v6 remains sealed and unconsumed. No model
 work or restricted membership access preceded this precommit.
 
+The implementation now keeps original and effective teacher labels separate,
+uses one shared effective-label rule in warmup, rehearsal, and PPO teacher CE,
+and emits V42-only relabel/fallback/schedule evidence. Pure selection tests cover
+state nonmutation, adaptive preference, stable ties, invalid/masked/WAIT
+exclusion, and no-alternate fallback; historical V40 sampling fixtures remain
+exact. The full Python suite passes 238 tests. No live/pretraining gate, seed
+freeze, or model work has begun.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

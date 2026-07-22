@@ -1812,8 +1812,12 @@ repository-evidence mapping used for the M6 audit is:
   fallback. ADR-0056 precommits V42 to that pure adaptive-preference-preserving
   relabel only. Config/umbrella hashes are `3fcb0c8800c638a3...` /
   `c1644d2dd6dde231...`. Dev-v38 is reserved primary-only in `[6B,7B)` but is
-  not constructed; held-out-v6 remains sealed/unconsumed. No V42 implementation,
-  model work, confirmation membership read, or restricted episode has begun.
+  not constructed; held-out-v6 remains sealed/unconsumed. The implementation
+  now separates original/effective labels, applies the shared V42 rule to all
+  three generic teacher paths, and records deterministic relabel/fallback/
+  schedule telemetry. The full Python suite passes 238 tests. Public/runtime/
+  Java/replay/reward pretraining gates are next; no model work, confirmation
+  membership read, or restricted episode has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

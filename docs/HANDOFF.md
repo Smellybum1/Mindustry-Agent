@@ -855,7 +855,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   recovery remain uncertain; report SHA is `ca7b39c84a9f51d1...`. V41 is
   rejected before confirmation. Dev-v37 is retired unopened/unconsumed;
   held-out-v6 remains sealed/unconsumed.
-- **V42 relabel precommitted; implementation not started**: public trace
+- **V42 relabel implemented; pretraining gates next**: public trace
   diagnosis closes learned WAIT-logit and danger-label interventions. The exact
   optimizer-free teacher diagnostic reproduces V40's 752 conflicts and finds
   deterministic nonconflicting alternates for 682, including all 256 tick-zero
@@ -864,8 +864,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   warmup, rehearsal, and generic PPO teacher imitation without changing runtime
   actions, masks, reward, model, roots, budget, or RNGs. Config/umbrella hashes
   are `3fcb0c8800c638a3...` / `c1644d2dd6dde231...`. Dev-v38 is reserved
-  primary-only in `[6B,7B)` but has not been constructed. Held-out-v6 remains
-  sealed/unconsumed; no V42 model work or restricted access has begun.
+  primary-only in `[6B,7B)` but has not been constructed. The production/test
+  packet keeps original/effective labels separate, implements all three generic
+  teacher paths and deterministic telemetry, and passes the full 238-test Python
+  suite. Held-out-v6 remains sealed/unconsumed; no live pretraining gate, V42
+  model work, or restricted access has begun.
 - **Current branch**: `coop-agent/v159.7`
 - **Current repository checkpoint**:
   `30e16e99b852f2f90141e174e9806978fc6a365b` (V40 training parents remain
@@ -1029,14 +1032,15 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement ADR-0056's exact V42 teacher-conflict relabel.** Preserve the
-   original scripted runtime action and state; only the separate generic
-   teacher-imitation label may change.
-2. **Add focused config, pure-selection, fallback, telemetry, and all-three-path
-   imitation tests.** Historical V39/V40 configs must remain exact.
-3. **Run the complete public/pretraining boundary before dev-v38 construction
-   or model work.** Dev-v38 membership construction is primary-only after the
-   green boundary is committed; held-out-v6 remains sealed.
+1. **Run ADR-0056's complete public/runtime pretraining boundary.** Include
+   public survival/staging, smoke, determinism, and golden/negative replay.
+2. **Run pinned Java/Python and all 44 exact-config reward gates.** Review and
+   commit the complete evidence before any seed freeze or model work.
+3. **Only after that committed green boundary, prepare primary-only dev-v38
+   value-free construction before replica A.** No membership may be rendered or
+   delegated. Dev-v38 access still requires exact replicas and reusable gates.
+   Do not begin model work before the value-free freeze is committed.
+   Held-out-v6 remains sealed.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
@@ -1067,8 +1071,9 @@ teacher-conflict filter, green pretraining boundary, value-free dev-v36 freeze,
 exact replicas, direct lineage, and reusable-scorecard rejection. ADR-0055's
 V41 successor was frozen and constructed exactly, then rejected by both
 reusable scorecards before confirmation. ADR-0056 precommits V42's exact
-training-only teacher-conflict relabel with V40 filter fallback; implementation
-and public/pretraining gates are next.
+training-only teacher-conflict relabel with V40 filter fallback. Its production
+and focused-test packet is complete at 238 Python tests; the full public/
+pretraining boundary is next.
 
 ## Deviations from the brief in this scaffold
 

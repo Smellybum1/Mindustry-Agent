@@ -189,6 +189,55 @@ class GreedyUtilityPolicy:
             if preferred == "SUPPLY_TURRET":
                 self._return_to_defense.add(agent_id)
 
+    def alternate_nonconflicting_candidate(
+        self,
+        agent_id: int,
+        observation: dict[str, Any],
+        action_mask: dict[str, Any],
+        excluded_candidate_indices: Iterable[int],
+    ) -> int | None:
+        """Purely select an adaptive-preference-preserving nonrisk label."""
+
+        candidates = observation.get("task_candidates", [])
+        for position, candidate in enumerate(candidates[:8]):
+            if (
+                not isinstance(candidate, dict)
+                or type(candidate.get("index")) is not int
+                or candidate["index"] != position
+            ):
+                raise ValueError("candidate catalog/index drift in first eight entries")
+
+        excluded = frozenset(excluded_candidate_indices)
+        masks = action_mask.get("candidate_task", [])
+        allowed: list[tuple[int, dict[str, Any]]] = []
+        for candidate in candidates[:8]:
+            index = candidate["index"]
+            if (
+                index in excluded
+                or index >= len(masks)
+                or not masks[index]
+                or candidate.get("valid") is False
+                or str(candidate.get("task_type", "")) == "WAIT"
+            ):
+                continue
+            allowed.append((index, candidate))
+
+        preferred_type = (
+            "DEFEND_REGION"
+            if agent_id in self._return_to_defense
+            else self._preferred_types.get(agent_id)
+        )
+        preferred = (
+            [
+                entry
+                for entry in allowed
+                if entry[1].get("task_type") == preferred_type
+            ]
+            if preferred_type is not None
+            else []
+        )
+        return _highest_utility(preferred or allowed)
+
     def actions(
         self,
         observations: list[dict[str, Any]],

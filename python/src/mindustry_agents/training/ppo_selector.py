@@ -60,6 +60,9 @@ PARTNER_INTENT_DUPLICATION_RISK_SCHEMA = (
 PARTNER_INTENT_TEACHER_CONFLICT_FILTER_SCHEMA = (
     "partner_intent_teacher_conflict_filter_v1"
 )
+PARTNER_INTENT_TEACHER_CONFLICT_RELABEL_SCHEMA = (
+    "partner_intent_teacher_conflict_relabel_v1"
+)
 
 ARC_HASH = "208a754044"
 LEARNED_SEAT = 0
@@ -82,8 +85,10 @@ class Transition:
     policy_loss_mask: bool
     successful_episode: bool = False
     teacher_action: int | None = None
+    teacher_effective_action: int | None = None
     policy_logit_bias: torch.Tensor | None = None
     teacher_partner_intent_risk_conflict: bool = False
+    teacher_partner_intent_relabel_status: str | None = None
 
 
 @dataclass
@@ -340,6 +345,10 @@ def _partner_intent_teacher_conflict_filter(
     conflict_filter = config.get("partner_intent_teacher_conflict_filter")
     if conflict_filter is None:
         return None
+    if config.get("partner_intent_teacher_conflict_relabel") is not None:
+        raise ValueError(
+            "partner-intent teacher conflict filter and relabel are mutually exclusive"
+        )
     expected = {
         "schema": PARTNER_INTENT_TEACHER_CONFLICT_FILTER_SCHEMA,
         "match": "teacher_action_index_in_risk_candidate_indices",
@@ -357,6 +366,79 @@ def _partner_intent_teacher_conflict_filter(
             "partner_intent_duplication_risk"
         )
     return expected
+
+
+def _partner_intent_teacher_conflict_relabel(
+    config: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Validate the exact V42 alternate-label intervention."""
+
+    relabel = config.get("partner_intent_teacher_conflict_relabel")
+    if relabel is None:
+        return None
+    expected = {
+        "schema": PARTNER_INTENT_TEACHER_CONFLICT_RELABEL_SCHEMA,
+        "match": "teacher_action_index_in_risk_candidate_indices",
+        "selection": "adaptive_preference_then_highest_utility_nonrisk_select_v1",
+        "fallback": "exclude_if_no_valid_nonrisk_select",
+        "applies_to": [
+            "teacher_warmup",
+            "teacher_rehearsal",
+            "ppo_teacher_imitation",
+        ],
+    }
+    if not isinstance(relabel, dict) or relabel != expected:
+        raise ValueError("invalid partner_intent_teacher_conflict_relabel config")
+    if config.get("partner_intent_teacher_conflict_filter") is not None:
+        raise ValueError(
+            "partner-intent teacher conflict filter and relabel are mutually exclusive"
+        )
+    if _partner_intent_duplication_risk(config) is None:
+        raise ValueError(
+            "partner_intent_teacher_conflict_relabel requires "
+            "partner_intent_duplication_risk"
+        )
+    optimizer = config.get("optimizer_ppo")
+    coefficients = (
+        config.get("successful_teacher_imitation_coefficient"),
+        optimizer.get("successful_teacher_imitation_coefficient")
+        if isinstance(optimizer, dict)
+        else None,
+    )
+    if any(type(value) is not float or value != 0.0 for value in coefficients):
+        raise ValueError(
+            "partner_intent_teacher_conflict_relabel requires top-level and "
+            "optimizer successful_teacher_imitation_coefficient 0.0"
+        )
+    return expected
+
+
+def _effective_teacher_action(
+    transition: Transition,
+    *,
+    teacher_conflict_filter: dict[str, Any] | None,
+    teacher_conflict_relabel: dict[str, Any] | None,
+) -> int | None:
+    """Return the one governed generic-imitation label, failing closed on drift."""
+
+    original = transition.teacher_action
+    if original is None:
+        return None
+    if teacher_conflict_filter is not None:
+        return None if transition.teacher_partner_intent_risk_conflict else original
+    if teacher_conflict_relabel is None:
+        return original
+    effective = transition.teacher_effective_action
+    status = transition.teacher_partner_intent_relabel_status
+    if transition.teacher_partner_intent_risk_conflict:
+        expected_status = (
+            "fallback_excluded" if effective is None else "relabeled_nonconflict"
+        )
+        if status != expected_status or effective == original:
+            raise RuntimeError("invalid teacher-conflict relabel transition")
+    elif status != "original_nonconflict" or effective != original:
+        raise RuntimeError("invalid nonconflicting teacher relabel transition")
+    return effective
 
 
 def _fixed_partner_intended_task_ids(
@@ -704,6 +786,7 @@ def rollout_episode(
     policy_logit_adjustment: dict[str, Any] | None = None,
     scripted_partner_opening: dict[str, Any] | None = None,
     partner_intent_duplication_risk: dict[str, Any] | None = None,
+    partner_intent_teacher_conflict_relabel: dict[str, Any] | None = None,
 ) -> EpisodeRollout:
     policy_logit_adjustment = _policy_logit_adjustment(
         {"policy_logit_adjustment": policy_logit_adjustment}
@@ -713,6 +796,22 @@ def rollout_episode(
     )
     partner_intent_duplication_risk = _partner_intent_duplication_risk(
         {"partner_intent_duplication_risk": partner_intent_duplication_risk}
+    )
+    partner_intent_teacher_conflict_relabel = (
+        _partner_intent_teacher_conflict_relabel(
+            {
+                "partner_intent_duplication_risk": (
+                    partner_intent_duplication_risk
+                ),
+                "partner_intent_teacher_conflict_relabel": (
+                    partner_intent_teacher_conflict_relabel
+                ),
+                "successful_teacher_imitation_coefficient": 0.0,
+                "optimizer_ppo": {
+                    "successful_teacher_imitation_coefficient": 0.0
+                },
+            }
+        )
     )
     reset = env.reset(
         seed,
@@ -808,6 +907,32 @@ def rollout_episode(
         teacher_index = _scripted_index(
             scripted_action, observations[LEARNED_SEAT]["task_candidates"]
         )
+        teacher_original_conflict = teacher_index in risk_candidate_indices
+        teacher_effective_index: int | None = teacher_index
+        teacher_relabel_status: str | None = None
+        if partner_intent_teacher_conflict_relabel is not None:
+            if teacher_original_conflict:
+                teacher_effective_index = (
+                    scripted.alternate_nonconflicting_candidate(
+                        LEARNED_SEAT,
+                        observations[LEARNED_SEAT],
+                        masks[LEARNED_SEAT],
+                        risk_candidate_indices,
+                    )
+                )
+                if teacher_effective_index is None:
+                    teacher_relabel_status = "fallback_excluded"
+                elif (
+                    teacher_effective_index < 0
+                    or teacher_effective_index >= 8
+                    or not bool(features.action_mask[teacher_effective_index])
+                    or teacher_effective_index in risk_candidate_indices
+                ):
+                    raise RuntimeError("invalid teacher-conflict alternate label")
+                else:
+                    teacher_relabel_status = "relabeled_nonconflict"
+            else:
+                teacher_relabel_status = "original_nonconflict"
         scripted_type = scripted_action.get("task_action", {}).get("type")
         forced = (
             features.forced_task_action is not None
@@ -924,10 +1049,14 @@ def rollout_episode(
                 done=done,
                 policy_loss_mask=features.policy_loss_mask and not forced,
                 teacher_action=teacher_index,
-                policy_logit_bias=logit_bias,
-                teacher_partner_intent_risk_conflict=(
-                    teacher_index in risk_candidate_indices
+                teacher_effective_action=(
+                    teacher_effective_index
+                    if partner_intent_teacher_conflict_relabel is not None
+                    else None
                 ),
+                policy_logit_bias=logit_bias,
+                teacher_partner_intent_risk_conflict=teacher_original_conflict,
+                teacher_partner_intent_relabel_status=teacher_relabel_status,
             )
         )
         trace.append(
@@ -955,6 +1084,22 @@ def rollout_episode(
                         ),
                     }
                     if partner_intent_duplication_risk is not None
+                    else {}
+                ),
+                **(
+                    {
+                        "teacher_original_partner_intent_risk_conflict": (
+                            teacher_original_conflict
+                        ),
+                        "teacher_alternate_action_index": (
+                            teacher_effective_index
+                            if teacher_relabel_status == "relabeled_nonconflict"
+                            else None
+                        ),
+                        "teacher_effective_action_index": teacher_effective_index,
+                        "teacher_conflict_relabel_status": teacher_relabel_status,
+                    }
+                    if partner_intent_teacher_conflict_relabel is not None
                     else {}
                 ),
                 "selected_candidate_diagnostics": _selected_candidate_diagnostics(
@@ -1063,8 +1208,9 @@ def ppo_update(
     episodes: list[EpisodeRollout],
     config: dict[str, Any],
     shuffle_generator: torch.Generator,
-) -> dict[str, float]:
+) -> dict[str, Any]:
     teacher_conflict_filter = _partner_intent_teacher_conflict_filter(config)
+    teacher_conflict_relabel = _partner_intent_teacher_conflict_relabel(config)
     transitions, advantages, returns = _advantages(episodes, config)
     candidates = torch.stack([item.candidates for item in transitions])
     scalars = torch.stack([item.scalars for item in transitions])
@@ -1091,19 +1237,33 @@ def ppo_update(
         [item.policy_loss_mask and item.successful_episode for item in transitions],
         dtype=torch.bool,
     )
-    teacher_actions = torch.tensor(
-        [item.teacher_action if item.teacher_action is not None else 0 for item in transitions],
+    effective_teacher_labels = [
+        _effective_teacher_action(
+            item,
+            teacher_conflict_filter=teacher_conflict_filter,
+            teacher_conflict_relabel=teacher_conflict_relabel,
+        )
+        for item in transitions
+    ]
+    original_teacher_actions = torch.tensor(
+        [
+            item.teacher_action if item.teacher_action is not None else 0
+            for item in transitions
+        ],
+        dtype=torch.long,
+    )
+    effective_teacher_actions = torch.tensor(
+        [
+            label if label is not None else 0
+            for label in effective_teacher_labels
+        ],
         dtype=torch.long,
     )
     teacher_mask = torch.tensor(
         [
             item.policy_loss_mask
-            and item.teacher_action is not None
-            and (
-                teacher_conflict_filter is None
-                or not item.teacher_partner_intent_risk_conflict
-            )
-            for item in transitions
+            and label is not None
+            for item, label in zip(transitions, effective_teacher_labels)
         ],
         dtype=torch.bool,
     )
@@ -1121,6 +1281,16 @@ def ppo_update(
             item.policy_loss_mask
             and item.successful_episode
             and item.teacher_action is not None
+            for item in transitions
+        ],
+        dtype=torch.bool,
+    )
+    teacher_relabel_mask = torch.tensor(
+        [
+            item.policy_loss_mask
+            and item.teacher_action is not None
+            and item.teacher_partner_intent_relabel_status
+            == "relabeled_nonconflict"
             for item in transitions
         ],
         dtype=torch.bool,
@@ -1146,8 +1316,17 @@ def ppo_update(
             }
         )
     teacher_coefficient = float(config.get("teacher_imitation_coefficient", 0.0))
+    teacher_retained_orders: list[list[int]] = []
     for _ in range(int(config["ppo_epochs"])):
         order = torch.randperm(len(transitions), generator=shuffle_generator)
+        if teacher_conflict_relabel is not None:
+            teacher_retained_orders.append(
+                [
+                    int(item)
+                    for item in order.tolist()
+                    if bool(teacher_mask[int(item)])
+                ]
+            )
         for start in range(0, len(transitions), batch_size):
             index = order[start : start + batch_size]
             _, masked_logits, values = model(
@@ -1185,7 +1364,7 @@ def ppo_update(
                 success_imitation_loss = values.sum() * 0.0
                 success_imitation_samples = 0.0
             teacher_log_probs = all_log_probs.gather(
-                1, teacher_actions[index, None]
+                1, effective_teacher_actions[index, None]
             ).squeeze(1)
             teacher = teacher_mask[index]
             if teacher_conflict_filter is not None:
@@ -1201,9 +1380,12 @@ def ppo_update(
             else:
                 teacher_imitation_loss = values.sum() * 0.0
                 teacher_imitation_samples = 0.0
+            original_teacher_log_probs = all_log_probs.gather(
+                1, original_teacher_actions[index, None]
+            ).squeeze(1)
             successful_teacher = successful_teacher_mask[index]
             if successful_teacher.any():
-                successful_teacher_imitation_loss = -teacher_log_probs[
+                successful_teacher_imitation_loss = -original_teacher_log_probs[
                     successful_teacher
                 ].mean()
                 successful_teacher_imitation_samples = float(
@@ -1250,7 +1432,7 @@ def ppo_update(
             metrics["teacher_imitation_samples"] += teacher_imitation_samples
             metrics["batches"] += 1.0
     divisor = max(1.0, metrics["batches"])
-    return {
+    result = {
         key: value / divisor
         if key
         not in {
@@ -1264,6 +1446,45 @@ def ppo_update(
         else value
         for key, value in metrics.items()
     }
+    if teacher_conflict_relabel is not None:
+        eligible = [
+            item
+            for item in transitions
+            if item.policy_loss_mask and item.teacher_action is not None
+        ]
+        original_conflicts = [
+            item
+            for item in eligible
+            if item.teacher_partner_intent_risk_conflict
+        ]
+        relabeled = [
+            item
+            for item in original_conflicts
+            if item.teacher_effective_action is not None
+        ]
+        result["teacher_conflict_relabel"] = {
+            **teacher_conflict_relabel,
+            "eligible_transitions": len(eligible),
+            "original_conflict_transitions": len(original_conflicts),
+            "relabeled_transitions": len(relabeled),
+            "fallback_excluded_transitions": len(original_conflicts) - len(relabeled),
+            "retained_transitions": (
+                len(eligible) - len(original_conflicts) + len(relabeled)
+            ),
+            "sampled_relabel_presentations": sum(
+                bool(teacher_relabel_mask[index])
+                for order in teacher_retained_orders
+                for index in order
+            ),
+            "sampled_retained_presentations": sum(
+                len(order) for order in teacher_retained_orders
+            ),
+            "sampled_retained_transition_indices_by_epoch": teacher_retained_orders,
+            "sampled_retained_schedule_sha256": _json_digest(
+                teacher_retained_orders
+            ),
+        }
+    return result
 
 
 def _teacher_trajectory_imitation_update(
@@ -1279,6 +1500,7 @@ def _teacher_trajectory_imitation_update(
     schema: str,
     samples_per_epoch: int | None = None,
     teacher_conflict_filter: dict[str, Any] | None = None,
+    teacher_conflict_relabel: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Apply deterministic CE-only updates from teacher-controlled trajectories."""
 
@@ -1293,17 +1515,39 @@ def _teacher_trajectory_imitation_update(
         for item in episode.transitions
         if item.policy_loss_mask and item.teacher_action is not None
     ]
-    retained = [
-        (index, item)
-        for index, item in enumerate(eligible_transitions)
-        if teacher_conflict_filter is None
-        or not item.teacher_partner_intent_risk_conflict
+    effective_teacher_labels = [
+        _effective_teacher_action(
+            item,
+            teacher_conflict_filter=teacher_conflict_filter,
+            teacher_conflict_relabel=teacher_conflict_relabel,
+        )
+        for item in eligible_transitions
     ]
+    if teacher_conflict_filter is not None:
+        retained = [
+            (index, item)
+            for index, item in enumerate(eligible_transitions)
+            if not item.teacher_partner_intent_risk_conflict
+        ]
+    elif teacher_conflict_relabel is not None:
+        retained = [
+            (index, item)
+            for index, (item, label) in enumerate(
+                zip(eligible_transitions, effective_teacher_labels)
+            )
+            if label is not None
+        ]
+    else:
+        retained = list(enumerate(eligible_transitions))
     transitions = [item for _, item in retained]
+    retained_teacher_labels = [
+        effective_teacher_labels[index] for index, _ in retained
+    ]
     if not transitions:
         raise RuntimeError("teacher warmup produced no unforced labeled transitions")
-    for transition in transitions:
-        teacher_action = int(transition.teacher_action)
+    for transition, label in zip(transitions, retained_teacher_labels):
+        assert label is not None
+        teacher_action = int(label)
         if (
             teacher_action < 0
             or teacher_action >= transition.action_mask.numel()
@@ -1325,7 +1569,8 @@ def _teacher_trajectory_imitation_update(
             ]
         )
     teacher_actions = torch.tensor(
-        [int(item.teacher_action) for item in transitions], dtype=torch.long
+        [int(label) for label in retained_teacher_labels],
+        dtype=torch.long,
     )
     loss_total = 0.0
     batches = 0
@@ -1337,7 +1582,7 @@ def _teacher_trajectory_imitation_update(
         if samples_per_epoch is not None:
             order = order[: min(samples_per_epoch, len(transitions))]
             sampled_orders.append([int(index) for index in order.tolist()])
-        if teacher_conflict_filter is not None:
+        if teacher_conflict_filter is not None or teacher_conflict_relabel is not None:
             sampled_retained_orders.append(
                 [retained[int(index)][0] for index in order.tolist()]
             )
@@ -1394,6 +1639,44 @@ def _teacher_trajectory_imitation_update(
                 sampled_retained_orders
             ),
         }
+    if teacher_conflict_relabel is not None:
+        original_conflicts = [
+            item
+            for item in eligible_transitions
+            if item.teacher_partner_intent_risk_conflict
+        ]
+        relabeled_indices = {
+            index
+            for index, item in enumerate(eligible_transitions)
+            if item.teacher_partner_intent_risk_conflict
+            and item.teacher_effective_action is not None
+        }
+        fallback_count = sum(
+            item.teacher_partner_intent_risk_conflict
+            and item.teacher_effective_action is None
+            for item in eligible_transitions
+        )
+        sampled_relabel_presentations = sum(
+            original_index in relabeled_indices
+            for order in sampled_retained_orders
+            for original_index in order
+        )
+        metrics["teacher_conflict_relabel"] = {
+            **teacher_conflict_relabel,
+            "eligible_transitions": len(eligible_transitions),
+            "original_conflict_transitions": len(original_conflicts),
+            "relabeled_transitions": len(relabeled_indices),
+            "fallback_excluded_transitions": fallback_count,
+            "retained_transitions": len(transitions),
+            "sampled_relabel_presentations": sampled_relabel_presentations,
+            "sampled_retained_presentations": samples,
+            "sampled_retained_transition_indices_by_epoch": (
+                sampled_retained_orders
+            ),
+            "sampled_retained_schedule_sha256": _json_digest(
+                sampled_retained_orders
+            ),
+        }
     return metrics
 
 
@@ -1408,6 +1691,7 @@ def teacher_trajectory_warmup_update(
 
     policy = _teacher_warmup_policy(config)
     teacher_conflict_filter = _partner_intent_teacher_conflict_filter(config)
+    teacher_conflict_relabel = _partner_intent_teacher_conflict_relabel(config)
     if policy is None:
         raise ValueError("teacher trajectory warmup is disabled")
     return _teacher_trajectory_imitation_update(
@@ -1422,6 +1706,7 @@ def teacher_trajectory_warmup_update(
         schema="teacher_trajectory_warmup_v1",
         samples_per_epoch=policy.get("samples_per_epoch"),
         teacher_conflict_filter=teacher_conflict_filter,
+        teacher_conflict_relabel=teacher_conflict_relabel,
     )
 
 
@@ -1437,6 +1722,7 @@ def teacher_trajectory_rehearsal_update(
     warmup_policy = _teacher_warmup_policy(config)
     rehearsal_policy = _teacher_rehearsal_policy(config)
     teacher_conflict_filter = _partner_intent_teacher_conflict_filter(config)
+    teacher_conflict_relabel = _partner_intent_teacher_conflict_relabel(config)
     if warmup_policy is None or rehearsal_policy is None:
         raise ValueError("teacher trajectory rehearsal is disabled")
     return _teacher_trajectory_imitation_update(
@@ -1451,6 +1737,7 @@ def teacher_trajectory_rehearsal_update(
         schema="teacher_trajectory_rehearsal_v1",
         samples_per_epoch=rehearsal_policy.get("samples_per_epoch"),
         teacher_conflict_filter=teacher_conflict_filter,
+        teacher_conflict_relabel=teacher_conflict_relabel,
     )
 
 
@@ -1508,6 +1795,7 @@ def _evaluate(
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     _partner_intent_teacher_conflict_filter(config)
+    _partner_intent_teacher_conflict_relabel(config)
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
     with RlServerProcess(
         LaunchConfig(port=port, java=java, build_if_missing=False)
@@ -1654,6 +1942,10 @@ def _write_teacher_warmup_report(
         report["configuration"]["partner_intent_teacher_conflict_filter"] = config[
             "partner_intent_teacher_conflict_filter"
         ]
+    if "partner_intent_teacher_conflict_relabel" in config:
+        report["configuration"]["partner_intent_teacher_conflict_relabel"] = config[
+            "partner_intent_teacher_conflict_relabel"
+        ]
     path = output_dir / "selector-v1-teacher-warmup.json"
     temporary_path = path.with_suffix(".json.tmp")
     temporary_path.write_text(
@@ -1711,6 +2003,10 @@ def _write_teacher_rehearsal_report(
         report["configuration"]["partner_intent_teacher_conflict_filter"] = config[
             "partner_intent_teacher_conflict_filter"
         ]
+    if "partner_intent_teacher_conflict_relabel" in config:
+        report["configuration"]["partner_intent_teacher_conflict_relabel"] = config[
+            "partner_intent_teacher_conflict_relabel"
+        ]
     path = output_dir / "selector-v1-teacher-rehearsal.json"
     temporary_path = path.with_suffix(".json.tmp")
     temporary_path.write_text(
@@ -1748,6 +2044,9 @@ def _manifest(
     selection_policy = _dev_checkpoint_selection_policy(config)
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
+    partner_intent_teacher_conflict_relabel = (
+        _partner_intent_teacher_conflict_relabel(config)
+    )
     manifest = {
         "schema": "selector_training_run_v1",
         "engine": {"tag": ENGINE_TAG, "commit": ENGINE_COMMIT, "arc": ARC_HASH},
@@ -1802,6 +2101,15 @@ def _manifest(
             **(
                 {"partner_intent_duplication_risk": partner_intent_duplication_risk}
                 if partner_intent_duplication_risk is not None
+                else {}
+            ),
+            **(
+                {
+                    "partner_intent_teacher_conflict_relabel": (
+                        partner_intent_teacher_conflict_relabel
+                    )
+                }
+                if partner_intent_teacher_conflict_relabel is not None
                 else {}
             ),
         },
@@ -1979,6 +2287,9 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     _partner_intent_teacher_conflict_filter(config)
+    partner_intent_teacher_conflict_relabel = (
+        _partner_intent_teacher_conflict_relabel(config)
+    )
     _configure_torch(config)
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
     teacher_warmup_set = _teacher_warmup_train_set(root, train_set, config)
@@ -2066,6 +2377,9 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     policy_logit_adjustment=policy_logit_adjustment,
                     scripted_partner_opening=scripted_partner_opening,
                     partner_intent_duplication_risk=partner_intent_duplication_risk,
+                    partner_intent_teacher_conflict_relabel=(
+                        partner_intent_teacher_conflict_relabel
+                    ),
                 )
                 for seed in teacher_warmup_seeds
             ]
@@ -2123,6 +2437,9 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     policy_logit_adjustment=policy_logit_adjustment,
                     scripted_partner_opening=scripted_partner_opening,
                     partner_intent_duplication_risk=partner_intent_duplication_risk,
+                    partner_intent_teacher_conflict_relabel=(
+                        partner_intent_teacher_conflict_relabel
+                    ),
                 )
                 for seed in seeds[start : start + episodes_per_update]
             ]

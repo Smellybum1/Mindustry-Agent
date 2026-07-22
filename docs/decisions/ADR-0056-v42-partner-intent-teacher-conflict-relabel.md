@@ -121,3 +121,14 @@ never sent to the environment, and all action/state evidence remains V40-exact.
 - This ADR authorizes implementation and public/pretraining gates after the
   precommit packet is committed. It does not authorize dev-v38 membership
   construction, replica A, confirmation consumption, or held-out-v6 access.
+
+## Implementation status
+
+The production/test packet implements a pure nonmutating adaptive-preference
+alternate selector, separate original/effective teacher labels, the shared
+warmup/rehearsal/PPO effective-label rule, fail-closed config validation, and
+V42-only conflict/relabel/fallback/schedule telemetry. Historical omitted-config
+and V40 filter paths retain their existing keys and selection populations. The
+full Python suite passes 238 tests. No live episode, optimizer run, dev-v38
+membership construction, confirmation access, or held-out-v6 access occurred.
+The complete public/runtime/Java/replay/reward pretraining boundary remains next.
