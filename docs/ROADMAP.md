@@ -1648,7 +1648,27 @@ disjoint roots each. Their hashes are
 the value-free freeze record hashes to
 `7282a3cd405f2d6b00dd3942fb8da2b2f62eb3a8f567dc067edc07756787018e`.
 Both sets remain unconsumed. The Python suite remains 166/166; no baseline,
-episode, V38 runtime, or model work has begun.
+episode, or model work has begun.
+
+V38's runtime implementation is committed at `8b3f9cc749`, and the complete
+pretraining boundary is green. The focused live owned-schematic probe on public
+seed 12345 observes seat 1 running `BUILD_SCHEMATIC`, one valid learned-seat
+`DEFEND_REGION` stage beside ordinary `BUILD_LINE`, no scripted-seat stage, and
+no synthetic claim/helper/event. Focused `CandidateGenerator` tests and Gradle
+`agent-core:test rl-server:test agent-plugin:classes` pass; Python is 166/166.
+The public candidate-policy gate is 5/5 with 10 proactive staging starts, and
+smoke is 9/9. Determinism ends at cross-process
+`20a97f36407167597981e77c`, reset `a2cf4a73ee901c844f30f486`, and alternate
+seed `495ba05fa71697bdc8ff2951`. Golden replay covers 664 checkpoints, 16,200
+ticks, and two episodes; negative replay detects a one-line `MINE` change. All
+44 exact-config reward adversaries pass for config
+`d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`; the
+temporary, uncommitted report SHA-256 is
+`e44865297a31ab1625bf4a43116cf1ff712b96657043c200c0af629ddd4f59bf`.
+Dev-v34 and held-out-v5 remain unconsumed; no baseline episode or model work has
+begun. M8.5 remains unmet. Replica A and fresh reusable baselines are next.
+Replica B remains prohibited unless replica A reaches at least 9/10 wins with
+mean idle below `0.25`.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

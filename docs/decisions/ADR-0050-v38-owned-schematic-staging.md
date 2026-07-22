@@ -146,3 +146,27 @@ The value-free freeze record hashes to
 `7282a3cd405f2d6b00dd3942fb8da2b2f62eb3a8f567dc067edc07756787018e`.
 Both sets remain unconsumed; no baseline episode or policy evidence has used
 either membership.
+
+The V38 runtime implementation is committed at `8b3f9cc749`. Its focused live
+owned-schematic probe passes on public seed 12345: seat 1 is running
+`BUILD_SCHEMATIC`; learned seat 0 receives one valid `DEFEND_REGION` staging
+candidate alongside ordinary `BUILD_LINE`; scripted seats receive no staging
+candidate; and no synthetic claim, helper, or event is created. Focused
+`CandidateGenerator` tests and Gradle `agent-core:test rl-server:test
+agent-plugin:classes` pass, as do all 166 Python tests. The public
+candidate-policy gate wins 5/5 with 10 proactive staging starts, and smoke
+passes all 9 checks.
+
+The remaining pretraining gates are green from that implementation checkpoint.
+Cross-process determinism ends at `20a97f36407167597981e77c`, reset purity at
+`a2cf4a73ee901c844f30f486`, and alternate-seed sensitivity at
+`495ba05fa71697bdc8ff2951`. Golden replay covers 664 checkpoints, 16,200 ticks,
+and two episodes; the negative control detects a one-line `MINE` mutation. All
+44 exact-config reward adversaries pass for config SHA-256
+`d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`; the
+temporary, uncommitted report hashes to
+`e44865297a31ab1625bf4a43116cf1ff712b96657043c200c0af629ddd4f59bf`.
+Dev-v34 and held-out-v5 remain unconsumed, and no baseline episode or model work
+has begun. M8.5 remains unmet. Replica A and fresh reusable baselines are next;
+replica B is permitted only if replica A reaches at least 9/10 construction
+wins with mean idle below `0.25`.

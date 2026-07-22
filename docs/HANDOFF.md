@@ -681,11 +681,24 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `1118ef59b0953aacd86176737777013bb2c6498e128f28bcbb7850e6ad586910`;
   freeze-record SHA-256 is
   `7282a3cd405f2d6b00dd3942fb8da2b2f62eb3a8f567dc067edc07756787018e`.
-  Both sets remain unconsumed. Python remains 166/166; no baseline, episode,
-  V38 runtime, or model work exists. M8.5 remains unmet.
+  Both sets remain unconsumed. V38's runtime implementation is committed at
+  `8b3f9cc749`, and all pretraining gates are green. The public-seed-12345 live
+  probe has seat 1 running `BUILD_SCHEMATIC`, one valid learned-seat
+  `DEFEND_REGION` stage beside ordinary `BUILD_LINE`, no scripted-seat stage,
+  and no synthetic claim/helper/event. Focused `CandidateGenerator` tests and
+  Gradle `agent-core:test rl-server:test agent-plugin:classes` pass; Python is
+  166/166. Candidate policy is 5/5 with 10 proactive staging starts; smoke is
+  9/9. Determinism ends at `20a97f36407167597981e77c` cross-process,
+  `a2cf4a73ee901c844f30f486` after reset, and
+  `495ba05fa71697bdc8ff2951` for the alternate seed. Golden replay covers 664
+  checkpoints, 16,200 ticks, and two episodes; negative replay detects a
+  one-line `MINE` change. All 44 exact-config reward adversaries pass for config
+  `d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`; the
+  temporary, uncommitted report SHA-256 is
+  `e44865297a31ab1625bf4a43116cf1ff712b96657043c200c0af629ddd4f59bf`. No
+  baseline episode or model work has begun. M8.5 remains unmet.
 - **Current branch**: `coop-agent/v159.7`
-- **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
-  several small commits; the pre-existing HEAD was `c9686eb5`).
+- **Current V38 implementation checkpoint**: `8b3f9cc749`.
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
 - **Uncommitted changes intentionally preserved**: the user's modified
@@ -845,15 +858,14 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement the precommitted learned-seat-only V38 candidate exposure.** Keep
-   V37 exact outside the quiet pre-defend-lead condition, preserve ordinary
-   learned selection, and add focused fail-closed tests before model work.
-2. **Run the complete pretraining gates from the implementation commit.** Keep
-   both frozen replacement sets unconsumed; no baseline episode is authorized
-   before the ordinary reusable gate sequence reaches its governed point.
-3. **Retrain exact replicas and refresh reusable baselines only after gates
-   pass.** No successor may open confirmation without exact replicas, reusable
-   dual-scorecard parity, and its own one-way confirmation pass.
+1. **Run V38 replica A and refresh the reusable baselines from the committed
+   runtime.** Keep dev-v34 and held-out-v5 unconsumed.
+2. **Start replica B only if replica A reaches at least 9/10 construction wins
+   with mean idle below `0.25`.** Otherwise stop and record the governed
+   rejection.
+3. **Run reusable preflight only after exact replicas and fresh baselines.** No
+   successor may open confirmation without reusable dual-scorecard parity and
+   its own one-way confirmation pass.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
