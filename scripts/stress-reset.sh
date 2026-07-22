@@ -8,7 +8,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-PY="${PYTHON:-python}"
+source "$(dirname "${BASH_SOURCE[0]}")/python-command.sh"
 RESETS="${RL_RESETS:-1000}"
 SEED="${RL_SEED:-12345}"
 PORT="${RL_PORT:-47810}"

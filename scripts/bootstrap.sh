@@ -34,7 +34,7 @@ fi
 
 # --- Python (need >= 3.11) -----------------------------------------------------
 echo "-- Python --"
-PY="${PYTHON:-python}"
+source "$(dirname "${BASH_SOURCE[0]}")/python-command.sh"
 if command -v "$PY" >/dev/null 2>&1; then
   "$PY" --version
   "$PY" - <<'EOF'

@@ -6,7 +6,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-PY="${PYTHON:-python}"
+source "$(dirname "${BASH_SOURCE[0]}")/python-command.sh"
 export PYTHONPATH="$ROOT/python/src${PYTHONPATH:+:$PYTHONPATH}"
 
 if "$PY" -m pytest --version >/dev/null 2>&1; then

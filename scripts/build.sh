@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-PY="${PYTHON:-python}"
+source "$(dirname "${BASH_SOURCE[0]}")/python-command.sh"
 
 echo "== Java modules =="
 ./gradlew rl-server:dist agent-core:classes agent-plugin:dist --console=plain

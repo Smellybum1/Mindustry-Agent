@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
-PY="${PYTHON:-python}"
+source "$(dirname "${BASH_SOURCE[0]}")/python-command.sh"
 PORT="${RL_PORT:-47810}"
 WORKERS="${LADDER_WORKERS:-1}"
 export PYTHONPATH="$ROOT/python/src${PYTHONPATH:+:$PYTHONPATH}"
