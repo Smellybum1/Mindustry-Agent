@@ -25,7 +25,7 @@ public final class CoordinationAdapter{
     private static final long HEARTBEAT_INTERVAL = 300L;
 
     private final Scenario scenario;
-    private final RlAgentRegistry registry;
+    private final AgentRuntimeRegistry registry;
     private final AdaptiveWorldFacts adaptiveFacts;
     private final ExpertCoordinationPlan expertPlan;
     private final TaskBoard board = new TaskBoard();
@@ -65,7 +65,7 @@ public final class CoordinationAdapter{
 
     public CoordinationAdapter(
         Scenario scenario,
-        RlAgentRegistry registry,
+        AgentRuntimeRegistry registry,
         AdaptiveWorldFacts adaptiveFacts
     ){
         this.scenario = scenario;
@@ -161,7 +161,7 @@ public final class CoordinationAdapter{
         for(int i = 0; i < actions.size; i++){
             Jval action = actions.get(i);
             int agentIndex = action.getInt("agent_id", -1);
-            RlAgentRegistry.Agent agent = registry.get(agentIndex);
+            AgentRuntimeRegistry.Agent agent = registry.get(agentIndex);
             if(agent == null){
                 results[i] = result(agentIndex, false, "unknown_agent", "");
                 continue;
@@ -213,50 +213,50 @@ public final class CoordinationAdapter{
         //Only final owners receive skills and transition to RUNNING.
         pending.sort(Comparator
             .comparingDouble((PendingSelection selection) -> selection.candidate.utility()).reversed()
-            .thenComparingInt(selection -> selection.agent.index)
+            .thenComparingInt(selection -> selection.agent.index())
             .thenComparing(selection -> selection.candidate.task().taskId()));
         for(PendingSelection selection : pending){
             TaskState state = board.task(selection.candidate.task().taskId());
             if(state == null || state.owner() == null
-                || state.owner().index() != selection.agent.index){
-                results[selection.actionIndex] = result(selection.agent.index, false,
+                || state.owner().index() != selection.agent.index()){
+                results[selection.actionIndex] = result(selection.agent.index(), false,
                     "claim_lost", selection.actionType, selection.candidate.task().taskId());
                 duplicateWorkIncidents++;
-                if(selection.agent.index == 1) markDecision("claim_lost");
+                if(selection.agent.index() == 1) markDecision("claim_lost");
                 continue;
             }
             Skill skill = skillFor(selection.agent, selection.candidate.task());
             if(skill == null){
-                board.release(state.taskId(), AgentId.of(selection.agent.index), tick);
-                results[selection.actionIndex] = result(selection.agent.index, false,
+                board.release(state.taskId(), AgentId.of(selection.agent.index()), tick);
+                results[selection.actionIndex] = result(selection.agent.index(), false,
                     "unsupported_or_missing_target", selection.actionType);
                 continue;
             }
             String reservationFailure = acquireReservations(
-                selection.candidate.task(), AgentId.of(selection.agent.index), tick);
+                selection.candidate.task(), AgentId.of(selection.agent.index()), tick);
             if(reservationFailure != null){
-                board.release(state.taskId(), AgentId.of(selection.agent.index), tick);
-                results[selection.actionIndex] = result(selection.agent.index, false,
+                board.release(state.taskId(), AgentId.of(selection.agent.index()), tick);
+                results[selection.actionIndex] = result(selection.agent.index(), false,
                     reservationFailure, selection.actionType, state.taskId());
                 duplicateWorkIncidents++;
                 continue;
             }
-            OpResult started = board.start(state.taskId(), AgentId.of(selection.agent.index), tick);
+            OpResult started = board.start(state.taskId(), AgentId.of(selection.agent.index()), tick);
             if(!started.ok()){
                 OpResult released = board.release(state.taskId(),
-                    AgentId.of(selection.agent.index), tick);
+                    AgentId.of(selection.agent.index()), tick);
                 if(!released.ok()) board.reservations().releaseAll(state.taskId());
-                results[selection.actionIndex] = result(selection.agent.index, false,
+                results[selection.actionIndex] = result(selection.agent.index(), false,
                     started.reason(), selection.actionType);
                 continue;
             }
-            selection.agent.controller.setSkill(skill);
+            selection.agent.controller().setSkill(skill);
             int startCoreCopper = StateHasher.coreItem(Items.copper);
-            assignments[selection.agent.index] = new Assignment(
+            assignments[selection.agent.index()] = new Assignment(
                 state.taskId(), selection.candidate.task(),
                 stageFor(selection.candidate.task()), startCoreCopper,
                 harvestTarget(selection.candidate.task(), startCoreCopper), tick);
-            results[selection.actionIndex] = result(selection.agent.index, true,
+            results[selection.actionIndex] = result(selection.agent.index(), true,
                 "accepted", selection.actionType, state.taskId());
         }
 
@@ -286,7 +286,7 @@ public final class CoordinationAdapter{
             StateHasher.coreItem(Items.copper) + reservedCopper);
         board.reservations().setCapacity("copper", copperReservationCapacity);
         for(int i = 0; i < assignments.length; i++){
-            RlAgentRegistry.Agent agent = registry.get(i);
+            AgentRuntimeRegistry.Agent agent = registry.get(i);
             syncHelperDelivery(i, agent, tick);
             Assignment assignment = assignments[i];
             if(assignment == null) continue;
@@ -310,7 +310,7 @@ public final class CoordinationAdapter{
                 if(enemies > 0) assignment.sawEnemy = true;
                 if(assignment.sawEnemy && enemies == 0){
                     OpResult completed = board.complete(assignment.taskId,
-                        AgentId.of(agent.index), tick);
+                        AgentId.of(agent.index()), tick);
                     if(completed.ok()){
                         tasksCompleted++;
                         rememberTransition(i, assignment.spec, tick, false);
@@ -324,7 +324,7 @@ public final class CoordinationAdapter{
             if(assignment.spec.type() == TaskType.BUILD_LINE
                 && adaptiveFacts.economy().operational()){
                 OpResult completed = board.complete(assignment.taskId,
-                    AgentId.of(agent.index), tick);
+                    AgentId.of(agent.index()), tick);
                 if(completed.ok()){
                     tasksCompleted++;
                     rememberTransition(i, assignment.spec, tick, false);
@@ -334,7 +334,7 @@ public final class CoordinationAdapter{
                 continue;
             }
 
-            SkillResult skill = agent.controller.lastResult();
+            SkillResult skill = agent.controller().lastResult();
             switch(skill.status()){
                 case RUNNING -> reportRunning(assignment, agent, skill, tick);
                 case SUCCEEDED -> skillSucceeded(assignment, agent, tick);
@@ -382,14 +382,14 @@ public final class CoordinationAdapter{
         return agentIndex == failureAgent && failureTick >= 0 && tick >= failureTick;
     }
 
-    private void applyInjectedFailure(int agentIndex, RlAgentRegistry.Agent agent){
+    private void applyInjectedFailure(int agentIndex, AgentRuntimeRegistry.Agent agent){
         if(failureApplied || agentIndex != failureAgent || agent == null) return;
         Assignment assignment = current(agentIndex);
         if(assignment != null && (assignment.spec.type() == TaskType.BUILD_SCHEMATIC
             || assignment.spec.type() == TaskType.REPAIR_REGION)){
-            agent.controller.cancelBuildPlans();
+            agent.controller().cancelBuildPlans();
         }
-        agent.controller.clearSkill();
+        agent.controller().clearSkill();
         failureApplied = true;
     }
 
@@ -533,7 +533,7 @@ public final class CoordinationAdapter{
 
     private void prepareSelection(
         int actionIndex,
-        RlAgentRegistry.Agent agent,
+        AgentRuntimeRegistry.Agent agent,
         int candidateIndex,
         String actionType,
         CandidateSet candidates,
@@ -541,71 +541,71 @@ public final class CoordinationAdapter{
         Jval[] results,
         long tick
     ){
-        if(current(agent.index) != null){
-            results[actionIndex] = result(agent.index, false, "task_active", actionType);
+        if(current(agent.index()) != null){
+            results[actionIndex] = result(agent.index(), false, "task_active", actionType);
             return;
         }
         if(candidateIndex < 0 || candidateIndex >= candidates.candidates().size()){
-            results[actionIndex] = result(agent.index, false, "candidate_index_out_of_range", actionType);
+            results[actionIndex] = result(agent.index(), false, "candidate_index_out_of_range", actionType);
             return;
         }
         TaskCandidate candidate = candidates.candidates().get(candidateIndex);
         if(!candidate.valid()){
-            results[actionIndex] = result(agent.index, false, candidate.invalidReason(), actionType);
+            results[actionIndex] = result(agent.index(), false, candidate.invalidReason(), actionType);
             return;
         }
         if(!dependenciesComplete(candidate.task())){
-            results[actionIndex] = result(agent.index, false, "dependency_incomplete", actionType);
+            results[actionIndex] = result(agent.index(), false, "dependency_incomplete", actionType);
             return;
         }
-        if(retryNotDue(agent.index, candidate.task(), tick)){
-            results[actionIndex] = result(agent.index, false, "retry_not_due", actionType);
+        if(retryNotDue(agent.index(), candidate.task(), tick)){
+            results[actionIndex] = result(agent.index(), false, "retry_not_due", actionType);
             return;
         }
         TaskState existing = board.task(candidate.task().taskId());
         boolean sameTickContest = existing != null && existing.status() == TaskStatus.CLAIMED
             && existing.leaseExpiryTick() == tick + board.leaseDurationTicks();
         if(existing != null && existing.status() != TaskStatus.OPEN && !sameTickContest){
-            results[actionIndex] = result(agent.index, false, "task_not_open", actionType);
+            results[actionIndex] = result(agent.index(), false, "task_not_open", actionType);
             return;
         }
         if(existing == null) board.propose(candidate.task(), tick);
 
-        AgentId id = AgentId.of(agent.index);
+        AgentId id = AgentId.of(agent.index());
         if(!sameTickContest){
             OpResult intent = board.announceIntent(candidate.task().taskId(), id,
                 candidate.utility(), tick);
             if(!intent.ok()){
-                results[actionIndex] = result(agent.index, false, intent.reason(), actionType);
+                results[actionIndex] = result(agent.index(), false, intent.reason(), actionType);
                 return;
             }
         }
         ClaimOutcome claim = board.claim(candidate.task().taskId(), id, candidate.utility(), tick);
         if(!claim.granted()){
-            results[actionIndex] = result(agent.index, false,
+            results[actionIndex] = result(agent.index(), false,
                 claim.result().name().toLowerCase(Locale.ROOT), actionType);
             return;
         }
         pending.add(new PendingSelection(actionIndex, agent, candidate, actionType));
     }
 
-    private Jval applyImmediate(RlAgentRegistry.Agent agent, Jval action, String type, long tick){
-        Assignment assignment = current(agent.index);
-        AgentId id = AgentId.of(agent.index);
+    private Jval applyImmediate(AgentRuntimeRegistry.Agent agent, Jval action, String type, long tick){
+        Assignment assignment = current(agent.index());
+        AgentId id = AgentId.of(agent.index());
         return switch(type){
             case "CONTINUE_CURRENT_TASK" -> {
-                if(assignment == null) yield result(agent.index, false, "no_current_task", type);
+                if(assignment == null) yield result(agent.index(), false, "no_current_task", type);
                 OpResult op = board.heartbeat(assignment.taskId, id, tick);
                 if(op.ok() && board.task(assignment.taskId).status() == TaskStatus.BLOCKED
-                    && agent.controller.lastResult().status() != SkillStatus.BLOCKED){
+                    && agent.controller().lastResult().status() != SkillStatus.BLOCKED){
                     board.reportProgress(assignment.taskId, id,
                         board.task(assignment.taskId).progress(), tick);
                     assignment.blockedReason = "";
                 }
-                yield result(agent.index, op.ok(), op.reason(), type, assignment.taskId);
+                yield result(agent.index(), op.ok(), op.reason(), type, assignment.taskId);
             }
             case "ABANDON" -> {
-                if(assignment == null) yield result(agent.index, false, "no_current_task", type);
+                if(assignment == null) yield result(agent.index(), false, "no_current_task", type);
                 String reason = action.getString("reason", "policy_abandon");
                 OpResult op = board.abandon(assignment.taskId, id, reason, tick);
                 if(op.ok()){
@@ -617,24 +617,24 @@ public final class CoordinationAdapter{
                         || reason.startsWith("blocked_replan:")) adaptiveReplans++;
                     if(reason.equals("wave_preempt")
                         || reason.equals("readiness_rebalance")) policySwitches++;
-                    rememberTransition(agent.index, assignment.spec, tick,
+                    rememberTransition(agent.index(), assignment.spec, tick,
                         reason.equals("resources_short_replan")
                             || reason.startsWith("blocked_replan:"));
-                    clearAssignment(agent.index, agent);
+                    clearAssignment(agent.index(), agent);
                     markDecision("task_terminal");
                 }
-                yield result(agent.index, op.ok(), op.reason(), type, assignment.taskId);
+                yield result(agent.index(), op.ok(), op.reason(), type, assignment.taskId);
             }
             case "REQUEST_HELP" -> {
-                if(assignment == null) yield result(agent.index, false, "no_current_task", type);
+                if(assignment == null) yield result(agent.index(), false, "no_current_task", type);
                 OpResult op = board.requestHelp(assignment.taskId, id,
                     Math.max(1, action.getInt("helpers_requested", 1)), tick);
-                yield result(agent.index, op.ok(), op.reason(), type, assignment.taskId);
+                yield result(agent.index(), op.ok(), op.reason(), type, assignment.taskId);
             }
             case "OFFER_HELP" -> offerHelp(agent, action, type, tick);
             case "ACCEPT_HELP" -> decideHelp(agent, action, type, true, tick);
             case "DECLINE_HELP" -> decideHelp(agent, action, type, false, tick);
-            default -> result(agent.index, false, "unknown_task_action", type);
+            default -> result(agent.index(), false, "unknown_task_action", type);
         };
     }
 
@@ -649,53 +649,53 @@ public final class CoordinationAdapter{
             || normalized.contains("cleanup");
     }
 
-    private Jval offerHelp(RlAgentRegistry.Agent agent, Jval action, String type, long tick){
-        if(current(agent.index) != null){
-            return result(agent.index, false, "task_active", type);
+    private Jval offerHelp(AgentRuntimeRegistry.Agent agent, Jval action, String type, long tick){
+        if(current(agent.index()) != null){
+            return result(agent.index(), false, "task_active", type);
         }
         int taskIndex = action.getInt("task_index", -1);
         List<TaskState> tasks = board.tasks();
         if(taskIndex < 0 || taskIndex >= Math.min(MAX_BOARD_TASKS, tasks.size())){
-            return result(agent.index, false, "task_index_out_of_range", type);
+            return result(agent.index(), false, "task_index_out_of_range", type);
         }
         TaskState task = tasks.get(taskIndex);
-        OpResult op = board.offerHelp(task.taskId(), AgentId.of(agent.index),
+        OpResult op = board.offerHelp(task.taskId(), AgentId.of(agent.index()),
             action.getString("contribution", "assist"),
             Math.max(0, action.getInt("amount", 0)), tick);
-        return result(agent.index, op.ok(), op.reason(), type, task.taskId());
+        return result(agent.index(), op.ok(), op.reason(), type, task.taskId());
     }
 
     private Jval decideHelp(
-        RlAgentRegistry.Agent agent,
+        AgentRuntimeRegistry.Agent agent,
         Jval action,
         String type,
         boolean accept,
         long tick
     ){
-        Assignment assignment = current(agent.index);
-        if(assignment == null) return result(agent.index, false, "no_current_task", type);
+        Assignment assignment = current(agent.index());
+        if(assignment == null) return result(agent.index(), false, "no_current_task", type);
         TaskState task = board.task(assignment.taskId);
         int offerIndex = action.getInt("offer_index", -1);
         if(task == null || offerIndex < 0 || offerIndex >= task.pendingOffers().size()){
-            return result(agent.index, false, "offer_index_out_of_range", type);
+            return result(agent.index(), false, "offer_index_out_of_range", type);
         }
         AgentId helper = task.pendingOffers().get(offerIndex).helper();
         OpResult op = accept
-            ? board.acceptHelp(task.taskId(), AgentId.of(agent.index), helper, tick)
-            : board.declineHelp(task.taskId(), AgentId.of(agent.index), helper, tick);
-        return result(agent.index, op.ok(), op.reason(), type, task.taskId());
+            ? board.acceptHelp(task.taskId(), AgentId.of(agent.index()), helper, tick)
+            : board.declineHelp(task.taskId(), AgentId.of(agent.index()), helper, tick);
+        return result(agent.index(), op.ok(), op.reason(), type, task.taskId());
     }
 
-    private void captureHelperDelivery(RlAgentRegistry.Agent agent, Jval command){
+    private void captureHelperDelivery(AgentRuntimeRegistry.Agent agent, Jval command){
         if(command == null || !command.isObject()
             || !command.getString("type", "").equalsIgnoreCase("DELIVER_CORE")) return;
         for(TaskState task : board.tasks()){
             for(HelperContract contract : task.helpers()){
-                if(!contract.fulfilled() && contract.helper().index() == agent.index
+                if(!contract.fulfilled() && contract.helper().index() == agent.index()
                     && contract.contribution().equalsIgnoreCase("deliver copper")
-                    && agent.unit.item() == Items.copper){
-                    helperDeliveryTasks[agent.index] = task.taskId();
-                    helperDeliveryCargo[agent.index] = agent.unit.stack().amount;
+                    && agent.unit().item() == Items.copper){
+                    helperDeliveryTasks[agent.index()] = task.taskId();
+                    helperDeliveryCargo[agent.index()] = agent.unit().stack().amount;
                     return;
                 }
             }
@@ -791,18 +791,18 @@ public final class CoordinationAdapter{
         };
     }
 
-    private void syncHelperDelivery(int agentIndex, RlAgentRegistry.Agent agent, long tick){
+    private void syncHelperDelivery(int agentIndex, AgentRuntimeRegistry.Agent agent, long tick){
         String taskId = helperDeliveryTasks[agentIndex];
         if(taskId == null || agent == null) return;
-        SkillResult result = agent.controller.lastResult();
-        if(!(agent.controller.activeSkill() instanceof DeliverToCore)
+        SkillResult result = agent.controller().lastResult();
+        if(!(agent.controller().activeSkill() instanceof DeliverToCore)
             || result.status() != SkillStatus.SUCCEEDED) return;
 
         TaskState task = board.task(taskId);
         if(task != null){
             for(HelperContract contract : task.helpers()){
                 if(!contract.fulfilled() && contract.helper().index() == agentIndex){
-                    int delivered = helperDeliveryCargo[agentIndex] - agent.unit.stack().amount;
+                    int delivered = helperDeliveryCargo[agentIndex] - agent.unit().stack().amount;
                     if(delivered >= contract.amount()){
                         board.reportHelpFulfilled(taskId, AgentId.of(agentIndex), tick);
                     }
@@ -816,18 +816,18 @@ public final class CoordinationAdapter{
 
     private void reportRunning(
         Assignment assignment,
-        RlAgentRegistry.Agent agent,
+        AgentRuntimeRegistry.Agent agent,
         SkillResult skill,
         long tick
     ){
         double progress = taskProgress(assignment, skill.progress());
         int bucket = (int)Math.floor(progress * 100.0);
         if(bucket > assignment.lastProgressBucket){
-            board.reportProgress(assignment.taskId, AgentId.of(agent.index), progress, tick);
+            board.reportProgress(assignment.taskId, AgentId.of(agent.index()), progress, tick);
             assignment.lastProgressBucket = bucket;
             assignment.lastHeartbeatTick = tick;
         }else if(tick - assignment.lastHeartbeatTick >= HEARTBEAT_INTERVAL){
-            board.heartbeat(assignment.taskId, AgentId.of(agent.index), tick);
+            board.heartbeat(assignment.taskId, AgentId.of(agent.index()), tick);
             assignment.lastHeartbeatTick = tick;
         }
         assignment.blockedReason = "";
@@ -835,48 +835,48 @@ public final class CoordinationAdapter{
 
     private void reportBlocked(
         Assignment assignment,
-        RlAgentRegistry.Agent agent,
+        AgentRuntimeRegistry.Agent agent,
         SkillResult skill,
         long tick
     ){
         String reason = skill.reason().name().toLowerCase(Locale.ROOT);
         if(!reason.equals(assignment.blockedReason)){
-            board.reportBlocked(assignment.taskId, AgentId.of(agent.index), reason, tick);
+            board.reportBlocked(assignment.taskId, AgentId.of(agent.index()), reason, tick);
             assignment.blockedReason = reason;
-            blockedTasks[agent.index] = assignment.spec;
-            blockedTaskTicks[agent.index] = tick;
+            blockedTasks[agent.index()] = assignment.spec;
+            blockedTaskTicks[agent.index()] = tick;
             rememberRetryHoldoff(
-                agent.index, assignment.spec, tick, skill.nextRetryTick(),
+                agent.index(), assignment.spec, tick, skill.nextRetryTick(),
                 skill.reason() == SkillReason.RESOURCES_SHORT
                     || skill.reason() == SkillReason.CORE_SHORT);
             markDecision("task_blocked");
         }
         if(tick - assignment.lastHeartbeatTick >= HEARTBEAT_INTERVAL){
-            board.heartbeat(assignment.taskId, AgentId.of(agent.index), tick);
+            board.heartbeat(assignment.taskId, AgentId.of(agent.index()), tick);
             assignment.lastHeartbeatTick = tick;
         }
     }
 
-    private void skillSucceeded(Assignment assignment, RlAgentRegistry.Agent agent, long tick){
+    private void skillSucceeded(Assignment assignment, AgentRuntimeRegistry.Agent agent, long tick){
         if(assignment.spec.type() == TaskType.HARVEST_RESOURCE){
             if(assignment.stage.equals("mine")){
                 assignment.stage = "deliver";
-                agent.controller.setSkill(new DeliverToCore());
-                board.reportProgress(assignment.taskId, AgentId.of(agent.index),
+                agent.controller().setSkill(new DeliverToCore());
+                board.reportProgress(assignment.taskId, AgentId.of(agent.index()),
                     taskProgress(assignment, 0f), tick);
                 return;
             }
             if(assignment.stage.equals("deliver")){
                 assignment.stage = "settle";
-                agent.controller.setSkill(new Wait(MineResource.DEFAULT_DRAIN_TICKS));
-                board.heartbeat(assignment.taskId, AgentId.of(agent.index), tick);
+                agent.controller().setSkill(new Wait(MineResource.DEFAULT_DRAIN_TICKS));
+                board.heartbeat(assignment.taskId, AgentId.of(agent.index()), tick);
                 assignment.lastHeartbeatTick = tick;
                 return;
             }
             if(StateHasher.coreItem(Items.copper) < assignment.targetCoreCopper){
                 assignment.stage = "mine";
-                agent.controller.setSkill(mineSkill(agent, assignment.targetCoreCopper));
-                board.reportProgress(assignment.taskId, AgentId.of(agent.index),
+                agent.controller().setSkill(mineSkill(agent, assignment.targetCoreCopper));
+                board.reportProgress(assignment.taskId, AgentId.of(agent.index()),
                     taskProgress(assignment, 0f), tick);
                 return;
             }
@@ -885,8 +885,8 @@ public final class CoordinationAdapter{
         if(assignment.spec.type() == TaskType.BUILD_LINE
             && !adaptiveFacts.economy().operational()){
             assignment.stage = "verify_line";
-            agent.controller.setSkill(new Wait(60));
-            board.reportProgress(assignment.taskId, AgentId.of(agent.index),
+            agent.controller().setSkill(new Wait(60));
+            board.reportProgress(assignment.taskId, AgentId.of(agent.index()),
                 adaptiveFacts.economy().readiness(), tick);
             assignment.lastHeartbeatTick = tick;
             return;
@@ -894,40 +894,40 @@ public final class CoordinationAdapter{
 
         if(assignment.spec.type() == TaskType.WAIT){
             OpResult released = board.release(assignment.taskId,
-                AgentId.of(agent.index), tick);
+                AgentId.of(agent.index()), tick);
             if(released.ok()) markDecision("task_terminal");
         }else{
             OpResult completed = board.complete(assignment.taskId,
-                AgentId.of(agent.index), tick);
+                AgentId.of(agent.index()), tick);
             if(completed.ok()){
                 tasksCompleted++;
-                rememberTransition(agent.index, assignment.spec, tick, false);
+                rememberTransition(agent.index(), assignment.spec, tick, false);
                 markDecision("task_terminal");
             }
         }
-        clearAssignment(agent.index, agent);
+        clearAssignment(agent.index(), agent);
     }
 
     private void abandon(
         Assignment assignment,
-        RlAgentRegistry.Agent agent,
+        AgentRuntimeRegistry.Agent agent,
         String reason,
         long tick
     ){
         OpResult abandoned = board.abandon(assignment.taskId,
-            AgentId.of(agent.index), reason, tick);
+            AgentId.of(agent.index()), reason, tick);
         if(abandoned.ok()){
             tasksAbandoned++;
-            rememberTransition(agent.index, assignment.spec, tick, true);
+            rememberTransition(agent.index(), assignment.spec, tick, true);
             markDecision("task_terminal");
         }
-        clearAssignment(agent.index, agent);
+        clearAssignment(agent.index(), agent);
     }
 
     private void abandonUnavailable(
         int agentIndex,
         Assignment assignment,
-        RlAgentRegistry.Agent agent,
+        AgentRuntimeRegistry.Agent agent,
         long tick
     ){
         OpResult abandoned = board.abandon(assignment.taskId,
@@ -941,7 +941,7 @@ public final class CoordinationAdapter{
         clearAssignment(agentIndex, agent);
     }
 
-    private Skill skillFor(RlAgentRegistry.Agent agent, TaskSpec task){
+    private Skill skillFor(AgentRuntimeRegistry.Agent agent, TaskSpec task){
         return switch(task.type()){
             case HARVEST_RESOURCE -> mineSkill(agent,
                 harvestTarget(task, StateHasher.coreItem(Items.copper)));
@@ -954,7 +954,7 @@ public final class CoordinationAdapter{
         };
     }
 
-    private Skill mineSkill(RlAgentRegistry.Agent agent, int targetCoreCopper){
+    private Skill mineSkill(AgentRuntimeRegistry.Agent agent, int targetCoreCopper){
         Scenario.ObjectiveSpec objective = scenario.objective(TaskType.HARVEST_RESOURCE);
         Scenario.OrePatch patch = scenario.orePatch(objective.targetRef());
         if(patch == null) return null;
@@ -1051,15 +1051,15 @@ public final class CoordinationAdapter{
         return agentIndex >= 0 && agentIndex < assignments.length ? assignments[agentIndex] : null;
     }
 
-    private void clearAssignment(int agentIndex, RlAgentRegistry.Agent agent){
+    private void clearAssignment(int agentIndex, AgentRuntimeRegistry.Agent agent){
         Assignment assignment = current(agentIndex);
         if(agent != null && assignment != null
             && (assignment.spec.type() == TaskType.BUILD_SCHEMATIC
                 || assignment.spec.type() == TaskType.BUILD_LINE
                 || assignment.spec.type() == TaskType.REPAIR_REGION)){
-            agent.controller.cancelBuildPlans();
+            agent.controller().cancelBuildPlans();
         }
-        if(agent != null) agent.controller.clearSkill();
+        if(agent != null) agent.controller().clearSkill();
         if(agentIndex >= 0 && agentIndex < assignments.length) assignments[agentIndex] = null;
     }
 
@@ -1075,8 +1075,8 @@ public final class CoordinationAdapter{
         return -1;
     }
 
-    private static boolean agentAvailable(RlAgentRegistry.Agent agent){
-        return agent != null && agent.unit.isValid() && !agent.unit.dead();
+    private static boolean agentAvailable(AgentRuntimeRegistry.Agent agent){
+        return agent != null && agent.unit().isValid() && !agent.unit().dead();
     }
 
     private static String stageFor(TaskSpec task){
@@ -1300,28 +1300,28 @@ public final class CoordinationAdapter{
     private final class SharedExpertPort implements ExpertCoordinationDriver.Port{
         @Override
         public SkillResult lastResult(int agentIndex){
-            RlAgentRegistry.Agent agent = registry.get(agentIndex);
-            return agent == null ? SkillResult.ready() : agent.controller.lastResult();
+            AgentRuntimeRegistry.Agent agent = registry.get(agentIndex);
+            return agent == null ? SkillResult.ready() : agent.controller().lastResult();
         }
 
         @Override
         public Skill activeSkill(int agentIndex){
-            RlAgentRegistry.Agent agent = registry.get(agentIndex);
-            return agent == null ? null : agent.controller.activeSkill();
+            AgentRuntimeRegistry.Agent agent = registry.get(agentIndex);
+            return agent == null ? null : agent.controller().activeSkill();
         }
 
         @Override
         public void setSkill(int agentIndex, Skill skill){
-            RlAgentRegistry.Agent agent = registry.get(agentIndex);
-            if(agent != null) agent.controller.setSkill(skill);
+            AgentRuntimeRegistry.Agent agent = registry.get(agentIndex);
+            if(agent != null) agent.controller().setSkill(skill);
         }
 
         @Override
         public void cancelWork(int agentIndex){
-            RlAgentRegistry.Agent agent = registry.get(agentIndex);
+            AgentRuntimeRegistry.Agent agent = registry.get(agentIndex);
             if(agent == null) return;
-            agent.controller.cancelBuildPlans();
-            agent.controller.clearSkill();
+            agent.controller().cancelBuildPlans();
+            agent.controller().clearSkill();
         }
 
         @Override
@@ -1349,7 +1349,7 @@ public final class CoordinationAdapter{
 
     private record PendingSelection(
         int actionIndex,
-        RlAgentRegistry.Agent agent,
+        AgentRuntimeRegistry.Agent agent,
         TaskCandidate candidate,
         String actionType
     ){}

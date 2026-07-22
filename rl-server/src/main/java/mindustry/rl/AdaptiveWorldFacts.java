@@ -19,7 +19,7 @@ import static mindustry.Vars.*;
 /** Rolling, simulation-thread-only evidence used by M7.4 adaptive planning. */
 public final class AdaptiveWorldFacts{
     private final Scenario scenario;
-    private final RlAgentRegistry registry;
+    private final AgentRuntimeRegistry registry;
     private final int[] automatedCopperInflow;
     private final int[] previousAgentCopper;
     private final float assignmentRange;
@@ -28,7 +28,7 @@ public final class AdaptiveWorldFacts{
     private int inflowTotal;
     private int previousCoreCopper;
 
-    public AdaptiveWorldFacts(Scenario scenario, RlAgentRegistry registry){
+    public AdaptiveWorldFacts(Scenario scenario, AgentRuntimeRegistry registry){
         this.scenario = Objects.requireNonNull(scenario, "scenario");
         this.registry = Objects.requireNonNull(registry, "registry");
         automatedCopperInflow = new int[scenario.buildLineInflowSampleTicks];
@@ -165,10 +165,10 @@ public final class AdaptiveWorldFacts{
     }
 
     private void captureAgentCopper(int[] output){
-        for(RlAgentRegistry.Agent agent : registry.agents()){
-            if(agent.index < 0 || agent.index >= output.length) continue;
-            output[agent.index] = agent.unit.stack().item == Items.copper
-                ? agent.unit.stack().amount : 0;
+        for(AgentRuntimeRegistry.Agent agent : registry.agents()){
+            if(agent.index() < 0 || agent.index() >= output.length) continue;
+            output[agent.index()] = agent.unit().stack().item == Items.copper
+                ? agent.unit().stack().amount : 0;
         }
     }
 

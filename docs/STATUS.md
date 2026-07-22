@@ -1868,6 +1868,9 @@ repository-evidence mapping used for the M6 audit is:
   M10 human goals/overrides and study instrumentation remain unimplemented.
   `docs/M10_DESIGN.md` and ADR-0057 accept the structured command contract and
   make demo adoption of the public candidate/typed-action path a prerequisite.
+  `AgentRuntimeRegistry` now removes the candidate/coordination adapters'
+  concrete dependency on `RlAgentRegistry`; the plugin policy port remains
+  pending and no command behavior has changed.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,

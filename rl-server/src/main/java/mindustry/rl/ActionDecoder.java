@@ -29,23 +29,23 @@ final class ActionDecoder{
     private ActionDecoder(){}
 
     /** Apply one {@code {agent_id, command}} action, returning its result object. */
-    static Jval apply(RlAgentRegistry registry, Scenario scenario, Jval action){
+    static Jval apply(AgentRuntimeRegistry registry, Scenario scenario, Jval action){
         int agentId = action.getInt("agent_id", -1);
-        RlAgentRegistry.Agent agent = registry.get(agentId);
+        AgentRuntimeRegistry.Agent agent = registry.get(agentId);
         if(agent == null){
             return result(agentId, false, "unknown_agent", "");
         }
 
         Jval command = action.get("command");
         if(command == null || command.isNull()){
-            return result(agentId, true, "continue", agent.controller.activeType());
+            return result(agentId, true, "continue", agent.controller().activeType());
         }
         String type = command.getString("type", "");
 
         switch(type){
             case "":
             case "CONTINUE":
-                return result(agentId, true, "continue", agent.controller.activeType());
+                return result(agentId, true, "continue", agent.controller().activeType());
 
             case "NAVIGATE":{
                 float x = (float)command.getDouble("x", Double.NaN);
@@ -54,7 +54,7 @@ final class ActionDecoder{
                 if(!finite(x) || !finite(y)){
                     return result(agentId, false, "malformed", type);
                 }
-                agent.controller.setSkill(new NavigateTo(x, y, Math.max(0f, tol)));
+                agent.controller().setSkill(new NavigateTo(x, y, Math.max(0f, tol)));
                 return result(agentId, true, "accepted", type);
             }
 
@@ -68,12 +68,12 @@ final class ActionDecoder{
                 if(amount <= 0){
                     return result(agentId, false, "malformed", type);
                 }
-                agent.controller.setSkill(new MineResource(tx, ty, amount));
+                agent.controller().setSkill(new MineResource(tx, ty, amount));
                 return result(agentId, true, "accepted", type);
             }
 
             case "DELIVER_CORE":
-                agent.controller.setSkill(new DeliverToCore());
+                agent.controller().setSkill(new DeliverToCore());
                 return result(agentId, true, "accepted", type);
 
             case "WAIT":{
@@ -81,7 +81,7 @@ final class ActionDecoder{
                 if(ticks < 0){
                     return result(agentId, false, "malformed", type);
                 }
-                agent.controller.setSkill(new Wait(ticks));
+                agent.controller().setSkill(new Wait(ticks));
                 return result(agentId, true, "accepted", type);
             }
 
@@ -100,7 +100,7 @@ final class ActionDecoder{
                 if(block == null || !state.rules.researched.contains(block)){
                     return result(agentId, false, "block_not_allowed", type);
                 }
-                agent.controller.setSkill(new BuildBlock(block.name, tx, ty, rotation));
+                agent.controller().setSkill(new BuildBlock(block.name, tx, ty, rotation));
                 return result(agentId, true, "accepted", type);
             }
 
@@ -117,7 +117,7 @@ final class ActionDecoder{
                         return result(agentId, false, "out_of_bounds", type);
                     }
                 }
-                agent.controller.setSkill(new ExecuteSchematic(name, anchorX, anchorY, spec.blocks()));
+                agent.controller().setSkill(new ExecuteSchematic(name, anchorX, anchorY, spec.blocks()));
                 return result(agentId, true, "accepted", type);
             }
 
@@ -133,7 +133,7 @@ final class ActionDecoder{
                 if(item == null || amount <= 0){
                     return result(agentId, false, "malformed", type);
                 }
-                agent.controller.setSkill(new SupplyBuilding(item.name, tx, ty, amount));
+                agent.controller().setSkill(new SupplyBuilding(item.name, tx, ty, amount));
                 return result(agentId, true, "accepted", type);
             }
 
@@ -145,7 +145,7 @@ final class ActionDecoder{
                 if(!inBounds(x1, y1) || !inBounds(x2, y2)){
                     return result(agentId, false, "out_of_bounds", type);
                 }
-                agent.controller.setSkill(new RebuildRegion(x1, y1, x2, y2));
+                agent.controller().setSkill(new RebuildRegion(x1, y1, x2, y2));
                 return result(agentId, true, "accepted", type);
             }
 
@@ -161,12 +161,12 @@ final class ActionDecoder{
                     || y >= world.height() * tilesize){
                     return result(agentId, false, "out_of_bounds", type);
                 }
-                agent.controller.setSkill(new DefendRegion(x, y, radius, ticks));
+                agent.controller().setSkill(new DefendRegion(x, y, radius, ticks));
                 return result(agentId, true, "accepted", type);
             }
 
             case "RETREAT":
-                agent.controller.setSkill(new EmergencyRetreat());
+                agent.controller().setSkill(new EmergencyRetreat());
                 return result(agentId, true, "accepted", type);
 
             default:

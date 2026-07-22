@@ -1979,7 +1979,10 @@ also make the existing `docs/CANDIDATE_GAPS.md` seam a hard prerequisite: the
 real-time plugin must move from `ExpertCoordinationDriver`'s stage-local
 candidates to the public `EngineCandidates` / typed-action path before human
 goals are applied. No M10 implementation exists yet; this packet does not start
-M9, authorize V43, or access any governed seed membership.
+M9, authorize V43, or access any governed seed membership. The first
+behavior-neutral prerequisite now exists: `AgentRuntimeRegistry` removes the
+public candidate/coordination adapters' concrete training-registry dependency;
+the plugin policy port itself remains pending.
 
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,
   `/agents assign <agent> <task>`, `/agents release <agent>`,

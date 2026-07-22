@@ -61,6 +61,10 @@ Only then may structured human goals overlay candidates. Command callbacks parse
 and enqueue immutable input; the simulation thread validates and applies it.
 `docs/M10_DESIGN.md` pins the accepted contract. This is architecture only at
 present—the demo policy port and human-control implementation do not yet exist.
+The first behavior-neutral prerequisite is implemented:
+`AgentRuntimeRegistry` decouples candidates, adaptive facts, feature extraction,
+action decoding, and coordination from the training registry while preserving
+`RlAgentRegistry` as the existing runtime facade.
 
 ## Module responsibilities
 

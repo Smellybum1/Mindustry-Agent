@@ -23,18 +23,12 @@ import static mindustry.Vars.*;
  * vanilla ever reassigns the controller, so no tagging is required (resolved open
  * question 2).
  */
-public final class RlAgentRegistry{
+public final class RlAgentRegistry implements AgentRuntimeRegistry{
 
     /** One agent's episode binding. */
-    public static final class Agent{
-        public final int index;
-        public final Unit unit;
-        public final SkillController controller;
-
+    public static final class Agent extends AgentRuntimeRegistry.Agent{
         Agent(int index, Unit unit, SkillController controller){
-            this.index = index;
-            this.unit = unit;
-            this.controller = controller;
+            super(index, unit, controller);
         }
     }
 

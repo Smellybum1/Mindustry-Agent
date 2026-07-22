@@ -8,14 +8,14 @@ import agentcore.utility.*;
 /** Engine-adapter feature values computed from one immutable observation boundary. */
 public final class EngineFeatureSource implements FeatureSource{
     private final Scenario scenario;
-    private final RlAgentRegistry registry;
+    private final AgentRuntimeRegistry registry;
     private final CandidateWorldSnapshot world;
     private final float assignmentRange;
     private final CoordinationAdapter coordination;
 
     public EngineFeatureSource(
         Scenario scenario,
-        RlAgentRegistry registry,
+        AgentRuntimeRegistry registry,
         CandidateWorldSnapshot world,
         float assignmentRange,
         CoordinationAdapter coordination
@@ -28,10 +28,10 @@ public final class EngineFeatureSource implements FeatureSource{
     }
 
     @Override public UtilityFeatures featuresFor(AgentId agentId, TaskSpec task, long tick){
-        RlAgentRegistry.Agent agent = registry.get(agentId.index());
+        AgentRuntimeRegistry.Agent agent = registry.get(agentId.index());
         float[] target = targetPosition(task, agent);
         double travel = agent == null ? 1.0 : clamp(Math.hypot(
-            target[0] - agent.unit.x, target[1] - agent.unit.y) / assignmentRange);
+            target[0] - agent.unit().x, target[1] - agent.unit().y) / assignmentRange);
 
         return UtilityFeatures.builder()
             .teamValue(task.priority())
@@ -83,7 +83,7 @@ public final class EngineFeatureSource implements FeatureSource{
         return 1.0 - world.defenseReadiness().readiness();
     }
 
-    private float[] targetPosition(TaskSpec task, RlAgentRegistry.Agent agent){
+    private float[] targetPosition(TaskSpec task, AgentRuntimeRegistry.Agent agent){
         if(task.target() instanceof EntityTarget entity){
             for(TurretSnapshot turret : world.turrets()){
                 if(turret.entityId() == entity.entityId()){
@@ -112,7 +112,7 @@ public final class EngineFeatureSource implements FeatureSource{
         }else if(task.target() instanceof TileTarget tile){
             return new float[]{tile.x() * world.tileSize(), tile.y() * world.tileSize()};
         }
-        return agent == null ? new float[]{0f, 0f} : new float[]{agent.unit.x, agent.unit.y};
+        return agent == null ? new float[]{0f, 0f} : new float[]{agent.unit().x, agent.unit().y};
     }
 
     private float center(int start, int size){

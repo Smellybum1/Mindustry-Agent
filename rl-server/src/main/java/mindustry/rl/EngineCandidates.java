@@ -23,7 +23,7 @@ public final class EngineCandidates{
         Set.of("build", "carry", "combat", "mine", "wait");
 
     private final Scenario scenario;
-    private final RlAgentRegistry registry;
+    private final AgentRuntimeRegistry registry;
     private final AdaptiveWorldFacts facts;
     private final ExpertCoordinationPlan expertPlan;
     private final CandidateGenerator generator = new CandidateGenerator();
@@ -39,13 +39,13 @@ public final class EngineCandidates{
     private boolean overlapProbe;
     private CoordinationAdapter coordination;
 
-    public EngineCandidates(Scenario scenario, RlAgentRegistry registry){
+    public EngineCandidates(Scenario scenario, AgentRuntimeRegistry registry){
         this(scenario, registry, new AdaptiveWorldFacts(scenario, registry));
     }
 
     public EngineCandidates(
         Scenario scenario,
-        RlAgentRegistry registry,
+        AgentRuntimeRegistry registry,
         AdaptiveWorldFacts facts
     ){
         this.scenario = scenario;
@@ -147,16 +147,16 @@ public final class EngineCandidates{
             false, minimumWave, priority, List.of());
     }
 
-    public CandidateSet generate(RlAgentRegistry.Agent agent, CandidateWorldSnapshot world){
+    public CandidateSet generate(AgentRuntimeRegistry.Agent agent, CandidateWorldSnapshot world){
         float assignmentRange = facts.assignmentRange();
-        String cargoItem = agent.unit.item() == null ? "" : agent.unit.item().name;
-        AgentSnapshot snapshot = new AgentSnapshot(AgentId.of(agent.index), agent.unit.x,
-            agent.unit.y, assignmentRange, ALPHA_CAPABILITIES, cargoItem,
-            agent.unit.stack().amount);
+        String cargoItem = agent.unit().item() == null ? "" : agent.unit().item().name;
+        AgentSnapshot snapshot = new AgentSnapshot(AgentId.of(agent.index()), agent.unit().x,
+            agent.unit().y, assignmentRange, ALPHA_CAPABILITIES, cargoItem,
+            agent.unit().stack().amount);
         HandTunedUtility utility = new HandTunedUtility(
             new EngineFeatureSource(scenario, registry, world, assignmentRange, coordination));
         boolean liveSchematicOwnedByOther = coordination != null
-            && coordination.liveBuildSchematicOwnedByOther(agent.index);
+            && coordination.liveBuildSchematicOwnedByOther(agent.index());
         CandidateSet generated = generator.generate(snapshot, world, utility,
             liveSchematicOwnedByOther);
         return overlapProbe ? withOverlapProbe(generated) : generated;
@@ -172,7 +172,7 @@ public final class EngineCandidates{
     }
 
     public Jval observation(
-        RlAgentRegistry.Agent agent,
+        AgentRuntimeRegistry.Agent agent,
         CandidateWorldSnapshot world,
         CandidateSet set
     ){
@@ -181,7 +181,7 @@ public final class EngineCandidates{
             facts.assignmentRange(), coordination);
         int index = 0;
         for(TaskCandidate candidate : set.candidates()){
-            UtilityFeatures features = featureSource.featuresFor(AgentId.of(agent.index),
+            UtilityFeatures features = featureSource.featuresFor(AgentId.of(agent.index()),
                 candidate.task(), world.tick());
             Jval item = Jval.newObject();
             item.put("index", index++);
@@ -207,7 +207,7 @@ public final class EngineCandidates{
             item.put("semantic_task_active", coordination != null
                 && coordination.semanticTaskActive(candidate.task()));
             item.put("semantic_task_owned_by_other", coordination != null
-                && coordination.semanticTaskOwnedByOther(agent.index, candidate.task()));
+                && coordination.semanticTaskOwnedByOther(agent.index(), candidate.task()));
             out.add(item);
         }
         return out;
