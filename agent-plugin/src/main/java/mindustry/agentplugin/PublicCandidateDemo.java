@@ -30,7 +30,9 @@ final class PublicCandidateDemo{
     private final GreedyUtilityPolicy policy = new GreedyUtilityPolicy();
     private final ArrayList<String> acceptedSelections = new ArrayList<>();
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
+    private final ArrayDeque<Jval> traces = new ArrayDeque<>();
     private final ExpertCoordinationPlan expertPlan;
+    private final boolean traceEnabled;
     private CandidateSet[] boundaryCandidates = new CandidateSet[0];
     private long nextDecisionTick;
     private long decisionRevision;
@@ -41,8 +43,9 @@ final class PublicCandidateDemo{
     private boolean reserveReported;
     private boolean started;
 
-    PublicCandidateDemo(Scenario scenario, DemoAgentRegistry registry){
+    PublicCandidateDemo(Scenario scenario, DemoAgentRegistry registry, boolean traceEnabled){
         this.registry = registry;
+        this.traceEnabled = traceEnabled;
         expertPlan = ExpertCoordinationPlans.fromScenario(scenario);
         facts = new AdaptiveWorldFacts(scenario, registry);
         candidates = new EngineCandidates(scenario, registry, facts);
@@ -58,6 +61,7 @@ final class PublicCandidateDemo{
         policy.reset();
         acceptedSelections.clear();
         signals.clear();
+        traces.clear();
         nextDecisionTick = (long)state.tick;
         decisionRevision = coordination.decisionRevision();
         previousEnemies = enemyCount();
@@ -113,6 +117,11 @@ final class PublicCandidateDemo{
     List<Signal> drainSignals(){
         ArrayList<Signal> out = new ArrayList<>(signals);
         signals.clear();
+        return List.copyOf(out);
+    }
+    List<Jval> drainTraces(){
+        ArrayList<Jval> out = new ArrayList<>(traces);
+        traces.clear();
         return List.copyOf(out);
     }
     Jval metrics(){ return coordination.metrics(); }
@@ -183,8 +192,44 @@ final class PublicCandidateDemo{
             }
         }
         policy.observeActionResults(accepted);
+        if(traceEnabled){
+            traces.add(trace(tick, world, views, masks, payload, results));
+        }
         decisionRevision = coordination.decisionRevision();
         nextDecisionTick = tick + decisionInterval;
+    }
+
+    private Jval trace(long tick, CandidateWorldSnapshot world, List<AgentView> views,
+                       Jval[] masks, Jval actions, Jval results){
+        Jval record = Jval.newObject();
+        record.put("tick", tick);
+        Jval team = Jval.newObject();
+        team.put("tick", tick);
+        team.put("enemy_count", world.enemyCount());
+        team.put("defense_ammo_coverage", world.defenseReadiness().ammoCoverage());
+        record.add("team", team);
+
+        Jval observations = Jval.newArray();
+        Jval actionMasks = Jval.newArray();
+        for(AgentView view : views){
+            Jval observation = Jval.newObject();
+            observation.put("agent_id", view.agentIndex());
+            Jval skill = Jval.newObject();
+            skill.put("type", view.activeSkill());
+            skill.put("status", view.skillStatus().name());
+            skill.put("reason", view.skillReason().name());
+            observation.add("skill", skill);
+            observation.add("team", Jval.read(team.toString(Jval.Jformat.plain)));
+            observation.add("task_candidates", candidates.observation(
+                registry.get(view.agentIndex()), world, view.candidates()));
+            observations.add(observation);
+            actionMasks.add(Jval.read(masks[view.agentIndex()].toString(Jval.Jformat.plain)));
+        }
+        record.add("observations", observations);
+        record.add("action_masks", actionMasks);
+        record.add("actions", Jval.read(actions.toString(Jval.Jformat.plain)));
+        record.add("action_results", Jval.read(results.toString(Jval.Jformat.plain)));
+        return record;
     }
 
     private void recordReadinessSignals(long tick){

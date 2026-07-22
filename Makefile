@@ -15,6 +15,7 @@ SCRIPTS := scripts
         determinism stress-reset benchmark scripted-demo evaluate-scripted \
         candidate-policy-check secondary-claim-wake-check \
         owned-schematic-staging-check coordination-parity \
+        public-demo-parity \
         adaptive-planning-check \
         scenario-variation-check evaluate-ladder verify-rl-boundary \
         training-gate demo-server
@@ -37,6 +38,7 @@ help: ## List available targets
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
+	@echo "  public-demo-parity exact public-path Java/Python parity (M10)"
 	@echo "  adaptive-planning-check adaptive-vs-frozen variant probe (M7.4)"
 	@echo "  scenario-variation-check bounded scenario-v2 dev acceptance (M7.5)"
 	@echo "  evaluate-ladder permanent baselines + teammate scorecard (M7.6)"
@@ -92,6 +94,9 @@ owned-schematic-staging-check: ## Verify live schematic ownership exposes seat-z
 
 coordination-parity: ## Shared fixed-step/demo decision parity (M7.2)
 	@bash $(SCRIPTS)/coordination-parity.sh
+
+public-demo-parity: ## Exact public-path Java/Python parity (M10 prerequisite)
+	@bash $(SCRIPTS)/public-demo-parity.sh
 
 adaptive-planning-check: ## Adaptive-vs-frozen fixed/probe acceptance (M7.4)
 	@bash $(SCRIPTS)/adaptive-planning-check.sh

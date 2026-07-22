@@ -1,10 +1,13 @@
 package mindustry.agentplugin;
 
 import arc.*;
+import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
+import mindustry.async.*;
 import mindustry.core.GameState.*;
 import mindustry.game.EventType.*;
+import mindustry.gen.*;
 import mindustry.maps.*;
 import mindustry.mod.*;
 import mindustry.net.Administration.*;
@@ -19,6 +22,7 @@ public final class AgentPlugin extends Plugin{
     public static final String publicPolicyProperty = "mindustry.agents.demo.public-policy";
 
     private DemoCoordinator coordinator;
+    private boolean deterministicProbe;
 
     @Override
     public void init(){
@@ -40,6 +44,7 @@ public final class AgentPlugin extends Plugin{
             }
         });
         Events.run(Trigger.update, () -> {
+            if(deterministicProbe && state.isPlaying()) pathfinder.syncUpdate();
             if(coordinator != null) coordinator.update();
         });
     }
@@ -85,8 +90,16 @@ public final class AgentPlugin extends Plugin{
         if(probe){
             //The parity probe compares exact policy selections with the externally
             //stepped runtime. Pin engine time here so server frame jitter cannot
-            //change resource-recovery decisions. Join and survival remain real-time.
+            //change resource-recovery decisions. Stop wall-clock pathfinder workers
+            //before world load and converge the enemy flow field on this simulation
+            //thread each tick. Join and survival remain stock real-time.
             Core.graphics = new FixedProbeGraphics();
+            deterministicProbe = true;
+            mindustry.entities.EntityGroup.enableDeterministicOrder();
+            Groups.build.enableDeterministicOrder(building -> -building.pos());
+            pathfinder.disableBackgroundThread();
+            controlPath.disableBackgroundThread();
+            Mathf.rand.setSeed(0L);
         }
 
         Scenario scenario = new Scenario();
@@ -94,7 +107,9 @@ public final class AgentPlugin extends Plugin{
         state.rules = scenario.buildRules();
         state.map = demoMap(scenario);
         scenario.load();
+        if(deterministicProbe) seedProbePhysics(0L);
         logic.play();
+        if(deterministicProbe) pathfinder.syncUpdate();
 
         coordinator = new DemoCoordinator(scenario, probe, openServer);
         coordinator.spawn();
@@ -121,6 +136,27 @@ public final class AgentPlugin extends Plugin{
         );
         return new Map(customMapDirectory.child("bootstrap-defense-v0.msav"),
             scenario.width, scenario.height, tags, true);
+    }
+
+    private static void seedProbePhysics(long seed){
+        try{
+            var physicsField = PhysicsProcess.class.getDeclaredField("physics");
+            physicsField.setAccessible(true);
+            var randomField = PhysicsProcess.PhysicsWorld.class.getDeclaredField("rand");
+            randomField.setAccessible(true);
+            for(AsyncProcess process : asyncCore.processes){
+                if(!(process instanceof PhysicsProcess physics)) continue;
+                Object physicsWorld = physicsField.get(physics);
+                if(physicsWorld == null){
+                    throw new IllegalStateException("probe physics world is absent");
+                }
+                ((Rand)randomField.get(physicsWorld)).setSeed(seed ^ 0x4d38504859534cL);
+                return;
+            }
+            throw new IllegalStateException("probe async physics process is absent");
+        }catch(ReflectiveOperationException e){
+            throw new IllegalStateException("probe physics layout changed", e);
+        }
     }
 
     private static int parsePort(String value){

@@ -70,9 +70,14 @@ the engine-neutral Java `GreedyUtilityPolicy` mirrors the accepted fallback's
 candidate/mask decisions. The opt-in `PublicCandidateDemo` now wires the
 real-time plugin through public candidates, masks, typed actions, board,
 reservations, and skills; the accepted default remains unchanged until its
-deterministic parity and combat-logistics-churn gates close. The public path now
+combat-logistics-churn gate closes. The public path now
 derives survival telemetry from simulation-thread world state and has passed
-the stock-clock three-wave acceptance at tick 8100 with core health 1100.
+the stock-clock three-wave acceptance at tick 8100 with core health 1100. Its
+probe-only trace supplies the exact candidate/mask/action/result sequence to a
+Python fallback replay; 338 boundaries and 1,014 actions match, and the pinned
+170-selection digest reproduces across fresh JVMs. Probe mode alone fixes delta,
+seeds engine/physics randomness, and synchronously owns pathfinding; join and
+survival retain stock real-time engine behavior.
 
 ## Module responsibilities
 

@@ -1883,9 +1883,13 @@ repository-evidence mapping used for the M6 audit is:
   stock-clock survival gate is now green through tick 8100 with core health
   1100; structured world-state telemetry records three wave clears, both
   expansion schematics at 8/10 turrets, both maintenance completions, and
-  reserve mining. The accepted default stays on the shared driver until exact
-  deterministic public-path parity and repeated combat logistics rebalance are
-  closed.
+  reserve mining. Exact public-path parity is also green: a probe-only JSON trace
+  replays 338 real candidate/mask boundaries and 1,014 Java actions through the
+  Python fallback without drift; two fresh JVMs reproduce 170 accepted
+  selections and digest `127bc6f8dc02b276531d17c94ce348d209a7de692bbbcff2ff18284cfc177907`.
+  Probe engine delta, pathfinding, entity iteration, and physics/global RNG are
+  deterministic; stock survival remains real-time. The accepted default stays
+  on the shared driver until repeated combat logistics rebalance is closed.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,

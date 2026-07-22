@@ -47,7 +47,7 @@ final class DemoCoordinator{
         this.registry = new DemoAgentRegistry(scenario);
         this.driver = new ExpertCoordinationDriver(
             ExpertCoordinationPlans.fromScenario(scenario), new DemoPort());
-        this.publicDemo = new PublicCandidateDemo(scenario, registry);
+        this.publicDemo = new PublicCandidateDemo(scenario, registry, probe);
         driver.reset(1L);
     }
 
@@ -69,6 +69,7 @@ final class DemoCoordinator{
         if(started() || stopped) return;
         if(publicPolicy){
             publicDemo.start();
+            drainPublicTraces();
             drainPublicAnnouncements();
         }else{
             driver.startOpening((long)state.tick);
@@ -82,6 +83,7 @@ final class DemoCoordinator{
         if(publicPolicy){
             publicDemo.update();
             drainPublicSignals();
+            drainPublicTraces();
             drainPublicAnnouncements();
             if(survivalProbe && !survivalReported && tick >= scenario.winTick){
                 Building core = scenario.coreTeam.core();
@@ -243,6 +245,12 @@ final class DemoCoordinator{
                     "AGENT-DEMO MAINTENANCE COMPLETE tick=@ wave=@",
                     signal.tick(), signal.wave());
             }
+        }
+    }
+
+    private void drainPublicTraces(){
+        for(Jval trace : publicDemo.drainTraces()){
+            Log.info("AGENT-DEMO PUBLIC TRACE @", trace.toString(Jval.Jformat.plain));
         }
     }
 

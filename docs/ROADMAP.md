@@ -1991,8 +1991,10 @@ action -> board -> reservation -> skill path and reached readiness after ordinar
 wave-damage recovery and rebind. Its stock-clock public-path survival gate now
 passes through tick 8100 at full core health, with structured evidence for all
 three wave clears, both expansion/maintenance completions, and reserve mining.
-Default promotion, exact deterministic public-path parity, and combat logistics
-churn remain open.
+Exact public-path parity also passes: Python matches 338 real plugin candidate/
+mask boundaries and all 1,014 Java actions, while two fresh JVMs reproduce 170
+accepted selections with digest `127bc6f8dc02b276531d17c94ce348d209a7de692bbbcff2ff18284cfc177907`.
+Default promotion and combat logistics churn remain open.
 
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,
   `/agents assign <agent> <task>`, `/agents release <agent>`,

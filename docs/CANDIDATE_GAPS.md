@@ -111,12 +111,11 @@ or weaken the bounded variation.
 - Supply targets still use live engine entity IDs in task identity. Ordering is
   deterministic within a boundary, but a future learned feature table should
   prefer stable spatial/logical turret identity.
-- The real-time plugin uses the shared Java utility driver and the same
-  scenario plan, while the externally stepped primary expert selects through
-  the public protocol seam. A future reusable policy port should eliminate the
-  remaining stage-local candidate construction in the demo driver. ADR-0057
-  now makes that port a hard M10.1 prerequisite; `docs/M10_DESIGN.md` accepts
-  the architecture, but no implementation exists yet.
+- The accepted real-time default still uses the shared Java utility driver, but
+  the opt-in `PublicCandidateDemo` now selects through the same public candidate,
+  mask, typed-action, board, reservation, and skill path as training. Its exact
+  Java/Python trace parity and stock-clock survival gates pass. Repeated combat
+  logistics rebalance remains before default promotion and M10.1 commands.
 - WAIT retains one shared task ID, so simultaneous idle seats can produce
   harmless rejected bids. This is visible in duplicate/rejection telemetry.
 - Candidate generation does not yet produce alternative fortification anchors

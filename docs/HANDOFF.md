@@ -185,9 +185,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   through the complete public typed-action path and has reached readiness after
   wave damage/rebind. Its stock-clock survival gate is green through tick 8100
   with core health 1100, three structured wave clears, both expansion and
-  maintenance completions, and reserve mining. Default promotion, exact
-  deterministic public-path parity, and combat logistics cleanup remain. M8.5
-  evaluation machinery is real, but the candidate did not promote.
+  maintenance completions, and reserve mining. Exact public-path parity is green:
+  338 traced candidate/mask boundaries and 1,014 Java actions match Python, and
+  two fresh JVMs reproduce 170 accepted selections with digest
+  `127bc6f8dc02b276531d17c94ce348d209a7de692bbbcff2ff18284cfc177907`.
+  Default promotion and combat logistics cleanup remain. M8.5 evaluation
+  machinery is real, but the candidate did not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
 - **Post-failure governance**: ADR-0013 freezes the 40-root, globally disjoint
