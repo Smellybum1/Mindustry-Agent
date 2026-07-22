@@ -194,6 +194,10 @@ public final class EngineCandidates{
             item.put("helpers_requested", candidate.task().helpersRequested());
             item.put("dependency_count", candidate.task().dependencyTaskIds().size());
             item.put("exclusive", candidate.task().exclusive());
+            if(candidate.task().origin() == TaskOrigin.HUMAN){
+                item.put("origin", "HUMAN");
+                item.put("source_goal_id", candidate.task().sourceGoalId());
+            }
             Jval cost = Jval.newObject();
             candidate.task().estimatedCost().asMap().forEach(cost::put);
             item.add("estimated_cost", cost);

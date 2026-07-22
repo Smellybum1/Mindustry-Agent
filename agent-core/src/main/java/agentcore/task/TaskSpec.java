@@ -34,6 +34,8 @@ public final class TaskSpec{
     private final boolean exclusive;
     private final String parentTaskId;      // nullable
     private final List<String> dependencyTaskIds;
+    private final TaskOrigin origin;
+    private final String sourceGoalId;      // nullable
 
     private TaskSpec(Builder b){
         this.taskId = Objects.requireNonNull(b.taskId, "taskId");
@@ -48,8 +50,20 @@ public final class TaskSpec{
         this.exclusive = b.exclusive;
         this.parentTaskId = b.parentTaskId;
         this.dependencyTaskIds = List.copyOf(b.dependencyTaskIds);
+        this.origin = Objects.requireNonNull(b.origin, "origin");
+        this.sourceGoalId = b.sourceGoalId;
         if(helpersRequested < 0) throw new IllegalArgumentException("helpersRequested must be >= 0");
         if(estimatedTicks < 0) throw new IllegalArgumentException("estimatedTicks must be >= 0");
+        if(origin == TaskOrigin.HUMAN && (sourceGoalId == null
+            || !sourceGoalId.matches("human:goal:[1-9][0-9]*"))){
+            throw new IllegalArgumentException("human task requires stable sourceGoalId");
+        }
+        if(origin == TaskOrigin.HUMAN && !taskId.equals(sourceGoalId)){
+            throw new IllegalArgumentException("human task id must equal sourceGoalId");
+        }
+        if(origin == TaskOrigin.AUTONOMOUS && sourceGoalId != null){
+            throw new IllegalArgumentException("autonomous task cannot have sourceGoalId");
+        }
     }
 
     public String taskId(){ return taskId; }
@@ -75,6 +89,8 @@ public final class TaskSpec{
     public String parentTaskId(){ return parentTaskId; }
     /** Tasks that must complete first (brief §11.3 {@code dependency_task_ids}). */
     public List<String> dependencyTaskIds(){ return dependencyTaskIds; }
+    public TaskOrigin origin(){ return origin; }
+    public String sourceGoalId(){ return sourceGoalId; }
 
     public static Builder builder(String taskId, TaskType type){
         return new Builder(taskId, type);
@@ -107,6 +123,8 @@ public final class TaskSpec{
         private boolean exclusive = true;
         private String parentTaskId;
         private List<String> dependencyTaskIds = List.of();
+        private TaskOrigin origin = TaskOrigin.AUTONOMOUS;
+        private String sourceGoalId;
 
         private Builder(String taskId, TaskType type){
             this.taskId = taskId;
@@ -122,6 +140,11 @@ public final class TaskSpec{
         public Builder exclusive(boolean exclusive){ this.exclusive = exclusive; return this; }
         public Builder parentTaskId(String parentTaskId){ this.parentTaskId = parentTaskId; return this; }
         public Builder dependencyTaskIds(List<String> deps){ this.dependencyTaskIds = Objects.requireNonNull(deps); return this; }
+        public Builder humanOrigin(String goalId){
+            this.origin = TaskOrigin.HUMAN;
+            this.sourceGoalId = Objects.requireNonNull(goalId);
+            return this;
+        }
 
         public TaskSpec build(){ return new TaskSpec(this); }
     }

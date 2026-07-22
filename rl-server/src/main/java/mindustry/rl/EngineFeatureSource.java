@@ -40,6 +40,7 @@ public final class EngineFeatureSource implements FeatureSource{
             .roleFit(agent == null ? 0.0 : roleFit(agentId.index(), task.type()))
             .proximity(1.0 - travel)
             .helpSynergy(task.helpersRequested() > 0 ? 1.0 : 0.0)
+            .humanPriority(task.origin() == TaskOrigin.HUMAN ? 1.0 : 0.0)
             .travelCost(travel)
             .resourceCost(clamp(task.estimatedCost().amount("copper")
                 / (double)Math.max(1, world.coreCopper())))

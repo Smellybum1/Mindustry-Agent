@@ -1896,8 +1896,13 @@ repository-evidence mapping used for the M6 audit is:
   commands produce canonical structured intent, while ordered bounded goals,
   assignments, autonomy/quiet settings, deterministic ids/revisions, stable
   rejection reasons, and reset are simulation-thread state. Candidate overlay
-  and queued plugin application remain pending, so no human command is exposed
-  end to end.
+  core is now implemented with explicit task provenance: the engine-free
+  resolver wraps only already-valid structured ordinary candidates, reserves
+  bounded slots in goal order, preserves WAIT, and returns the exact original
+  candidate set for empty control. Autonomous canonical bytes, observation
+  fields, and hashes omit provenance and remain unchanged. Engine matching,
+  assignment masks, and queued plugin application remain pending, so no human
+  command is exposed end to end.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,

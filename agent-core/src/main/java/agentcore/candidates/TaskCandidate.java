@@ -28,6 +28,9 @@ public record TaskCandidate(TaskSpec task, boolean valid, String invalidReason, 
             + (task.parentTaskId() == null ? "" : task.parentTaskId()) + "|"
             + String.join(",", task.dependencyTaskIds()) + "|" + valid + "|"
             + invalidReason + "|" + Double.toHexString(utility);
+        if(task.origin() == agentcore.task.TaskOrigin.HUMAN){
+            line += "|HUMAN|" + task.sourceGoalId();
+        }
         return line.getBytes(StandardCharsets.UTF_8);
     }
 }

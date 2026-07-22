@@ -195,8 +195,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   the default promotion pass. The first M10.1 packet now adds the engine-free
   strict `HumanControl` parser and simulation-thread state with bounded ordered
   goals, assignments, autonomy/quiet settings, deterministic ids/revisions,
-  stable rejection reasons, and reset tests. Candidate overlay and queued
-  plugin application remain pending; no human command is exposed end to end.
+  stable rejection reasons, and reset tests. Explicit task provenance and the
+  engine-free overlay core now wrap only already-valid structured ordinary
+  candidates, reserve bounded goal-order slots, preserve WAIT, and return the
+  exact original candidate set for empty control. Autonomous bytes,
+  observations, and hashes omit provenance. Engine matching, assignment masks,
+  and queued plugin application remain pending; no human command is exposed end
+  to end.
   M8.5 evaluation machinery is real, but the candidate did not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.

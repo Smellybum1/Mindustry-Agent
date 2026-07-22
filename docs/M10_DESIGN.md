@@ -47,8 +47,13 @@ seven repeated abandon/reclaim cycles to two phase-entry rebalances and seven
 unassigned waits. The engine-free `HumanControl` parser and simulation-thread
 state are implemented and tested with strict grammar, stable rejection reasons,
 bounded ordered goals, assignments, autonomy/quiet settings, deterministic ids
-and revisions, and reset behavior. The public candidate overlay and queued
-plugin command application remain pending; no human command is exposed yet.
+and revisions, and reset behavior. Explicit `TaskOrigin`/source-goal provenance
+and the engine-free `HumanGoalResolver` are also implemented: only an already-
+valid structured ordinary candidate may be wrapped, goal order reserves bounded
+slots, and WAIT remains last. Autonomous task bytes, observations, and hashes
+omit the new metadata and remain unchanged. The engine adapter/assignment masks
+and queued plugin command application remain pending; no human command is
+exposed yet.
 
 ## Command grammar
 

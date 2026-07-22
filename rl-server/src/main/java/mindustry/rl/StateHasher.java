@@ -214,6 +214,10 @@ public final class StateHasher{
                     writeString(out, spec.parentTaskId() == null ? "" : spec.parentTaskId());
                     out.writeInt(spec.dependencyTaskIds().size());
                     for(String dependency : spec.dependencyTaskIds()) writeString(out, dependency);
+                    if(spec.origin() == TaskOrigin.HUMAN){
+                        out.writeInt(0x48554d4e); //"HUMN"; absent preserves autonomous hashes.
+                        writeString(out, spec.sourceGoalId());
+                    }
 
                     out.writeInt(task.status().ordinal());
                     out.writeInt(task.owner() == null ? -1 : task.owner().index());

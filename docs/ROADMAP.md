@@ -2004,7 +2004,11 @@ strict parser and simulation-thread-owned control state provide bounded ordered
 goals, assignments, autonomy/quiet settings, deterministic ids/revisions,
 stable result reasons, and reset behavior. Candidate overlay and queued plugin
 application remain pending, so no command is exposed end to end and no M10 exit
-criterion is checked.
+criterion is checked. The engine-free overlay core is now present: explicit
+human task provenance wraps only already-valid structured ordinary candidates,
+reserves bounded slots in goal order, and preserves WAIT. Empty control omits
+the metadata, leaving autonomous canonical bytes, observations, and hashes
+unchanged. Engine matching, assignment masks, and command queuing remain next.
 
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,
   `/agents cancel <goal-id>`, `/agents assign <agent> <goal-id>`,

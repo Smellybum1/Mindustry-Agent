@@ -19,6 +19,8 @@ class TaskModelTest{
         assertTrue(s.exclusive());
         assertEquals(0, s.helpersRequested());
         assertTrue(s.estimatedCost().isEmpty());
+        assertEquals(TaskOrigin.AUTONOMOUS, s.origin());
+        assertNull(s.sourceGoalId());
         assertThrows(UnsupportedOperationException.class, () -> s.dependencyTaskIds().add("x"));
     }
 
@@ -48,5 +50,18 @@ class TaskModelTest{
         assertThrows(IllegalArgumentException.class, () -> ResourceCost.of("copper", -5));
         assertThrows(IllegalArgumentException.class,
             () -> TaskSpec.builder("t", TaskType.WAIT).helpersRequested(-1).build());
+    }
+
+    @Test void humanOriginRequiresAStableSourceGoal(){
+        TaskSpec human = TaskSpec.builder("human:goal:1", TaskType.DEFEND_REGION)
+            .humanOrigin("human:goal:1").build();
+        assertEquals(TaskOrigin.HUMAN, human.origin());
+        assertEquals("human:goal:1", human.sourceGoalId());
+        assertThrows(NullPointerException.class, () ->
+            TaskSpec.builder("bad", TaskType.WAIT).humanOrigin(null));
+        assertThrows(IllegalArgumentException.class, () ->
+            TaskSpec.builder("bad", TaskType.WAIT).humanOrigin("not-a-goal").build());
+        assertThrows(IllegalArgumentException.class, () ->
+            TaskSpec.builder("different", TaskType.WAIT).humanOrigin("human:goal:1").build());
     }
 }
