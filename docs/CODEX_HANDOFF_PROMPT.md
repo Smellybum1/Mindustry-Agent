@@ -1,15 +1,15 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, after V38's exact twin replicas and direct-lineage
-validation.
+`coop-agent/v159.7`, after V38's reusable preflight rejection at the
+selected-only provenance guard.
 
 Read first, in order:
 
 1. `AGENTS.md` in full; obey its delegation and sealed-data rules.
-2. `docs/HANDOFF.md`, focusing on the V38 entry and next-five queue.
+2. `docs/HANDOFF.md`, focusing on the V38 rejection and next-five queue.
 3. M8.5 and the M8 exit criteria in `docs/ROADMAP.md`.
-4. ADR-0050.
+4. ADR-0050 and ADR-0051.
 
 Run `bash scripts/codex-status.sh`. Preserve and never stage the user-modified
 `AGENTS.md`, generated
@@ -194,11 +194,37 @@ canonical equality. Direct lineage passes
 model, and config; digest is `ada0bcca1d60b25b...` and artifact SHA-256 is
 `9a608dc354ff06ba3...`.
 
-Next, refresh permanent random and greedy plus matched random and greedy
-baselines under the exact V38 runtime, then run reusable scorecard preflight.
-Require both permanent-greedy and matched-greedy parity; uncertainty is failure.
-Dev-v34 and held-out-v5 remain unconsumed. Do not inspect their membership and
-do not run confirmation or final episodes. M8.5 remains unmet.
+ADR-0051 accepts the selected-only reusable-evaluation contract implemented by
+guard commit `9bc96f91c7219ad9e9656f99b29f15331b78b399`: explicit-only
+`--seed-set-file`, required declared split and pre-read held-out gate, no
+implicit Gradle, runtime config/repository/JAR provenance, and fail-closed stale
+promotion provenance. Legacy registry loading remains an explicit diagnostic
+compatibility path and may not be used as a promotion fallback. Python passes
+176/176. Exact-config reward adversaries remain 44/44 with report
+`e44865297a31ab1625bf4a43116cf1ff712b96657043c200c0af629ddd4f59bf`.
+
+Fresh permanent baselines bind config `d92bf9aa2050a5a4...`, repository
+`9bc96f91c7219ad9e9656f99b29f15331b78b399`, and JAR `5d4fc89f...`;
+records/aggregate hashes are `aaf28dd1...`/`4bbc3aa3...`. Permanent random is
+4/10, idle `0.0153280914`, core `217.7`; permanent greedy is 8/10, idle
+`0.0157205468`, core `707.2`. Candidate update 20/checkpoint `3bc4a3a1...`
+reproduces on reusable dev-v1 at 9/10, return `4.85968`, core `565.2`, idle
+`0.0210717389`. Matched random is 5/10 with idle `0.1635828272`; matched greedy
+is 6/10 with idle `0.0888449994`. All observed win comparisons pass.
+
+The frozen dual scorecards reject V38. Against permanent greedy,
+announcements, duplicates, and idle are uncertain; recovery and abandonment
+pass. Against matched greedy, announcements, idle, and abandonment pass, while
+duplicates and recovery are uncertain. Preflight is false with records,
+aggregate, and report hashes `99575abd...`, `aa3fa1fe...`, and `e6c9cf27...`.
+ADR-0050 defines uncertainty as failure, so no confirmation set was opened.
+Dev-v34 is retired unopened and unconsumed without any membership read.
+Held-out-v5 remains sealed and unconsumed. M8.5 remains unmet.
+
+Next, diagnose exactly one successor coordinate from reusable evidence only.
+Precommit and gate it, then freeze a new dev confirmation identity before any
+model work. Do not inspect dev-v34 or held-out-v5 membership and do not run
+confirmation or final episodes.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

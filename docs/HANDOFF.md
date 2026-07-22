@@ -735,9 +735,26 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   permanent random/greedy and matched baselines, then reusable scorecard
   preflight, are next. Both protected sets remain unconsumed; confirmation and
   final remain prohibited. M8.5 remains unmet.
+- **V38 reusable preflight rejects before confirmation**: ADR-0051 accepts the
+  selected-only contract at guard commit
+  `9bc96f91c7219ad9e9656f99b29f15331b78b399`: explicit seed-set file, declared
+  split and pre-read held-out gate, prebuilt fail-closed JAR, config/repository/JAR
+  provenance, no implicit Gradle, and fail-closed stale-provenance checks.
+  Legacy registry mode remains diagnostic compatibility only. Python is
+  176/176 and reward adversaries are 44/44 (`e44865297a31ab...`). Fresh
+  permanent random/greedy are 4/10 and 8/10, with idle `0.0153280914` and
+  `0.0157205468`; matched random/greedy are 5/10 and 6/10, with idle
+  `0.1635828272` and `0.0888449994`. Candidate update 20 remains 9/10, return
+  `4.85968`, core `565.2`, idle `0.0210717389`, and passes all observed win
+  comparisons. Permanent scorecards leave announcements, duplicates, and idle
+  uncertain; matched scorecards leave duplicates and recovery uncertain.
+  Preflight is false (`99575abd...` records, `aa3fa1fe...` aggregate,
+  `e6c9cf27...` report), so ADR-0050 rejects V38. Dev-v34 is retired unopened
+  and unconsumed without a membership read; held-out-v5 remains sealed and
+  unconsumed. M8.5 remains unmet.
 - **Current branch**: `coop-agent/v159.7`
-- **Current V38 exact-replica repository checkpoint**:
-  `3effefed781b88c2e71354d784db58eb787ed7e6`.
+- **Current V38 rejection/guard repository checkpoint**:
+  `9bc96f91c7219ad9e9656f99b29f15331b78b399`.
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
 - **Uncommitted changes intentionally preserved**: the user's modified
@@ -752,7 +769,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; ends `bootstrap: OK`, exit 0. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the Python suite (156 pass). Use `make test-java` for the JUnit suite. Exit 0. |
+| `make test` | Runs the Python suite (176 pass). Use `make test-java` for the JUnit suite. Exit 0. |
 | `make test-python` | `pytest python/tests -q` → all pass. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
 | `make training-gate` | On WSL2 with pinned `UV`/`JAVA`, reconstructs the RL environment, runs the 1/2/4-JVM shadow-inference collector gate, then 10,000 resets. Current 4-JVM result 375.1x real-time; zero reset drift/leak/orphans; ends `TRAINING-GATE OK`. Verified 2026-07-21. |
@@ -843,7 +860,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 
 ## Tests
 
-- **Passing**: 156 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.6
+- **Passing**: 176 Python tests (`test_import.py`, `test_protocol.py` incl. M3–M7.6
   action/board/event roundtrips, `test_supervisor.py`, `test_env.py`; fake-server
   subprocess, no JVM, fast) and 108 Java JUnit tests (`agent-core`, incl.
   31 M3/M4 `agentcore.skill` FSM tests, via `make test-java`). Real-JVM coverage is
@@ -897,20 +914,20 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Refresh permanent random and permanent greedy baselines under the exact V38
-   runtime.** The V38 replicas are complete and exact.
-2. **Refresh the matched random and matched greedy V38 controls.** Preserve the
-   governed candidate/config/runtime construction used by both replicas.
-3. **Run reusable scorecard preflight against the fresh V38 baselines.** Require
-   both permanent-greedy and matched-greedy parity; uncertainty is failure.
-   Keep dev-v34 and held-out-v5 unconsumed, and do not run confirmation or final.
+1. **Diagnose exactly one next coordinate from reusable V38 evidence only.**
+   Do not inspect confirmation or held-out membership.
+2. **Precommit the successor coordinate and complete its public/reward/runtime
+   gates before model work.** Preserve the ADR-0051 direct-loading/provenance
+   contract.
+3. **Freeze a new dev confirmation identity before successor model work.**
+   Dev-v34 is retired unopened/unconsumed; held-out-v5 remains sealed/unconsumed.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0050` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0051` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -921,7 +938,9 @@ records V36's collision-free build-line opening prior, green pretraining gates,
 and rejection when replica A tops out at 7/10; ADR-0048 records V37's fixed
 scripted-seat-2 harvest opening and reusable rejection; ADR-0049 retires the
 membership-exposed but unexecuted dev-v33 and held-out-v4 sets; ADR-0050 records
-V38's learned-seat-only proactive staging exposure and exact twin replicas.
+V38's learned-seat-only proactive staging exposure, exact twins, and reusable
+rejection; ADR-0051 accepts selected-only loading and runtime provenance while
+retaining legacy registry mode only for diagnostic compatibility.
 
 ## Deviations from the brief in this scaffold
 

@@ -1641,6 +1641,39 @@ repository-evidence mapping used for the M6 audit is:
   Fresh permanent random/greedy and matched V38 baselines, followed by reusable
   scorecard preflight, are next. Dev-v34 and held-out-v5 remain unconsumed;
   confirmation/final remain prohibited and M8.5 remains unmet.
+- ADR-0051 accepts the selected-only reusable-evaluation contract implemented
+  by guard commit `9bc96f91c7219ad9e9656f99b29f15331b78b399`. Governed runs require an
+  explicit `--seed-set-file`, declared split, pre-read held-out gate, caller-
+  supplied runtime, and config/repository/JAR provenance; they reject stale
+  promotion provenance and never invoke Gradle implicitly. Legacy registry
+  loading remains diagnostic-only compatibility and cannot be a promotion
+  fallback. Python passes 176/176; the exact-config reward report remains
+  44/44 at `e44865297a31ab1625bf4a43116cf1ff712b96657043c200c0af629ddd4f59bf`.
+- Fresh selected-only permanent baselines bind config
+  `d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`,
+  repository `9bc96f91c7219ad9e9656f99b29f15331b78b399`, and JAR `5d4fc89f...`.
+  Records/aggregate hashes are `aaf28dd1...`/`4bbc3aa3...`. Permanent random
+  is 4/10 with idle `0.0153280914` and core health `217.7`; permanent greedy is
+  8/10 with idle `0.0157205468` and core health `707.2`. V38 selected update 20
+  reproduces on reusable dev-v1 at 9/10, return `4.85968`, core health `565.2`,
+  and idle `0.0210717389`. Matched random is 5/10 with idle `0.1635828272`;
+  matched greedy is 6/10 with idle `0.0888449994`. All four observed win
+  comparisons pass.
+- V38 is rejected by the frozen dual scorecards. Against permanent greedy,
+  announcements (`-0.00307796475`, CI `[-0.0150290537,0.0074881288]`),
+  duplicates (`-0.6`, CI `[-1.9,0.6]`), and idle (`+0.00535119211`, CI
+  `[-0.0112619599,0.0266615919]`) are uncertain; recovery (`-108.4`, CI
+  `[-168.10125,-46.15]`) and abandonment pass. Against matched greedy,
+  announcements (`-0.0187138416`, CI `[-0.0269992949,-0.0108248022]`) and idle
+  (`-0.0677732604`, CI `[-0.0946828840,-0.0412051517]`) pass; duplicates
+  (`-1.0`, CI `[-3.4,0.8]`) and recovery (`-20.85`, CI
+  `[-100.3025,61.4025]`) are uncertain; abandonment passes. Preflight is false;
+  records/aggregate/report hashes are `99575abd...`/`aa3fa1fe...`/`e6c9cf27...`.
+  ADR-0050 makes uncertainty a failure, so rejection occurs before confirmation.
+  Dev-v34 is retired unopened and unconsumed without any membership read;
+  held-out-v5 remains sealed and unconsumed. M8.5 remains unmet. Next diagnose
+  one coordinate using reusable evidence only, precommit it, and freeze a new
+  dev confirmation identity before model work.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

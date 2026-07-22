@@ -1,7 +1,7 @@
 # Roadmap
 
 Milestones M0–M10 from brief §25, as trackable checklists with exit criteria.
-Checkboxes reflect **truthful** current state (date 2026-07-20). A box is ticked
+Checkboxes reflect **truthful** current state (date 2026-07-22). A box is ticked
 only when its exit criterion is genuinely met.
 
 Anchors used by `scripts/*.sh` and the Makefile are the GitHub-style slugs of the
@@ -1708,6 +1708,37 @@ Exact replicas are therefore complete. Next refresh permanent random/greedy and
 matched baselines under the V38 runtime, then run reusable scorecard preflight.
 Dev-v34 and held-out-v5 remain unconsumed; confirmation/final remain prohibited
 and M8.5 remains unmet.
+
+ADR-0051 accepts the selected-only evaluation contract implemented at guard
+commit `9bc96f91c7219ad9e9656f99b29f15331b78b399`: explicit-only
+`--seed-set-file`, required declared split and pre-read held-out gate, no
+implicit Gradle, runtime config/repository/JAR provenance, and stale-provenance
+promotion rejection. Legacy registry loading remains an explicit diagnostic
+compatibility path, not a promotion fallback. Python passes 176/176 and the
+exact-config reward report remains 44/44 at `e44865297a31ab...`.
+
+Fresh permanent baselines bind config `d92bf9aa2050a5a4...`, repository
+`9bc96f91c7219ad9e9656f99b29f15331b78b399`, and JAR `5d4fc89f...`;
+records/aggregate hashes are `aaf28dd1...`/`4bbc3aa3...`. Permanent random is
+4/10, idle `0.0153280914`, core `217.7`; permanent greedy is 8/10, idle
+`0.0157205468`, core `707.2`. V38 update 20 reproduces on reusable dev-v1 at
+9/10, return `4.85968`, core `565.2`, idle `0.0210717389`; matched random is
+5/10 with idle `0.1635828272`, and matched greedy is 6/10 with idle
+`0.0888449994`. All four observed win comparisons pass.
+
+V38 nevertheless fails its frozen dual scorecards. Versus permanent greedy,
+announcements (`-0.00307796475`, CI `[-0.0150290537,0.0074881288]`),
+duplicates (`-0.6`, CI `[-1.9,0.6]`), and idle (`+0.00535119211`, CI
+`[-0.0112619599,0.0266615919]`) are uncertain; recovery and abandonment pass.
+Versus matched greedy, announcements and idle pass, while duplicates (`-1.0`,
+CI `[-3.4,0.8]`) and recovery (`-20.85`, CI
+`[-100.3025,61.4025]`) are uncertain; abandonment passes. Preflight is false
+with records/aggregate/report hashes `99575abd...`/`aa3fa1fe...`/`e6c9cf27...`.
+Under ADR-0050, uncertainty is failure: V38 is rejected before confirmation.
+Dev-v34 is retired unopened and unconsumed without a membership read;
+held-out-v5 remains sealed and unconsumed. Diagnose one successor coordinate
+from reusable evidence only, precommit it, and freeze a new dev confirmation
+identity before model work. M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

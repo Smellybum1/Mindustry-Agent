@@ -240,3 +240,48 @@ The next authorized work is to refresh permanent random and greedy plus matched
 baselines under the V38 runtime, then run reusable scorecard preflight. Dev-v34
 and held-out-v5 remain unconsumed; confirmation and final evaluation remain
 prohibited. M8.5 remains unmet.
+
+ADR-0051 then hardened reusable evaluation before baseline refresh. Guard
+commit `9bc96f91c7219ad9e9656f99b29f15331b78b399` adds explicit-only
+`--seed-set-file`, a required declared split and pre-read held-out gate, no
+implicit Gradle invocation, runtime config/repository/JAR provenance, and
+fail-closed rejection of stale promotion provenance. The Python suite passes
+176/176 and the exact-config reward report remains 44/44 at
+`e44865297a31ab1625bf4a43116cf1ff712b96657043c200c0af629ddd4f59bf`.
+
+Fresh selected-only permanent baselines were then generated for config
+`d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`,
+repository `9bc96f91c7219ad9e9656f99b29f15331b78b399`, and runtime JAR SHA-256
+`5d4fc89f...`. Baseline records hash to `aaf28dd1...` and their aggregate to
+`4bbc3aa3...`. Permanent random wins 4/10 with idle `0.0153280914` and mean
+core health `217.7`; permanent greedy wins 8/10 with idle `0.0157205468` and
+mean core health `707.2`.
+
+Selected update 20, checkpoint
+`3bc4a3a1cc9c2ef4450e20c689c3909a8bf9ae8ba35b194e8710df1acf737b5e`,
+reproduces on reusable dev-v1 at 9/10 wins, return `4.85968`, core health
+`565.2`, and idle `0.0210717389`. Its matched greedy control wins 6/10 with
+idle `0.0888449994`; matched random wins 5/10 with idle `0.1635828272`.
+All four observed win comparisons pass: candidate versus permanent random,
+permanent greedy, matched random, and matched greedy.
+
+The frozen dual scorecards do not both pass. Against permanent greedy,
+announcement difference is `-0.00307796475` with 95% CI
+`[-0.0150290537,0.0074881288]` (uncertain), duplicate difference is `-0.6`
+with CI `[-1.9,0.6]` (uncertain), idle difference is `+0.00535119211` with CI
+`[-0.0112619599,0.0266615919]` (uncertain), recovery difference is `-108.4`
+with CI `[-168.10125,-46.15]` (pass), and abandonment passes. Against matched
+greedy, announcements are `-0.0187138416` with CI
+`[-0.0269992949,-0.0108248022]` (pass), idle is `-0.0677732604` with CI
+`[-0.0946828840,-0.0412051517]` (pass), duplicates are `-1.0` with CI
+`[-3.4,0.8]` (uncertain), recovery is `-20.85` with CI
+`[-100.3025,61.4025]` (uncertain), and abandonment passes.
+
+Reusable preflight is therefore `false`. Records SHA-256 is `99575abd...`,
+aggregate SHA-256 is `aa3fa1fe...`, and report SHA-256 is `e6c9cf27...`.
+ADR-0050 precommitted uncertainty as failure, so V38 is rejected before
+confirmation. Dev-v34 is retired unopened and unconsumed; its membership was
+not read. Held-out-v5 remains sealed and unconsumed. M8.5 remains unmet. The
+next work is to diagnose exactly one successor coordinate from reusable
+evidence only, then precommit it and freeze a new dev confirmation identity
+before any model work.
