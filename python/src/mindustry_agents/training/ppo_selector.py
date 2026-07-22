@@ -267,7 +267,7 @@ def _policy_logit_adjustment(config: dict[str, Any]) -> dict[str, Any] | None:
 
 def _task_type_logit_bias(
     candidates: list[dict[str, Any]],
-    action_mask: torch.Tensor,
+    action_mask: torch.Tensor | list[bool],
     *,
     tick: int,
     adjustment: dict[str, Any] | None,
@@ -276,7 +276,7 @@ def _task_type_logit_bias(
 
     if adjustment is None or tick != int(adjustment["tick"]):
         return None
-    bias = torch.zeros(action_mask.shape, dtype=torch.float32)
+    bias = torch.zeros(len(action_mask), dtype=torch.float32)
     for index, candidate in enumerate(candidates[:8]):
         if (
             bool(action_mask[index])

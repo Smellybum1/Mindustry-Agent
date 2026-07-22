@@ -209,7 +209,7 @@ class TestPpoSelector(unittest.TestCase):
                 {"task_type": "BUILD_LINE"},
                 {"task_type": "BUILD_SCHEMATIC"},
             ],
-            torch.ones(10, dtype=torch.bool),
+            [True] * 10,
             tick=0,
             adjustment=adjustment,
         )
