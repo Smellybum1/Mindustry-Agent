@@ -3,6 +3,7 @@ import importlib.util
 import json
 import tempfile
 import unittest
+from copy import deepcopy
 from pathlib import Path
 
 
@@ -318,6 +319,216 @@ class TestPpoSelector(unittest.TestCase):
         for value in invalid:
             with self.subTest(value=value), self.assertRaises(ValueError):
                 _scripted_partner_opening({"scripted_partner_opening": value})
+
+    def test_partner_intent_duplication_risk_is_exact_and_legacy_optional(self):
+        from mindustry_agents.training.ppo_selector import (
+            _partner_intent_duplication_risk,
+        )
+
+        self.assertIsNone(_partner_intent_duplication_risk({}))
+        intervention = {
+            "schema": "fixed_partner_selected_task_duplication_risk_v1",
+            "agent_ids": [1, 2],
+            "match": "task_id",
+            "feature": "utility_features.duplication_risk",
+            "value": 1.0,
+        }
+        self.assertEqual(
+            _partner_intent_duplication_risk(
+                {"partner_intent_duplication_risk": intervention}
+            ),
+            intervention,
+        )
+        invalid = (
+            "invalid",
+            intervention | {"schema": "unknown"},
+            intervention | {"agent_ids": [2, 1]},
+            intervention | {"agent_ids": [1, True]},
+            intervention | {"agent_ids": [True, 2]},
+            intervention | {"match": "candidate_index"},
+            intervention | {"feature": "utility_features.urgency"},
+            intervention | {"value": True},
+            intervention | {"value": 1},
+            intervention | {"value": float("nan")},
+            intervention | {"value": 0.5},
+            intervention | {"extra": "not-allowed"},
+        )
+        for value in invalid:
+            with self.subTest(value=value), self.assertRaisesRegex(
+                ValueError, "partner_intent_duplication_risk"
+            ):
+                _partner_intent_duplication_risk(
+                    {"partner_intent_duplication_risk": value}
+                )
+
+    def test_fixed_partner_intended_task_ids_are_structured_and_fail_closed(self):
+        from mindustry_agents.training.ppo_selector import (
+            _fixed_partner_intended_task_ids,
+            _partner_intent_duplication_risk,
+        )
+
+        intervention = _partner_intent_duplication_risk(
+            {
+                "partner_intent_duplication_risk": {
+                    "schema": "fixed_partner_selected_task_duplication_risk_v1",
+                    "agent_ids": [1, 2],
+                    "match": "task_id",
+                    "feature": "utility_features.duplication_risk",
+                    "value": 1.0,
+                }
+            }
+        )
+        actions = [
+            {"agent_id": 0, "task_action": {"type": "WAIT"}},
+            {
+                "agent_id": 1,
+                "task_action": {
+                    "type": "SELECT_CANDIDATE_TASK",
+                    "candidate_index": 0,
+                },
+            },
+            {
+                "agent_id": 2,
+                "task_action": {
+                    "type": "SELECT_CANDIDATE_TASK",
+                    "candidate_index": 1,
+                },
+            },
+        ]
+        observations = [
+            {"task_candidates": []},
+            {"task_candidates": [{"task_id": "supply:alpha"}]},
+            {
+                "task_candidates": [
+                    {"task_id": "harvest:beta"},
+                    {"task_id": "build:gamma"},
+                ]
+            },
+        ]
+        original_actions = deepcopy(actions)
+        original_observations = deepcopy(observations)
+        self.assertEqual(
+            _fixed_partner_intended_task_ids(
+                actions, observations, intervention
+            ),
+            ("supply:alpha", "build:gamma"),
+        )
+        self.assertEqual(actions, original_actions)
+        self.assertEqual(observations, original_observations)
+        self.assertEqual(
+            _fixed_partner_intended_task_ids(actions, observations, None), ()
+        )
+
+        malformed = (
+            actions[:1],
+            actions[:1]
+            + [{"agent_id": 1, "task_action": {"type": "WAIT"}}]
+            + actions[2:],
+            actions[:1]
+            + [
+                {
+                    "agent_id": 1,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": True,
+                    },
+                }
+            ]
+            + actions[2:],
+            actions[:1]
+            + [
+                {
+                    "agent_id": 1,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": "0",
+                    },
+                }
+            ]
+            + actions[2:],
+            actions[:1]
+            + [
+                {
+                    "agent_id": 1,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": -1,
+                    },
+                }
+            ]
+            + actions[2:],
+            actions[:1]
+            + [
+                {
+                    "agent_id": 1,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": 9,
+                    },
+                }
+            ]
+            + actions[2:],
+            actions[:1]
+            + [
+                {
+                    "agent_id": True,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": 0,
+                    },
+                }
+            ]
+            + actions[2:],
+            actions[:1]
+            + [
+                {
+                    "agent_id": 2,
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": 0,
+                    },
+                }
+            ]
+            + actions[2:],
+            actions[:1]
+            + [
+                {
+                    "task_action": {
+                        "type": "SELECT_CANDIDATE_TASK",
+                        "candidate_index": 0,
+                    },
+                }
+            ]
+            + actions[2:],
+        )
+        for changed_actions in malformed:
+            with self.subTest(actions=changed_actions):
+                self.assertNotIn(
+                    "supply:alpha",
+                    _fixed_partner_intended_task_ids(
+                        changed_actions, observations, intervention
+                    ),
+                )
+
+        for candidate in ({}, {"task_id": ""}, {"task_id": 7}, "not-an-object"):
+            changed_observations = deepcopy(observations)
+            changed_observations[1]["task_candidates"][0] = candidate
+            with self.subTest(candidate=candidate):
+                self.assertNotIn(
+                    "supply:alpha",
+                    _fixed_partner_intended_task_ids(
+                        actions, changed_observations, intervention
+                    ),
+                )
+
+        duplicate_observations = deepcopy(observations)
+        duplicate_observations[2]["task_candidates"][1]["task_id"] = "supply:alpha"
+        self.assertEqual(
+            _fixed_partner_intended_task_ids(
+                actions, duplicate_observations, intervention
+            ),
+            ("supply:alpha",),
+        )
 
     def test_scripted_partner_opening_replaces_only_fixed_seat_at_exact_tick(self):
         from mindustry_agents.training.ppo_selector import (
@@ -1397,6 +1608,8 @@ class TestPpoSelector(unittest.TestCase):
             log_probability=-0.5000001,
             value_prediction=0.2500001,
             teacher_candidate_diagnostics={"task_type": "SUPPLY_TURRET"},
+            fixed_partner_intended_task_ids=["supply:alpha"],
+            partner_intent_duplication_risk_candidate_indices=[0],
             task_events=[{"message_id": 1}],
         )
 

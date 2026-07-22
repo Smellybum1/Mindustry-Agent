@@ -54,6 +54,9 @@ QUALITY_GATE_RANKING = (
 )
 POLICY_LOGIT_ADJUSTMENT_SCHEMA = "initial_task_type_logit_bias_v1"
 SCRIPTED_PARTNER_OPENING_SCHEMA = "fixed_seat_initial_task_type_v1"
+PARTNER_INTENT_DUPLICATION_RISK_SCHEMA = (
+    "fixed_partner_selected_task_duplication_risk_v1"
+)
 
 ARC_HASH = "208a754044"
 LEARNED_SEAT = 0
@@ -289,6 +292,88 @@ def _scripted_partner_opening(config: dict[str, Any]) -> dict[str, Any] | None:
         "agent_id": agent_id,
         "task_type": task_type,
     }
+
+
+def _partner_intent_duplication_risk(
+    config: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Validate optional fixed-partner intent evidence for selector features."""
+
+    intervention = config.get("partner_intent_duplication_risk")
+    if intervention is None:
+        return None
+    expected = {
+        "schema": PARTNER_INTENT_DUPLICATION_RISK_SCHEMA,
+        "agent_ids": [1, 2],
+        "match": "task_id",
+        "feature": "utility_features.duplication_risk",
+        "value": 1.0,
+    }
+    if not isinstance(intervention, dict) or intervention.keys() != expected.keys():
+        raise ValueError("invalid partner_intent_duplication_risk config")
+    agent_ids = intervention.get("agent_ids")
+    value = intervention.get("value")
+    if (
+        intervention.get("schema") != expected["schema"]
+        or agent_ids != expected["agent_ids"]
+        or not isinstance(agent_ids, list)
+        or any(type(agent_id) is not int for agent_id in agent_ids)
+        or intervention.get("match") != expected["match"]
+        or intervention.get("feature") != expected["feature"]
+        or type(value) is not float
+        or not math.isfinite(value)
+        or value != 1.0
+    ):
+        raise ValueError("invalid partner_intent_duplication_risk config")
+    return expected
+
+
+def _fixed_partner_intended_task_ids(
+    actions: list[dict[str, Any]],
+    observations: list[dict[str, Any]],
+    intervention: dict[str, Any] | None,
+) -> tuple[str, ...]:
+    """Extract deterministic structured partner intents, failing closed on drift."""
+
+    if intervention is None:
+        return ()
+    intended: list[str] = []
+    seen: set[str] = set()
+    for agent_id in intervention["agent_ids"]:
+        if agent_id >= len(actions) or agent_id >= len(observations):
+            continue
+        action = actions[agent_id]
+        observation = observations[agent_id]
+        if not isinstance(action, dict) or not isinstance(observation, dict):
+            continue
+        action_agent_id = action.get("agent_id")
+        if type(action_agent_id) is not int or action_agent_id != agent_id:
+            continue
+        task_action = action.get("task_action")
+        if (
+            not isinstance(task_action, dict)
+            or task_action.get("type") != "SELECT_CANDIDATE_TASK"
+        ):
+            continue
+        candidate_index = task_action.get("candidate_index")
+        if not isinstance(candidate_index, int) or isinstance(candidate_index, bool):
+            continue
+        candidates = observation.get("task_candidates")
+        if (
+            not isinstance(candidates, list)
+            or candidate_index < 0
+            or candidate_index >= len(candidates)
+        ):
+            continue
+        candidate = candidates[candidate_index]
+        if not isinstance(candidate, dict):
+            continue
+        task_id = candidate.get("task_id")
+        if not isinstance(task_id, str) or not task_id or task_id in seen:
+            continue
+        seen.add(task_id)
+        intended.append(task_id)
+    return tuple(intended)
 
 
 def _apply_scripted_partner_opening(
@@ -587,12 +672,16 @@ def rollout_episode(
     teacher_controlled: bool = False,
     policy_logit_adjustment: dict[str, Any] | None = None,
     scripted_partner_opening: dict[str, Any] | None = None,
+    partner_intent_duplication_risk: dict[str, Any] | None = None,
 ) -> EpisodeRollout:
     policy_logit_adjustment = _policy_logit_adjustment(
         {"policy_logit_adjustment": policy_logit_adjustment}
     )
     scripted_partner_opening = _scripted_partner_opening(
         {"scripted_partner_opening": scripted_partner_opening}
+    )
+    partner_intent_duplication_risk = _partner_intent_duplication_risk(
+        {"partner_intent_duplication_risk": partner_intent_duplication_risk}
     )
     reset = env.reset(
         seed,
@@ -635,14 +724,40 @@ def rollout_episode(
             tick=tick,
             opening=scripted_partner_opening,
         )
-        features = build_selector_features(
+        intended_task_ids = _fixed_partner_intended_task_ids(
+            scripted_bundle,
             observations,
-            masks,
-            metadata,
-            task_board=board,
-            boundary_reasons=boundary_reasons,
-            history=history,
-            agent_id=LEARNED_SEAT,
+            partner_intent_duplication_risk,
+        )
+        feature_kwargs = {
+            "task_board": board,
+            "boundary_reasons": boundary_reasons,
+            "history": history,
+            "agent_id": LEARNED_SEAT,
+        }
+        if partner_intent_duplication_risk is None:
+            features = build_selector_features(
+                observations, masks, metadata, **feature_kwargs
+            )
+        else:
+            features = build_selector_features(
+                observations,
+                masks,
+                metadata,
+                fixed_partner_intended_task_ids=intended_task_ids,
+                **feature_kwargs,
+            )
+        risk_candidate_indices = (
+            [
+                index
+                for index, candidate in enumerate(
+                    observations[LEARNED_SEAT].get("task_candidates", [])[:8]
+                )
+                if isinstance(candidate, dict)
+                and candidate.get("task_id") in intended_task_ids
+            ]
+            if partner_intent_duplication_risk is not None
+            else []
         )
         with torch.no_grad():
             raw_logits, masked_logits, value, tensors = _model_outputs(model, features)
@@ -796,6 +911,16 @@ def rollout_episode(
                 **(
                     {"scripted_partner_opening": opening_action}
                     if opening_action is not None
+                    else {}
+                ),
+                **(
+                    {
+                        "fixed_partner_intended_task_ids": list(intended_task_ids),
+                        "partner_intent_duplication_risk_candidate_indices": (
+                            risk_candidate_indices
+                        ),
+                    }
+                    if partner_intent_duplication_risk is not None
                     else {}
                 ),
                 "selected_candidate_diagnostics": _selected_candidate_diagnostics(
@@ -1283,6 +1408,7 @@ def _evaluate(
     model.eval()
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
+    partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
     with RlServerProcess(
         LaunchConfig(port=port, java=java, build_if_missing=False)
@@ -1301,6 +1427,7 @@ def _evaluate(
                 quality_reward=config.get("quality_reward"),
                 policy_logit_adjustment=policy_logit_adjustment,
                 scripted_partner_opening=scripted_partner_opening,
+                partner_intent_duplication_risk=partner_intent_duplication_risk,
             )
             for seed in seeds
         ]
@@ -1513,6 +1640,7 @@ def _manifest(
     lock = root / "python" / "requirements-rl-linux-py312.lock"
     selection_policy = _dev_checkpoint_selection_policy(config)
     scripted_partner_opening = _scripted_partner_opening(config)
+    partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     manifest = {
         "schema": "selector_training_run_v1",
         "engine": {"tag": ENGINE_TAG, "commit": ENGINE_COMMIT, "arc": ARC_HASH},
@@ -1562,6 +1690,11 @@ def _manifest(
             **(
                 {"scripted_partner_opening": scripted_partner_opening}
                 if scripted_partner_opening is not None
+                else {}
+            ),
+            **(
+                {"partner_intent_duplication_risk": partner_intent_duplication_risk}
+                if partner_intent_duplication_risk is not None
                 else {}
             ),
         },
@@ -1737,6 +1870,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     teacher_rehearsal_policy = _teacher_rehearsal_policy(config)
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
+    partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     _configure_torch(config)
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
     teacher_warmup_set = _teacher_warmup_train_set(root, train_set, config)
@@ -1823,6 +1957,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     teacher_controlled=True,
                     policy_logit_adjustment=policy_logit_adjustment,
                     scripted_partner_opening=scripted_partner_opening,
+                    partner_intent_duplication_risk=partner_intent_duplication_risk,
                 )
                 for seed in teacher_warmup_seeds
             ]
@@ -1879,6 +2014,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     quality_reward=config.get("quality_reward"),
                     policy_logit_adjustment=policy_logit_adjustment,
                     scripted_partner_opening=scripted_partner_opening,
+                    partner_intent_duplication_risk=partner_intent_duplication_risk,
                 )
                 for seed in seeds[start : start + episodes_per_update]
             ]
