@@ -96,12 +96,14 @@ non-forced abandonment but still rejects permanent-greedy idle by
 announcements/recovery and matched recovery are uncertain. V32 is rejected and
 dev-v28 is retired unopened.
 
-ADR-0044 precommits V33 from reusable diagnostics only. V32 mean idle ticks by
-seat are `[4.2,408.8,487.4]` versus permanent greedy
-`[274.8,51.5,298.8]`; scripted seat 1 is the dominant gap. Implement the exact
-V32 staging rule for seats 0 and 1 only, preserving seat 2. Complete all frozen
-pretraining gates before replica A. Dev-v29 (`282001..282160`) and held-out-v4
-remain sealed.
+ADR-0044 records V33's pretraining rejection. Reusable idle ticks by seat were
+`[4.2, 408.8, 487.4]` versus permanent greedy
+`[274.8, 51.5, 298.8]`, so V33 tested the exact V32 staging rule on seats 0 and
+1 only. The hard live boundary failed before training: seed 23456 lost at tick
+7593 and the gate was only 4/5. The experimental runtime edit was removed and
+the accepted V32 runtime restored. V33 is rejected, dev-v29 is retired unopened,
+and no model work began. Diagnose a non-disruptive reusable intervention and
+precommit it before implementation. Held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

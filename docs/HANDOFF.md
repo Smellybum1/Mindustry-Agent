@@ -800,12 +800,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement ADR-0044's exact V33 seat scope.** Preserve V32's staging rule for
-   seat 0, extend it only to fixed scripted seat 1, and keep seat 2 exact.
-2. **Complete the frozen pretraining packet.** Engine-free/live scope tests,
-   exact-config adversaries, Python/Java suites, pinned build, 5/5 candidate
-   gate, smoke, determinism, and negative replay must pass before replica A.
-3. **Keep dev-v29 and held-out-v4 sealed.** No successor may open them without exact replicas,
+1. **Diagnose a non-disruptive downstream-idle intervention.** ADR-0044 shows
+   that defense staging for seat 1 causes the same public survival regression as
+   all-seat staging, despite seat 1 being the dominant idle source.
+2. **Precommit any successor before implementation or model work.** Keep the
+   accepted V32 runtime as the base and require the 5/5 gate before training.
+3. **Keep held-out-v4 sealed.** Dev-v29 is retired unopened; no successor may
+   open a new confirmation set without exact replicas,
    reusable dual-scorecard parity, and its own one-way confirmation pass.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
@@ -816,7 +817,7 @@ queue.
 See `docs/decisions/ADR-0001..0044` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
-V33's targeted secondary-seat staging before implementation or model work.
+and records V33's targeted secondary-seat staging rejection before model work.
 
 ## Deviations from the brief in this scaffold
 

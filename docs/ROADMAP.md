@@ -1441,7 +1441,7 @@ recovery are uncertain. Dev-v28 remains unopened and is retired, held-out-v4
 stays sealed, and M8.5 remains unmet.
 
 ADR-0044 precommits V33 from reusable V32 evidence only. Mean idle ticks by
-seat are `[4.2,408.8,487.4]` for V32 versus `[274.8,51.5,298.8]` for permanent
+seat are `[4.2, 408.8, 487.4]` for V32 versus `[274.8, 51.5, 298.8]` for permanent
 greedy. Scripted seat 1 is the dominant `+357.3`-tick gap while learned seat 0
 is already `-270.6` better. V33 therefore extends the exact V32 proactive-
 staging rule to fixed seat 1 and preserves seat 2. All model, reward, teacher,
@@ -1450,6 +1450,13 @@ unopened. Dev-v29 freezes globally disjoint roots `282001..282160` and remains
 unopened; held-out-v4 stays sealed. Config/seed governance, 158 Python tests,
 and all 44 exact-config reward adversaries pass. No V33 implementation, live
 outcome, or model work preceded the precommit. M8.5 remains unmet.
+
+V33 is rejected at its hard public pretraining boundary. Extending defense
+staging to seat 1 changed seed 23456 from a V32 win to a loss at tick 7593,
+producing only 4/5 even with seat 2 preserved. The uncommitted runtime
+experiment was removed and the accepted V32 runtime restored; replica A never
+began. Dev-v29 remains unopened and is retired, held-out-v4 stays sealed, and
+M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

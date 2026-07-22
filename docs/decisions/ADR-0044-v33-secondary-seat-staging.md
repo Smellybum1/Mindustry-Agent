@@ -86,3 +86,17 @@ All 44 exact-config reward adversaries pass; the report at
 `3aa1b316161137e6d9ba4350d249567baff53cbac5e6aa3669517c96db3cef7f`.
 No V33 runtime implementation, live candidate outcome, teacher collection,
 model work, dev-v29 evidence, or held-out evidence preceded this precommit.
+
+## Outcome
+
+The engine-free scope tests and pinned build passed, but the first live
+five-seed boundary rejected V33 before training. Public seed 23456 changed from
+V32's win to a loss at tick 7593 with zero core health, producing only 4/5
+wins. This repeats the survival regression first exposed by the overbroad V32
+prototype and shows that extending defense staging to seat 1 is itself unsafe;
+seat 2 was not required to trigger the failure.
+
+Per Decision 4, this result rejects V33 and does not authorize a different seat
+adjustment under the same identity. The uncommitted runtime experiment was
+removed, the accepted V32 runtime restored, replica A never began, dev-v29 is
+retired unopened, held-out-v4 remains sealed, and M8.5 is unmet.
