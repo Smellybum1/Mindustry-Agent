@@ -1903,7 +1903,11 @@ repository-evidence mapping used for the M6 audit is:
   distributions. The inherited upstream workflows are guarded to run only in
   `Anuken/Mindustry`, so this fork never follows their Arc `master` checkout.
   Local equivalents pass (248 Python tests, Java suites/custom-module compile,
-  and distributions); the no-push rule leaves the first hosted run pending.
+  and distributions). A detached clean Ubuntu 24.04 worktree at `43d3b17db6`
+  also passed literal `make bootstrap && make test` with an isolated JDK
+  21.0.11, GNU Make 4.3, empty Gradle cache, and the 33-test zero-dependency
+  Python boundary. The disposable toolchain/worktree and daemon were removed
+  after verification. The no-push rule leaves only the first hosted run pending.
 - **RL lock is verified** for Linux CPython 3.12 CPU; core remains dependency
   free. Native Windows training, CUDA, and other Python/platform locks are not
   certified and require an explicit later decision.

@@ -29,9 +29,10 @@ Deliverables:
 - [x] One-command bootstrap for reference runtime (`make bootstrap` / `scripts/bootstrap.sh`)
 
 Exit criteria:
-- [ ] Fresh checkout can run `make bootstrap` and `make test` (bootstrap and
-      both underlying test scripts are green locally; literal `make test` awaits
-      the first Linux CI run because `make` is absent on the Windows host)
+- [x] Fresh checkout can run `make bootstrap` and `make test` (verified
+      2026-07-23 from detached clean commit `43d3b17db6` on Ubuntu 24.04 with
+      an isolated JDK 21.0.11, GNU Make 4.3, empty Gradle cache, and no Python
+      dependencies: 33 core tests plus Java suites/custom-module compile green)
 - [x] Build does not depend on an unpinned `latest`
 - [x] Current upstream modifications are zero or documented (`docs/UPSTREAM_PATCHES.md`)
 
