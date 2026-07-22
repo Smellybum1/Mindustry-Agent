@@ -1596,6 +1596,27 @@ never be used. Any successor must precommit globally disjoint dev-v34 and
 held-out-v5 sets and a committed umbrella marker that precedes membership reads
 and baseline episodes.
 
+Two reusable-only, off-contract V38 diagnostics are rejected. Collision
+redirect (`097d8f5c95b0bbd6a40d3f8fbca0ca6e86d527d4bbf1c8a1f3a01ebc52ff2490`)
+falls from V37's 9/10 to 6/10 and raises total idle `7,840 -> 11,609`
+(`+48.07%`): learned-seat idle falls by 3,053 ticks but seat 2 gains 6,988.
+Its 37 rewrites include 34 for seat 2 and 13 to `WAIT`; seeds 2002, 2003, and
+2006 flip from win to loss. Broader collision rerouting therefore moves the
+problem between seats and is not a viable coordinate.
+
+Partner-intent masking
+(`83a4242b6b7df288ec20976029356637de61a3e2adf9736b1a3cff41e5006319`) is
+bound to the exact V37 config, checkpoint, direct lineage, and public reusable
+set, but falls to 7/10 with mean core health `500.0`. Total idle falls
+`7,840 -> 7,182`, with per-seat ticks
+`[4,658,342,2,840] -> [4,619,338,2,225]`; only 39 learned-seat ticks are saved,
+and 617 of the 658 total savings come from seed 2002 seat 2. Mean authoritative
+idle is `0.05223`. All 48 masks have clean traces with no invalid or unaccepted
+learned action, while seeds 2005 and 2010 flip from win to loss. The diagnostic
+does not carry the event evidence required for announcement or recovery parity.
+This coordinate is also rejected, and no V38 precommit exists. M8.5 remains
+unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

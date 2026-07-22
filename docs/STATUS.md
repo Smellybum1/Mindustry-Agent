@@ -1542,6 +1542,22 @@ repository-evidence mapping used for the M6 audit is:
   retires both sets unexecuted. Neither may ever be used. The next successor
   must precommit globally disjoint dev-v34 and held-out-v5 sets plus an umbrella
   one-way marker created before any membership read or baseline episode.
+- Two reusable-only off-contract V38 diagnostics are rejected. Collision
+  redirect (`097d8f5c95b0bbd6a40d3f8fbca0ca6e86d527d4bbf1c8a1f3a01ebc52ff2490`)
+  falls from V37's 9/10 to 6/10 and increases idle `7,840 -> 11,609`
+  (`+48.07%`): learned seat 0 saves 3,053 ticks while seat 2 gains 6,988. Of 37
+  rewrites, 34 target seat 2 and 13 become `WAIT`; seeds 2002/2003/2006 flip to
+  losses. Partner-intent masking
+  (`83a4242b6b7df288ec20976029356637de61a3e2adf9736b1a3cff41e5006319`) is
+  evidence-bound to V37's exact config/checkpoint/lineage and public reusable
+  set, but reaches only 7/10 and mean core health `500.0`. Idle changes
+  `7,840 -> 7,182`, by seat `[4,658,342,2,840] -> [4,619,338,2,225]`; only 39
+  learned-seat ticks are saved and seed 2002 seat 2 supplies 617/658 of the
+  reduction. Mean authoritative idle is `0.05223`; 48 masks produce clean
+  traces with no invalid or unaccepted learned action, but seeds 2005/2010 flip
+  to losses. Announcement/recovery parity is not measurable from this
+  diagnostic. Both coordinates are rejected, no V38 precommit exists, and
+  M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

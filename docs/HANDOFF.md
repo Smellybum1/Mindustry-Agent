@@ -639,6 +639,23 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   gate, smoke, determinism, and negative replay pass. Config/adversary hashes
   are `861f34bd07db43a5...` and `e7eb2f8826db4617...`. The committed packet must
   precede all V31 model work.
+- **Post-V37 reusable diagnostics rejected**: after V37's reusable scorecard
+  rejection and ADR-0049's retirement of the membership-exposed sets, two
+  off-contract V38 coordinates were tested only on reusable evidence. Collision
+  redirect (`097d8f5c95b0bbd6a40d3f8fbca0ca6e86d527d4bbf1c8a1f3a01ebc52ff2490`)
+  falls from 9/10 to 6/10 and shifts idle from learned seat 0 to seat 2: total
+  idle rises `7,840 -> 11,609` (`+48.07%`), with learned seat `-3,053` and seat
+  2 `+6,988`; 37 rewrites include 34 for seat 2 and 13 `WAIT`s, and seeds
+  2002/2003/2006 flip to losses. Partner-intent masking
+  (`83a4242b6b7df288ec20976029356637de61a3e2adf9736b1a3cff41e5006319`) is
+  bound to V37's exact config/checkpoint/direct lineage/public reusable set but
+  reaches 7/10 and mean core health `500.0`. Idle falls `7,840 -> 7,182`, by
+  seat `[4,658,342,2,840] -> [4,619,338,2,225]`, yet only 39 learned-seat ticks
+  are saved and seed 2002 seat 2 contributes 617/658 of the reduction. Its mean
+  authoritative idle is `0.05223`; all 48 masks have clean traces, while seeds
+  2005/2010 flip to losses. It cannot measure announcement/recovery parity.
+  Both coordinates are rejected; no V38 precommit exists and M8.5 remains
+  unmet.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
@@ -801,10 +818,14 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Diagnose V37's remaining permanent-greedy parity gap from reusable evidence
-   only.** V37 is 9/10 and passes matched greedy strongly, but permanent-greedy
-   announcement/idle/recovery intervals remain uncertain. Isolate per-seat and
-   accepted-task causes before precommitting one V38 coordinate.
+1. **Investigate learned-seat task actionability and fortification from reusable
+   evidence only.** V37 is 9/10 and passes matched greedy strongly, but
+   permanent-greedy announcement/idle/recovery intervals remain uncertain. The
+   rejected collision-redirect and partner-intent-mask diagnostics show that
+   broader collision rerouting either shifts idle to seat 2 or harms survival
+   without materially reducing learned-seat idle. Isolate the learned seat's
+   actionable task/fortification sequence before precommitting any V38
+   coordinate.
 2. **Do not reinterpret uncertainty as a pass.** V37 is rejected under the
    frozen dual-scorecard rule; no dev-v33 confirmation is authorized.
 3. **Keep dev-v32 unopened and dev-v33/held-out-v4 retired unexecuted.** Their
