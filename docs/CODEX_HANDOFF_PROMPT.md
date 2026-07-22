@@ -278,11 +278,12 @@ roots, budget, and RNGs remain V39-exact. The immutable config hashes to
 `230759e7e02dcca9a6b7608f7784b20f85845c40da0f7a28dd1ec13641d0013a`.
 A value-free umbrella reserves primary-only dev-v36 in `[4B,5B)`. The exact
 filter implementation is committed at
-`c9459c58f4`; 208 Python tests and the bound train-only diagnostic pass, with
+`c9459c58f4`; the bound train-only diagnostic passes, with
 report SHA `4fe2960225d659cb...`. Pinned Java, public/runtime/replay, and all
 44 exact-config reward gates now pass; reward report SHA is
-`9677e5caed4d891...`. Commit that evidence, then add and commit a primary-only
-dev-v36 freezer using only `[4B,5B)` before construction. Never render or
+`9677e5caed4d891...`; gate evidence is committed at `a94cb9e534`. The
+primary-only `[4B,5B)` dev-v36 freezer packet is prepared and the 211-test suite
+passes, but the freezer must be committed before it runs. Never render or
 delegate membership, and never inspect held-out-v6 membership.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,

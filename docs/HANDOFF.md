@@ -813,6 +813,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   staging starts, focused wake/staging, smoke, accepted determinism digests,
   664-checkpoint/16,200-tick golden plus negative replay, and 44/44 exact-config
   reward adversaries pass. Reward report SHA is `9677e5caed4d891...`.
+- **Dev-v36 freezer ready, not run**: the primary-only freezer is constrained
+  to `[4B,5B)`, hashes in-memory bytes, reads no membership, and passes the
+  211-test Python suite. Commit the freezer packet before execution.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V39 implementation/governance repository checkpoint**:
   `e31e4daf7151661f285511ce29db6232a48a2242` (the documentation-only V39
@@ -976,9 +979,9 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Add and commit the primary-only dev-v36 freezer without reading any prior
-   membership.** Use only the reserved `[4B,5B)` namespace.
-2. **Freeze dev-v36 value-free and review its receipt primary-only.** Never
+1. **Commit the prepared primary-only dev-v36 freezer packet.** Do not run the
+   uncommitted generator.
+2. **Then freeze dev-v36 value-free and review its receipt primary-only.** Never
    render or delegate membership values; held-out-v6 remains sealed.
 3. **Only after the committed freeze, run V40 replica A.** Replica B requires
    at least 9/10 reusable wins and idle `<0.25` from A.

@@ -1748,7 +1748,9 @@ repository-evidence mapping used for the M6 audit is:
   accepted cross-process/reset/alternate-seed determinism, the 664-checkpoint
   16,200-tick golden plus negative control, and 44/44 exact-config reward
   adversaries. The reward report hashes to `9677e5caed4d891...`. Primary-only
-  dev-v36 freezer construction is next; membership, baselines, and model work
+  dev-v36 freezer code and pure tests now pass within the 211-test suite. The
+  freezer uses only `[4B,5B)`, hashes in-memory bytes, and reads no membership.
+  It must be committed before execution; membership, baselines, and model work
   remain absent.
 
 ## What is stubbed (compiles/imports, no real behaviour)

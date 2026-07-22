@@ -661,7 +661,9 @@ gates also pass: pinned Java, public 5/5 survival with 10 staging starts,
 focused wake/staging, smoke, accepted determinism digests, golden/negative
 replay, and 44/44 exact-config reward adversaries. Reward evidence hashes to
 `9677e5caed4d891...`. Dev-v36 construction remains primary-only and must be
-committed before model work.
+committed before model work. The dedicated freezer generates only within
+`[4B,5B)`, hashes its in-memory manifest bytes, and never reads prior, sealed,
+or generated membership; its pure tests pass in the 211-test suite.
 
 ## M8.1 acceptance review
 

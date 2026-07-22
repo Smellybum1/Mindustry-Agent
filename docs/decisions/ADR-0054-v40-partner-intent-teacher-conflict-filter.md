@@ -131,3 +131,9 @@ ignored reward report SHA-256 is
 `9677e5caed4d891cb9f31c6a34475e1f276359dfa5c794f8b13210cd9ffe0dd5`.
 No confirmation membership, baseline episode, or model work preceded the
 green boundary.
+
+The primary-only dev-v36 freezer packet adds
+`scripts/freeze-v40-confirmation-seed-set.py` and pure no-membership tests. It
+generates solely within `[4B,5B)`, hashes in-memory bytes, never opens a prior,
+sealed, or generated membership document, and emits only a value-free receipt.
+The 211-test Python suite passes before the freezer is committed or run.
