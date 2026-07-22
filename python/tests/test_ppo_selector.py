@@ -361,6 +361,55 @@ class TestPpoSelector(unittest.TestCase):
                     {"partner_intent_duplication_risk": value}
                 )
 
+    def test_partner_intent_teacher_conflict_filter_is_exact_and_dependent(self):
+        from mindustry_agents.training.ppo_selector import (
+            _partner_intent_teacher_conflict_filter,
+        )
+
+        risk = {
+            "schema": "fixed_partner_selected_task_duplication_risk_v1",
+            "agent_ids": [1, 2],
+            "match": "task_id",
+            "feature": "utility_features.duplication_risk",
+            "value": 1.0,
+        }
+        conflict_filter = {
+            "schema": "partner_intent_teacher_conflict_filter_v1",
+            "match": "teacher_action_index_in_risk_candidate_indices",
+            "applies_to": [
+                "teacher_warmup",
+                "teacher_rehearsal",
+                "ppo_teacher_imitation",
+            ],
+        }
+        self.assertIsNone(_partner_intent_teacher_conflict_filter({}))
+        config = {
+            "partner_intent_duplication_risk": risk,
+            "partner_intent_teacher_conflict_filter": conflict_filter,
+        }
+        self.assertEqual(
+            _partner_intent_teacher_conflict_filter(config), conflict_filter
+        )
+        invalid = (
+            "invalid",
+            conflict_filter | {"schema": "unknown"},
+            conflict_filter | {"match": "task_type"},
+            conflict_filter
+            | {"applies_to": conflict_filter["applies_to"][:-1]},
+            conflict_filter | {"extra": True},
+        )
+        for value in invalid:
+            with self.subTest(value=value), self.assertRaisesRegex(
+                ValueError, "partner_intent_teacher_conflict_filter"
+            ):
+                _partner_intent_teacher_conflict_filter(
+                    config | {"partner_intent_teacher_conflict_filter": value}
+                )
+        with self.assertRaisesRegex(ValueError, "requires"):
+            _partner_intent_teacher_conflict_filter(
+                {"partner_intent_teacher_conflict_filter": conflict_filter}
+            )
+
     def test_fixed_partner_intended_task_ids_are_structured_and_fail_closed(self):
         from mindustry_agents.training.ppo_selector import (
             _fixed_partner_intended_task_ids,
@@ -1356,6 +1405,195 @@ class TestPpoSelector(unittest.TestCase):
                 config,
                 torch.Generator().manual_seed(17),
             )
+
+    def test_teacher_conflict_filter_excludes_only_teacher_ce_paths(self):
+        import torch
+
+        from mindustry_agents.training.model import SelectorActorCritic
+        from mindustry_agents.training.ppo_selector import (
+            EpisodeRollout,
+            Transition,
+            _model_state_digest,
+            ppo_update,
+            teacher_trajectory_rehearsal_update,
+            teacher_trajectory_warmup_update,
+        )
+
+        def transition(*, conflict: bool) -> Transition:
+            return Transition(
+                candidates=torch.zeros((8, 37)),
+                scalars=torch.zeros(56),
+                candidate_present=torch.zeros(8, dtype=torch.bool),
+                action_mask=torch.ones(10, dtype=torch.bool),
+                action=1,
+                old_log_prob=0.0,
+                old_value=0.0,
+                reward=1.0,
+                advanced_ticks=60,
+                done=True,
+                policy_loss_mask=True,
+                successful_episode=True,
+                teacher_action=0,
+                teacher_partner_intent_risk_conflict=conflict,
+            )
+
+        episode = EpisodeRollout(
+            seed=1,
+            outcome="win",
+            tick=60,
+            core_health=1.0,
+            transitions=[transition(conflict=True), transition(conflict=False)],
+            reward_components={},
+            trace=[],
+            coordination_metrics={},
+        )
+        risk = {
+            "schema": "fixed_partner_selected_task_duplication_risk_v1",
+            "agent_ids": [1, 2],
+            "match": "task_id",
+            "feature": "utility_features.duplication_risk",
+            "value": 1.0,
+        }
+        conflict_filter = {
+            "schema": "partner_intent_teacher_conflict_filter_v1",
+            "match": "teacher_action_index_in_risk_candidate_indices",
+            "applies_to": [
+                "teacher_warmup",
+                "teacher_rehearsal",
+                "ppo_teacher_imitation",
+            ],
+        }
+        base = {
+            "teacher_warmup_cycles": 1,
+            "teacher_warmup_epochs": 2,
+            "teacher_warmup_minibatch_size": 2,
+            "teacher_warmup_success_only": True,
+            "teacher_warmup_shuffle_seed": 16,
+            "teacher_warmup_minibatch_seed": 17,
+            "teacher_warmup_samples_per_epoch": 1,
+            "max_grad_norm": 0.5,
+        }
+        enabled = base | {
+            "partner_intent_duplication_risk": risk,
+            "partner_intent_teacher_conflict_filter": conflict_filter,
+        }
+        results = []
+        digests = []
+        for seed in (17, 17):
+            model = SelectorActorCritic(20)
+            results.append(
+                teacher_trajectory_warmup_update(
+                    model,
+                    torch.optim.Adam(model.parameters(), lr=1e-3),
+                    [episode],
+                    enabled,
+                    torch.Generator().manual_seed(seed),
+                )
+            )
+            digests.append(_model_state_digest(model.state_dict()))
+        self.assertEqual(results[0], results[1])
+        self.assertEqual(digests[0], digests[1])
+        evidence = results[0]["teacher_conflict_filter"]
+        self.assertEqual(evidence["eligible_transitions"], 2)
+        self.assertEqual(evidence["excluded_conflict_transitions"], 1)
+        self.assertEqual(evidence["retained_transitions"], 1)
+        self.assertEqual(evidence["sampled_conflict_presentations"], 0)
+        self.assertEqual(evidence["sampled_retained_presentations"], 2)
+        self.assertEqual(
+            evidence["sampled_retained_transition_indices_by_epoch"], [[1], [1]]
+        )
+
+        rehearsal_config = enabled | {
+            "teacher_rehearsal_epochs_per_update": 1,
+            "teacher_rehearsal_minibatch_seed": 18,
+            "teacher_rehearsal_samples_per_epoch": 1,
+        }
+        rehearsal_model = SelectorActorCritic(21)
+        rehearsal = teacher_trajectory_rehearsal_update(
+            rehearsal_model,
+            torch.optim.Adam(rehearsal_model.parameters(), lr=0.0),
+            [episode],
+            rehearsal_config,
+            torch.Generator().manual_seed(18),
+        )
+        self.assertEqual(
+            rehearsal["teacher_conflict_filter"]["excluded_conflict_transitions"],
+            1,
+        )
+        self.assertEqual(rehearsal["samples"], 1)
+
+        legacy_model = SelectorActorCritic(23)
+        legacy_copy = SelectorActorCritic(23)
+        legacy = teacher_trajectory_warmup_update(
+            legacy_model,
+            torch.optim.Adam(legacy_model.parameters(), lr=1e-3),
+            [episode],
+            base,
+            torch.Generator().manual_seed(17),
+        )
+        no_conflict_episode = deepcopy(episode)
+        for item in no_conflict_episode.transitions:
+            item.teacher_partner_intent_risk_conflict = False
+        legacy_no_conflict = teacher_trajectory_warmup_update(
+            legacy_copy,
+            torch.optim.Adam(legacy_copy.parameters(), lr=1e-3),
+            [no_conflict_episode],
+            base,
+            torch.Generator().manual_seed(17),
+        )
+        self.assertEqual(legacy, legacy_no_conflict)
+        self.assertEqual(
+            _model_state_digest(legacy_model.state_dict()),
+            _model_state_digest(legacy_copy.state_dict()),
+        )
+        self.assertNotIn("teacher_conflict_filter", legacy)
+
+        ppo_base = {
+            "gamma_per_second": 0.99,
+            "gae_lambda": 0.95,
+            "minibatch_size": 2,
+            "ppo_epochs": 1,
+            "clip_ratio": 0.2,
+            "value_coefficient": 0.5,
+            "entropy_coefficient": 0.0,
+            "success_imitation_coefficient": 0.0,
+            "successful_teacher_imitation_coefficient": 0.0,
+            "teacher_imitation_coefficient": 1.0,
+            "max_grad_norm": 0.5,
+        }
+        unfiltered_model = SelectorActorCritic(24)
+        filtered_model = SelectorActorCritic(24)
+        unfiltered = ppo_update(
+            unfiltered_model,
+            torch.optim.Adam(unfiltered_model.parameters(), lr=0.0),
+            [episode],
+            ppo_base,
+            torch.Generator().manual_seed(19),
+        )
+        filtered = ppo_update(
+            filtered_model,
+            torch.optim.Adam(filtered_model.parameters(), lr=0.0),
+            [episode],
+            ppo_base
+            | {
+                "partner_intent_duplication_risk": risk,
+                "partner_intent_teacher_conflict_filter": conflict_filter,
+            },
+            torch.Generator().manual_seed(19),
+        )
+        self.assertEqual(unfiltered["teacher_imitation_samples"], 2.0)
+        self.assertEqual(filtered["teacher_imitation_samples"], 1.0)
+        self.assertEqual(filtered["teacher_imitation_eligible_samples"], 2.0)
+        self.assertEqual(
+            filtered["teacher_imitation_excluded_conflict_samples"], 1.0
+        )
+        self.assertEqual(filtered["policy_loss"], unfiltered["policy_loss"])
+        self.assertEqual(filtered["value_loss"], unfiltered["value_loss"])
+        self.assertEqual(filtered["entropy"], unfiltered["entropy"])
+        self.assertEqual(
+            filtered["successful_teacher_imitation_samples"],
+            unfiltered["successful_teacher_imitation_samples"],
+        )
 
     def test_teacher_warmup_report_is_atomic_and_reproducibility_evidence(self):
         from mindustry_agents.training.ppo_selector import (

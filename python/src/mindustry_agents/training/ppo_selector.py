@@ -57,6 +57,9 @@ SCRIPTED_PARTNER_OPENING_SCHEMA = "fixed_seat_initial_task_type_v1"
 PARTNER_INTENT_DUPLICATION_RISK_SCHEMA = (
     "fixed_partner_selected_task_duplication_risk_v1"
 )
+PARTNER_INTENT_TEACHER_CONFLICT_FILTER_SCHEMA = (
+    "partner_intent_teacher_conflict_filter_v1"
+)
 
 ARC_HASH = "208a754044"
 LEARNED_SEAT = 0
@@ -80,6 +83,7 @@ class Transition:
     successful_episode: bool = False
     teacher_action: int | None = None
     policy_logit_bias: torch.Tensor | None = None
+    teacher_partner_intent_risk_conflict: bool = False
 
 
 @dataclass
@@ -325,6 +329,33 @@ def _partner_intent_duplication_risk(
         or value != 1.0
     ):
         raise ValueError("invalid partner_intent_duplication_risk config")
+    return expected
+
+
+def _partner_intent_teacher_conflict_filter(
+    config: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Validate the optional exact-risk teacher-imitation exclusion."""
+
+    conflict_filter = config.get("partner_intent_teacher_conflict_filter")
+    if conflict_filter is None:
+        return None
+    expected = {
+        "schema": PARTNER_INTENT_TEACHER_CONFLICT_FILTER_SCHEMA,
+        "match": "teacher_action_index_in_risk_candidate_indices",
+        "applies_to": [
+            "teacher_warmup",
+            "teacher_rehearsal",
+            "ppo_teacher_imitation",
+        ],
+    }
+    if not isinstance(conflict_filter, dict) or conflict_filter != expected:
+        raise ValueError("invalid partner_intent_teacher_conflict_filter config")
+    if _partner_intent_duplication_risk(config) is None:
+        raise ValueError(
+            "partner_intent_teacher_conflict_filter requires "
+            "partner_intent_duplication_risk"
+        )
     return expected
 
 
@@ -894,6 +925,9 @@ def rollout_episode(
                 policy_loss_mask=features.policy_loss_mask and not forced,
                 teacher_action=teacher_index,
                 policy_logit_bias=logit_bias,
+                teacher_partner_intent_risk_conflict=(
+                    teacher_index in risk_candidate_indices
+                ),
             )
         )
         trace.append(
@@ -1030,6 +1064,7 @@ def ppo_update(
     config: dict[str, Any],
     shuffle_generator: torch.Generator,
 ) -> dict[str, float]:
+    teacher_conflict_filter = _partner_intent_teacher_conflict_filter(config)
     transitions, advantages, returns = _advantages(episodes, config)
     candidates = torch.stack([item.candidates for item in transitions])
     scalars = torch.stack([item.scalars for item in transitions])
@@ -1062,7 +1097,21 @@ def ppo_update(
     )
     teacher_mask = torch.tensor(
         [
-            item.policy_loss_mask and item.teacher_action is not None
+            item.policy_loss_mask
+            and item.teacher_action is not None
+            and (
+                teacher_conflict_filter is None
+                or not item.teacher_partner_intent_risk_conflict
+            )
+            for item in transitions
+        ],
+        dtype=torch.bool,
+    )
+    teacher_conflict_mask = torch.tensor(
+        [
+            item.policy_loss_mask
+            and item.teacher_action is not None
+            and item.teacher_partner_intent_risk_conflict
             for item in transitions
         ],
         dtype=torch.bool,
@@ -1089,6 +1138,13 @@ def ppo_update(
         "teacher_imitation_samples": 0.0,
         "batches": 0.0,
     }
+    if teacher_conflict_filter is not None:
+        metrics.update(
+            {
+                "teacher_imitation_eligible_samples": 0.0,
+                "teacher_imitation_excluded_conflict_samples": 0.0,
+            }
+        )
     teacher_coefficient = float(config.get("teacher_imitation_coefficient", 0.0))
     for _ in range(int(config["ppo_epochs"])):
         order = torch.randperm(len(transitions), generator=shuffle_generator)
@@ -1132,6 +1188,13 @@ def ppo_update(
                 1, teacher_actions[index, None]
             ).squeeze(1)
             teacher = teacher_mask[index]
+            if teacher_conflict_filter is not None:
+                metrics["teacher_imitation_eligible_samples"] += float(
+                    (teacher | teacher_conflict_mask[index]).sum().item()
+                )
+                metrics["teacher_imitation_excluded_conflict_samples"] += float(
+                    teacher_conflict_mask[index].sum().item()
+                )
             if teacher_coefficient != 0.0 and teacher.any():
                 teacher_imitation_loss = -teacher_log_probs[teacher].mean()
                 teacher_imitation_samples = float(teacher.sum().item())
@@ -1195,6 +1258,8 @@ def ppo_update(
             "success_imitation_samples",
             "successful_teacher_imitation_samples",
             "teacher_imitation_samples",
+            "teacher_imitation_eligible_samples",
+            "teacher_imitation_excluded_conflict_samples",
         }
         else value
         for key, value in metrics.items()
@@ -1213,6 +1278,7 @@ def _teacher_trajectory_imitation_update(
     max_grad_norm: float,
     schema: str,
     samples_per_epoch: int | None = None,
+    teacher_conflict_filter: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Apply deterministic CE-only updates from teacher-controlled trajectories."""
 
@@ -1221,12 +1287,19 @@ def _teacher_trajectory_imitation_update(
         for episode in episodes
         if not success_only or episode.outcome == "win"
     ]
-    transitions = [
+    eligible_transitions = [
         item
         for episode in eligible_episodes
         for item in episode.transitions
         if item.policy_loss_mask and item.teacher_action is not None
     ]
+    retained = [
+        (index, item)
+        for index, item in enumerate(eligible_transitions)
+        if teacher_conflict_filter is None
+        or not item.teacher_partner_intent_risk_conflict
+    ]
+    transitions = [item for _, item in retained]
     if not transitions:
         raise RuntimeError("teacher warmup produced no unforced labeled transitions")
     for transition in transitions:
@@ -1258,11 +1331,16 @@ def _teacher_trajectory_imitation_update(
     batches = 0
     samples = 0
     sampled_orders: list[list[int]] = []
+    sampled_retained_orders: list[list[int]] = []
     for _ in range(epochs):
         order = torch.randperm(len(transitions), generator=shuffle_generator)
         if samples_per_epoch is not None:
             order = order[: min(samples_per_epoch, len(transitions))]
             sampled_orders.append([int(index) for index in order.tolist()])
+        if teacher_conflict_filter is not None:
+            sampled_retained_orders.append(
+                [retained[int(index)][0] for index in order.tolist()]
+            )
         for start in range(0, len(order), batch_size):
             index = order[start : start + batch_size]
             _, masked_logits, _ = model(
@@ -1300,6 +1378,22 @@ def _teacher_trajectory_imitation_update(
                 "sample_schedule_sha256": _json_digest(sampled_orders),
             }
         )
+    if teacher_conflict_filter is not None:
+        conflict_count = len(eligible_transitions) - len(transitions)
+        metrics["teacher_conflict_filter"] = {
+            **teacher_conflict_filter,
+            "eligible_transitions": len(eligible_transitions),
+            "excluded_conflict_transitions": conflict_count,
+            "retained_transitions": len(transitions),
+            "sampled_conflict_presentations": 0,
+            "sampled_retained_presentations": samples,
+            "sampled_retained_transition_indices_by_epoch": (
+                sampled_retained_orders
+            ),
+            "sampled_retained_schedule_sha256": _json_digest(
+                sampled_retained_orders
+            ),
+        }
     return metrics
 
 
@@ -1313,6 +1407,7 @@ def teacher_trajectory_warmup_update(
     """Run deterministic CE-only warmup on teacher-controlled train trajectories."""
 
     policy = _teacher_warmup_policy(config)
+    teacher_conflict_filter = _partner_intent_teacher_conflict_filter(config)
     if policy is None:
         raise ValueError("teacher trajectory warmup is disabled")
     return _teacher_trajectory_imitation_update(
@@ -1326,6 +1421,7 @@ def teacher_trajectory_warmup_update(
         max_grad_norm=float(config["max_grad_norm"]),
         schema="teacher_trajectory_warmup_v1",
         samples_per_epoch=policy.get("samples_per_epoch"),
+        teacher_conflict_filter=teacher_conflict_filter,
     )
 
 
@@ -1340,6 +1436,7 @@ def teacher_trajectory_rehearsal_update(
 
     warmup_policy = _teacher_warmup_policy(config)
     rehearsal_policy = _teacher_rehearsal_policy(config)
+    teacher_conflict_filter = _partner_intent_teacher_conflict_filter(config)
     if warmup_policy is None or rehearsal_policy is None:
         raise ValueError("teacher trajectory rehearsal is disabled")
     return _teacher_trajectory_imitation_update(
@@ -1353,6 +1450,7 @@ def teacher_trajectory_rehearsal_update(
         max_grad_norm=float(config["max_grad_norm"]),
         schema="teacher_trajectory_rehearsal_v1",
         samples_per_epoch=rehearsal_policy.get("samples_per_epoch"),
+        teacher_conflict_filter=teacher_conflict_filter,
     )
 
 
@@ -1409,6 +1507,7 @@ def _evaluate(
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
+    _partner_intent_teacher_conflict_filter(config)
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
     with RlServerProcess(
         LaunchConfig(port=port, java=java, build_if_missing=False)
@@ -1551,6 +1650,10 @@ def _write_teacher_warmup_report(
         report["configuration"]["teacher_warmup_samples_per_epoch"] = config[
             "teacher_warmup_samples_per_epoch"
         ]
+    if "partner_intent_teacher_conflict_filter" in config:
+        report["configuration"]["partner_intent_teacher_conflict_filter"] = config[
+            "partner_intent_teacher_conflict_filter"
+        ]
     path = output_dir / "selector-v1-teacher-warmup.json"
     temporary_path = path.with_suffix(".json.tmp")
     temporary_path.write_text(
@@ -1603,6 +1706,10 @@ def _write_teacher_rehearsal_report(
     if "teacher_rehearsal_samples_per_epoch" in config:
         report["configuration"]["teacher_rehearsal_samples_per_epoch"] = config[
             "teacher_rehearsal_samples_per_epoch"
+        ]
+    if "partner_intent_teacher_conflict_filter" in config:
+        report["configuration"]["partner_intent_teacher_conflict_filter"] = config[
+            "partner_intent_teacher_conflict_filter"
         ]
     path = output_dir / "selector-v1-teacher-rehearsal.json"
     temporary_path = path.with_suffix(".json.tmp")
@@ -1871,6 +1978,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
+    _partner_intent_teacher_conflict_filter(config)
     _configure_torch(config)
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
     teacher_warmup_set = _teacher_warmup_train_set(root, train_set, config)
