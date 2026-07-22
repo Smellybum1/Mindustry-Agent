@@ -81,3 +81,43 @@ and golden determinism including the negative replay. Config SHA-256 is
 `861f34bd07db43a54aafb2b88ef725a0185c1aca685b533b32e99995ada1594b`;
 adversary report SHA-256 is
 `e7eb2f8826db46171fd5f4c8a08666b8138f4c04b66511f260a95546321412d9`.
+
+## Outcome
+
+Both pinned replicas complete and reproduce the same selected update 16 at
+9/10 reusable wins, mean return `3.11808`, mean core health `891.0`, and mean
+idle `0.07742222`. Checkpoint SHA-256 is
+`6961656faaee8d9304b24a6b97d086bb409f4c616348d61c8d687a16914ed267`;
+model-state SHA-256 is
+`d87d193cb36e660438f3eccdd7c41b385610174266f9095d689d7c410599448d`;
+fresh replay digest is
+`b9f7e84c938a0bd3c02b75e060f4bb3366afbe3f780776215be902dde40d901e`.
+Warmup, rehearsal, and frontier report hashes are respectively
+`413111f8600665579c962936f4fbceaf931663864f1968059248518bc9ec56b8`,
+`41f53bda1dd44d374020c44d22a34e4d5ee48202cc2ddb8790c6b69d4939f502`,
+and `0893deb0a3c3a09957c5191857c7fe40616db3fac06f271f418dc3a3bfbc05f4`.
+
+The original v1 reproducibility digest accidentally included the replica-local
+warmup-report path nested in rehearsal evidence. Commit `d62fc09872` restores
+the documented path-independent contract while validating both legacy recorded
+digests. The replicas then compare at canonical full-run digest
+`b2dacf42484258fb...`; direct lineage hashes to
+`78e923796393ca589b590368d31d2ff1b929b0654739bfbacc24defb519c3c19`
+(manifest SHA-256
+`613f21abff1d738ae3213c8868b009fca8c2ba1ffb64b6a53a26d01ec82753d5`).
+
+Reusable dev-v1 preflight wins 9/10 and strictly improves the observed rate
+over permanent random (4/10), permanent greedy (8/10), matched random (4/10),
+and matched greedy (0/10), but fails both corrected scorecards. Against
+permanent greedy, idle regresses by `0.02698246` (95% paired interval
+`[0.00914830,0.04427167]`) and non-forced abandonment regresses by `0.03137446`
+(`[0.01788685,0.04475829]`); announcements and recovery are uncertain. Against
+matched greedy, abandonment has the same regressing mean with interval
+`[0.01742217,0.04518267]`, and recovery is uncertain. Records, aggregate, and
+preflight hashes are respectively
+`554c3059c84303a73cbd9e9a6cb782576161ff95931ed55bd308e066b19a97b9`,
+`34f52021f624f9d9ff4851422cb927499850227fe851f1018ff8f16f9f2e5ead`,
+and `9fd8c9a6c33e40acbb2dd27fef4fafc26510a221bc5bf03a21c786579c3a04f8`.
+
+V31 is rejected before confirmation. Dev-v27 remains unopened and is retired;
+held-out-v4 remains sealed.

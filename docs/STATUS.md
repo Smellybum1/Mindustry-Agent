@@ -1366,6 +1366,18 @@ repository-evidence mapping used for the M6 audit is:
   adversaries, 156 Python tests, pinned build, 5/5 candidate gate, smoke,
   determinism, and negative replay pass. Config/adversary hashes are
   `861f34bd07db43a5...` and `e7eb2f8826db4617...`.
+- V31 replicas reproduce selected update 16 exactly at 9/10 wins, return
+  `3.11808`, core health `891.0`, and idle `0.07742222`. Checkpoint/model/replay
+  hashes are `6961656faaee8d93...`, `d87d193cb36e6604...`, and
+  `b9f7e84c938a0bd3...`. Commit `d62fc09872` removes the replica-local warmup
+  artifact path from canonical v1 evidence while still validating legacy run
+  digests; canonical full-run digest is `b2dacf42484258fb...` and direct lineage
+  is `78e923796393ca58...`. Reusable preflight wins 9/10 and beats all four
+  observed-rate comparators, but rejects V31: permanent-greedy idle regresses
+  `+0.02698246` and abandonment `+0.03137446` with intervals wholly above zero;
+  matched-greedy abandonment also regresses, while recovery and permanent
+  announcements remain uncertain. Dev-v27 is retired unopened and held-out-v4
+  remains sealed. M8.5 is unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

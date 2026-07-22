@@ -78,11 +78,14 @@ Pretraining gates are green: 44 exact-config adversaries (report SHA-256
 negative replay. Dev-v27 is frozen at `271001..271160` and remains unopened.
 No V31 model work preceded the committed packet.
 
-Run V31 replica A only under the pinned WSL2 CPU lock. Replica B is forbidden
-unless A reaches at least 9/10 reusable wins with idle below 0.25. If A fails,
-record the rejection without opening dev-v27. If A passes, require exact B
-reproduction and reusable dual-scorecard preflight before any confirmation.
-Never open held-out-v4 without every governed prerequisite.
+V31 replicas reproduce selected update 16 exactly at 9/10 reusable wins.
+Canonical full-run/direct-lineage hashes are `b2dacf42484258fb...` and
+`78e923796393ca58...`. Reusable preflight beats all win-rate comparators but
+rejects V31 on permanent idle/abandonment and matched abandonment, with
+additional uncertain intervals. Dev-v27 is retired unopened. Diagnose and
+precommit any successor only from reusable evidence, freeze a new disjoint
+confirmation set before model work, and never open held-out-v4 without every
+governed prerequisite.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

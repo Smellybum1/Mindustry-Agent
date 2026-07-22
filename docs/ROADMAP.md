@@ -1400,6 +1400,18 @@ candidate gate, smoke, determinism, and negative replay pass. Config/adversary
 hashes are `861f34bd07db43a5...` and `e7eb2f8826db4617...`. Replica A is next;
 M8.5 remains unmet.
 
+V31 replicas reproduce selected update 16 exactly at 9/10 reusable wins, mean
+return `3.11808`, core health `891.0`, and idle `0.07742222`. Checkpoint,
+model-state, replay, canonical full-run, and direct-lineage hashes are
+`6961656faaee8d93...`, `d87d193cb36e6604...`, `b9f7e84c938a0bd3...`,
+`b2dacf42484258fb...`, and `78e923796393ca58...`. Reusable dev-v1 then beats
+all four observed win-rate comparators but fails corrected scorecard parity:
+permanent-greedy idle regresses `+0.02698246` and abandonment `+0.03137446`
+with paired intervals wholly above zero; matched-greedy abandonment also
+regresses, and recovery plus permanent announcements are uncertain. V31 is
+rejected, dev-v27 remains unopened and is retired, held-out-v4 stays sealed,
+and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

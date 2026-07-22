@@ -800,23 +800,23 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run V31 replica A from committed evidence.** Use the pinned WSL2 lock and
-   `m8-selector-v31-initial-schematic-prior.json`; preserve complete teacher,
-   sample-schedule, and applied-prior evidence.
-2. **Train replica B only after construction passes.** Require A at 9/10 wins
-   and idle `<0.25` before starting B, then require exact checkpoint/frontier/
-   model/replay/full-run/direct-lineage reproduction.
-3. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
-   and both permanent-greedy and matched-greedy scorecards before any one-way
-   confirmation. Dev-v27 remains unopened until those gates pass; held-out-v4
-   remains sealed.
+1. **Record and diagnose V31 only from reusable evidence.** Both replicas match
+   at update 16 and 9/10; canonical full-run/direct-lineage hashes are
+   `b2dacf42484258fb...` / `78e923796393ca58...`.
+2. **Treat reusable preflight as the terminal V31 gate.** Permanent idle and
+   abandonment regress, matched abandonment regresses, and two recovery/
+   announcement intervals remain uncertain. Dev-v27 is retired unopened.
+3. **Precommit any successor before model work.** Use only reusable train/dev-v1
+   evidence, freeze a new disjoint confirmation set, and preserve corrected
+   permanent-plus-matched scorecard parity. Held-out-v4 remains sealed.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0042` (do not relitigate).
+See `docs/decisions/ADR-0001..0042` (do not relitigate). ADR-0042 now records
+V31's reproducible construction and reusable-preflight rejection.
 
 ## Deviations from the brief in this scaffold
 
