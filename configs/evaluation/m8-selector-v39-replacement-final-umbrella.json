@@ -1,0 +1,53 @@
+{
+  "schema": "m8_replacement_final_evaluation_umbrella_v1",
+  "candidate_version": "v39",
+  "status": "reserved_before_membership_creation",
+  "created_date": "2026-07-22",
+  "repository_parent_commit": "50bdc784ef59c6ee93939b3185a55e991c604685",
+  "training_config": {
+    "path": "configs/training/m8-selector-v39-partner-intent-duplication-risk.json",
+    "sha256": "54d76bb209ec31f24bc2711b208cb2995e6d538534ba0b99a150091596ccf924"
+  },
+  "access_owner": "primary_agent_only",
+  "delegation_forbidden": true,
+  "confirmation_binding": {
+    "seed_set_id": "bootstrap-defense-v1-dev-v35",
+    "seed_set_version": 35,
+    "split": "dev",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v35.json",
+    "sha256": "24c4a5e7ab8d664eba66c7a4313a1739c4ac8f994aa7aa21f9eb8ba6a52ecef3",
+    "freeze_receipt": {
+      "path": "configs/evaluation/m8-selector-v39-dev-v35-freeze.json",
+      "sha256": "30a3b7bc0a034b54e8e05de3d43bf83d1c9aa1bd5d1058739c48f330b517b45f"
+    },
+    "consumption_state": "frozen_unconsumed",
+    "membership_read_for_rebinding": false,
+    "exclusive_umbrella_attempt": "runs/m8-selector-v39-dev-v35-umbrella-attempt.json"
+  },
+  "retired_final": {
+    "seed_set_id": "bootstrap-defense-v1-held-out-v5",
+    "reason": "membership_read_by_legacy_full_suite_governance_test",
+    "outcomes_observed": false,
+    "values_rendered_or_delegated": false
+  },
+  "replacement_final": {
+    "role": "final",
+    "seed_set_id": "bootstrap-defense-v1-held-out-v6",
+    "seed_set_version": 6,
+    "split": "held-out",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-held-out-v6.json",
+    "membership_state_at_reservation": "not_created",
+    "exclusive_umbrella_attempt": "runs/m8-selector-v39-held-out-v6-umbrella-attempt.json",
+    "replaces": "bootstrap-defense-v1-held-out-v5"
+  },
+  "rules": [
+    "This reservation and metadata-only config revision must be committed before held-out-v6 membership is created or read.",
+    "Construction uses the disjoint 3000000000..3999999999 root namespace and must not open any prior membership manifest.",
+    "Membership construction is primary-agent-only and must not render seed values into agent output.",
+    "Dev-v35 remains unconsumed and cannot be read until exact replicas and reusable dual scorecards pass.",
+    "Held-out-v6 cannot be read until dev-v35 passes every frozen gate.",
+    "A started, aborted, failed, exposed, or completed one-way attempt consumes its set permanently."
+  ]
+}

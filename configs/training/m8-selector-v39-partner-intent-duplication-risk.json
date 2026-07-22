@@ -9,8 +9,8 @@
   "teacher_warmup_seed_set": "configs/evaluation/bootstrap-defense-v1-teacher-train-v1.json",
   "dev_seed_set": "configs/evaluation/bootstrap-defense-v1-dev-v1.json",
   "confirmation_seed_set": "configs/evaluation/bootstrap-defense-v1-dev-v35.json",
-  "held_out_seed_set_id": "bootstrap-defense-v1-held-out-v5",
-  "held_out_seed_set_version": 5,
+  "held_out_seed_set_id": "bootstrap-defense-v1-held-out-v6",
+  "held_out_seed_set_version": 6,
   "reward_schema": "selector_reward_v2",
   "quality_reward": {
     "idle_agent_tick_cost": 0.002,

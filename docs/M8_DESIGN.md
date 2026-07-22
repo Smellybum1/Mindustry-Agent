@@ -615,12 +615,14 @@ regression rejects V39 before training.
 
 The immutable config is
 `configs/training/m8-selector-v39-partner-intent-duplication-risk.json`, SHA-256
-`0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995`.
-The value-free confirmation umbrella reserves dev-v35 and binds the existing
-sealed held-out-v5 final without reading either membership. Dev-v35 membership
+`54d76bb209ec31f24bc2711b208cb2995e6d538534ba0b99a150091596ccf924`
+after ADR-0053's final-identity-only repair.
+The value-free confirmation umbrella reserves dev-v35. Dev-v35 membership
 may be constructed only by the primary agent after this precommit is committed,
 and may not be consumed until exact replicas and strict reusable scorecards
-pass. Held-out-v5 remains sealed and unconsumed.
+pass. Dev-v35 is frozen unconsumed with zero prior membership reads. A legacy
+test read retired held-out-v5 without outcomes; ADR-0053 reserves held-out-v6
+in a separate no-read namespace.
 
 ## M8.1 acceptance review
 

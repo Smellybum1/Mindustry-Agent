@@ -782,14 +782,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   precommits the successor: exact fixed-partner `task_id` intent raises the
   matching learned candidate's existing `duplication_risk` input to `1.0`
   without masking, redirecting, forcing, reordering, suppressing, or applying
-  an action. Config SHA-256 is
-  `0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995`.
-  The value-free umbrella reserves dev-v35 for primary-only construction after
-  the precommit and binds held-out-v5 without reading membership. Only
-  implementation/pretraining gates are authorized. Dev-v34 remains retired;
-  held-out-v5 remains sealed/unconsumed; M8.5 remains unmet. The precommit
-  packet passes 177 Python tests and 44/44 exact-config reward adversaries;
-  ignored report SHA-256 is `7bd71c1c9b5de869bab1d852fb26244c1c313f56797ce9dff0287147b531ef76`.
+  an action. ADR-0053 supersedes only final-set metadata; the behavior-identical live
+  config SHA-256 is
+  `54d76bb209ec31f24bc2711b208cb2995e6d538534ba0b99a150091596ccf924`.
+  The value-free umbrella reserved dev-v35 for primary-only construction after
+  the precommit. Dev-v34 remains retired;
+  held-out-v5 is retired without outcomes after a legacy test manifest read;
+  held-out-v6 is reserved but not yet created. Dev-v35 is frozen value-free and
+  unconsumed. M8.5 remains unmet. Implementation passes 198 Python tests,
+  pinned Java, public/runtime/replay gates, and the revised 44/44 reward gate;
+  the ignored report hashes to
+  `f3365c5abdd30fb8f1f7731c245c4b00b15870f5f22839f65aab4a9ebdc5173e`.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V38 rejection/guard repository checkpoint**:
   `9bc96f91c7219ad9e9656f99b29f15331b78b399`.
@@ -956,9 +959,9 @@ queue.
    not add masking, redirects, action changes, a feature dimension, or reward.
 2. **Run focused disabled-feature parity plus the complete public/reward/runtime
    gates.** Preserve ADR-0051's direct-loading/provenance contract.
-3. **After this committed precommit, freeze dev-v35 primary-only, but do not
-   consume it before exact replicas and strict reusable scorecards pass.**
-   Dev-v34 is retired; held-out-v5 remains sealed/unconsumed.
+3. **Commit and run the primary-only held-out-v6 freezer without opening any
+   membership.** The revised-config reward gate already passes. Dev-v35 is frozen
+   unconsumed; held-out-v5 is retired without outcomes.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.

@@ -1,0 +1,35 @@
+{
+  "candidate_version": "v39",
+  "disjointness_method": "partitioned_numeric_namespace_without_reads",
+  "generator_commit": "50bdc784ef59c6ee93939b3185a55e991c604685",
+  "global_disjointness_verified": true,
+  "membership_documents_read": 0,
+  "namespace_proof": {
+    "legacy_root_seed_max_exclusive": 1000000000,
+    "v38_sealed_max_exclusive": 2000000000,
+    "v38_sealed_min_inclusive": 1000000000,
+    "v39_confirmation_max_inclusive": 2147483647,
+    "v39_confirmation_min_inclusive": 2000000000
+  },
+  "repository_head_before_generation": "50bdc784ef59c6ee93939b3185a55e991c604685",
+  "schema": "m8_confirmation_seed_freeze_v1",
+  "sealed_final_membership_read": false,
+  "set": {
+    "count": 160,
+    "exclusive_umbrella_attempt": "runs/m8-selector-v39-dev-v35-umbrella-attempt.json",
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v35.json",
+    "replaces": "bootstrap-defense-v1-dev-v34",
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v35",
+    "seed_set_version": 35,
+    "sha256": "24c4a5e7ab8d664eba66c7a4313a1739c4ac8f994aa7aa21f9eb8ba6a52ecef3",
+    "split": "dev"
+  },
+  "status": "membership_frozen_unconsumed",
+  "umbrella": {
+    "commit": "f60b332e93e59825c9f222f7f6db0115f0d297bc",
+    "path": "configs/evaluation/m8-selector-v39-confirmation-umbrella.json",
+    "sha256": "b7f948f5a9ade11364d43164b516971e915e727459f8520ee69fd944d012b3aa"
+  },
+  "values_emitted": false
+}

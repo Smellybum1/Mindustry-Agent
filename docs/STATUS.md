@@ -1706,16 +1706,20 @@ repository-evidence mapping used for the M6 audit is:
   existing `duplication_risk` input to `1.0`; it does not mask, redirect, force,
   reorder, suppress, or apply an action. Runtime, feature dimensions, action
   vocabulary, model, reward, optimizer, roots, teacher, budget, RNGs, and
-  checkpoint ranking remain V38-exact. The immutable config SHA-256 is
-  `0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995`.
+  checkpoint ranking remain V38-exact. ADR-0053 supersedes only its final-set
+  metadata after a legacy full-suite
+  test read retired held-out-v5. The behavior-identical live config hashes to
+  `54d76bb209ec31f24bc2711b208cb2995e6d538534ba0b99a150091596ccf924`.
   A value-free umbrella reserves dev-v35 for primary-only construction after
-  this precommit and binds the existing sealed held-out-v5 final without a
-  membership read. Implementation/pretraining gates are authorized; replica A,
-  confirmation consumption, and final access are not. Dev-v34 remains retired
-  unopened/unconsumed, held-out-v5 remains sealed/unconsumed, and M8.5 remains
-  unmet. The precommit packet passes 177 Python tests and all 44 exact-config
-  reward adversaries; the ignored reward report hashes to
-  `7bd71c1c9b5de869bab1d852fb26244c1c313f56797ce9dff0287147b531ef76`.
+  this precommit. Dev-v35 is now frozen value-free with zero membership reads
+  and remains unconsumed. Held-out-v5 is retired without outcomes; a committed
+  replacement umbrella reserves held-out-v6 in a disjoint no-read namespace.
+  Replica A, confirmation consumption, and final access are not yet authorized.
+  M8.5 remains unmet. The implementation passes 198 Python tests, pinned Java,
+  public 5/5 survival/staging, smoke, determinism/replay controls, and 44/44
+  exact-config reward adversaries for the revised hash. The ignored revised
+  reward report hashes to
+  `f3365c5abdd30fb8f1f7731c245c4b00b15870f5f22839f65aab4a9ebdc5173e`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

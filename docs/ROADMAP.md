@@ -1773,14 +1773,18 @@ selection remains authoritative, unlike the rejected 48-choice mask and
 37-choice redirect. Runtime, action vocabulary, feature dimensions, model,
 reward, optimizer, roots, teacher, budget, RNGs, and checkpoint ranking remain
 V38-exact. The immutable config hashes to
-`0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995`.
+ADR-0053 supersedes only the final-set metadata after a legacy full-suite test
+read retired held-out-v5. The behavior-identical live config hashes to
+`54d76bb209ec31f24bc2711b208cb2995e6d538534ba0b99a150091596ccf924`.
 
 Implementation and pretraining gates are authorized; replica A is not. The
-committed value-free umbrella reserves dev-v35 for primary-only construction
-after the precommit, while held-out-v5 remains sealed and unconsumed. Dev-v34
-remains retired unopened/unconsumed. V39 must pass focused feature/parity
-checks, public survival/staging, suites, smoke, determinism, replay controls,
-and exact-config reward adversaries before model work. M8.5 remains unmet.
+committed value-free umbrella reserved dev-v35; it is now frozen unconsumed
+with zero membership reads. Held-out-v5 is retired without outcomes and a new
+committed umbrella reserves held-out-v6 in a disjoint no-read namespace.
+Focused feature/parity checks, public 5/5 survival/staging, suites, smoke,
+determinism, replay controls, and the initial exact-config reward gate pass.
+The revised-hash 44/44 reward gate passes; only the value-free held-out-v6
+freeze remains before model work. M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

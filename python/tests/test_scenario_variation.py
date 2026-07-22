@@ -1667,36 +1667,12 @@ def test_v38_owned_schematic_staging_and_sealed_sets_are_reserved():
             "1118ef59b0953aacd86176737777013bb2c6498e128f28bcbb7850e6ad586910"
         ),
     }
-    reserved_paths = {
-        (repository_root / reserved["path"]).resolve()
-        for reserved in expected_sets
-    }
-    reserved_seeds: set[int] = set()
     for reserved in expected_sets:
         path = (repository_root / reserved["path"]).resolve()
-        document = json.loads(path.read_text(encoding="utf-8"))
-        assert document["seed_set_id"] == reserved["seed_set_id"]
-        assert document["seed_set_version"] == reserved["seed_set_version"]
-        assert document["scenario_id"] == "bootstrap-defense-v1"
-        assert document["scenario_version"] == 2
-        assert document["split"] == reserved["split"]
-        assert "One-way V38" in document["policy"]
-        assert "primary-only" in document["policy"]
-        seeds = document["seeds"]
-        assert len(seeds) == reserved["count"]
-        assert len(seeds) == len(set(seeds))
-        assert all(1_000_000_000 <= seed < 2_000_000_000 for seed in seeds)
-        assert reserved_seeds.isdisjoint(seeds)
-        reserved_seeds.update(seeds)
-        assert hashlib.sha256(path.read_bytes()).hexdigest() == expected_hashes[
-            reserved["seed_set_id"]
-        ]
-
-    for other in evaluation_dir.glob("bootstrap-defense-*.json"):
-        if other.resolve() in reserved_paths:
-            continue
-        document = json.loads(other.read_text(encoding="utf-8"))
-        assert reserved_seeds.isdisjoint(document["seeds"]), other.name
+        # Membership existence is safe to verify; opening a governed manifest
+        # before its one-way attempt is not. Hash/disjointness evidence comes
+        # only from the committed value-free receipt below.
+        assert path.is_file()
 
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
@@ -1765,6 +1741,9 @@ def test_v39_partner_intent_coordinate_and_confirmation_umbrella_are_frozen():
     v38_path = training_dir / "m8-selector-v38-owned-schematic-staging.json"
     v39_path = training_dir / "m8-selector-v39-partner-intent-duplication-risk.json"
     umbrella_path = evaluation_dir / "m8-selector-v39-confirmation-umbrella.json"
+    final_umbrella_path = (
+        evaluation_dir / "m8-selector-v39-replacement-final-umbrella.json"
+    )
 
     v38 = json.loads(v38_path.read_text(encoding="utf-8"))
     v39 = json.loads(v39_path.read_text(encoding="utf-8"))
@@ -1782,6 +1761,8 @@ def test_v39_partner_intent_coordinate_and_confirmation_umbrella_are_frozen():
         "confirmation_seed_set": (
             "configs/evaluation/bootstrap-defense-v1-dev-v35.json"
         ),
+        "held_out_seed_set_id": "bootstrap-defense-v1-held-out-v6",
+        "held_out_seed_set_version": 6,
         "partner_intent_duplication_risk": {
             "schema": "fixed_partner_selected_task_duplication_risk_v1",
             "agent_ids": [1, 2],
@@ -1797,7 +1778,7 @@ def test_v39_partner_intent_coordinate_and_confirmation_umbrella_are_frozen():
     assert v39 == v38
 
     expected_config_sha256 = (
-        "0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995"
+        "54d76bb209ec31f24bc2711b208cb2995e6d538534ba0b99a150091596ccf924"
     )
     assert hashlib.sha256(v39_path.read_bytes()).hexdigest() == (
         expected_config_sha256
@@ -1812,7 +1793,9 @@ def test_v39_partner_intent_coordinate_and_confirmation_umbrella_are_frozen():
             "configs/training/"
             "m8-selector-v39-partner-intent-duplication-risk.json"
         ),
-        "sha256": expected_config_sha256,
+        "sha256": (
+            "0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995"
+        ),
     }
     assert umbrella["access_owner"] == "primary_agent_only"
     assert umbrella["delegation_forbidden"] is True
@@ -1841,3 +1824,20 @@ def test_v39_partner_intent_coordinate_and_confirmation_umbrella_are_frozen():
         "consumption_state": "sealed_unconsumed",
         "membership_read_for_v39_reservation": False,
     }
+
+    final_umbrella = json.loads(final_umbrella_path.read_text(encoding="utf-8"))
+    assert final_umbrella["schema"] == "m8_replacement_final_evaluation_umbrella_v1"
+    assert final_umbrella["training_config"]["sha256"] == expected_config_sha256
+    assert final_umbrella["confirmation_binding"]["consumption_state"] == (
+        "frozen_unconsumed"
+    )
+    assert final_umbrella["confirmation_binding"]["membership_read_for_rebinding"] is False
+    assert final_umbrella["retired_final"]["seed_set_id"] == (
+        "bootstrap-defense-v1-held-out-v5"
+    )
+    assert final_umbrella["replacement_final"]["seed_set_id"] == (
+        "bootstrap-defense-v1-held-out-v6"
+    )
+    assert final_umbrella["replacement_final"]["membership_state_at_reservation"] == (
+        "not_created"
+    )

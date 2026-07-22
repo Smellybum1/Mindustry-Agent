@@ -259,7 +259,8 @@ candidate's existing `duplication_risk` input to `1.0`. It does not mask,
 redirect, force, reorder, suppress, or apply an action. The model shape, reward,
 runtime, roots, teacher, budget, RNGs, and checkpoint ranking remain V38-exact.
 The immutable config SHA-256 is
-`0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995`.
+`54d76bb209ec31f24bc2711b208cb2995e6d538534ba0b99a150091596ccf924`
+after ADR-0053's final-identity-only repair.
 
 Implement that exact feature and run focused fail-closed/disabled-feature
 parity, public survival/staging, suites, smoke, determinism, golden/negative
@@ -267,9 +268,9 @@ replay, and exact-config reward gates. The committed value-free umbrella
 reserves dev-v35 for primary-only construction after the precommit; never
 delegate or render its membership. Replica A remains prohibited until all
 implementation gates pass, and dev-v35 remains prohibited until exact replicas
-and strict reusable scorecards pass. Dev-v34 is retired; held-out-v5 remains
-sealed/unconsumed. Do not inspect either membership or run confirmation/final
-episodes. Keep ADR-0051 unchanged.
+and strict reusable scorecards pass. Dev-v34 and held-out-v5 are retired;
+held-out-v6 is reserved but not yet created. Do not inspect any membership or
+run confirmation/final episodes. Keep ADR-0051 unchanged.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
