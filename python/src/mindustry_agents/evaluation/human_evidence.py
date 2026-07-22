@@ -8,9 +8,12 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from mindustry_agents.evaluation.human_scorecard import human_teammate_scorecard
-from mindustry_agents.telemetry.human_session import CAPTURE_PROVENANCE_FIELDS
+from mindustry_agents.telemetry.human_session import (
+    CAPTURE_PROVENANCE_FIELDS,
+    CAPTURE_PROVENANCE_FIELDS_BY_VERSION,
+)
 
-EVIDENCE_SCHEMA = "human_teammate_evidence_v1"
+EVIDENCE_SCHEMA = "human_teammate_evidence_v2"
 MINIMUM_SERIOUS_SESSIONS = 3
 BASE_IDENTITY_FIELDS = (
     "capture_schema_version",
@@ -78,17 +81,17 @@ def human_evidence_report(
             raise ValueError(f"duplicate human session digest: {digest}")
         seen.add(digest)
         start = records[0]
+        schema_version = start.get("capture_schema_version", 0)
         required_identity = (
-            IDENTITY_FIELDS
-            if start.get("capture_schema_version", 0) >= 2
-            else BASE_IDENTITY_FIELDS
+            BASE_IDENTITY_FIELDS
+            + CAPTURE_PROVENANCE_FIELDS_BY_VERSION.get(schema_version, ())
         )
         missing = [field for field in required_identity if field not in start]
         if missing:
             raise ValueError(
                 "human evidence session identity missing: " + ", ".join(missing)
             )
-        provenance_complete = start["capture_schema_version"] >= 2
+        provenance_complete = schema_version >= 3
         identity = {
             field: start.get(field) for field in IDENTITY_FIELDS
         }
@@ -141,12 +144,12 @@ def human_evidence_report(
         "agents_present_vs_absent_not_measured_by_rating_v1",
     ]
     if any(not row["provenance_complete"] for row in rows):
-        blockers.insert(0, "legacy_capture_v1_excluded_from_acceptance")
+        blockers.insert(0, "legacy_capture_schema_excluded_from_acceptance")
     if not pin_floor_met:
         blockers.insert(0, "fewer_than_three_pin_compatible_serious_sessions")
     return {
         "schema": EVIDENCE_SCHEMA,
-        "version": 1,
+        "version": 2,
         "minimum_serious_sessions": MINIMUM_SERIOUS_SESSIONS,
         "distinct_session_count": len(rows),
         "serious_session_count": len(serious_rows),

@@ -10,13 +10,24 @@ from typing import Any
 
 from mindustry_agents import ARC_VERSION, ENGINE_COMMIT, ENGINE_TAG, PROTOCOL_VERSION
 
-CAPTURE_SCHEMA_VERSION = 2
-SUPPORTED_CAPTURE_SCHEMA_VERSIONS = (1, 2)
+CAPTURE_SCHEMA_VERSION = 3
+SUPPORTED_CAPTURE_SCHEMA_VERSIONS = (1, 2, 3)
 CAPTURE_PROVENANCE_FIELDS = (
     "repository_commit",
     "agent_plugin_sha256",
     "server_sha256",
+    "agent_plugin_content_sha256",
+    "server_content_sha256",
 )
+CAPTURE_PROVENANCE_FIELDS_BY_VERSION = {
+    1: (),
+    2: ("repository_commit", "agent_plugin_sha256", "server_sha256"),
+    3: (
+        "repository_commit",
+        "agent_plugin_content_sha256",
+        "server_content_sha256",
+    ),
+}
 POPULATION_SCHEMA = "scripted_human_partner_population_v1"
 PROFILE_IDS = (
     "fast-expert",
@@ -84,17 +95,16 @@ def load_session(path: Path) -> list[dict[str, Any]]:
     ):
         if field not in start:
             raise ValueError(f"human session start missing {field}")
-    if start["capture_schema_version"] >= 2:
-        lengths = {
-            "repository_commit": 40,
-            "agent_plugin_sha256": 64,
-            "server_sha256": 64,
-        }
-        for field in CAPTURE_PROVENANCE_FIELDS:
+    provenance_fields = CAPTURE_PROVENANCE_FIELDS_BY_VERSION[
+        start["capture_schema_version"]
+    ]
+    if provenance_fields:
+        for field in provenance_fields:
             value = start.get(field)
+            length = 40 if field == "repository_commit" else 64
             if (
                 not isinstance(value, str)
-                or len(value) != lengths[field]
+                or len(value) != length
                 or any(character not in "0123456789abcdef" for character in value)
             ):
                 raise ValueError(f"human session {field} is not lowercase hex")

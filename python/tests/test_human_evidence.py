@@ -18,17 +18,22 @@ from mindustry_agents.tools import human_evidence as human_evidence_tool
 def _records(
     digest: str,
     policy: str = "public-greedy-candidates-v1",
-    schema_version: int = 2,
+    schema_version: int = 3,
 ) -> list[dict]:
-    provenance = (
-        {
+    if schema_version == 2:
+        provenance = {
             "repository_commit": "1" * 40,
             "agent_plugin_sha256": "2" * 64,
             "server_sha256": "3" * 64,
         }
-        if schema_version >= 2
-        else {}
-    )
+    elif schema_version >= 3:
+        provenance = {
+            "repository_commit": "1" * 40,
+            "agent_plugin_content_sha256": "2" * 64,
+            "server_content_sha256": "3" * 64,
+        }
+    else:
+        provenance = {}
     return [
         {
             "capture_schema_version": schema_version,
@@ -59,7 +64,7 @@ def _entry(
     keep: bool = True,
     comparison: int = 0,
     policy: str = "public-greedy-candidates-v1",
-    schema_version: int = 2,
+    schema_version: int = 3,
 ) -> tuple[list[dict], dict]:
     return (
         _records(digest, policy, schema_version),
@@ -76,12 +81,14 @@ def test_three_pin_compatible_serious_sessions_meet_only_the_floor():
             _entry("d" * 64, serious=False),
         ]
     )
+    assert report["schema"] == "human_teammate_evidence_v2"
+    assert report["version"] == 2
     assert report["distinct_session_count"] == 4
     assert report["serious_session_count"] == 3
     assert report["pin_compatible_serious_session_floor_met"] is True
     assert report["acceptance_status"] == "not_evaluated"
     assert "scorecard_targets_not_precommitted" in report["blocking_reasons"]
-    assert "legacy_capture_v1_excluded_from_acceptance" not in report[
+    assert "legacy_capture_schema_excluded_from_acceptance" not in report[
         "blocking_reasons"
     ]
     assert "agents_present_vs_absent_not_measured_by_rating_v1" in report[
@@ -128,24 +135,27 @@ def test_missing_session_identity_is_rejected():
         human_evidence_report([(records, rating)])
 
 
-def test_v2_missing_artifact_provenance_is_rejected():
+def test_v3_missing_artifact_provenance_is_rejected():
     records, rating = _entry("a" * 64)
-    del records[0]["server_sha256"]
-    with pytest.raises(ValueError, match="session identity missing: server_sha256"):
+    del records[0]["server_content_sha256"]
+    with pytest.raises(
+        ValueError, match="session identity missing: server_content_sha256"
+    ):
         human_evidence_report([(records, rating)])
 
 
-def test_legacy_v1_sessions_are_excluded_from_floor():
+@pytest.mark.parametrize("schema_version", [1, 2])
+def test_legacy_capture_sessions_are_excluded_from_floor(schema_version):
     report = human_evidence_report(
         [
-            _entry("a" * 64, schema_version=1),
-            _entry("b" * 64, schema_version=1),
-            _entry("c" * 64, schema_version=1),
+            _entry("a" * 64, schema_version=schema_version),
+            _entry("b" * 64, schema_version=schema_version),
+            _entry("c" * 64, schema_version=schema_version),
         ]
     )
     assert report["serious_session_count"] == 3
     assert report["pin_compatible_serious_session_floor_met"] is False
-    assert "legacy_capture_v1_excluded_from_acceptance" in report[
+    assert "legacy_capture_schema_excluded_from_acceptance" in report[
         "blocking_reasons"
     ]
     assert report["groups"][0]["provenance_complete"] is False

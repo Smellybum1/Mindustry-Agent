@@ -12,10 +12,10 @@ import java.util.*;
 
 /** Opt-in, simulation-thread-owned JSONL capture for human demo sessions. */
 final class DemoSessionCapture{
-    static final int schemaVersion = 2;
+    static final int schemaVersion = 3;
     static final String repositoryCommitProperty = "mindustry.agents.demo.repository-commit";
-    static final String pluginSha256Property = "mindustry.agents.demo.plugin-sha256";
-    static final String serverSha256Property = "mindustry.agents.demo.server-sha256";
+    static final String pluginContentSha256Property = "mindustry.agents.demo.plugin-content-sha256";
+    static final String serverContentSha256Property = "mindustry.agents.demo.server-content-sha256";
 
     private final Path path;
     private final BufferedWriter writer;
@@ -27,8 +27,8 @@ final class DemoSessionCapture{
 
     private DemoSessionCapture(Path path, Scenario scenario, long tick){
         String repositoryCommit = requireHexProperty(repositoryCommitProperty, 40);
-        String pluginSha256 = requireHexProperty(pluginSha256Property, 64);
-        String serverSha256 = requireHexProperty(serverSha256Property, 64);
+        String pluginContentSha256 = requireHexProperty(pluginContentSha256Property, 64);
+        String serverContentSha256 = requireHexProperty(serverContentSha256Property, 64);
         this.path = path;
         try{
             Path parent = path.getParent();
@@ -53,8 +53,8 @@ final class DemoSessionCapture{
         start.put("scenario_version", scenario.version);
         start.put("policy", "public-greedy-candidates-v1");
         start.put("repository_commit", repositoryCommit);
-        start.put("agent_plugin_sha256", pluginSha256);
-        start.put("server_sha256", serverSha256);
+        start.put("agent_plugin_content_sha256", pluginContentSha256);
+        start.put("server_content_sha256", serverContentSha256);
         start.put("python_lockfile", "not_applicable_demo_runtime");
         start.put("training_config", "not_applicable_demo_runtime");
         write(start, true);

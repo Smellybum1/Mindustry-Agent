@@ -60,8 +60,8 @@ Records are ordered and have these types:
 
 - `session_start`: engine tag/commit, Arc hash, protocol version, scenario and
   policy identity, and explicit not-applicable demo values for the Python
-  training lockfile/config fields. Current schema v2 also records the project
-  commit plus exact agent-plugin and server JAR SHA-256 values;
+  training lockfile/config fields. Current schema v3 also records the project
+  commit plus canonical agent-plugin and server runtime-content SHA-256 values;
 - `trajectory`: the existing public-candidate team observations, candidate
   masks, typed actions, and action results at one decision boundary;
 - `control`: queued tick, applied tick, sequence, hashed/canonical author ID,
@@ -79,10 +79,14 @@ messages, secrets, and wall-clock timestamps are not captured. Player author
 IDs use the existing truncated SHA-256 identity; server/probe authors use their
 canonical local IDs.
 
-The loader remains backward-compatible with schema-v1 captures, but v1 lacks
-project and executable provenance. ADR-0058 therefore permits v1 only as an
-exploratory operational baseline. Only schema-v2 sessions can contribute to a
-provenance-complete serious-session floor.
+The loader remains backward-compatible with schema-v1/v2 captures. V1 lacks
+project and executable provenance. V2 recorded whole-JAR byte hashes, but the
+upstream server archive contains volatile generated packaging metadata, so
+fresh byte-identical builds cannot be expected. Both are exploratory only.
+Schema v3 hashes sorted entry names and decompressed bytes while normalizing
+only `version.properties` comments and `buildDate`; stable build/version fields,
+all classes, and every other resource remain authoritative. Only v3 sessions
+can contribute to a provenance-complete serious-session floor.
 
 ## Statistics, replay, and staged partner models
 
@@ -173,12 +177,13 @@ PYTHONPATH=python/src python -m mindustry_agents.tools.human_evidence \
   --output runs/human-evidence-001.json
 ```
 
-The create-new report rejects duplicate capture digests and groups sessions by
-matching engine, Arc, protocol, scenario, and policy pins. Only explicit
+The current evidence-report schema v2 rejects duplicate capture digests and
+groups sessions by matching engine, Arc, protocol, scenario, and policy pins.
+Only explicit
 `serious_session=true` ratings count toward the minimum-three-session floor.
 That floor is readiness evidence, not acceptance: rating v1 does not measure a
 paired agents-present versus agents-absent preference, and no learned/scripted
-target thresholds are precommitted yet. Legacy v1 groups remain exploratory;
-v2 groups additionally require exact project-commit and built-artifact hashes.
-The report therefore states `acceptance_status=not_evaluated` even when a v2
+target thresholds are precommitted yet. Legacy v1/v2 groups remain exploratory;
+v3 groups additionally require exact project-commit and canonical runtime-
+content hashes. The report therefore states `acceptance_status=not_evaluated` even when a v3
 group meets the collection floor. See ADR-0058.

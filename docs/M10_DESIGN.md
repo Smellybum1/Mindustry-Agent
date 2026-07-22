@@ -211,8 +211,8 @@ The existing training `state_hash` and selector tensor schema do not change for
 the empty-control default. Any later policy-visible control observation requires
 an explicit protocol/feature-schema version and fresh learning governance.
 
-Capture schema v2 is implemented in `DemoSessionCapture` and documented in
-`docs/HUMAN_SESSIONS.md`; the Python loader retains legacy-v1 readability. An
+Capture schema v3 is implemented in `DemoSessionCapture` and documented in
+`docs/HUMAN_SESSIONS.md`; the Python loader retains legacy-v1/v2 readability. An
 explicit `mindustry.agents.demo.capture-path`
 creates a new UTF-8 JSONL file and refuses overwrite. It records pinned session
 metadata, the existing public-candidate trajectory at every decision boundary,
@@ -220,9 +220,12 @@ applied control events, authoritative coordination events with render outcome,
 and human-plan/recent-construction changes. The terminal line carries a record
 count and SHA-256 over every preceding line. The dependency-free Python loader
 fails closed on pin, ordering, structure, replay-revision, count, or digest
-drift and produces deterministic pace/role/plan-change summaries. V2 adds the
-project commit plus exact agent-plugin and server JAR SHA-256 values; the Git
-Bash/Linux launcher derives and injects them after building the artifacts.
+drift and produces deterministic pace/role/plan-change summaries. V3 adds the
+project commit plus canonical agent-plugin and server runtime-content SHA-256
+values; the Git Bash/Linux launcher derives and injects them after building the
+artifacts. The canonical digest hashes sorted entry names and decompressed
+bytes, ignoring ZIP order/timestamps/compression and only the generated
+`version.properties` comment/`buildDate`. Stable version fields remain hashed.
 
 The five M10.3 partner styles have a versioned executable profile catalog at
 `configs/partners/human-scripted-v1.json`. Their engine-neutral deterministic
@@ -236,9 +239,13 @@ capture/statistics/model implementation slice, but not the roadmap item or M10
 exit checkbox: population activation is an M9 action and remains gated.
 The historical v1 probe digest is
 `3e864f35ffc3cf3c52bb72cfe28fec8d970f1a63a990efb2325294f0b963346b`.
-The v2 working-tree gate passes with unchanged control schedule digest
-`d30d529355b07ce18c45d074f58a11d4c444b3dff0a2ec70b89bfeb8cbbef6ce`.
-A committed v2 reference capture is the next verification step.
+Committed v2 diagnostic captures differed (`7cee94a1...` / `489bbb68...`)
+because whole-server-JAR bytes changed on each upstream build. Per-entry
+diagnosis isolated only volatile `version.properties`; all other entry contents
+matched. V3 supersedes v2 for acceptance provenance. Its working-tree gate
+passes with unchanged control schedule digest
+`d30d529355b07ce18c45d074f58a11d4c444b3dff0a2ec70b89bfeb8cbbef6ce`;
+a committed v3 reference is next.
 
 M10.4 scorecard v1 is derived only from capture structure. Intervention rate
 uses unique accepted-control ticks intersecting trajectory boundaries; plan
@@ -259,15 +266,15 @@ the exact rating schema from four explicit human answers, obtains the binding
 digest from a fully validated capture, rejects unknown fields, and writes with
 create-new semantics. This removes manual digest transcription without
 weakening human authority over preference evidence.
-ADR-0058 governs multi-session evidence. The dependency-free
+ADR-0058 governs multi-session evidence. The dependency-free schema-v2
 `mindustry_agents.tools.human_evidence` report reloads complete capture/rating
 pairs, rejects duplicate digests, and groups only exact engine/Arc/protocol/
 scenario/policy identities. Serious ratings count toward the roadmap's
 three-session floor, but the report keeps acceptance `not_evaluated`: scorecard
 targets are not yet precommitted, and rating v1 does not measure a paired
-agents-present versus agents-absent preference. Legacy capture v1 lacks project
-commit and executable hashes and is excluded from the collection floor; v2
-groups require all three exact values. This prevents operational
+agents-present versus agents-absent preference. Legacy capture v1/v2 is
+excluded from the collection floor; v3 groups require the project commit and
+both canonical runtime-content hashes. This prevents operational
 scripted sessions from being mislabeled as learned-team or north-star evidence.
 The deterministic probe currently yields 5/83 intervention ticks, one conflict
 with zero-tick yield latency, 1/1 eligible goal compliance, no observed help

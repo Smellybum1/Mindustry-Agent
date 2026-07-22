@@ -101,13 +101,19 @@ fi
 if [[ -n "$CAPTURE_FILE" ]]; then
     check_new_output "$CAPTURE_FILE" "capture"
     REPOSITORY_COMMIT="$(git rev-parse --verify HEAD)"
-    PLUGIN_SHA256="$(sha256sum -- "$PLUGIN_JAR" | awk '{print $1}')"
-    SERVER_SHA256="$(sha256sum -- "$SERVER_JAR" | awk '{print $1}')"
+    export PYTHONPATH="$ROOT/python/src${PYTHONPATH:+:$PYTHONPATH}"
+    source "$ROOT/scripts/python-command.sh"
+    PLUGIN_CONTENT_SHA256="$(
+        "$PY" -m mindustry_agents.tools.jar_content_sha256 "$PLUGIN_JAR"
+    )"
+    SERVER_CONTENT_SHA256="$(
+        "$PY" -m mindustry_agents.tools.jar_content_sha256 "$SERVER_JAR"
+    )"
     CAPTURE_ARGS=(
         -Dmindustry.agents.demo.capture-path="$CAPTURE_FILE"
         -Dmindustry.agents.demo.repository-commit="$REPOSITORY_COMMIT"
-        -Dmindustry.agents.demo.plugin-sha256="$PLUGIN_SHA256"
-        -Dmindustry.agents.demo.server-sha256="$SERVER_SHA256"
+        -Dmindustry.agents.demo.plugin-content-sha256="$PLUGIN_CONTENT_SHA256"
+        -Dmindustry.agents.demo.server-content-sha256="$SERVER_CONTENT_SHA256"
     )
 fi
 

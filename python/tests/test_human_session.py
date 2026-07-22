@@ -22,16 +22,21 @@ def _line(value: dict) -> bytes:
     return (json.dumps(value, separators=(",", ":")) + "\n").encode()
 
 
-def _capture(path: Path, schema_version: int = 2) -> None:
-    provenance = (
-        {
+def _capture(path: Path, schema_version: int = 3) -> None:
+    if schema_version == 2:
+        provenance = {
             "repository_commit": "1" * 40,
             "agent_plugin_sha256": "2" * 64,
             "server_sha256": "3" * 64,
         }
-        if schema_version >= 2
-        else {}
-    )
+    elif schema_version >= 3:
+        provenance = {
+            "repository_commit": "1" * 40,
+            "agent_plugin_content_sha256": "2" * 64,
+            "server_content_sha256": "3" * 64,
+        }
+    else:
+        provenance = {}
     records = [
         {
             "capture_schema_version": schema_version,
@@ -106,7 +111,7 @@ def test_load_replay_and_style_summary():
         assert session_summary(records)["session_content_sha256"] == records[-1][
             "content_sha256"
         ]
-        assert session_summary(records)["capture_schema_version"] == 2
+        assert session_summary(records)["capture_schema_version"] == 3
 
 
 def test_legacy_v1_capture_remains_readable():
@@ -118,14 +123,30 @@ def test_legacy_v1_capture_remains_readable():
         assert session_summary(records)["capture_schema_version"] == 1
 
 
-def test_v2_capture_rejects_invalid_artifact_provenance():
+def test_legacy_v2_capture_remains_readable():
     root = Path(__file__).parents[2]
     with TemporaryDirectory(dir=root / "runs") as directory:
         path = Path(directory) / "session-v2.jsonl"
+        _capture(path, schema_version=2)
+        records = load_session(path)
+        assert session_summary(records)["capture_schema_version"] == 2
+
+
+def test_v3_capture_rejects_invalid_artifact_provenance():
+    root = Path(__file__).parents[2]
+    with TemporaryDirectory(dir=root / "runs") as directory:
+        path = Path(directory) / "session-v3.jsonl"
         _capture(path)
         raw = path.read_bytes()
-        path.write_bytes(raw.replace(b'"server_sha256":"333', b'"server_sha256":"X33'))
-        with pytest.raises(ValueError, match="server_sha256 is not lowercase hex"):
+        path.write_bytes(
+            raw.replace(
+                b'"server_content_sha256":"333',
+                b'"server_content_sha256":"X33',
+            )
+        )
+        with pytest.raises(
+            ValueError, match="server_content_sha256 is not lowercase hex"
+        ):
             load_session(path)
 
 
