@@ -153,3 +153,26 @@ must be entered by the human after play; the probe deliberately emits
 exit criterion. Keep the automatically generated `.scorecard.unrated.json` as
 the objective record and write the later digest-bound rated result to the
 separate `.scorecard.json` path shown above.
+
+## Aggregate serious-session evidence
+
+Aggregate only complete capture/rating pairs; a scorecard alone does not carry
+enough runtime, scenario, and policy identity to establish comparability:
+
+```bash
+PYTHONPATH=python/src python -m mindustry_agents.tools.human_evidence \
+  --entry runs/human-session-001.jsonl runs/human-session-001.rating.json \
+  --entry runs/human-session-002.jsonl runs/human-session-002.rating.json \
+  --entry runs/human-session-003.jsonl runs/human-session-003.rating.json \
+  --output runs/human-evidence-001.json
+```
+
+The create-new report rejects duplicate capture digests and groups sessions by
+matching engine, Arc, protocol, scenario, and policy pins. Only explicit
+`serious_session=true` ratings count toward the minimum-three-session floor.
+That floor is readiness evidence, not acceptance: rating v1 does not measure a
+paired agents-present versus agents-absent preference, and no learned/scripted
+target thresholds are precommitted yet. Capture v1 also lacks project-commit and
+built-artifact hashes, so even pin-compatible v1 groups are exploratory rather
+than final evidence. The report therefore always states
+`acceptance_status=not_evaluated`. See ADR-0058.

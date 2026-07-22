@@ -62,6 +62,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0055](ADR-0055-v41-adjacent-frontier-midpoint.md) | V41 adjacent-frontier midpoint |
 | [0056](ADR-0056-v42-partner-intent-teacher-conflict-relabel.md) | V42 partner-intent teacher-conflict relabel |
 | [0057](ADR-0057-m10-human-control-and-demo-candidate-parity.md) | M10 human control and demo candidate-path parity |
+| [0058](ADR-0058-m10-human-evidence-governance.md) | M10 pin-compatible human evidence governance |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

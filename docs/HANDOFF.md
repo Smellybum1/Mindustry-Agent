@@ -912,7 +912,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   and all 44 exact-config reward adversaries (`272ac291ef143fa6...`). Freezer /
   freeze commits are `3e328ce91e` / `949b73f987`; membership/receipt hashes are
   `3f4b0d012cf87303...` / `fea431ae993d1072...`. The receipt records zero reads
-  and no emitted values, and the full suite now passes 263 tests. Independent
+  and no emitted values, and the full suite now passes 269 tests. Independent
   replicas from training commit `12980ee2b9` both select update 2 at 9/10 wins,
   return `4.73976`, core `568.8`, and idle `0.03455784384563236`; all 32
   checkpoint files match. Checkpoint/model/replay/action-state/full-run hashes
@@ -956,6 +956,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   objective result is 5/83 intervention ticks, one
   zero-latency conflict, 1/1 eligible goal compliance, and 10/4 rendered/
   suppressed announcements. Real serious sessions remain pending.
+- **M10 human-evidence governance**: ADR-0058 forbids pooling scorecards without
+  their captures. `mindustry_agents.tools.human_evidence` reloads capture/rating
+  pairs, rejects duplicate digests, groups exact runtime/scenario/policy pins,
+  and counts only serious ratings toward the three-session floor. It never
+  claims acceptance: learned/scripted targets are not precommitted and rating
+  v1 does not prove agents-present versus agents-absent preference. Capture v1
+  also lacks the project-commit and built-artifact provenance required for final
+  evidence; ADR-0058 makes that an explicit blocker.
 - **Current V42 training identity**:
   `12980ee2b9e427d65be1883d014da6fc67a29c5a` (V40 training parents remain
   bound to `c288483436c1003d25dc64ce7aba968600d45f3a`).
@@ -973,8 +981,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; resolves `python` on Windows or `python3` on stock Ubuntu; ends `bootstrap: OK`, exit 0. Clean Ubuntu verification passed at `43d3b17db6`. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the complete Python suite (263 with the locked runtime, or the 33-test stdlib core boundary without it), then the `agent-core` / `rl-server` JUnit suites and `agent-plugin` compile check. Literal clean-checkout Ubuntu execution passed at `43d3b17db6`; hosted CI is still pending the first push. |
-| `make test-python` | With the locked dev/RL runtime, `pytest python/tests -q` runs all 263 tests. Without pytest, the script runs the governed 33-test stdlib-only core boundary under `python -S`; both paths pass. |
+| `make test` | Runs the complete Python suite (269 with the locked runtime, or the 33-test stdlib core boundary without it), then the `agent-core` / `rl-server` JUnit suites and `agent-plugin` compile check. Literal clean-checkout Ubuntu execution passed at `43d3b17db6`; hosted CI is still pending the first push. |
+| `make test-python` | With the locked dev/RL runtime, `pytest python/tests -q` runs all 269 tests. Without pytest, the script runs the governed 33-test stdlib-only core boundary under `python -S`; both paths pass. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
 | `make training-gate` | On WSL2 with pinned `UV`/`JAVA`, reconstructs the RL environment, runs the 1/2/4-JVM shadow-inference collector gate, then 10,000 resets. Current 4-JVM result 375.1x real-time; zero reset drift/leak/orphans; ends `TRAINING-GATE OK`. Verified 2026-07-21. |
 | `bash scripts/train-selector.sh` | Runs 27 reward adversaries, two independent train/dev PPO runs, two complete fresh-checkpoint replays, and exact manifest comparison. Current checkpoint `0b2bd8ac...`, full digest `56cc7b54...`, dev 0/10; ends `TRAIN-SELECTOR OK`. Held-out is not read. |

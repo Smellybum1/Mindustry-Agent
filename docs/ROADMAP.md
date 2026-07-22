@@ -2048,7 +2048,12 @@ are complete; opt-in session capture is next.
   an unrated objective scorecard after normal exit. The deterministic probe
   leaves ratings null. A create-new rating tool binds four explicit human
   answers to the validated capture digest and rejects extra/free-text fields;
-  real serious sessions and human-entered ratings are still required.
+  a create-new evidence report rejects duplicates and separates incompatible
+  runtime/scenario/policy groups. Per ADR-0058, three serious compatible
+  sessions meet only the collection floor: learned/scripted targets and a paired
+  agents-present/absent protocol must be precommitted before acceptance
+  collection. Real serious sessions and human-entered ratings are still
+  required.
 - 10.5 Learned policy in the demo seat: latency budget (decision within one
   real-time tick), safety invariants live (stop/pause instant, autonomy
   levels honored), fallback to scripted brain on policy-process failure.

@@ -255,6 +255,16 @@ the exact rating schema from four explicit human answers, obtains the binding
 digest from a fully validated capture, rejects unknown fields, and writes with
 create-new semantics. This removes manual digest transcription without
 weakening human authority over preference evidence.
+ADR-0058 governs multi-session evidence. The dependency-free
+`mindustry_agents.tools.human_evidence` report reloads complete capture/rating
+pairs, rejects duplicate digests, and groups only exact engine/Arc/protocol/
+scenario/policy identities. Serious ratings count toward the roadmap's
+three-session floor, but the report keeps acceptance `not_evaluated`: scorecard
+targets are not yet precommitted, and rating v1 does not measure a paired
+agents-present versus agents-absent preference. Capture v1 also lacks project
+commit and executable hashes, which is an explicit report blocker. This
+prevents operational
+scripted sessions from being mislabeled as learned-team or north-star evidence.
 The deterministic probe currently yields 5/83 intervention ticks, one conflict
 with zero-tick yield latency, 1/1 eligible goal compliance, no observed help
 request, and 10 rendered/four suppressed announcements.
