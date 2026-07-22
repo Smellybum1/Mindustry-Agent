@@ -81,6 +81,13 @@ public final class AgentPlugin extends Plugin{
             return;
         }
 
+        if(probe){
+            //The parity probe compares exact policy selections with the externally
+            //stepped runtime. Pin engine time here so server frame jitter cannot
+            //change resource-recovery decisions. Join and survival remain real-time.
+            Core.graphics = new FixedProbeGraphics();
+        }
+
         Scenario scenario = new Scenario();
         logic.reset();
         state.rules = scenario.buildRules();

@@ -13,6 +13,7 @@ for required in \
     plugin.json \
     mindustry/agentplugin/AgentPlugin.class \
     mindustry/agentplugin/DemoAgentController.class \
+    mindustry/agentplugin/FixedProbeGraphics.class \
     agentcore/board/TaskBoard.class \
     agentcore/skill/ExecuteSchematic.class \
     scenarios/bootstrap-defense-v0/scenario.json; do

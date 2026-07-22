@@ -297,6 +297,11 @@ Command: `make coordination-parity` (equivalently
 `bash scripts/coordination-parity.sh`). This is a behavioral acceptance gate,
 not a throughput benchmark.
 
+The no-port plugin half of this exact-selection gate uses a fixed graphics delta.
+That matches the externally stepped clock and prevents host frame jitter from
+changing resource-recovery branches. Human-join and survival probes continue to
+use the stock real-time dedicated-server clock.
+
 | Check | Observed result |
 |---|---|
 | Recorded snapshot parity | 90 snapshots, 366 decisions, 89 selections; two independent shared-driver runs matched exactly |

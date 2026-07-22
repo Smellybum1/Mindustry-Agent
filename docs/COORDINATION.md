@@ -218,8 +218,11 @@ The fixed-step adapter remains externally controlled by default. The
 validation-only `shared_expert_policy` reset option enables the shared driver so
 its decisions can be compared directly with the no-port plugin. A normalized
 SHA-256 digest covers decision kind, agent, task type, and target while excluding
-runtime tick/pacing differences. `make coordination-parity` checks both a
-recorded snapshot sequence and the two live runtime openings.
+runtime tick values. `make coordination-parity` checks both a recorded snapshot
+sequence and the fixed-step runtime against an isolated no-port plugin probe. The
+plugin probe pins its graphics delta only for this exact-selection comparison so
+host frame jitter cannot alter resource-recovery branches; human-join and survival
+modes retain the stock dedicated-server real-time clock.
 
 ## Public greedy expert (M7.3)
 
