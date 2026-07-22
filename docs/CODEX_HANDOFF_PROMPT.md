@@ -6,7 +6,7 @@ validation.
 
 Read first, in order:
 
-1. `AGENTS.md` in full; obey its project-wide no-subagent rule.
+1. `AGENTS.md` in full; obey its delegation and sealed-data rules.
 2. `docs/HANDOFF.md`, focusing on the V38 entry and next-five queue.
 3. M8.5 and the M8 exit criteria in `docs/ROADMAP.md`.
 4. ADR-0050.
