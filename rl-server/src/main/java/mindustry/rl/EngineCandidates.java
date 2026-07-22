@@ -149,8 +149,10 @@ public final class EngineCandidates{
 
     public CandidateSet generate(RlAgentRegistry.Agent agent, CandidateWorldSnapshot world){
         float assignmentRange = facts.assignmentRange();
+        String cargoItem = agent.unit.item() == null ? "" : agent.unit.item().name;
         AgentSnapshot snapshot = new AgentSnapshot(AgentId.of(agent.index), agent.unit.x,
-            agent.unit.y, assignmentRange, ALPHA_CAPABILITIES);
+            agent.unit.y, assignmentRange, ALPHA_CAPABILITIES, cargoItem,
+            agent.unit.stack().amount);
         HandTunedUtility utility = new HandTunedUtility(
             new EngineFeatureSource(scenario, registry, world, assignmentRange, coordination));
         CandidateSet generated = generator.generate(snapshot, world, utility);

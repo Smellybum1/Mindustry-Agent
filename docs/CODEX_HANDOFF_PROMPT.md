@@ -87,11 +87,15 @@ precommit any successor only from reusable evidence, freeze a new disjoint
 confirmation set before model work, and never open held-out-v4 without every
 governed prerequisite.
 
-ADR-0043 now precommits V32 from reusable evidence only. Implement its exact
-catalog boundary: mask `SUPPLY_TURRET` without current core/unit copper and add
-nonexclusive defense staging only when ordinary work is empty, with duration
-ending at the existing defend-lead boundary. Complete engine-free/live tests and
-all frozen pretraining gates before replica A. Dev-v28 (`281001..281160`) and
+ADR-0043's V32 runtime is implemented from reusable evidence only: mask
+`SUPPLY_TURRET` without current core/unit copper and add nonexclusive defense
+staging for learned seat 0 only when ordinary work is empty, with duration
+ending at the existing defend-lead boundary. The initial all-seat rule failed
+public seed 23456 (4/5); the learned-seat correction restored 5/5 before model
+work. Engine-free/live checks, the pinned 112-test Java build, smoke, determinism,
+negative replay, 157 Python tests, and all 44 exact-config reward adversaries
+pass. Commit this packet, refresh permanent reusable baselines under the V32
+runtime, and only then construct replicas. Dev-v28 (`281001..281160`) and
 held-out-v4 remain sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,

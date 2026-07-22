@@ -13,8 +13,20 @@ public record AgentSnapshot(
     float worldX,
     float worldY,
     float assignmentRange,
-    Set<String> capabilities
+    Set<String> capabilities,
+    String cargoItem,
+    int cargoAmount
 ){
+    public AgentSnapshot(
+        AgentId id,
+        float worldX,
+        float worldY,
+        float assignmentRange,
+        Set<String> capabilities
+    ){
+        this(id, worldX, worldY, assignmentRange, capabilities, "", 0);
+    }
+
     public AgentSnapshot{
         if(id == null) throw new IllegalArgumentException("id is required");
         if(!Float.isFinite(worldX) || !Float.isFinite(worldY)){
@@ -25,9 +37,15 @@ public record AgentSnapshot(
         }
         capabilities = Collections.unmodifiableSet(
             new LinkedHashSet<>(new TreeSet<>(capabilities == null ? Set.of() : capabilities)));
+        cargoItem = cargoItem == null ? "" : cargoItem;
+        if(cargoAmount < 0) throw new IllegalArgumentException("cargoAmount must be >= 0");
     }
 
     public boolean hasCapabilities(Set<String> required){
         return capabilities.containsAll(required);
+    }
+
+    public boolean carries(String item){
+        return cargoAmount > 0 && cargoItem.equals(item);
     }
 }

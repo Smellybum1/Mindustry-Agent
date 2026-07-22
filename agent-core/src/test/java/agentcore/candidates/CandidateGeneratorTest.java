@@ -92,7 +92,7 @@ class CandidateGeneratorTest{
             "lower utility task should be truncated");
     }
 
-    @Test void satisfiedAndSafeWorldProducesOnlyWait(){
+    @Test void defendLeadBoundaryUsesOrdinaryDefenseInsteadOfStaging(){
         CandidateWorldSnapshot world = new CandidateWorldSnapshot(
             50, 8, "T1", "T2", "T3", "T4", "T6", "T5", 400, 300,
             true, economy(true), 31, true, 120,
@@ -101,13 +101,70 @@ class CandidateGeneratorTest{
             3, List.of(),
             List.of(new TurretSnapshot(7, 30, 24, 10)), 10,
             0, 260f, 196f, "defense_block",
-            0, 1200f, defense(1.0, 0.0), 300f, 196f, "east_lane"
+            0, 600f, defense(1.0, 0.0), 300f, 196f, "east_lane"
         );
 
         CandidateSet candidates = new CandidateGenerator().generate(AGENT, world, UTILITY);
-        assertEquals(1, candidates.candidates().size());
-        assertEquals("runtime:wait", candidates.candidates().get(0).task().taskId());
+        assertEquals(2, candidates.candidates().size());
+        assertEquals("T5:defend:east_lane:wave-3:agent-0:at-50",
+            candidates.candidates().get(0).task().taskId());
+        assertFalse(candidates.candidates().get(0).task().taskId().contains(":stage:"));
         assertTrue(candidates.candidates().get(0).valid());
+        assertEquals("runtime:wait", candidates.candidates().get(1).task().taskId());
+    }
+
+    @Test void emptyQuietCatalogProducesExactDefenseStagingWindow(){
+        CandidateWorldSnapshot world = satisfiedWorld(1200f);
+        CandidateSet candidates = new CandidateGenerator().generate(AGENT, world, UTILITY);
+
+        assertEquals(2, candidates.candidates().size());
+        TaskSpec staging = candidates.candidates().get(0).task();
+        assertEquals("T5:stage:east_lane:wave-3:agent-0:at-50", staging.taskId());
+        assertEquals(TaskType.DEFEND_REGION, staging.type());
+        assertEquals(1.0, staging.priority(), 1e-12);
+        assertEquals(600, staging.estimatedTicks());
+        assertFalse(staging.exclusive());
+        assertTrue(candidates.candidates().get(0).valid());
+        assertEquals(TaskType.WAIT, candidates.candidates().get(1).task().type());
+    }
+
+    @Test void ordinaryWorkPrecedesProactiveDefenseStaging(){
+        CandidateSet candidates = new CandidateGenerator().generate(
+            AGENT, activeWorld(List.of()), UTILITY);
+
+        assertTrue(candidates.candidates().stream()
+            .noneMatch(candidate -> candidate.task().taskId().contains(":stage:")));
+    }
+
+    @Test void proactiveDefenseStagingIsScopedToTheLearnedSeat(){
+        AgentSnapshot partner = new AgentSnapshot(AgentId.of(1),
+            100f, 100f, 1000f, ALL_CAPABILITIES);
+        CandidateSet candidates = new CandidateGenerator().generate(
+            partner, satisfiedWorld(1200f), UTILITY);
+
+        assertEquals(1, candidates.candidates().size());
+        assertEquals(TaskType.WAIT, candidates.candidates().get(0).task().type());
+    }
+
+    @Test void supplyRequiresCurrentCoreOrCarriedCopper(){
+        CandidateWorldSnapshot world = copyWithCore(activeWorld(List.of(
+            new TurretSnapshot(7, 30, 24, 0)
+        )), 0);
+        TaskCandidate empty = supplyCandidate(new CandidateGenerator(16)
+            .generate(AGENT, world, UTILITY));
+        assertFalse(empty.valid());
+        assertEquals("resources_unavailable:copper", empty.invalidReason());
+
+        AgentSnapshot carryingCopper = new AgentSnapshot(AgentId.of(0),
+            100f, 100f, 1000f, ALL_CAPABILITIES, "copper", 1);
+        assertTrue(supplyCandidate(new CandidateGenerator(16)
+            .generate(carryingCopper, world, UTILITY)).valid());
+
+        AgentSnapshot carryingLead = new AgentSnapshot(AgentId.of(0),
+            100f, 100f, 1000f, ALL_CAPABILITIES, "lead", 1);
+        assertEquals("resources_unavailable:copper",
+            supplyCandidate(new CandidateGenerator(16)
+                .generate(carryingLead, world, UTILITY)).invalidReason());
     }
 
     @Test void completedBuildLineIsRemovedWhileOtherWorkRemains(){
@@ -189,6 +246,25 @@ class CandidateGeneratorTest{
             3, 260f, 196f, "defense_block",
             0, 400f, defense(0.0, 0.5), 300f, 196f, "east_lane"
         );
+    }
+
+    private static CandidateWorldSnapshot satisfiedWorld(float timeToNextWave){
+        return new CandidateWorldSnapshot(
+            50, 8, "T1", "T2", "T3", "T4", "T6", "T5", 400, 300,
+            true, economy(true), 31, true, 120,
+            84f, 84f, 224f, 224f, "copper_line_v1",
+            260f, 196f, "east_duo_v1",
+            3, List.of(),
+            List.of(new TurretSnapshot(7, 30, 24, 10)), 10,
+            0, 260f, 196f, "defense_block",
+            0, timeToNextWave, defense(1.0, 0.0), 300f, 196f, "east_lane"
+        );
+    }
+
+    private static TaskCandidate supplyCandidate(CandidateSet set){
+        return set.candidates().stream()
+            .filter(candidate -> candidate.task().type() == TaskType.SUPPLY_TURRET)
+            .findFirst().orElseThrow();
     }
 
     private static CandidateWorldSnapshot copyWithPlan(

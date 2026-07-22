@@ -163,7 +163,7 @@ def _check_retry_eligibility(env, seed: int) -> tuple[int, int, int, str]:
     return block_tick, retry_tick, agent_id, str(task["task_type"])
 
 
-def _check_resource_scoped_retry_eligibility(env, seed: int) -> tuple[int, int, int]:
+def _check_resource_actionability(env, seed: int) -> tuple[int, int, int]:
     episode = UtilityExpertEpisode(env, seed, require_win=False)
     schematic = episode.layout.metadata["reference_schematic"]
     anchor_x, anchor_y = (int(value) for value in schematic["anchor"])
@@ -207,7 +207,7 @@ def _check_resource_scoped_retry_eligibility(env, seed: int) -> tuple[int, int, 
     team = episode.observations[0]["team"]
     if int(team["copper"]) != 0 or len(team["turrets"]) != 2:
         raise AssertionError(
-            "resource-scoped retry fixture setup drifted: "
+            "resource actionability fixture setup drifted: "
             f"copper={team['copper']} turrets={len(team['turrets'])}"
         )
 
@@ -220,58 +220,17 @@ def _check_resource_scoped_retry_eligibility(env, seed: int) -> tuple[int, int, 
             if candidate.get("task_type") == "SUPPLY_TURRET"
         ]
 
-    def block(candidate: dict[str, Any]) -> tuple[dict[str, Any], int, int]:
-        response = episode.step(
-            1,
-            [
-                {
-                    "agent_id": agent_id,
-                    "task_action": {
-                        "type": "SELECT_CANDIDATE_TASK",
-                        "candidate_index": int(candidate["index"]),
-                    },
-                }
-            ],
-            event_driven=True,
-        )
-        if len(response.action_results) != 1 or not response.action_results[0].get(
-            "accepted", False
-        ):
-            raise AssertionError(
-                f"resource-scoped retry selection failed: {response.action_results}"
-            )
-        blocked = _blocked_assignment(response, episode.observations)
-        while blocked is None and episode.tick < 1200:
-            response = episode.step(30, event_driven=True)
-            blocked = _blocked_assignment(response, episode.observations)
-        if blocked is None or blocked[0] != agent_id:
-            raise AssertionError("resource-scoped retry fixture did not block supply")
-        return blocked[1], blocked[2], episode.tick
-
     candidates = supply_candidates()
     if len(candidates) != 2:
         raise AssertionError(f"expected two supply targets, got {candidates}")
-    first_task, first_due, first_block = block(candidates[0])
-    episode.step(
-        1,
-        [
-            {
-                "agent_id": agent_id,
-                "task_action": {
-                    "type": "ABANDON",
-                    "reason": "resources_short_replan",
-                },
-            }
-        ],
-        event_driven=True,
-    )
-    candidates = supply_candidates()
-    if len(candidates) != 2:
-        raise AssertionError(f"expected two regenerated supply targets, got {candidates}")
     for candidate in candidates:
-        if episode.action_masks[agent_id]["candidate_task"][int(candidate["index"])]:
+        if candidate.get("invalid_reason") != "resources_unavailable:copper":
+            raise AssertionError(f"zero-source supply reason drifted: {candidate}")
+        if candidate.get("valid", True) or episode.action_masks[agent_id][
+            "candidate_task"
+        ][int(candidate["index"])]:
             raise AssertionError(
-                f"shared resource-short holdoff did not mask {candidate}"
+                f"zero-source supply remained selectable: {candidate}"
             )
     other_legal = any(
         episode.action_masks[agent_id]["candidate_task"][int(candidate["index"])]
@@ -279,12 +238,7 @@ def _check_resource_scoped_retry_eligibility(env, seed: int) -> tuple[int, int, 
         for candidate in episode.observations[agent_id]["task_candidates"]
     )
     if not other_legal:
-        raise AssertionError("resource-scoped holdoff masked unrelated work")
-    second = next(
-        candidate
-        for candidate in candidates
-        if candidate.get("target") != first_task.get("target")
-    )
+        raise AssertionError("zero-source supply mask removed unrelated work")
     rejected = episode.step(
         1,
         [
@@ -292,31 +246,20 @@ def _check_resource_scoped_retry_eligibility(env, seed: int) -> tuple[int, int, 
                 "agent_id": agent_id,
                 "task_action": {
                     "type": "SELECT_CANDIDATE_TASK",
-                    "candidate_index": int(second["index"]),
+                    "candidate_index": int(candidates[0]["index"]),
                 },
             }
         ],
     )
-    if len(rejected.action_results) != 1 or rejected.action_results[0].get(
-        "reason"
-    ) != "retry_not_due":
-        raise AssertionError(
-            f"alternate resource-short target bypass was not rejected: "
-            f"{rejected.action_results}"
-        )
-    if episode.tick < first_due:
-        episode.step(first_due - episode.tick)
-    if episode.tick != first_due:
-        raise AssertionError(
-            f"resource-scoped retry advanced to {episode.tick}, expected {first_due}"
-        )
-    reopened = supply_candidates()
-    if len(reopened) != 2 or not all(
-        episode.action_masks[agent_id]["candidate_task"][int(candidate["index"])]
-        for candidate in reopened
+    if len(rejected.action_results) != 1 or rejected.action_results[0].get("reason") != (
+        "resources_unavailable:copper"
     ):
-        raise AssertionError(f"supply targets did not reopen together: {reopened}")
-    return first_block, first_due, len(reopened)
+        raise AssertionError(
+            f"zero-source supply bypass was not rejected precisely: {rejected.action_results}"
+        )
+    return episode.tick, len(candidates), sum(
+        episode.action_masks[agent_id]["candidate_task"]
+    )
 
 
 def main(argv=None) -> int:
@@ -331,8 +274,9 @@ def main(argv=None) -> int:
     policy = GreedyUtilityPolicy()
     rows = []
     retry_row = None
-    resource_retry_row = None
+    resource_actionability_row = None
     loss_releases = 0
+    staging_starts = 0
     try:
         with RlServerProcess(LaunchConfig(port=args.port, java=args.java)) as env:
             env.handshake("m7.3-candidate-policy-check")
@@ -363,6 +307,11 @@ def main(argv=None) -> int:
                         stop_on_decision_event=True,
                     )
                     policy.observe_action_results(response.action_results)
+                    staging_starts += sum(
+                        event.get("act") == "START_TASK"
+                        and ":stage:" in str(event.get("task_id", ""))
+                        for event in response.task_events
+                    )
                     loss_releases += sum(
                         event.get("act") == "ABANDON"
                         and event.get("reason_code") == "agent_death"
@@ -430,7 +379,7 @@ def main(argv=None) -> int:
                     )
                 )
             retry_row = _check_retry_eligibility(env, args.seeds[0])
-            resource_retry_row = _check_resource_scoped_retry_eligibility(
+            resource_actionability_row = _check_resource_actionability(
                 env, args.seeds[0]
             )
     except Exception as exc:
@@ -451,8 +400,10 @@ def main(argv=None) -> int:
         return 1
     if retry_row is None:
         raise AssertionError("retry eligibility check did not run")
-    if resource_retry_row is None:
-        raise AssertionError("resource-scoped retry eligibility check did not run")
+    if resource_actionability_row is None:
+        raise AssertionError("resource actionability check did not run")
+    if staging_starts <= 0:
+        raise AssertionError("five-seed candidate gate observed no proactive staging")
     if 34567 in args.seeds and loss_releases <= 0:
         print(
             "CANDIDATE-POLICY FAIL: fixed loss seed emitted no structured task release",
@@ -466,10 +417,12 @@ def main(argv=None) -> int:
     )
     print(f"agent-loss releases: {loss_releases}")
     print(
-        "resource-scoped retry eligibility: "
-        f"block={resource_retry_row[0]} due={resource_retry_row[1]} "
-        f"targets={resource_retry_row[2]}"
+        "resource actionability: "
+        f"tick={resource_actionability_row[0]} "
+        f"masked_supply_targets={resource_actionability_row[1]} "
+        f"other_legal={resource_actionability_row[2]}"
     )
+    print(f"proactive staging starts: {staging_starts}")
     print(f"CANDIDATE-POLICY OK: wins={wins}/{len(rows)}")
     return 0
 

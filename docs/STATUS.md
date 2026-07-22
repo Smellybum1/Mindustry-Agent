@@ -1382,12 +1382,16 @@ repository-evidence mapping used for the M6 audit is:
   are one-copper `SUPPLY_TURRET` selections that block at zero current copper;
   every available idle run has only WAIT in its catalog during a quiet pre-wave
   gap. V32 keeps V31 exact but masks supply unless the core or selecting unit
-  has copper and adds a priority-1.0 nonexclusive defense-staging task only when
-  no ordinary work exists, ending at the existing defend-lead boundary. Dev-v27
-  is retired unopened; dev-v28 freezes disjoint roots `281001..281160` and
-  remains unopened; held-out-v4 stays sealed. Config/seed governance tests pass.
-  Runtime implementation and pretraining gates are next; no V32 model work has
-  begun.
+  has copper and, for learned seat 0 only, adds a priority-1.0 nonexclusive
+  defense-staging task when no ordinary work exists, ending at the existing
+  defend-lead boundary. The first all-seat implementation failed public seed
+  23456 (4/5); scoping the evidence-backed change to the learned seat restored
+  the gate to 5/5 before any model work. Engine-free/live actionability and
+  staging checks, the pinned 112-test Java build, candidate gate, smoke,
+  determinism, negative replay, 157-test Python suite, and all 44 exact-config reward
+  adversaries pass. Dev-v27 is retired unopened; dev-v28 freezes disjoint roots
+  `281001..281160` and remains unopened; held-out-v4 stays sealed. No V32 model
+  work has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

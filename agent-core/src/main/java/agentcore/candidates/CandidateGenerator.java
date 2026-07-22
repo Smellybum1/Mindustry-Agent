@@ -132,6 +132,19 @@ public final class CandidateGenerator{
                 .exclusive(false).build(), world.defendWorldX(), world.defendWorldY()));
         }
 
+        if(agent.id().index() == 0 && pending.isEmpty() && world.enemyCount() == 0
+            && world.timeToNextWave() > defense.defendLeadTicks()){
+            int stagingTicks = Math.max(1,
+                (int)Math.ceil(world.timeToNextWave() - defense.defendLeadTicks()));
+            pending.add(new Pending(TaskSpec.builder(world.defendTaskId() + ":stage:"
+                + world.defendRegionId() + ":wave-" + world.waveNumber() + ":agent-"
+                + agent.id().index() + ":at-" + world.tick(), TaskType.DEFEND_REGION)
+                .target(new RegionTarget(world.defendRegionId()))
+                .priority(1.0).estimatedTicks(stagingTicks)
+                .requiredCapabilities(DEFEND_CAPS)
+                .exclusive(false).build(), world.defendWorldX(), world.defendWorldY()));
+        }
+
         Pending wait = new Pending(TaskSpec.builder("runtime:wait", TaskType.WAIT)
             .priority(0.0).estimatedTicks(60).requiredCapabilities(WAIT_CAPS)
             .exclusive(false).build(), agent.worldX(), agent.worldY());
@@ -139,7 +152,7 @@ public final class CandidateGenerator{
         ArrayList<ScoredPending> scored = new ArrayList<>(pending.size());
         for(int i = 0; i < pending.size(); i++){
             Pending item = pending.get(i);
-            String invalid = invalidReason(agent, item);
+            String invalid = invalidReason(agent, item, world);
             scored.add(new ScoredPending(item, invalid,
                 utility.score(agent.id(), item.task(), world.tick()), i));
         }
@@ -164,13 +177,17 @@ public final class CandidateGenerator{
             result.add(new TaskCandidate(item.pending().task(), item.invalidReason().isEmpty(),
                 item.invalidReason(), item.utility()));
         }
-        String waitInvalid = invalidReason(agent, wait);
+        String waitInvalid = invalidReason(agent, wait, world);
         result.add(new TaskCandidate(wait.task(), waitInvalid.isEmpty(), waitInvalid,
             utility.score(agent.id(), wait.task(), world.tick())));
         return new CandidateSet(result);
     }
 
-    private static String invalidReason(AgentSnapshot agent, Pending candidate){
+    private static String invalidReason(
+        AgentSnapshot agent,
+        Pending candidate,
+        CandidateWorldSnapshot world
+    ){
         for(String required : candidate.task().requiredCapabilities()){
             if(!agent.capabilities().contains(required)) return "missing_capability:" + required;
         }
@@ -178,6 +195,10 @@ public final class CandidateGenerator{
         float dy = candidate.worldY() - agent.worldY();
         if(dx * dx + dy * dy > agent.assignmentRange() * agent.assignmentRange()){
             return "out_of_range";
+        }
+        if(candidate.task().type() == TaskType.SUPPLY_TURRET
+            && world.coreCopper() <= 0 && !agent.carries("copper")){
+            return "resources_unavailable:copper";
         }
         return "";
     }

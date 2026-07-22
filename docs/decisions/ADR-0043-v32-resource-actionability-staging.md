@@ -32,10 +32,11 @@ interval.
    ways. A `SUPPLY_TURRET` candidate is valid only when current core copper is
    positive or the selecting unit carries positive copper; otherwise it remains
    visible but masked with reason `resources_unavailable:copper`.
-2. After generating every ordinary task, if the pending catalog is empty, no
-   enemy is present, and time-to-wave is strictly greater than the existing
-   `defendLeadTicks`, add one nonexclusive `DEFEND_REGION` staging candidate.
-   It has priority `1.0` and estimated duration
+2. For the fixed M8 learned seat 0 only, after generating every ordinary task,
+   if the pending catalog is empty, no enemy is present, and time-to-wave is
+   strictly greater than the existing `defendLeadTicks`, add one nonexclusive
+   `DEFEND_REGION` staging candidate. Scripted partner catalogs remain exact.
+   The candidate has priority `1.0` and estimated duration
    `ceil(timeToNextWave - defendLeadTicks)`, so it ends exactly at the existing
    active-defense boundary. Ordinary work always takes precedence.
 3. Staging uses the existing named region, `DefendRegion` skill, task type,
@@ -87,5 +88,20 @@ work occurred before this precommit.
 
 The immutable config SHA-256 is
 `cf5f42da2cf2d99a14ad7671d766b10ca6cbc8695f7ef3f3f22cf8ee49823fa5`.
-The precommit governance addition brings the Python suite to 157 passing tests;
-runtime and full pretraining gates are not yet claimed.
+The precommit governance addition brings the Python suite to 157 passing tests.
+
+The first live implementation gate exposed an overbroad interpretation before
+training: offering staging to all three scripted seats changed public seed
+23456 from a win to a loss. Core copper never reached the new supply-mask
+boundary in that episode, while all three seats staged. The rule is therefore
+fixed to learned seat 0 as stated above; this is the seat whose reusable idle
+evidence justified the intervention and preserves partner behavior. No V32
+model work or exclusive evidence preceded this correction.
+
+The corrected implementation passes its engine-free boundary tests and live
+actionability/staging checks, the pinned 112-test Java build, the five-seed candidate
+gate, smoke, determinism, negative replay, the full 157-test Python suite, and
+all 44 exact-config reward adversaries. The adversary report is
+`runs/m8-selector-v32-precommit/reward-adversaries.json`, SHA-256
+`49d18508bbd825bdf605dc47d6a494b6231bc5bc251e07665681544892e8d9c4`.
+No V32 model work or unopened evaluation evidence preceded these gates.
