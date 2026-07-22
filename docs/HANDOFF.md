@@ -801,12 +801,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run V35's remaining committed pretraining gates.** Focused fixed-seat live,
-   pinned Java, and the complete 5/5 public candidate command already pass.
-   Run smoke, determinism, and negative replay from the implementation commit.
-2. **Begin replica A only if every gate stays green.** Use the exact V35 config
-   and pinned WSL2 runtime; require at least 9/10 construction wins and idle
-   below 0.25 before authorizing replica B.
+1. **Construct V35 replica A.** Every pretraining gate passes from implementation
+   commit `673042bfd0`. Use the exact V35 config and pinned WSL2 runtime; require
+   at least 9/10 reusable construction wins and idle below 0.25.
+2. **Authorize replica B only after auditing A.** If A passes construction,
+   reproduce the complete governed checkpoint/frontier/model/replay/teacher/
+   canonical/direct-lineage evidence before opening any confirmation set.
 3. **Keep held-out-v4 sealed.** Dev-v29 and dev-v30 are retired unopened; freeze
    a new disjoint confirmation set but do not open it before exact replicas and
    both reusable scorecards pass. No successor may

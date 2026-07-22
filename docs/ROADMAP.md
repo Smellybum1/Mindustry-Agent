@@ -1497,8 +1497,10 @@ pinned Java build, and complete public candidate gate. Scripted seat 1 wakes
 after one tick on a real harvest `claim_lost`; learned seat 0 loses the same
 task without a decision wake. Winner ownership remains authoritative and no
 synthetic board event is emitted. The public gate is 5/5 with all five proactive
-staging starts restored. Smoke, determinism, and negative replay must pass from
-the committed implementation packet before model work. M8.5 remains unmet.
+staging starts restored. From implementation commit `673042bfd0`, smoke,
+cross-process/reset/seed determinism, the 16,200-tick golden replay, and negative
+replay all pass. Replica A is authorized; dev-v31 and held-out-v4 remain
+unopened. M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

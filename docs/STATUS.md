@@ -1451,7 +1451,9 @@ repository-evidence mapping used for the M6 audit is:
   tick on a real harvest `claim_lost`; seat 0 loses the same task without a
   boundary. Winner ownership remains authoritative and no fake board event is
   emitted. The public gate is 5/5 with all five proactive-staging starts
-  restored. Smoke, determinism, and negative replay remain before model work.
+  restored. From implementation commit `673042bfd0`, smoke, cross-process/reset/
+  seed determinism, the 16,200-tick golden replay, and negative replay all pass.
+  Replica A is authorized; dev-v31 and held-out-v4 remain unopened.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

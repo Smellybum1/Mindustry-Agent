@@ -101,5 +101,8 @@ task and no synthetic `CLAIM_LOST` board event exists.
 
 The pinned Java build passes. The complete public candidate command also passes
 5/5 with all five proactive-staging starts restored; core health by seed is
-`[299,1100,263,1091,1091]`. Smoke, determinism, and negative replay remain hard
-gates to run from the committed implementation packet before model work.
+`[299,1100,263,1091,1091]`. From implementation commit `673042bfd0`, smoke,
+cross-process/reset/seed determinism, the 664-checkpoint 16,200-tick golden
+replay, and intentional one-line negative replay all pass. Every pretraining
+boundary in Decision 9 is green; replica A is authorized. No model work has yet
+begun, and dev-v31 plus held-out-v4 remain unopened.

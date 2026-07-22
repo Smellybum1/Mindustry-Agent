@@ -117,9 +117,11 @@ ADR-0046 precommits V35's fixed-seat correction. Wake only scripted seat 1 on
 final atomic `claim_lost`; seat 0 and seat 2 preserve V32 scheduling. The focused
 positive seat-1/negative seat-0 check, pinned Java build, and complete public
 gate already pass; public survival is 5/5 with all five staging starts restored.
-Commit the implementation packet, then run smoke, determinism, and negative
-replay before model work. Dev-v31 is frozen at disjoint roots `284001..284160`
-but unopened; held-out-v4 remains sealed.
+From implementation commit `673042bfd0`, smoke, determinism, the 16,200-tick
+golden replay, and negative replay also pass. Construct replica A with the exact
+V35 config and pinned WSL2 runtime, then audit the 9/10 and idle-below-0.25
+construction boundary before replica B. Dev-v31 is frozen at disjoint roots
+`284001..284160` but unopened; held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
