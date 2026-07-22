@@ -26,6 +26,8 @@ from mindustry_agents.process.launcher import (
     DEFAULT_PORT,
     LaunchConfig,
     RlServerProcess,
+    jar_path,
+    repo_root,
 )
 from mindustry_agents.tools.scripted_demo import run_frozen_episode
 from mindustry_agents.tools.utility_expert import run_utility_episode
@@ -75,6 +77,7 @@ POLICY_VERSIONS = {
     "frozen-expert": "frozen-m6-expert-v1",
     "adaptive-v1": "adaptive-v1",
 }
+RUNTIME_PROVENANCE_SCHEMA = "mindustry_rl_runtime_provenance_v1"
 
 
 def _policy(policy_name: str, seed: int):
@@ -95,10 +98,15 @@ def _run_partition(
     *,
     base_port: int,
     java: str,
+    runtime_provenance: dict[str, Any] | None = None,
 ) -> list[tuple[int, dict[str, Any]]]:
     records = []
     with RlServerProcess(
-        LaunchConfig(port=base_port + partition_index, java=java)
+        LaunchConfig(
+            port=base_port + partition_index,
+            java=java,
+            build_if_missing=False,
+        )
     ) as env:
         handshake = env.handshake(f"m7.6-ladder-worker-{partition_index}")
         engine = {
@@ -151,6 +159,11 @@ def _run_partition(
                 "python_dependency_contract": "stdlib-only; no lockfile required",
                 "training_config": "not-applicable-evaluation",
                 "precondition_trace_tick": trace_tick,
+                **(
+                    {"runtime_provenance": runtime_provenance}
+                    if runtime_provenance is not None
+                    else {}
+                ),
             }
             records.append(
                 (
@@ -177,6 +190,53 @@ def _load_contracts(root: Path) -> dict[str, dict[str, Any]]:
     return contracts
 
 
+def _load_direct_contracts(paths: list[Path]) -> dict[str, dict[str, Any]]:
+    contracts: dict[str, dict[str, Any]] = {}
+    seen: dict[int, str] = {}
+    for path in paths:
+        contract = load_seed_set(path)
+        seed_set_id = str(contract["seed_set_id"])
+        if seed_set_id in contracts:
+            raise ValueError(f"duplicate direct seed set id: {seed_set_id}")
+        for seed in contract["seeds"]:
+            if seed in seen:
+                raise ValueError(
+                    f"seed {seed} appears in both {seen[seed]} and "
+                    f"{seed_set_id} seed sets"
+                )
+            seen[seed] = seed_set_id
+        contracts[seed_set_id] = contract
+    return contracts
+
+
+def _runtime_provenance(root: Path, config_path: Path) -> dict[str, Any]:
+    from mindustry_agents.training.ppo_selector import _git_evidence, _sha256
+
+    root = root.resolve()
+    config_path = config_path.resolve()
+    server_jar = jar_path(root).resolve()
+    try:
+        config_relative = config_path.relative_to(root).as_posix()
+        jar_relative = server_jar.relative_to(root).as_posix()
+    except ValueError as exc:
+        raise ValueError(
+            "runtime config and rl-server jar must be inside the repository"
+        ) from exc
+    repository = _git_evidence(root)
+    return {
+        "schema": RUNTIME_PROVENANCE_SCHEMA,
+        "config": {
+            "path": config_relative,
+            "sha256": _sha256(config_path),
+        },
+        "repository": repository,
+        "rl_server_jar": {
+            "path": jar_relative,
+            "sha256": _sha256(server_jar),
+        },
+    }
+
+
 def _jobs(
     contracts: dict[str, dict[str, Any]],
     seed_set_names: list[str],
@@ -186,7 +246,7 @@ def _jobs(
     for seed_set_name in seed_set_names:
         contract = contracts[seed_set_name]
         for policy in policies:
-            if policy == "frozen-expert" and seed_set_name != "fixed":
+            if policy == "frozen-expert" and contract["split"] != "fixed":
                 continue
             for seed in contract["seeds"]:
                 jobs.append(
@@ -206,6 +266,7 @@ def _run_jobs(
     workers: int,
     port: int,
     java: str,
+    runtime_provenance: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     cells: list[list[dict[str, Any]]] = []
     for job in jobs:
@@ -223,7 +284,15 @@ def _run_jobs(
         )
     ordered = []
     for index, cell in enumerate(cells):
-        ordered.extend(_run_partition(index, cell, base_port=port, java=java))
+        ordered.extend(
+            _run_partition(
+                index,
+                cell,
+                base_port=port,
+                java=java,
+                runtime_provenance=runtime_provenance,
+            )
+        )
     return [record for _, record in sorted(ordered)]
 
 
@@ -266,11 +335,22 @@ def main(argv=None) -> int:
         default=1,
         help="certified mode requires 1; values above 4 are never accepted",
     )
-    parser.add_argument(
+    seed_source = parser.add_mutually_exclusive_group()
+    seed_source.add_argument(
         "--seed-sets",
         nargs="+",
         choices=tuple(SEED_SET_FILES),
-        default=["fixed", "dev"],
+    )
+    seed_source.add_argument(
+        "--seed-set-file",
+        type=Path,
+        action="append",
+        help="repeatable explicit seed-set contract path",
+    )
+    parser.add_argument(
+        "--seed-set-split",
+        choices=("fixed", "dev", "held-out"),
+        help="declared split required with --seed-set-file",
     )
     parser.add_argument(
         "--policies", nargs="+", choices=POLICY_ORDER, default=list(POLICY_ORDER)
@@ -284,6 +364,11 @@ def main(argv=None) -> int:
         "--config-dir", type=Path, default=Path("configs/evaluation")
     )
     parser.add_argument(
+        "--runtime-config",
+        type=Path,
+        help="governed runtime config required with --seed-set-file",
+    )
+    parser.add_argument(
         "--output", type=Path, default=Path("runs/evaluation-ladder.jsonl")
     )
     parser.add_argument(
@@ -293,19 +378,65 @@ def main(argv=None) -> int:
     )
     args = parser.parse_args(argv)
 
-    if "held-out" in args.seed_sets and not args.allow_held_out_final:
-        parser.error("held-out execution requires --allow-held-out-final")
-    if args.allow_held_out_final and "held-out" not in args.seed_sets:
-        parser.error("--allow-held-out-final is only valid with --seed-sets held-out")
-
     try:
-        contracts = _load_contracts(args.config_dir)
-        jobs = _jobs(contracts, args.seed_sets, args.policies)
+        runtime_provenance = None
+        if args.seed_set_file:
+            if args.runtime_config is None:
+                parser.error("--runtime-config is required with --seed-set-file")
+            if args.seed_set_split is None:
+                parser.error("--seed-set-split is required with --seed-set-file")
+            if args.seed_set_split == "held-out" and not args.allow_held_out_final:
+                parser.error("held-out execution requires --allow-held-out-final")
+            if args.allow_held_out_final and args.seed_set_split != "held-out":
+                parser.error(
+                    "--allow-held-out-final is only valid with a held-out seed set"
+                )
+            visibly_held_out = any(
+                "held-out" in path.name.lower() for path in args.seed_set_file
+            )
+            if visibly_held_out and not (
+                args.seed_set_split == "held-out" and args.allow_held_out_final
+            ):
+                parser.error(
+                    "a held-out seed-set filename requires --seed-set-split "
+                    "held-out and --allow-held-out-final"
+                )
+            contracts = _load_direct_contracts(args.seed_set_file)
+            mismatched = [
+                seed_set_id
+                for seed_set_id, contract in contracts.items()
+                if contract["split"] != args.seed_set_split
+            ]
+            if mismatched:
+                parser.error(
+                    "direct seed-set contract split does not match "
+                    f"--seed-set-split {args.seed_set_split}: {mismatched}"
+                )
+            seed_set_names = list(contracts)
+        else:
+            contracts = _load_contracts(args.config_dir)
+            seed_set_names = args.seed_sets or ["fixed", "dev"]
+        has_held_out = any(
+            contract["split"] == "held-out"
+            for contract in (contracts[name] for name in seed_set_names)
+        )
+        if has_held_out and not args.allow_held_out_final:
+            parser.error("held-out execution requires --allow-held-out-final")
+        if args.allow_held_out_final and not has_held_out:
+            parser.error(
+                "--allow-held-out-final is only valid with a held-out seed set"
+            )
+        if args.seed_set_file:
+            runtime_provenance = _runtime_provenance(
+                repo_root(), args.runtime_config
+            )
+        jobs = _jobs(contracts, seed_set_names, args.policies)
         records = _run_jobs(
             jobs,
             workers=args.workers,
             port=args.port,
             java=args.java,
+            runtime_provenance=runtime_provenance,
         )
         aggregates = aggregate_records(records)
         promotions = held_out_promotions(aggregates)
@@ -322,7 +453,15 @@ def main(argv=None) -> int:
     args.aggregate_output.parent.mkdir(parents=True, exist_ok=True)
     args.aggregate_output.write_text(
         json.dumps(
-            {"aggregates": aggregates, "promotions": promotions},
+            {
+                "aggregates": aggregates,
+                "promotions": promotions,
+                **(
+                    {"runtime_provenance": runtime_provenance}
+                    if runtime_provenance is not None
+                    else {}
+                ),
+            },
             indent=2,
             sort_keys=True,
         )

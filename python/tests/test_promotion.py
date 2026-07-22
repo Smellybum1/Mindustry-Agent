@@ -101,6 +101,108 @@ class TestPromotion(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "missing or stale"):
                 _load_baseline_records(path, seed_set)
 
+    def test_baseline_loaders_require_exact_runtime_provenance_when_expected(self):
+        from mindustry_agents.training.promotion import (
+            PERMANENT_BASELINES,
+            RUNTIME_PROVENANCE_ERROR,
+            _load_baseline_records,
+            _load_baselines,
+        )
+
+        expected = {
+            "schema": "mindustry_rl_runtime_provenance_v1",
+            "config": {"sha256": "config"},
+            "repository": {"commit": "commit"},
+            "rl_server_jar": {"sha256": "jar"},
+        }
+        seed_set = {
+            "seed_set_id": "dev",
+            "seed_set_version": 1,
+            "seeds": [10],
+        }
+        aggregates = [
+            {
+                "policy": policy,
+                "seed_set": {"id": "dev", "version": 1},
+            }
+            for policy in PERMANENT_BASELINES
+        ]
+        records = [
+            _record(policy, 10, False, 0.0) for policy in PERMANENT_BASELINES
+        ]
+        for record in records:
+            record["manifest"]["runtime_provenance"] = expected
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            aggregate_path = root / "aggregate.json"
+            records_path = root / "records.jsonl"
+            aggregate_path.write_text(
+                json.dumps(
+                    {
+                        "aggregates": aggregates,
+                        "runtime_provenance": expected,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            records_path.write_text(
+                "".join(json.dumps(record) + "\n" for record in records),
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                len(_load_baselines(aggregate_path, seed_set, expected)), 2
+            )
+            self.assertEqual(
+                len(_load_baseline_records(records_path, seed_set, expected)), 2
+            )
+
+            for field, stale in (
+                ("config", {"sha256": "stale"}),
+                ("repository", {"commit": "stale"}),
+                ("rl_server_jar", {"sha256": "stale"}),
+            ):
+                changed = json.loads(json.dumps(expected))
+                changed[field] = stale
+                aggregate_path.write_text(
+                    json.dumps(
+                        {
+                            "aggregates": aggregates,
+                            "runtime_provenance": changed,
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                with self.assertRaisesRegex(RuntimeError, RUNTIME_PROVENANCE_ERROR):
+                    _load_baselines(aggregate_path, seed_set, expected)
+
+            aggregate_path.write_text(
+                json.dumps({"aggregates": aggregates}), encoding="utf-8"
+            )
+            with self.assertRaisesRegex(RuntimeError, RUNTIME_PROVENANCE_ERROR):
+                _load_baselines(aggregate_path, seed_set, expected)
+            for field, stale in (
+                (None, None),
+                ("config", {"sha256": "stale"}),
+                ("repository", {"commit": "stale"}),
+                ("rl_server_jar", {"sha256": "stale"}),
+            ):
+                records[0]["manifest"]["runtime_provenance"] = json.loads(
+                    json.dumps(expected)
+                )
+                if field is None:
+                    del records[0]["manifest"]["runtime_provenance"]
+                else:
+                    records[0]["manifest"]["runtime_provenance"][field] = stale
+                records_path.write_text(
+                    "".join(json.dumps(record) + "\n" for record in records),
+                    encoding="utf-8",
+                )
+                with self.assertRaisesRegex(
+                    RuntimeError, RUNTIME_PROVENANCE_ERROR
+                ):
+                    _load_baseline_records(records_path, seed_set, expected)
+
     def test_preflight_requires_all_win_comparators_and_paired_scorecard(self):
         records = []
         for seed in range(10):

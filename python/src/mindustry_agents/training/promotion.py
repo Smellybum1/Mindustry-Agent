@@ -24,6 +24,7 @@ from mindustry_agents.process.launcher import (
     DEFAULT_PORT,
     LaunchConfig,
     RlServerProcess,
+    jar_path,
     repo_root,
 )
 from mindustry_agents.tools.expert_common import EpisodeResult
@@ -54,6 +55,10 @@ GREEDY_MIXED = "greedy-mixed-seat0"
 RANDOM_MIXED = "random-mixed-seat0"
 PERMANENT_BASELINES = ("random-valid", "greedy-utility")
 CONFIRMATION_ATTEMPT_SCHEMA = "selector_promotion_dev_confirmation_attempt_v1"
+RUNTIME_PROVENANCE_SCHEMA = "mindustry_rl_runtime_provenance_v1"
+RUNTIME_PROVENANCE_ERROR = (
+    "permanent dev baseline runtime provenance is missing or stale"
+)
 
 
 def _canonical_control_action(
@@ -276,8 +281,32 @@ def _record(
     return record
 
 
-def _load_baselines(path: Path, seed_set: dict[str, Any]) -> list[dict[str, Any]]:
+def _matches_runtime_provenance(
+    actual: Any, expected: dict[str, Any]
+) -> bool:
+    if not isinstance(actual, dict):
+        return False
+    return (
+        actual.get("schema") == expected.get("schema")
+        and actual.get("config", {}).get("sha256")
+        == expected.get("config", {}).get("sha256")
+        and actual.get("repository", {}).get("commit")
+        == expected.get("repository", {}).get("commit")
+        and actual.get("rl_server_jar", {}).get("sha256")
+        == expected.get("rl_server_jar", {}).get("sha256")
+    )
+
+
+def _load_baselines(
+    path: Path,
+    seed_set: dict[str, Any],
+    expected_runtime_provenance: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     document = json.loads(path.read_text(encoding="utf-8"))
+    if expected_runtime_provenance is not None and not _matches_runtime_provenance(
+        document.get("runtime_provenance"), expected_runtime_provenance
+    ):
+        raise RuntimeError(RUNTIME_PROVENANCE_ERROR)
     return [
         item
         for item in document["aggregates"]
@@ -288,7 +317,9 @@ def _load_baselines(path: Path, seed_set: dict[str, Any]) -> list[dict[str, Any]
 
 
 def _load_baseline_records(
-    path: Path, seed_set: dict[str, Any]
+    path: Path,
+    seed_set: dict[str, Any],
+    expected_runtime_provenance: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     records = [
         json.loads(line)
@@ -313,7 +344,27 @@ def _load_baseline_records(
     }
     if len(selected) != len(expected_pairs) or actual_pairs != expected_pairs:
         raise RuntimeError("permanent dev baseline records are missing or stale")
+    if expected_runtime_provenance is not None and any(
+        not _matches_runtime_provenance(
+            item.get("manifest", {}).get("runtime_provenance"),
+            expected_runtime_provenance,
+        )
+        for item in selected
+    ):
+        raise RuntimeError(RUNTIME_PROVENANCE_ERROR)
     return selected
+
+
+def _expected_runtime_provenance(
+    root: Path, config_path: Path, repository: dict[str, Any]
+) -> dict[str, Any]:
+    server_jar = jar_path(root)
+    return {
+        "schema": RUNTIME_PROVENANCE_SCHEMA,
+        "config": {"sha256": _sha256(config_path.resolve())},
+        "repository": {"commit": repository["commit"]},
+        "rl_server_jar": {"sha256": _sha256(server_jar)},
+    }
 
 
 def _create_exclusive_attempt(path: Path, evidence: dict[str, Any]) -> None:
@@ -393,11 +444,22 @@ def main(argv: list[str] | None = None) -> int:
     reward_passed = bool(reward_report.get("pass", False)) and all(
         item.get("pass", False) for item in reward_report.get("cases", [])
     )
-    baseline_aggregates = _load_baselines(args.baseline_aggregate, seed_set)
+    repository = _git_evidence(root)
+    expected_runtime_provenance = _expected_runtime_provenance(
+        root, args.config, repository
+    )
+    baseline_aggregates = _load_baselines(
+        args.baseline_aggregate,
+        seed_set,
+        expected_runtime_provenance,
+    )
     if len(baseline_aggregates) != len(PERMANENT_BASELINES):
         raise RuntimeError("permanent dev baselines are missing or stale")
-    baseline_records = _load_baseline_records(args.baseline_records, seed_set)
-    repository = _git_evidence(root)
+    baseline_records = _load_baseline_records(
+        args.baseline_records,
+        seed_set,
+        expected_runtime_provenance,
+    )
     unexpected_dirty = [
         line
         for line in repository["status"]
@@ -493,6 +555,7 @@ def main(argv: list[str] | None = None) -> int:
                 "frozen": not unexpected_dirty,
             },
             "sources": {
+                "runtime_provenance": expected_runtime_provenance,
                 "baseline_aggregate": str(args.baseline_aggregate.resolve()),
                 "baseline_aggregate_sha256": _sha256(args.baseline_aggregate.resolve()),
                 "baseline_records": str(args.baseline_records.resolve()),
