@@ -15,6 +15,7 @@ from mindustry_agents.training.ppo_selector import (
     FEATURE_SCHEMA,
     MODEL_SCHEMA,
     REWARD_SCHEMA,
+    REWARD_SCHEMA_V2,
     _git_evidence,
     _json_digest,
     _model_state_digest,
@@ -95,6 +96,15 @@ def _validate_construction_config(config: dict[str, Any]) -> list[dict[str, Any]
     return parents
 
 
+def _reward_schema(config: dict[str, Any]) -> str:
+    reward_schema = str(config.get("reward_schema", REWARD_SCHEMA))
+    if reward_schema not in {REWARD_SCHEMA, REWARD_SCHEMA_V2}:
+        raise ValueError(
+            f"unsupported interpolation reward schema: {reward_schema}"
+        )
+    return reward_schema
+
+
 def _manifest_reproducibility_digest(manifest: dict[str, Any]) -> str:
     if manifest.get("schema") != "selector_training_run_v1":
         raise ValueError("parent training manifest schema mismatch")
@@ -112,6 +122,7 @@ def _load_parent(
     spec: dict[str, Any],
     checkpoint_path: Path,
     manifest_path: Path,
+    reward_schema: str,
 ) -> ParentEvidence:
     role = str(spec["role"])
     checkpoint_path = checkpoint_path.resolve()
@@ -125,10 +136,17 @@ def _load_parent(
         raise ValueError(f"{role} manifest training config path mismatch")
     if source_config.get("sha256") != training_config_sha256:
         raise ValueError(f"{role} manifest training config hash mismatch")
+    training_config = _load_json(training_config_path)
+    if _reward_schema(training_config) != reward_schema:
+        raise ValueError(f"{role} training reward schema mismatch")
+    if manifest.get("schemas", {}).get("reward") != reward_schema:
+        raise ValueError(f"{role} manifest reward schema mismatch")
 
     model_seed = int(construction["model_init_seed"])
     model = SelectorActorCritic(model_seed)
-    checkpoint = load_checkpoint(checkpoint_path, model)
+    checkpoint = load_checkpoint(
+        checkpoint_path, model, reward_schema=reward_schema
+    )
     checkpoint_sha256 = _sha256(checkpoint_path)
     update = int(spec["update"])
     if checkpoint.get("config_sha256") != training_config_sha256:
@@ -262,6 +280,7 @@ def construct_checkpoint(
     config_path = config_path.resolve()
     config = _load_json(config_path)
     specs = _validate_construction_config(config)
+    reward_schema = _reward_schema(config)
     repository = _git_evidence(root)
     unexpected_dirty = _unexpected_dirty(repository["status"])
     if unexpected_dirty:
@@ -279,6 +298,7 @@ def construct_checkpoint(
             spec=spec,
             checkpoint_path=checkpoint,
             manifest_path=parent_manifest,
+            reward_schema=reward_schema,
         )
         for spec, (checkpoint, parent_manifest) in zip(specs, paths)
     ]
@@ -312,7 +332,7 @@ def construct_checkpoint(
     checkpoint = {
         "checkpoint_kind": CHECKPOINT_KIND,
         "feature_schema": FEATURE_SCHEMA,
-        "reward_schema": REWARD_SCHEMA,
+        "reward_schema": reward_schema,
         "model_schema": MODEL_SCHEMA,
         "config_sha256": config_sha256,
         "parent_checkpoint": [parent.checkpoint_sha256 for parent in parents],
@@ -334,7 +354,7 @@ def construct_checkpoint(
         "repository": repository,
         "schemas": {
             "feature": FEATURE_SCHEMA,
-            "reward": REWARD_SCHEMA,
+            "reward": reward_schema,
             "model": MODEL_SCHEMA,
         },
         "model_init_seed": int(config["model_init_seed"]),
@@ -411,13 +431,19 @@ def validate_lineage_manifest(
     if recorded != digest:
         raise ValueError("checkpoint lineage reproducibility digest mismatch")
     config_sha256 = _sha256(config_path)
+    config = _load_json(config_path)
+    reward_schema = _reward_schema(config)
+    if manifest.get("schemas", {}).get("reward") != reward_schema:
+        raise ValueError("checkpoint lineage reward schema mismatch")
     if manifest.get("source_config", {}).get("sha256") != config_sha256:
         raise ValueError("checkpoint lineage config hash mismatch")
     checkpoint_sha256 = _sha256(checkpoint_path)
     if manifest.get("checkpoint", {}).get("sha256") != checkpoint_sha256:
         raise ValueError("checkpoint lineage artifact hash mismatch")
     model = SelectorActorCritic(int(manifest["model_init_seed"]))
-    checkpoint = load_checkpoint(checkpoint_path, model)
+    checkpoint = load_checkpoint(
+        checkpoint_path, model, reward_schema=reward_schema
+    )
     if checkpoint.get("config_sha256") != config_sha256:
         raise ValueError("derived checkpoint config hash mismatch")
     model_state_sha256 = _model_state_digest(checkpoint["model_state"])
