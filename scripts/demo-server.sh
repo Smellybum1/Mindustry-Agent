@@ -56,20 +56,71 @@ esac
 
 CAPTURE_ARGS=()
 CAPTURE_FILE="${DEMO_CAPTURE_PATH:-}"
+SCORECARD_FILE=""
+
+check_new_output(){
+    local output_file="$1"
+    local output_name="$2"
+    local output_parent
+    output_parent="$(dirname "$output_file")"
+    [[ -d "$output_parent" ]] || {
+        echo "demo-server: $output_name parent does not exist: $output_parent" >&2
+        exit 2
+    }
+    [[ ! -e "$output_file" ]] || {
+        echo "demo-server: refusing to overwrite $output_name: $output_file" >&2
+        exit 2
+    }
+}
+
+validate_and_score_capture(){
+    local capture_file="$1"
+    local scorecard_file="$2"
+    [[ -s "$capture_file" ]] || {
+        echo "demo-server: human capture was not written: $capture_file" >&2
+        exit 1
+    }
+    export PYTHONPATH="$ROOT/python/src${PYTHONPATH:+:$PYTHONPATH}"
+    source "$ROOT/scripts/python-command.sh"
+    "$PY" -m mindustry_agents.tools.human_session \
+        --session "$capture_file" \
+        --population "$ROOT/configs/partners/human-scripted-v1.json"
+    "$PY" -m mindustry_agents.tools.human_scorecard \
+        --session "$capture_file" \
+        --output "$scorecard_file"
+    [[ -s "$scorecard_file" ]] || {
+        echo "demo-server: human scorecard was not written: $scorecard_file" >&2
+        exit 1
+    }
+}
+
 if [[ "${DEMO_HUMAN_CAPTURE:-0}" == "1" && -z "$CAPTURE_FILE" ]]; then
     CAPTURE_FILE="$RUNTIME/human-session.jsonl"
 fi
 if [[ -n "$CAPTURE_FILE" ]]; then
-    capture_parent="$(dirname "$CAPTURE_FILE")"
-    [[ -d "$capture_parent" ]] || {
-        echo "demo-server: capture parent does not exist: $capture_parent" >&2
-        exit 2
-    }
-    [[ ! -e "$CAPTURE_FILE" ]] || {
-        echo "demo-server: refusing to overwrite capture: $CAPTURE_FILE" >&2
-        exit 2
-    }
+    check_new_output "$CAPTURE_FILE" "capture"
     CAPTURE_ARGS=(-Dmindustry.agents.demo.capture-path="$CAPTURE_FILE")
+fi
+
+if [[ "${DEMO_JOIN:-0}" == "1" ]]; then
+    if [[ -n "${DEMO_SCORECARD_PATH:-}" && -z "$CAPTURE_FILE" ]]; then
+        echo "demo-server: DEMO_SCORECARD_PATH requires DEMO_CAPTURE_PATH" >&2
+        exit 2
+    fi
+    if [[ -n "$CAPTURE_FILE" ]]; then
+        if [[ -n "${DEMO_SCORECARD_PATH:-}" ]]; then
+            SCORECARD_FILE="$DEMO_SCORECARD_PATH"
+        elif [[ "$CAPTURE_FILE" == *.jsonl ]]; then
+            SCORECARD_FILE="${CAPTURE_FILE%.jsonl}.scorecard.unrated.json"
+        else
+            SCORECARD_FILE="$CAPTURE_FILE.scorecard.unrated.json"
+        fi
+        [[ "$SCORECARD_FILE" != "$CAPTURE_FILE" ]] || {
+            echo "demo-server: capture and scorecard paths must differ" >&2
+            exit 2
+        }
+        check_new_output "$SCORECARD_FILE" "scorecard"
+    fi
 fi
 
 if [[ "${DEMO_HUMAN_CONTROL:-0}" == "1" || "${DEMO_HUMAN_CAPTURE:-0}" == "1" ]]; then
@@ -105,23 +156,9 @@ if [[ "${DEMO_HUMAN_CONTROL:-0}" == "1" || "${DEMO_HUMAN_CAPTURE:-0}" == "1" ]];
         exit 1
     fi
     if [[ "${DEMO_HUMAN_CAPTURE:-0}" == "1" ]]; then
-        [[ -s "$CAPTURE_FILE" ]] || {
-            echo "demo-server: human capture was not written" >&2
-            exit 1
-        }
-        export PYTHONPATH="$ROOT/python/src${PYTHONPATH:+:$PYTHONPATH}"
-        source "$ROOT/scripts/python-command.sh"
-        "$PY" -m mindustry_agents.tools.human_session \
-            --session "$CAPTURE_FILE" \
-            --population "$ROOT/configs/partners/human-scripted-v1.json"
         SCORECARD_FILE="$RUNTIME/human-scorecard.json"
-        "$PY" -m mindustry_agents.tools.human_scorecard \
-            --session "$CAPTURE_FILE" \
-            --output "$SCORECARD_FILE"
-        [[ -s "$SCORECARD_FILE" ]] || {
-            echo "demo-server: human scorecard was not written" >&2
-            exit 1
-        }
+        check_new_output "$SCORECARD_FILE" "scorecard"
+        validate_and_score_capture "$CAPTURE_FILE" "$SCORECARD_FILE"
     fi
     echo "demo-server: HUMAN CONTROL OK"
     exit 0
@@ -179,11 +216,21 @@ PY
     echo "demo-server: explicit join mode; opening private game port $DEMO_PORT"
     echo "demo-server: connect a stock v159.7 client to localhost:$DEMO_PORT"
     cd "$RUNTIME"
+    set +e
     "$JAVA_BIN" "${POLICY_ARGS[@]}" "${CAPTURE_ARGS[@]}" \
         -Dmindustry.agents.demo.mode=join \
         -Dmindustry.agents.demo.port="$DEMO_PORT" \
         -jar server.jar
-    exit $?
+    server_status=$?
+    set -e
+    cd "$ROOT"
+    [[ $server_status -eq 0 ]] || exit "$server_status"
+    if [[ -n "$CAPTURE_FILE" ]]; then
+        validate_and_score_capture "$CAPTURE_FILE" "$SCORECARD_FILE"
+        echo "demo-server: validated capture: $CAPTURE_FILE"
+        echo "demo-server: unrated scorecard: $SCORECARD_FILE"
+    fi
+    exit 0
 fi
 
 LOG="$ROOT/runs/demo-server-probe.log"

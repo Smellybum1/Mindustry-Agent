@@ -2043,8 +2043,11 @@ are complete; opt-in session capture is next.
   ("keep this team?" + comparative rating vs scripted team). Session protocol
   documented; results logged per session in runs/. The create-new local tool
   derives every objective field from capture and accepts only an explicit,
-  digest-bound rating file. The deterministic probe leaves ratings null; real
-  serious sessions and human-entered ratings are still required.
+  digest-bound rating file. Opted-in private join mode now preflights capture
+  and scorecard paths, validates the completed session, and automatically writes
+  an unrated objective scorecard after normal exit. The deterministic probe
+  leaves ratings null; real serious sessions and human-entered ratings are still
+  required.
 - 10.5 Learned policy in the demo seat: latency budget (decision within one
   real-time tick), safety invariants live (stop/pause instant, autonomy
   levels honored), fallback to scripted brain on policy-process failure.

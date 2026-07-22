@@ -945,9 +945,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   training until M8 promotion authorizes M9. See `docs/HUMAN_SESSIONS.md`.
 - **M10.4 scorecard substrate**: the same no-port gate now writes and validates
   an objective create-new scorecard with interventions, conflicts, yield
-  latency, goal compliance, time-to-help, and announcement outcomes. A separate
-  `human_session_rating_v1` file must be human-entered and digest-bound before
-  usefulness/preference/comparison fields are populated. The probe never
+  latency, goal compliance, time-to-help, and announcement outcomes. Captured
+  private join mode checks both output targets before opening the server and,
+  after a normal exit, uses that same validator to write a sibling
+  `.scorecard.unrated.json`. A separate `human_session_rating_v1` file must be
+  human-entered and digest-bound before usefulness/preference/comparison fields
+  are populated. The probe never
   fabricates ratings; its objective result is 5/83 intervention ticks, one
   zero-latency conflict, 1/1 eligible goal compliance, and 10/4 rendered/
   suppressed announcements. Real serious sessions remain pending.

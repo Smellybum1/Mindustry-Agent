@@ -1932,6 +1932,10 @@ repository-evidence mapping used for the M6 audit is:
   M10.4's objective scorecard substrate is also implemented. It derives human
   intervention rate, plan conflicts, yield latency, goal compliance,
   time-to-help, and announcement counts from authoritative capture records.
+  An opted-in private join now checks both create-new artifact targets before
+  opening the server, then validates the completed capture and writes a sibling
+  `.scorecard.unrated.json` after a normal exit. The same postprocessor is used
+  by the deterministic no-port gate.
   Optional usefulness/preference/comparison/serious-session judgments require a
   separate human-entered schema-v1 rating whose session digest must match; the
   create-new writer refuses overwrite. The no-port gate deliberately reports

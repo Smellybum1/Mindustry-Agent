@@ -245,6 +245,11 @@ announcement usefulness, team preference, scripted-team comparison, and
 serious-session status may enter only through a separate schema-v1 rating file
 bound to the session content SHA-256. The writer refuses overwrite and the
 probe supplies no rating. See `docs/HUMAN_SESSIONS.md`.
+Captured private join mode preflights both create-new artifact paths before
+opening the server. After a normal exit it runs the same complete validation,
+replay, statistics, and objective-scorecard postprocessor as the deterministic
+probe, writing a sibling `.scorecard.unrated.json` unless an explicit
+`DEMO_SCORECARD_PATH` is supplied. It never creates or infers a human rating.
 The deterministic probe currently yields 5/83 intervention ticks, one conflict
 with zero-tick yield latency, 1/1 eligible goal compliance, no observed help
 request, and 10 rendered/four suppressed announcements.

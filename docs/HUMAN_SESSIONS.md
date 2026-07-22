@@ -17,7 +17,12 @@ DEMO_JOIN=1 bash scripts/demo-server.sh
 The writer uses `CREATE_NEW`: it refuses to overwrite an existing file and
 requires the parent directory to exist. Use `/agents stop` before shutting down
 the server for the normal explicit session end. A process-shutdown hook is only
-the abrupt-exit fallback.
+the abrupt-exit fallback. After a normal server exit, the launcher validates
+the capture, replays its structured controls, prints partner-style statistics,
+and creates `runs/human-session-001.scorecard.unrated.json`. Both artifact
+targets are checked before the server opens, so an existing path fails before
+play begins. Set `DEMO_SCORECARD_PATH` to choose a different create-new
+scorecard path.
 
 The deterministic, no-port acceptance gate is:
 
@@ -37,12 +42,13 @@ PYTHONPATH=python/src python -m mindustry_agents.tools.human_session \
   --population configs/partners/human-scripted-v1.json
 ```
 
-Create the objective M10.4 scorecard without asserting any human rating:
+To create the objective M10.4 scorecard manually for an older capture without
+asserting any human rating:
 
 ```bash
 PYTHONPATH=python/src python -m mindustry_agents.tools.human_scorecard \
   --session runs/human-session-001.jsonl \
-  --output runs/human-session-001.scorecard.json
+  --output runs/human-session-001.scorecard.unrated.json
 ```
 
 Both capture and scorecard output are create-new and refuse overwrite.
@@ -130,4 +136,6 @@ PYTHONPATH=python/src python -m mindustry_agents.tools.human_scorecard \
 The rating file contains no free-text field, identity, or secret. Real ratings
 must be entered by the human after play; the probe deliberately emits
 `rating_status=not_provided` and cannot satisfy the project-owner preference
-exit criterion.
+exit criterion. Keep the automatically generated `.scorecard.unrated.json` as
+the objective record and write the later digest-bound rated result to the
+separate `.scorecard.json` path shown above.
