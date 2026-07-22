@@ -1,8 +1,7 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, after the V29 construction rejection and the committed V30
-presentation-budget precommit.
+`coop-agent/v159.7`, after the V30 construction rejection.
 
 Read first, in order:
 
@@ -30,7 +29,7 @@ and `26c6270efca0c85210fb4c4fb9486ecd6cfe9e4fc7fe71618c33bb811bb31c1a`.
 No checkpoint exceeded 4/10. Replica B did not start, dev-v25 was retired
 unopened, and held-out-v4 remains sealed.
 
-ADR-0041 precommits V30 as the isolated correction. V29 increased the corpus
+ADR-0041 precommitted V30 as the isolated correction. V29 increased the corpus
 from 121 to 860 transitions while leaving epoch counts fixed, multiplying CE
 optimization roughly sevenfold. V30 keeps the complete diverse corpus but caps
 each warmup and rehearsal epoch at 121 deterministic samples. This restores
@@ -46,16 +45,21 @@ Pretraining gates are green: 44 exact-config reward adversaries (report SHA-256
 `a3bcf116478e1be0948c8653deccba749bd5f97b84b058093275eb22c5298677`),
 155 Python tests, pinned build, 5/5 candidate-policy survival, smoke, golden
 determinism, and negative replay. Dev-v26 is frozen at roots `261001..261160`
-and remains unopened. No V30 teacher collection or model work preceded the
-committed packet.
+and was unopened at precommit. No V30 teacher collection or model work preceded
+the committed packet.
 
-Run V30 replica A only, sequentially, under the pinned Linux/WSL2 CPU lock.
-Preserve its warmup and rehearsal reports even if the construction gate raises.
-Replica B is forbidden unless A reaches at least 9/10 reusable dev-v1 wins with
-mean idle below 0.25. If A fails, do not start B or open dev-v26; record the
-rejection truthfully. If A passes, require an exact B reproduction and reusable
-dual-scorecard preflight before any one-way confirmation. Never open
-held-out-v4 without every governed prerequisite.
+V30 replica A then completed all construction work but peaked at 8/10. Warmup
+restored 968 presentations/eight batches and sampled 603/860 transitions;
+rehearsal restored 3,872 presentations and covered 855/860 transitions across
+updates. Twenty-one checkpoints reached 8/10; best-ranked update 11 has mean
+return `1.18132`, core health `686.5`, and idle `0.06573742`. Warmup,
+rehearsal, and frontier SHA-256 values are
+`7f92ee1bdaa59d8ff1138f876d30c62bc9d5600b17bf3b50e2231a5dbc5edd8e`,
+`a2559f5651cc0d54a0c8cee8d179a9155a66fd9604a281d2f99d2f90e3c203c3`,
+and `e841b620424e0299b8fb099128b53a827c6f77973551e5386601d00bc2bd2ebe`.
+Replica B did not start, dev-v26 is retired unopened, and held-out-v4 remains
+sealed. Precommit the next hypothesis from reusable train/dev evidence before
+any new model work; never open held-out-v4 without every governed prerequisite.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

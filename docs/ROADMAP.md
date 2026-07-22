@@ -1373,6 +1373,18 @@ Python tests, pinned build, 5/5 candidate gate, smoke, determinism, and negative
 replay pass. Config/adversary hashes are `c57556695157dcd4...` and
 `a3bcf116478e1be0...`. Replica A is next; M8.5 remains unmet.
 
+V30 replica A reproduced the 37-episode/860-transition eligible corpus and
+completed all 2,048 PPO episodes/32 updates, but failed construction at a
+maximum 8/10. Warmup consumes exactly 968 presentations/eight batches and
+samples 603 unique transitions; report hash is `7f92ee1bdaa59d8f...`.
+Rehearsal consumes exactly 3,872 presentations, collectively covers 855/860
+transitions, and lowers CE `1.41403544 -> 1.05248463`; report hash is
+`a2559f5651cc0d54...`. Twenty-one updates reach 8/10. Best-ranked update 11 has
+mean return `1.18132`, core health `686.5`, and idle `0.06573742`; complete
+frontier hash is `e841b620424e0299...`. Replica B did not start, dev-v26 remained
+unopened and is retired, held-out-v4 stays sealed, and V30 is rejected before
+reusable preflight. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

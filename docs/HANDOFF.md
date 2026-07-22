@@ -607,7 +607,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `26c6270efca0c852...`. Best-ranked update 5 has idle `0.21429663`. Replica B
   did not start, dev-v25 is retired unopened, held-out-v4 stays sealed, and V29
   stops before reusable preflight.
-- **V30 precommitted; replica A next**: ADR-0041 identifies V29's confound:
+- **V30 precommit and rejection**: ADR-0041 identifies V29's confound:
   expanding 121 eligible labels to 860 while keeping epoch counts fixed raised
   warmup presentations `968 -> 6,880` and rehearsal `121 -> 860` per update.
   V30 holds V29 exact but caps each CE epoch at 121 deterministic samples, so
@@ -618,7 +618,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   stays sealed. All 44 exact-config adversaries, 155 Python tests, pinned build,
   5/5 candidate gate, smoke, determinism, and negative replay pass. Config/
   adversary hashes are `c57556695157dcd4...` and `a3bcf116478e1be0...`. The
-  committed packet must precede all V30 teacher collection and model work.
+  committed packet preceded all model work. Replica A then restored exactly 968
+  warmup and 3,872 rehearsal presentations, covering 603/860 warmup and 855/860
+  aggregate rehearsal transitions. CE fell `1.41403544 -> 1.05248463` across
+  rehearsal, but the best result remained 8/10. Twenty-one updates reached
+  8/10; best-ranked update 11 has idle `0.06573742`. Warmup/rehearsal/frontier
+  hashes are `7f92ee1bdaa59d8f...`, `a2559f5651cc0d54...`, and
+  `e841b620424e0299...`. Replica B did not start, dev-v26 is retired unopened,
+  held-out-v4 stays sealed, and V30 stops before reusable preflight.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
@@ -780,16 +787,15 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run V30 replica A from committed evidence.** Use the pinned WSL2 lock and
-   `m8-selector-v30-budgeted-diverse-teacher-corpus.json`; preserve its complete
-   teacher outcomes and capped sample schedules.
-2. **Train replica B only after construction passes.** Require A at 9/10 wins
-   and idle `<0.25` before starting B, then require exact corpus/schedule/
-   checkpoint/frontier/model/replay/full-run/direct-lineage reproduction.
+1. **Precommit the next train/dev-only hypothesis before model work.** Use only
+   reusable train/dev construction evidence; V30 closes the diverse-corpus
+   presentation-budget test at 8/10.
+2. **Train replicas sequentially.** Require replica A to clear its frozen
+   construction gate before starting B, then require exact checkpoint/frontier/
+   model/replay/full-run/direct-lineage reproduction.
 3. **Use corrected preflight parity.** Require exact replicas, reusable dev-v1,
    and both permanent-greedy and matched-greedy scorecards before any one-way
-   confirmation. Dev-v26 remains unopened until those gates pass; held-out-v4
-   remains sealed.
+   confirmation. Dev-v26 is retired unopened; held-out-v4 remains sealed.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.

@@ -81,3 +81,27 @@ and golden determinism including the negative replay. Config SHA-256 is
 `c57556695157dcd4b405ea7a69a527ee6f3c304a67cd042599e9ebf84571473d`;
 adversary report SHA-256 is
 `a3bcf116478e1be0948c8653deccba749bd5f97b84b058093275eb22c5298677`.
+
+## Outcome
+
+Replica A reproduced V29's 37 winning teacher episodes and 860-transition
+eligible corpus, completed all 2,048 PPO episodes/32 updates, and then failed
+the frozen construction gate. Warmup consumed exactly 968 presentations in
+eight batches and sampled 603 unique transitions. Mean warmup CE was
+`1.42388608`; model state changed
+`dbae4c605e52b962... -> 09282e1caa1c075f...`. The complete warmup report
+hashes to
+`7f92ee1bdaa59d8ff1138f876d30c62bc9d5600b17bf3b50e2231a5dbc5edd8e`.
+
+The 32 rehearsal updates consumed exactly 3,872 presentations and collectively
+covered 855/860 corpus transitions. Mean rehearsal CE fell from `1.41403544` to
+`1.05248463`; the complete report hashes to
+`a2559f5651cc0d54a0c8cee8d179a9155a66fd9604a281d2f99d2f90e3c203c3`.
+The budget isolation recovered construction from V29's maximum 4/10 to 8/10,
+but no checkpoint reached 9/10. Twenty-one updates reached 8/10; the best-ranked
+row is update 11 with mean return `1.18132`, mean core health `686.5`, and mean
+idle `0.06573742`. The complete frontier hashes to
+`e841b620424e0299b8fb099128b53a827c6f77973551e5386601d00bc2bd2ebe`.
+
+Replica B did not start, dev-v26 remained unopened, and held-out-v4 remained
+sealed. V30 is rejected before reusable preflight.
