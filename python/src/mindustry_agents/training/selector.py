@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -104,7 +105,20 @@ def _ratio(value: Any, denominator: Any, name: str) -> float:
     return _unit(_finite(value, name) / divisor, name)
 
 
-def _candidate_row(candidate: dict[str, Any], metadata: dict[str, Any]) -> list[float]:
+def _intended_task_ids(values: Iterable[Any] | None) -> frozenset[str]:
+    if values is None or isinstance(values, (str, bytes, Mapping)):
+        return frozenset()
+    try:
+        return frozenset(value for value in values if isinstance(value, str) and value)
+    except TypeError:
+        return frozenset()
+
+
+def _candidate_row(
+    candidate: dict[str, Any],
+    metadata: dict[str, Any],
+    fixed_partner_intended_task_ids: frozenset[str],
+) -> list[float]:
     task_type = str(candidate.get("task_type", ""))
     if task_type not in TASK_TYPES:
         raise SelectorFeatureError(f"unknown task type: {task_type!r}")
@@ -112,6 +126,13 @@ def _candidate_row(candidate: dict[str, Any], metadata: dict[str, Any]) -> list[
     if not isinstance(raw, dict):
         raise SelectorFeatureError("candidate is missing utility_features")
     row = [_unit(raw.get(name), f"utility_features.{name}") for name in UTILITY_FIELDS]
+    task_id = candidate.get("task_id")
+    if (
+        isinstance(task_id, str)
+        and task_id
+        and task_id in fixed_partner_intended_task_ids
+    ):
+        row[UTILITY_FIELDS.index("duplication_risk")] = 1.0
     row.extend(1.0 if name == task_type else 0.0 for name in TASK_TYPES)
     estimated_cost = candidate.get("estimated_cost", {})
     if not isinstance(estimated_cost, dict):
@@ -151,6 +172,7 @@ def build_selector_features(
     agent_id: int = 0,
     terminated: bool = False,
     truncated: bool = False,
+    fixed_partner_intended_task_ids: Iterable[Any] | None = None,
 ) -> SelectorFeatures:
     """Construct the exact 8x37 + 56 plain-number selector boundary."""
 
@@ -160,7 +182,11 @@ def build_selector_features(
     candidates = observation.get("task_candidates", [])
     if not isinstance(candidates, list) or len(candidates) > MAX_CANDIDATES:
         raise SelectorFeatureError("candidate row count must be between 0 and 8")
-    rows = [_candidate_row(candidate, metadata) for candidate in candidates]
+    intended_task_ids = _intended_task_ids(fixed_partner_intended_task_ids)
+    rows = [
+        _candidate_row(candidate, metadata, intended_task_ids)
+        for candidate in candidates
+    ]
     present = [True] * len(rows) + [False] * (MAX_CANDIDATES - len(rows))
     rows.extend([[0.0] * 37 for _ in range(MAX_CANDIDATES - len(rows))])
 

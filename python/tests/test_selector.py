@@ -1,5 +1,6 @@
 import math
 import unittest
+from copy import deepcopy
 
 from mindustry_agents.training.selector import (
     BOUNDARY_REASONS,
@@ -130,6 +131,116 @@ class TestSelectorFeatures(unittest.TestCase):
         terminal = build_selector_features(observations, masks, metadata, terminated=True)
         self.assertEqual(terminal.action_mask, [False] * 9 + [True])
         self.assertEqual(terminal.forced_task_action, {"type": "WAIT"})
+
+    def test_partner_intent_raises_only_exact_task_duplication_risk(self):
+        observations, masks, metadata = boundary()
+        observations[0]["task_candidates"][0]["task_id"] = "build-line:alpha"
+        risk_index = 9
+
+        matched = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            fixed_partner_intended_task_ids=["build-line:alpha"],
+        )
+        unmatched = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            fixed_partner_intended_task_ids=["build-line:beta"],
+        )
+
+        self.assertEqual(matched.candidates[0][risk_index], 1.0)
+        self.assertEqual(unmatched.candidates[0][risk_index], 0.0)
+        self.assertEqual(len(matched.candidates[0]), 37)
+
+    def test_partner_intent_is_idempotent_and_does_not_mutate_inputs(self):
+        observations, masks, metadata = boundary()
+        observations[0]["task_candidates"][0]["task_id"] = "build-line:alpha"
+        before_observations = deepcopy(observations)
+        before_masks = deepcopy(masks)
+        before_metadata = deepcopy(metadata)
+
+        result = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            fixed_partner_intended_task_ids=[
+                "build-line:alpha",
+                "build-line:alpha",
+            ],
+        )
+
+        self.assertEqual(result.candidates[0][9], 1.0)
+        self.assertEqual(observations, before_observations)
+        self.assertEqual(masks, before_masks)
+        self.assertEqual(metadata, before_metadata)
+
+    def test_partner_intent_malformed_ids_fail_closed(self):
+        malformed_ids = (None, "", 7, {"task": "build-line:alpha"})
+        observations, masks, metadata = boundary()
+        missing = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            fixed_partner_intended_task_ids=["build-line:alpha"],
+        )
+        self.assertEqual(missing.candidates[0][9], 0.0)
+
+        for candidate_task_id in malformed_ids:
+            with self.subTest(candidate_task_id=candidate_task_id):
+                observations, masks, metadata = boundary()
+                observations[0]["task_candidates"][0]["task_id"] = candidate_task_id
+                result = build_selector_features(
+                    observations,
+                    masks,
+                    metadata,
+                    fixed_partner_intended_task_ids=[
+                        None,
+                        "",
+                        7,
+                        "build-line:alpha",
+                    ],
+                )
+                self.assertEqual(result.candidates[0][9], 0.0)
+
+        observations, masks, metadata = boundary()
+        observations[0]["task_candidates"][0]["task_id"] = "build-line:alpha"
+        malformed_intents = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            fixed_partner_intended_task_ids=[None, "", 7, {"task": "other"}],
+        )
+        self.assertEqual(malformed_intents.candidates[0][9], 0.0)
+
+    def test_omitted_partner_intent_preserves_exact_features(self):
+        observations, masks, metadata = boundary()
+        observations[0]["task_candidates"][0]["task_id"] = "build-line:alpha"
+
+        omitted = build_selector_features(observations, masks, metadata)
+        malformed_outer = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            fixed_partner_intended_task_ids="build-line:alpha",
+        )
+        malformed_mapping = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            fixed_partner_intended_task_ids={"build-line:alpha": True},
+        )
+        empty = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            fixed_partner_intended_task_ids=[],
+        )
+
+        self.assertEqual(omitted, empty)
+        self.assertEqual(omitted, malformed_outer)
+        self.assertEqual(omitted, malformed_mapping)
 
     def test_schema_failures_are_loud(self):
         observations, masks, metadata = boundary()
