@@ -12,10 +12,11 @@ confirmation or held-out membership.
 
 M10.1 has one mandatory prerequisite: the real-time plugin must select through
 the same bounded public candidate table, masks, typed task actions, board,
-reservations, and skills used by the externally stepped runtime. The plugin
-currently uses `ExpertCoordinationDriver`'s remaining stage-local candidate
-construction. Adding human commands there would create a second privileged
-policy surface and violate the roadmap's “same brain that trains” requirement.
+reservations, and skills used by the externally stepped runtime. That
+prerequisite is now satisfied. The legacy `ExpertCoordinationDriver` path is an
+explicit regression oracle only; adding commands there would create a second
+privileged policy surface and violate the roadmap's “same brain that trains”
+requirement.
 
 The implementation order is therefore:
 
@@ -43,7 +44,11 @@ reproduce 225 accepted selections with digest
 `aaf2e734ea384fe4b537cbdf3bd5342fb5e954f3432a91470ebce311fa503714`.
 The logistics seat now remains dedicated during undersupplied combat, reducing
 seven repeated abandon/reclaim cycles to two phase-entry rebalances and seven
-unassigned waits.
+unassigned waits. The engine-free `HumanControl` parser and simulation-thread
+state are implemented and tested with strict grammar, stable rejection reasons,
+bounded ordered goals, assignments, autonomy/quiet settings, deterministic ids
+and revisions, and reset behavior. The public candidate overlay and queued
+plugin command application remain pending; no human command is exposed yet.
 
 ## Command grammar
 

@@ -192,8 +192,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `aaf2e734ea384fe4b537cbdf3bd5342fb5e954f3432a91470ebce311fa503714`.
   A persistent logistics seat reduces seven repeated abandon/reclaim cycles to
   two phase-entry rebalances and seven unassigned waits. All prerequisites and
-  the default promotion pass; human commands are next. M8.5 evaluation machinery
-  is real, but the candidate did not promote.
+  the default promotion pass. The first M10.1 packet now adds the engine-free
+  strict `HumanControl` parser and simulation-thread state with bounded ordered
+  goals, assignments, autonomy/quiet settings, deterministic ids/revisions,
+  stable rejection reasons, and reset tests. Candidate overlay and queued
+  plugin application remain pending; no human command is exposed end to end.
+  M8.5 evaluation machinery is real, but the candidate did not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
 - **Post-failure governance**: ADR-0013 freezes the 40-root, globally disjoint

@@ -1999,8 +1999,16 @@ entry rebalances and seven unassigned waits. All prerequisites and default
 promotion are green; `DEMO_PUBLIC_POLICY=0` preserves the legacy regression
 oracle, and command implementation is next.
 
+The first command packet is now implemented in `agent-core`: an engine-free
+strict parser and simulation-thread-owned control state provide bounded ordered
+goals, assignments, autonomy/quiet settings, deterministic ids/revisions,
+stable result reasons, and reset behavior. Candidate overlay and queued plugin
+application remain pending, so no command is exposed end to end and no M10 exit
+criterion is checked.
+
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,
-  `/agents assign <agent> <task>`, `/agents release <agent>`,
+  `/agents cancel <goal-id>`, `/agents assign <agent> <goal-id>`,
+  `/agents release <agent>`,
   `/agents autonomy low|normal|high`, `/agents quiet on|off` — human-created
   goals become high-priority board tasks entering the SAME candidate stream
   (human_priority weight already exists); validated, confirmable, revocable.

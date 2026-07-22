@@ -1891,7 +1891,13 @@ repository-evidence mapping used for the M6 audit is:
   Probe engine delta, pathfinding, entity iteration, and physics/global RNG are
   deterministic; stock survival remains real-time. All public-path prerequisite
   gates and the default promotion are green. `DEMO_PUBLIC_POLICY=0` keeps the
-  shared driver as an explicit regression oracle; human commands remain next.
+  shared driver as an explicit regression oracle. The engine-free M10.1
+  `HumanControl` parser/state packet is implemented and focused-tested: strict
+  commands produce canonical structured intent, while ordered bounded goals,
+  assignments, autonomy/quiet settings, deterministic ids/revisions, stable
+  rejection reasons, and reset are simulation-thread state. Candidate overlay
+  and queued plugin application remain pending, so no human command is exposed
+  end to end.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,
