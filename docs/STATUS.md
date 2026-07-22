@@ -1576,9 +1576,16 @@ repository-evidence mapping used for the M6 audit is:
   Umbrella reservation SHA-256
   `a2e2389925797a5f5a8c93224561f68f36fd443afbebdc07f888aaf6bef6f27a` is part
   of the governance/config/umbrella/test packet committed at `de597c8462`
-  before membership access. The Python suite is 166/166. Dev-v34 and held-out-v5
-  identities are reserved, but no membership documents exist yet. No
-  implementation or model work has begun, and M8.5 remains unmet.
+  before membership access. The primary-only freezer commit is `a7504a4781`;
+  freeze commit `9c8f7f3d32` records `values_emitted=false`, 41 pre-existing
+  membership documents, and 5,321 unique prior roots. Dev-v34 and held-out-v5
+  are now frozen at 160 unique, globally disjoint roots each, with hashes
+  `bef6bb17c7759530dc216961733839808dbff228bb96a09232dced89a7ca5ac7` and
+  `1118ef59b0953aacd86176737777013bb2c6498e128f28bcbb7850e6ad586910`.
+  The value-free freeze record hash is
+  `7282a3cd405f2d6b00dd3942fb8da2b2f62eb3a8f567dc067edc07756787018e`.
+  Both sets remain unconsumed. The Python suite remains 166/166; no baseline,
+  episode, implementation, or model work has begun, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

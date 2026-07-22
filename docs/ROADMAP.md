@@ -1638,8 +1638,17 @@ The umbrella reservation SHA-256 is
 `a2e2389925797a5f5a8c93224561f68f36fd443afbebdc07f888aaf6bef6f27a`.
 The governance/config/umbrella/test packet is committed at `de597c8462` before
 any replacement membership generation or read, and the Python suite is
-166/166. Dev-v34 and held-out-v5 identities are reserved, but their membership
-documents do not exist yet. No V38 implementation or model work has begun.
+166/166. The primary-only freezer was committed at `a7504a4781`, then the
+value-free membership freeze was committed at `9c8f7f3d32` with
+`values_emitted=false`. It verified 41 pre-existing membership documents with
+5,321 unique roots, then froze dev-v34 and held-out-v5 at 160 unique, globally
+disjoint roots each. Their hashes are
+`bef6bb17c7759530dc216961733839808dbff228bb96a09232dced89a7ca5ac7` and
+`1118ef59b0953aacd86176737777013bb2c6498e128f28bcbb7850e6ad586910`;
+the value-free freeze record hashes to
+`7282a3cd405f2d6b00dd3942fb8da2b2f62eb3a8f567dc067edc07756787018e`.
+Both sets remain unconsumed. The Python suite remains 166/166; no baseline,
+episode, V38 runtime, or model work has begun.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

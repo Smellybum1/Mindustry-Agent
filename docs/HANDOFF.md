@@ -672,9 +672,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   umbrella reservation SHA-256 is
   `a2e2389925797a5f5a8c93224561f68f36fd443afbebdc07f888aaf6bef6f27a`.
   The governance/config/umbrella/test packet is committed at `de597c8462`
-  before membership access, with the Python suite at 166/166. Dev-v34 and
-  held-out-v5 identities are reserved, but membership documents do not exist
-  yet. No V38 implementation/model work exists; M8.5 remains unmet.
+  before membership access. Primary-only freezer commit `a7504a4781` precedes
+  freeze commit `9c8f7f3d32`; the value-free record says
+  `values_emitted=false` after checking 41 pre-existing membership documents and
+  5,321 unique roots. Dev-v34 and held-out-v5 are frozen at 160 unique, globally
+  disjoint roots each. Their hashes are
+  `bef6bb17c7759530dc216961733839808dbff228bb96a09232dced89a7ca5ac7` and
+  `1118ef59b0953aacd86176737777013bb2c6498e128f28bcbb7850e6ad586910`;
+  freeze-record SHA-256 is
+  `7282a3cd405f2d6b00dd3942fb8da2b2f62eb3a8f567dc067edc07756787018e`.
+  Both sets remain unconsumed. Python remains 166/166; no baseline, episode,
+  V38 runtime, or model work exists. M8.5 remains unmet.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
@@ -837,13 +845,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Primary-only generate, verify, and freeze replacement memberships without
-   rendering them into agent output.** Dev-v34 and held-out-v5 identities are
-   reserved, but their membership documents do not exist yet. Verify global
-   disjointness under the committed umbrella before any baseline episode.
-2. **Implement the precommitted learned-seat-only V38 candidate exposure.** Keep
+1. **Implement the precommitted learned-seat-only V38 candidate exposure.** Keep
    V37 exact outside the quiet pre-defend-lead condition, preserve ordinary
    learned selection, and add focused fail-closed tests before model work.
+2. **Run the complete pretraining gates from the implementation commit.** Keep
+   both frozen replacement sets unconsumed; no baseline episode is authorized
+   before the ordinary reusable gate sequence reaches its governed point.
 3. **Retrain exact replicas and refresh reusable baselines only after gates
    pass.** No successor may open confirmation without exact replicas, reusable
    dual-scorecard parity, and its own one-way confirmation pass.
