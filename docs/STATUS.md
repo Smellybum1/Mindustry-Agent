@@ -1378,6 +1378,16 @@ repository-evidence mapping used for the M6 audit is:
   matched-greedy abandonment also regresses, while recovery and permanent
   announcements remain uncertain. Dev-v27 is retired unopened and held-out-v4
   remains sealed. M8.5 is unmet.
+- ADR-0043 precommits V32 from reusable V31 traces. All 13 non-forced abandons
+  are one-copper `SUPPLY_TURRET` selections that block at zero current copper;
+  every available idle run has only WAIT in its catalog during a quiet pre-wave
+  gap. V32 keeps V31 exact but masks supply unless the core or selecting unit
+  has copper and adds a priority-1.0 nonexclusive defense-staging task only when
+  no ordinary work exists, ending at the existing defend-lead boundary. Dev-v27
+  is retired unopened; dev-v28 freezes disjoint roots `281001..281160` and
+  remains unopened; held-out-v4 stays sealed. Config/seed governance tests pass.
+  Runtime implementation and pretraining gates are next; no V32 model work has
+  begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

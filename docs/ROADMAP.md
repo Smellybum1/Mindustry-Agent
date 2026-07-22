@@ -1412,6 +1412,17 @@ regresses, and recovery plus permanent announcements are uncertain. V31 is
 rejected, dev-v27 remains unopened and is retired, held-out-v4 stays sealed,
 and M8.5 remains unmet.
 
+ADR-0043 precommits V32 from reusable structured traces. Every one of V31's 13
+non-forced abandons is a one-copper `SUPPLY_TURRET` start that blocks at zero
+live copper, and every available idle run exposes only WAIT during a quiet
+pre-wave gap. V32 holds V31 exact but masks supply unless the core or selecting
+unit currently has copper, then adds a priority-1.0 nonexclusive defense-
+staging task only when no ordinary work exists; its duration ends at the
+existing defend-lead boundary. Dev-v27 is retired unopened. Dev-v28 freezes
+globally disjoint roots `281001..281160` and remains unopened; held-out-v4 stays
+sealed. No V32 implementation or model work preceded the precommit. M8.5
+remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

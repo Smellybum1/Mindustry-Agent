@@ -800,23 +800,25 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Record and diagnose V31 only from reusable evidence.** Both replicas match
-   at update 16 and 9/10; canonical full-run/direct-lineage hashes are
-   `b2dacf42484258fb...` / `78e923796393ca58...`.
-2. **Treat reusable preflight as the terminal V31 gate.** Permanent idle and
-   abandonment regress, matched abandonment regresses, and two recovery/
-   announcement intervals remain uncertain. Dev-v27 is retired unopened.
-3. **Precommit any successor before model work.** Use only reusable train/dev-v1
-   evidence, freeze a new disjoint confirmation set, and preserve corrected
-   permanent-plus-matched scorecard parity. Held-out-v4 remains sealed.
+1. **Implement ADR-0043's V32 catalog boundary.** Mask supply with no current
+   core/unit copper; add defense staging only when ordinary work is empty and
+   end it at the existing defend-lead boundary.
+2. **Prove actionability before training.** Add engine-free and live checks for
+   zero-source supply, carried-copper supply, ordinary-work precedence, exact
+   staging duration, masks, and deterministic state hashing.
+3. **Complete the frozen pretraining packet.** Exact-config adversaries, Python
+   and Java suites, pinned build, 5/5 candidate gate, smoke, determinism, and
+   negative replay must pass before V32 replica A. Dev-v28 and held-out-v4 stay
+   sealed.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0042` (do not relitigate). ADR-0042 now records
-V31's reproducible construction and reusable-preflight rejection.
+See `docs/decisions/ADR-0001..0043` (do not relitigate). ADR-0042 records V31's
+reproducible rejection; ADR-0043 precommits the V32 actionability/staging
+runtime before implementation or model work.
 
 ## Deviations from the brief in this scaffold
 

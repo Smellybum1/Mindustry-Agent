@@ -87,6 +87,13 @@ precommit any successor only from reusable evidence, freeze a new disjoint
 confirmation set before model work, and never open held-out-v4 without every
 governed prerequisite.
 
+ADR-0043 now precommits V32 from reusable evidence only. Implement its exact
+catalog boundary: mask `SUPPLY_TURRET` without current core/unit copper and add
+nonexclusive defense staging only when ordinary work is empty, with duration
+ending at the existing defend-lead boundary. Complete engine-free/live tests and
+all frozen pretraining gates before replica A. Dev-v28 (`281001..281160`) and
+held-out-v4 remain sealed.
+
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.
