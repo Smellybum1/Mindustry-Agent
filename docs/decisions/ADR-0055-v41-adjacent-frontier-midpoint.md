@@ -86,3 +86,21 @@ review after the precommit packet is committed. It does not authorize dev-v37
 membership construction, checkpoint construction, reusable evaluation,
 confirmation consumption, or held-out-v6 access until their preceding gates
 are committed and pass.
+
+## Outcome
+
+The 44/44 exact-config reward adversaries pass. Dev-v37 was frozen value-free
+and remained unopened. After correcting the generic constructor to propagate
+the config-selected reward schema, independent pinned-toolchain constructions
+matched exactly at checkpoint `b6b5e98ddee56740...`, model state
+`93594bd64193740a...`, and canonical lineage `37c4b1e571fca96c...`.
+
+Reusable evaluation rejects V41 before confirmation. The candidate is 10/10
+versus permanent random/greedy 4/10 and 8/10 and matched random/greedy 5/10 and
+6/10, so every observed win comparison passes. The permanent-greedy scorecard
+fails uncertain idle (mean `-0.00739956`, 95% CI
+`[-0.02001559,+0.01067689]`), while the matched-greedy scorecard fails uncertain
+recovery (mean `-19.85`, 95% CI `[-81.80125,+29.65]`). The records, aggregate,
+and report SHA-256 values are `543e50b729097326...`,
+`056b356de88704f0...`, and `ca7b39c84a9f51d1...`. Dev-v37 is retired unopened
+and unconsumed; held-out-v6 remains sealed and unconsumed.

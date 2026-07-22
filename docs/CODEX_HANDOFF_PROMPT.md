@@ -328,9 +328,13 @@ membership/receipt hashes are `7874f5abaf230665...` /
 committed at `b081e39962`, with 224 Python tests passing. Pinned WSL Torch
 2.12.1 constructions A/B are exact at checkpoint/model/lineage
 `b6b5e98ddee56740...` / `93594bd64193740a...` /
-`37c4b1e571fca96c...`. Run fresh selected-only permanent baselines and the
-candidate/matched reusable preflight next. Dev-v37 and held-out-v6 must remain
-unopened unless their preceding gates completely pass.
+`37c4b1e571fca96c...`. Fresh permanent random/greedy are 4/10 and 8/10; V41 is
+10/10 and matched random/greedy are 5/10 and 6/10. Every win comparison passes,
+but permanent-greedy idle and matched-greedy recovery remain uncertain. Report
+SHA is `ca7b39c84a9f51d1...`; V41 is rejected before confirmation. Dev-v37 is
+retired unopened/unconsumed and held-out-v6 remains sealed/unconsumed. Diagnose
+any successor only from public/train evidence and precommit it before model or
+seed construction.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

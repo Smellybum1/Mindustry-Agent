@@ -838,7 +838,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   matched-greedy recovery remain uncertain, so both frozen scorecards fail.
   Report SHA is `8453b0c4b75cd681...`. Dev-v36 is retired unopened/unconsumed;
   held-out-v6 stays sealed/unconsumed. No confirmation/final episode ran.
-- **V41 midpoint constructed exactly, reusable evaluation pending**: canonical
+- **V41 midpoint rejected at reusable scorecards**: canonical
   reusable diagnosis shows V40 updates 25/26/28 all 10/10 and all fail the same
   three scorecard rows; updates 25 and 26 have complementary idle outliers.
   ADR-0055 fixes one
@@ -849,8 +849,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `7874f5abaf230665...` / `277264b80c6456f7...`; held-out-v6 remains sealed.
   A/B construction under pinned WSL Torch 2.12.1 is byte-exact at checkpoint
   `b6b5e98ddee56740...`, model state `93594bd64193740a...`, and canonical
-  lineage `37c4b1e571fca96c...`. Fresh selected-only reusable baselines and both
-  scorecards are next; confirmation/final access remains prohibited.
+  lineage `37c4b1e571fca96c...`. Fresh permanent random/greedy are 4/10 and 8/10;
+  the midpoint is 10/10 and matched random/greedy are 5/10 and 6/10, so every
+  observed win comparison passes. Permanent-greedy idle and matched-greedy
+  recovery remain uncertain; report SHA is `ca7b39c84a9f51d1...`. V41 is
+  rejected before confirmation. Dev-v37 is retired unopened/unconsumed;
+  held-out-v6 remains sealed/unconsumed.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V41 construction repository checkpoint**:
   `b081e39962484c3c960847dd23de3a6d31fadb04` (V40 training parents remain
@@ -1014,12 +1018,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run fresh selected-only permanent baselines on reusable dev-v1** under the
-   current committed V41 config/runtime provenance.
-2. **Run candidate plus matched random/greedy reusable preflight and both frozen
-   scorecards.** Uncertainty is failure.
-3. **Open dev-v37 only if every reusable gate passes.** Held-out-v6 remains
-   prohibited until the one-way dev-v37 confirmation also passes.
+1. **Diagnose the V41 reusable rejection from public/train-only evidence.** Do
+   not open retired dev-v37 or sealed held-out-v6.
+2. **Precommit any successor coordinate before model or seed construction.** A
+   coefficient sweep on reusable roots remains prohibited.
+3. **Reserve a new globally disjoint, value-free confirmation identity only
+   after the successor design is fixed.**
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
@@ -1048,8 +1052,8 @@ structured fixed-partner intent as evidence in the existing duplication-risk
 feature, without changing action authority. ADR-0054 records V40's narrow
 teacher-conflict filter, green pretraining boundary, value-free dev-v36 freeze,
 exact replicas, direct lineage, and reusable-scorecard rejection. ADR-0055's
-V41 successor is now frozen and constructed exactly; reusable evaluation is
-next.
+V41 successor was frozen and constructed exactly, then rejected by both
+reusable scorecards before confirmation.
 
 ## Deviations from the brief in this scaffold
 

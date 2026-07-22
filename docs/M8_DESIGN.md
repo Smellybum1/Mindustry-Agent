@@ -716,8 +716,16 @@ the governed constructor propagates `selector_reward_v2` from config while
 preserving legacy reward-v1 defaults and failing closed on mismatch. The
 224-test suite passes. Using the parent-pinned WSL Torch 2.12.1 environment,
 independent A/B midpoints are byte-exact at checkpoint `b6b5e98ddee56740...`,
-model state `93594bd64193740a...`, and lineage `37c4b1e571fca96c...`. Reusable
-baselines and dual scorecards are authorized next; confirmation is not.
+model state `93594bd64193740a...`, and lineage `37c4b1e571fca96c...`.
+
+Fresh reusable evidence rejects the midpoint before confirmation. Permanent
+random/greedy are 4/10 and 8/10; V41 is 10/10 and matched random/greedy are
+5/10 and 6/10. All win comparisons pass. The permanent-greedy scorecard fails
+only uncertain idle (mean `-0.00739956`, CI
+`[-0.02001559,+0.01067689]`); the matched-greedy scorecard fails only uncertain
+recovery (mean `-19.85`, CI `[-81.80125,+29.65]`). Report SHA is
+`ca7b39c84a9f51d1...`. Dev-v37 is retired unopened/unconsumed and held-out-v6
+remains sealed/unconsumed.
 
 ## M8.1 acceptance review
 

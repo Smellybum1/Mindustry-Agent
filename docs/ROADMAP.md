@@ -1860,9 +1860,14 @@ reward, feature, root, or action-authority field. Config/umbrella hashes are
 receipt hashes `7874f5abaf230665...` / `277264b80c6456f7...`. Independent
 construction under pinned WSL Torch 2.12.1 is exact at checkpoint/model/lineage
 hashes `b6b5e98ddee56740...` / `93594bd64193740a...` /
-`37c4b1e571fca96c...`. Fresh selected-only reusable baselines and both frozen
-scorecards are next. No V41 episode has run; dev-v37 and held-out-v6 remain
-unopened, and M8.5 remains unmet.
+`37c4b1e571fca96c...`. Fresh permanent random/greedy are 4/10 and 8/10; V41 is
+10/10 versus matched random/greedy 5/10 and 6/10, passing every observed win
+comparison. It nevertheless fails both frozen scorecards: permanent-greedy
+idle is uncertain at 95% CI `[-0.02001559,+0.01067689]`, and matched-greedy
+recovery is uncertain at `[-81.80125,+29.65]`. Report SHA is
+`ca7b39c84a9f51d1...`. V41 is rejected before confirmation; dev-v37 is retired
+unopened/unconsumed, held-out-v6 remains sealed/unconsumed, and M8.5 remains
+unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

@@ -1792,9 +1792,15 @@ repository-evidence mapping used for the M6 audit is:
   schema while retaining legacy v1 behavior (224 Python tests pass). Under the
   pinned WSL Torch 2.12.1 toolchain, independent A/B constructions are exact:
   checkpoint `b6b5e98ddee56740...`, model state `93594bd64193740a...`, and
-  canonical lineage `37c4b1e571fca96c...`. Fresh selected-only reusable
-  baselines and dual scorecards are next. No V41 episode has run; dev-v37 and
-  held-out-v6 access remain prohibited.
+  canonical lineage `37c4b1e571fca96c...`. Fresh permanent random/greedy
+  baselines are 4/10 and 8/10; the midpoint is 10/10 versus matched random /
+  greedy 5/10 and 6/10, so all observed win comparisons pass. V41 is rejected
+  because permanent-greedy idle remains uncertain (mean `-0.00739956`, 95% CI
+  `[-0.02001559,+0.01067689]`) and matched-greedy recovery remains uncertain
+  (mean `-19.85`, 95% CI `[-81.80125,+29.65]`). Records/aggregate/report hashes
+  are `543e50b729097326...` / `056b356de88704f0...` /
+  `ca7b39c84a9f51d1...`. Dev-v37 is retired unopened/unconsumed; held-out-v6
+  remains sealed/unconsumed. No confirmation or final episode ran.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
