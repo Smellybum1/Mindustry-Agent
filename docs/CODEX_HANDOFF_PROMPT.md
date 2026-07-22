@@ -1,15 +1,17 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, after V39's construction rejection at 8/10 reusable wins.
+`coop-agent/v159.7`, after ADR-0056 precommits V42's training-only
+partner-intent teacher-conflict relabel. Implementation and public/pretraining
+gates are next; no V42 model work or dev-v38 membership construction has begun.
 
 Read first, in order:
 
 1. `AGENTS.md` in full; obey its delegation and sealed-data rules.
-2. `docs/HANDOFF.md`, focusing on V39's construction rejection, ADR-0052/0053,
-   and the next-five queue.
+2. `docs/HANDOFF.md`, focusing on the V41 rejection, V42 precommit, and the
+   next-five queue.
 3. M8.5 and the M8 exit criteria in `docs/ROADMAP.md`.
-4. ADR-0050, ADR-0051, ADR-0052, and ADR-0053.
+4. ADR-0053, ADR-0054, ADR-0055, and ADR-0056.
 
 Run `bash scripts/codex-status.sh`. Preserve and never stage the user-modified
 `AGENTS.md`, generated
@@ -335,6 +337,20 @@ SHA is `ca7b39c84a9f51d1...`; V41 is rejected before confirmation. Dev-v37 is
 retired unopened/unconsumed and held-out-v6 remains sealed/unconsumed. Diagnose
 any successor only from public/train evidence and precommit it before model or
 seed construction.
+
+Public/train-only diagnosis now closes learned WAIT-logit and danger-label
+successors. The exact optimizer-free teacher diagnostic reproduces V40's 752
+partner-intent conflicts and finds deterministic nonconflicting alternates for
+682, including all 256 tick-zero conflicts and 174/189 successful-corpus
+conflicts; 70 retain filter fallback. ADR-0056 precommits V42 to a pure,
+adaptive-preference-preserving alternate teacher label across warmup, rehearsal,
+and generic PPO teacher imitation. The original scripted action still drives the
+trajectory and state. Runtime actions/masks, reward, features, model, optimizer,
+roots, budget, RNGs, and engine pins remain V40-exact. Config/umbrella hashes are
+`3fcb0c8800c638a3...` / `c1644d2dd6dde231...`. Implement and test that exact
+coordinate, then run the complete public/pretraining boundary. Dev-v38 is
+reserved primary-only in `[6B,7B)` but must not be constructed until that green
+boundary is committed. Held-out-v6 remains sealed and unconsumed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

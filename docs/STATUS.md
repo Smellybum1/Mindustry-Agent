@@ -1801,6 +1801,19 @@ repository-evidence mapping used for the M6 audit is:
   are `543e50b729097326...` / `056b356de88704f0...` /
   `ca7b39c84a9f51d1...`. Dev-v37 is retired unopened/unconsumed; held-out-v6
   remains sealed/unconsumed. No confirmation or final episode ran.
+- Public-only V42 diagnosis closes learned WAIT-logit and danger-label fixes:
+  seed 2006's adverse idle follows learned-seat death and forced WAIT while both
+  surviving scripted seats have only structured `runtime:wait` candidates, and
+  teacher/learned danger is zero before every public learned-seat death. The
+  exact teacher train schedule instead exposes one untried label coordinate.
+  An optimizer-free diagnostic reproduces V40's 94/256 wins and 752 exact
+  partner-intent conflicts, finding valid deterministic nonconflicting labels
+  for 682 conflicts and 174/189 successful-corpus conflicts; 70 retain filter
+  fallback. ADR-0056 precommits V42 to that pure adaptive-preference-preserving
+  relabel only. Config/umbrella hashes are `3fcb0c8800c638a3...` /
+  `c1644d2dd6dde231...`. Dev-v38 is reserved primary-only in `[6B,7B)` but is
+  not constructed; held-out-v6 remains sealed/unconsumed. No V42 implementation,
+  model work, confirmation membership read, or restricted episode has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

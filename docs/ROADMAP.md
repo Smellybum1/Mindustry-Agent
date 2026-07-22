@@ -1869,6 +1869,24 @@ recovery is uncertain at `[-81.80125,+29.65]`. Report SHA is
 unopened/unconsumed, held-out-v6 remains sealed/unconsumed, and M8.5 remains
 unmet.
 
+ADR-0056 precommits V42 after public-only diagnosis closes WAIT-logit,
+danger-label, exact-death recovery, broader staging, reward-pressure,
+teacher-strength, and interpolation-sweep successors. The exact 256-episode
+ordinary teacher schedule reproduces V40's 752 partner-intent conflicts. A
+behavior-neutral, optimizer-free diagnostic finds a deterministic valid
+non-WAIT alternate for 682 conflicts, including all 256 tick-zero conflicts and
+174/189 successful-corpus conflicts; 70 retain V40 filtering. V42 changes only
+the effective generic teacher-imitation label, preserving the adaptive
+teacher's current preference/return state and selecting the highest-utility
+nonrisk candidate with stable index tie breaking. Original scripted trajectory
+actions, runtime masks and authority, reward, features, model, roots, budgets,
+RNGs, and engine pins remain V40-exact. Config/umbrella hashes are
+`3fcb0c8800c638a3...` / `c1644d2dd6dde231...`. Dev-v38 is reserved
+primary-only in `[6B,7B)` but may not be constructed until the committed
+implementation and complete public/pretraining gates pass. Held-out-v6 remains
+sealed/unconsumed. No V42 model work or restricted membership access preceded
+the precommit; M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

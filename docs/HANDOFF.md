@@ -855,9 +855,20 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   recovery remain uncertain; report SHA is `ca7b39c84a9f51d1...`. V41 is
   rejected before confirmation. Dev-v37 is retired unopened/unconsumed;
   held-out-v6 remains sealed/unconsumed.
+- **V42 relabel precommitted; implementation not started**: public trace
+  diagnosis closes learned WAIT-logit and danger-label interventions. The exact
+  optimizer-free teacher diagnostic reproduces V40's 752 conflicts and finds
+  deterministic nonconflicting alternates for 682, including all 256 tick-zero
+  conflicts and 174/189 successful-corpus conflicts; 70 retain V40 fallback
+  filtering. ADR-0056 freezes adaptive-preference-preserving relabeling across
+  warmup, rehearsal, and generic PPO teacher imitation without changing runtime
+  actions, masks, reward, model, roots, budget, or RNGs. Config/umbrella hashes
+  are `3fcb0c8800c638a3...` / `c1644d2dd6dde231...`. Dev-v38 is reserved
+  primary-only in `[6B,7B)` but has not been constructed. Held-out-v6 remains
+  sealed/unconsumed; no V42 model work or restricted access has begun.
 - **Current branch**: `coop-agent/v159.7`
-- **Current V41 construction repository checkpoint**:
-  `b081e39962484c3c960847dd23de3a6d31fadb04` (V40 training parents remain
+- **Current repository checkpoint**:
+  `30e16e99b852f2f90141e174e9806978fc6a365b` (V40 training parents remain
   bound to `c288483436c1003d25dc64ce7aba968600d45f3a`).
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
@@ -1018,19 +1029,21 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Diagnose the V41 reusable rejection from public/train-only evidence.** Do
-   not open retired dev-v37 or sealed held-out-v6.
-2. **Precommit any successor coordinate before model or seed construction.** A
-   coefficient sweep on reusable roots remains prohibited.
-3. **Reserve a new globally disjoint, value-free confirmation identity only
-   after the successor design is fixed.**
+1. **Implement ADR-0056's exact V42 teacher-conflict relabel.** Preserve the
+   original scripted runtime action and state; only the separate generic
+   teacher-imitation label may change.
+2. **Add focused config, pure-selection, fallback, telemetry, and all-three-path
+   imitation tests.** Historical V39/V40 configs must remain exact.
+3. **Run the complete public/pretraining boundary before dev-v38 construction
+   or model work.** Dev-v38 membership construction is primary-only after the
+   green boundary is committed; held-out-v6 remains sealed.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0054` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0056` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1053,7 +1066,9 @@ feature, without changing action authority. ADR-0054 records V40's narrow
 teacher-conflict filter, green pretraining boundary, value-free dev-v36 freeze,
 exact replicas, direct lineage, and reusable-scorecard rejection. ADR-0055's
 V41 successor was frozen and constructed exactly, then rejected by both
-reusable scorecards before confirmation.
+reusable scorecards before confirmation. ADR-0056 precommits V42's exact
+training-only teacher-conflict relabel with V40 filter fallback; implementation
+and public/pretraining gates are next.
 
 ## Deviations from the brief in this scaffold
 

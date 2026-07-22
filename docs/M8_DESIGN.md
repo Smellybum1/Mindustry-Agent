@@ -727,6 +727,33 @@ recovery (mean `-19.85`, CI `[-81.80125,+29.65]`). Report SHA is
 `ca7b39c84a9f51d1...`. Dev-v37 is retired unopened/unconsumed and held-out-v6
 remains sealed/unconsumed.
 
+## V42 governed successor
+
+ADR-0056 precommits the one remaining narrow training-only coordinate. Public
+trace diagnosis shows V41's seed-2006 idle outlier follows learned-seat death
+and forced WAIT while the surviving partners have only structured
+`runtime:wait` candidates; teacher danger is zero and agrees with the learned
+selection before every public learned-seat death. This closes WAIT-logit,
+danger-label, exact-death recovery, and broader runtime-action interventions.
+
+The exact V40 teacher train schedule contains 752 structured partner-intent
+conflicts. A behavior-neutral, optimizer-free diagnostic finds a deterministic
+valid non-WAIT alternate for 682, including all 256 tick-zero conflicts and
+174/189 successful-corpus conflicts. V42 preserves the adaptive teacher's
+current task-type preference/return-to-defense state, excludes exact risk
+indices, then selects highest utility with lower-index tie breaking. The 70
+no-alternate conflicts retain V40's filter. The original scripted action still
+drives the teacher trajectory and policy state; only the separate imitation
+label changes across warmup, rehearsal, and PPO teacher imitation.
+
+Runtime actions and masks, fixed partners, features, reward, model, optimizer
+coefficients, roots, budget, RNGs, checkpoint ranking, and engine pins remain
+V40-exact. Config/umbrella hashes are `3fcb0c8800c638a3...` /
+`c1644d2dd6dde231...`. Dev-v38 is reserved primary-only in `[6B,7B)` but may
+not be constructed until the committed implementation and complete public/
+pretraining boundary pass. Held-out-v6 remains sealed and unconsumed. No model
+work or restricted membership access preceded this precommit.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one
