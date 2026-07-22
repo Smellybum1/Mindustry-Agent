@@ -131,3 +131,15 @@ The frontier hashes to
 `93e736d9969fd51809f91091b2a45100ea5ccf56331439533892d8a7a6e098f9`;
 fresh checkpoint replays are bit-exact. Replica B is authorized. Dev-v33 and
 held-out-v4 remain unopened.
+
+Replica B reproduces A at update 16 with identical checkpoint bytes, model
+state, replay traces, teacher evidence, canonical frontier evidence, and
+canonical full-run digest
+`614c071b7f3003b016e332c4540787969d3b468f0804acfbc8db1fa443cd7163`.
+Direct lineage from training commit `8d323a3c729d1e42e781277a9a6abfb3bc924171`
+passes with reproducibility digest
+`fd69503ae40e977bd695b9a51a129e8769ba1cb623252777e4e4a213a29ceea0`;
+the lineage artifact SHA-256 is
+`3c17cfdf02a43fcbb8b7d42b2445466cbf94794f1a9a24b088630f5a8406673b`.
+Reusable permanent-greedy and matched-greedy scorecards are now authorized;
+dev-v33 and held-out-v4 remain unopened.

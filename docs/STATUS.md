@@ -1518,6 +1518,14 @@ repository-evidence mapping used for the M6 audit is:
   `614c071b7f3003b0...`; the two fresh checkpoint replays are bit-exact. Replica
   B is authorized from the same frozen commit/config/toolchain. Dev-v33 and
   held-out-v4 remain unopened; no scorecard or confirmation work has begun.
+- V37 replica B reproduces A exactly: update 16, 9/10 wins, return `4.18676`,
+  core health `805.5`, idle `0.05108287`, checkpoint/model/replay/full-run
+  digests, teacher evidence, and canonical frontier evidence all match. The
+  repository comparator reports bit-exact full-run digest
+  `614c071b7f3003b0...`; direct lineage passes with digest
+  `fd69503ae40e977b...` and artifact SHA-256 `3c17cfdf02a43fcb...` from training
+  commit `8d323a3c72`. Reusable permanent-greedy and matched-greedy scorecards
+  are next. Dev-v33 and held-out-v4 remain unopened.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1573,6 +1573,13 @@ digests are `a9a55110fe2266b8...`, `21b665232664f79e...`,
 bit-exact. The precommitted construction and idle floors pass, so exact replica
 B is authorized. Dev-v33 and held-out-v4 remain sealed.
 
+V37 replica B reproduces A exactly at update 16: checkpoint bytes, model state,
+replay traces, teacher evidence, canonical frontier evidence, and full-run
+digest `614c071b7f3003b0...` match. Direct lineage passes from training commit
+`8d323a3c72` with digest `fd69503ae40e977b...` and artifact SHA-256
+`3c17cfdf02a43fcb...`. Reusable permanent-greedy and matched-greedy scorecards
+must pass before dev-v33 can be opened; held-out-v4 remains sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

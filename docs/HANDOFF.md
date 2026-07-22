@@ -801,12 +801,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Train exact V37 replica B from scratch.** Replica A passes at update 16
-   with 9/10 wins and idle `0.05108287`. Use the same frozen commit, immutable
-   config, pinned WSL2 lock/toolchain, and independent output directory.
-2. **Require complete replica equality before scorecards.** Check checkpoint,
-   frontier, model, replay, teacher schedules/reports, canonical full-run
-   digest, and direct lineage; reject V37 on any divergence.
+1. **Run V37's reusable dual scorecards.** Exact replicas reproduce at update
+   16 with 9/10 wins and idle `0.05108287`; canonical full-run and direct
+   lineage gates pass. Refresh/reuse governed permanent baselines and evaluate
+   candidate, matched greedy, and matched random on dev-v1.
+2. **Open dev-v33 only if both reusable scorecards pass.** Require win-rate
+   comparisons plus non-regression against permanent greedy and matched greedy;
+   otherwise reject V37 without confirmation.
 3. **Keep dev-v32 retired unopened, dev-v33 unopened, and held-out-v4 sealed.**
    No successor may
    open a new confirmation set without exact replicas,
