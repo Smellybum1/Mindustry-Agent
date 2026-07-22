@@ -1806,7 +1806,11 @@ rehearsal, and PPO teacher imitation; runtime, PPO policy/value learning,
 reward, model, roots, budgets, and RNGs remain V39-exact. The immutable config
 hash is `230759e7e02dcca9...`. A value-free umbrella reserves dev-v36 in the
 disjoint `[4B,5B)` namespace before membership creation. Implementation and all
-pretraining gates are next; replica A, dev-v36 construction/access, and
+pretraining gates were authorized. The exact filter is now implemented at
+`c9459c58f4`; 208 Python tests and the bound 256-episode train-only diagnostic
+pass. Its report hashes to `4fe2960225d659cb...` and records the corrected 189
+successful-corpus conflicts. Pinned Java, public/runtime/replay, and reward
+gates remain before primary-only dev-v36 construction or replica A. Dev-v36 and
 held-out-v6 access remain prohibited.
 
 Exit criteria:

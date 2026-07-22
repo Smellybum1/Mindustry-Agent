@@ -26,9 +26,11 @@ ordinary action as the imitation label. Across the fixed 256-episode teacher
 warmup schedule, 752 of 3,956 teacher-eligible transitions select a candidate
 that the same transition marks as partner-intent duplication risk. All 256
 episodes contain a conflict: 325 schematic, 38 harvest, and 389 supply labels;
-256 occur at tick zero and 496 later. The 94 successful episodes contribute 188
+256 occur at tick zero and 496 later. The 94 successful episodes contribute 189
 conflicts to the 1,079-transition warmup/rehearsal corpus. V39 samples those
-conflicts 177 times in warmup and 734 times in rehearsal. The on-policy PPO
+conflicts 177 times in warmup and 734 times in rehearsal; the complete
+rehearsal schedule reaches 188 unique conflicts, leaving one unsampled. The
+on-policy PPO
 teacher term at coefficient `0.05` applies the same unfiltered label rule.
 
 This is contradictory supervision, not an action-authority defect: PPO can
@@ -108,3 +110,12 @@ as duplicate work at that boundary.
 - This ADR authorizes implementation and pretraining gates after the precommit
   packet is committed. It does not authorize dev-v36 membership construction,
   replica A, confirmation consumption, or held-out-v6 access.
+
+The implementation is committed at `c9459c58f4`. The bound train-only
+diagnostic reproduces 256 episodes, 94 wins, 3,956 teacher-eligible transitions,
+752 conflicts, and the corrected 1,079/189 successful-corpus counts. Warmup
+samples 177 conflict presentations and rehearsal samples 734 across 188 unique
+conflicts. The ignored report SHA-256 is
+`4fe2960225d659cb5e2d78e02ab199484b6c09dbfd8b09a9393bfb60c1de387e`;
+its deterministic payload digest is
+`8484c36bf959fd9efffba60a0540b388e6e470fae854d657d5b4df897bfe4096`.

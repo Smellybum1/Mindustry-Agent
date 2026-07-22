@@ -1738,7 +1738,10 @@ repository-evidence mapping used for the M6 audit is:
   transitions; V39 presented 177 in warmup and 734 in rehearsal. PPO
   policy/value learning, runtime, reward, model, roots, budget, and RNGs remain
   exact. Config SHA is `230759e7e02dcca9...`; a committed value-free umbrella
-  reserves primary-only dev-v36 in `[4B,5B)`. No V40 implementation, membership
+  reserves primary-only dev-v36 in `[4B,5B)`. The filter implementation is
+  committed at `c9459c58f4`; 208 Python tests pass. The bound train-only
+  diagnostic reproduces all counts, including the corrected 189 successful-
+  corpus conflicts, and hashes to `4fe2960225d659cb...`. No dev-v36 membership
   construction, baseline episode, or model work has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)

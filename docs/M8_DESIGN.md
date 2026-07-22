@@ -635,9 +635,10 @@ unconsumed; held-out-v6 remains sealed and unconsumed.
 ADR-0054 identifies contradictory teacher supervision as the only narrow V40
 coordinate. On V39's fixed warmup schedule, 752 of 3,956 teacher-eligible
 transitions label an action that the same structured boundary marks as exact
-partner-intent duplicate risk. The successful teacher corpus retains 188 such
+partner-intent duplicate risk. The successful teacher corpus retains 189 such
 transitions; deterministic V39 sampling presents them 177 times in warmup and
-734 times in rehearsal, while PPO's 0.05 teacher term is also unfiltered.
+734 times in rehearsal, reaching 188 unique conflicts, while PPO's 0.05 teacher
+term is also unfiltered.
 
 V40 excludes only those exact action-index conflicts from teacher warmup,
 teacher rehearsal, and PPO teacher imitation. The transition remains available
@@ -651,6 +652,12 @@ The immutable preimplementation config SHA-256 is
 The value-free dev-v36 umbrella reserves 160 roots in `[4B,5B)` without a
 membership read. Dev-v36 construction/access is primary-only after the
 precommit and required gates; held-out-v6 remains sealed.
+
+The filter implementation is committed at `c9459c58f4`. The bound train-only
+diagnostic reproduces the complete schedule and corrected 189 successful-
+corpus conflicts; its report/payload hashes are `4fe2960225d659cb...` /
+`8484c36bf959fd9e...`. The 208-test Python suite passes. Runtime and reward
+gates remain before dev-v36 construction or model work.
 
 ## M8.1 acceptance review
 

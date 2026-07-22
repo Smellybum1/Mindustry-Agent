@@ -276,10 +276,13 @@ partner-intent teacher-label conflicts are excluded from warmup, rehearsal,
 and PPO teacher imitation only; PPO policy/value, runtime, reward, model,
 roots, budget, and RNGs remain V39-exact. The immutable config hashes to
 `230759e7e02dcca9a6b7608f7784b20f85845c40da0f7a28dd1ec13641d0013a`.
-A value-free umbrella reserves primary-only dev-v36 in `[4B,5B)`. Implement
-and gate this exact filter next. Do not construct/read dev-v36 or start model
-work until the committed pretraining boundary passes; never inspect
-held-out-v6 membership.
+A value-free umbrella reserves primary-only dev-v36 in `[4B,5B)`. The exact
+filter implementation is committed at
+`c9459c58f4`; 208 Python tests and the bound train-only diagnostic pass, with
+report SHA `4fe2960225d659cb...`. Run the remaining pinned Java,
+public/runtime/replay, and exact-config reward gates next. Do not
+construct/read dev-v36 or start model work until the complete committed
+pretraining boundary passes; never inspect held-out-v6 membership.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
