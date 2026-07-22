@@ -321,10 +321,16 @@ ADR-0055 now precommits V41's single 50/50 adjacent-frontier midpoint. The
 canonical diagnostic proves V40 updates 25, 26, and 28 are all 10/10 and all
 fail the same permanent announcement/idle and matched recovery rows; updates 25
 and 26 have complementary idle outliers. Config SHA is `c4705974f18512a...` and
-the value-free dev-v37 umbrella SHA is `7ce8f5cf640978ef...`. Dev-v37 is reserved
-in `[5B,6B)` but not created. Validate the config and unchanged-runtime gates,
-then implement/commit/run a primary-only no-read freezer before constructing
-the exact A/B midpoint checkpoints. Held-out-v6 remains sealed/unconsumed.
+the value-free dev-v37 umbrella SHA is `7ce8f5cf640978ef...`. The 44/44 reward
+gate passes. Dev-v37 is frozen value-free and unopened in `[5B,6B)`;
+membership/receipt hashes are `7874f5abaf230665...` /
+`277264b80c6456f7...`. The constructor's reward-schema compatibility fix is
+committed at `b081e39962`, with 224 Python tests passing. Pinned WSL Torch
+2.12.1 constructions A/B are exact at checkpoint/model/lineage
+`b6b5e98ddee56740...` / `93594bd64193740a...` /
+`37c4b1e571fca96c...`. Run fresh selected-only permanent baselines and the
+candidate/matched reusable preflight next. Dev-v37 and held-out-v6 must remain
+unopened unless their preceding gates completely pass.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

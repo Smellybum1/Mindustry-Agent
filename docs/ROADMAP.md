@@ -1855,9 +1855,14 @@ fail the same permanent announcement/idle and matched recovery rows. Updates 25
 and 26 have complementary idle outliers. V41 tests one unswept 50/50 aligned
 model-state midpoint, using exact A/B parent pairs and changing no runtime,
 reward, feature, root, or action-authority field. Config/umbrella hashes are
-`c4705974f18512a...` / `7ce8f5cf640978ef...`. Dev-v37 is reserved in `[5B,6B)`
-but not created; it must be frozen value-free before construction. No V41 model
-or episode work has begun; held-out-v6 remains sealed and M8.5 remains unmet.
+`c4705974f18512a...` / `7ce8f5cf640978ef...`. The exact-config reward gate is
+44/44. Dev-v37 is frozen value-free and unopened in `[5B,6B)` with membership /
+receipt hashes `7874f5abaf230665...` / `277264b80c6456f7...`. Independent
+construction under pinned WSL Torch 2.12.1 is exact at checkpoint/model/lineage
+hashes `b6b5e98ddee56740...` / `93594bd64193740a...` /
+`37c4b1e571fca96c...`. Fresh selected-only reusable baselines and both frozen
+scorecards are next. No V41 episode has run; dev-v37 and held-out-v6 remain
+unopened, and M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

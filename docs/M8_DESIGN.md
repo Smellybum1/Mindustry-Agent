@@ -709,6 +709,16 @@ roots, and RNG semantics remain V40-exact. Dev-v37 is reserved value-free in
 remains sealed. Config/umbrella hashes are `c4705974f18512a...` /
 `7ce8f5cf640978ef...`; no V41 model or evaluation work preceded the precommit.
 
+The exact-config reward gate passes 44/44. Dev-v37 was then frozen value-free
+and remains unopened; membership/receipt hashes are `7874f5abaf230665...` /
+`277264b80c6456f7...`. Interpolation required one compatibility correction so
+the governed constructor propagates `selector_reward_v2` from config while
+preserving legacy reward-v1 defaults and failing closed on mismatch. The
+224-test suite passes. Using the parent-pinned WSL Torch 2.12.1 environment,
+independent A/B midpoints are byte-exact at checkpoint `b6b5e98ddee56740...`,
+model state `93594bd64193740a...`, and lineage `37c4b1e571fca96c...`. Reusable
+baselines and dual scorecards are authorized next; confirmation is not.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

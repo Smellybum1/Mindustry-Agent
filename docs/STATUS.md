@@ -1785,8 +1785,16 @@ repository-evidence mapping used for the M6 audit is:
   complementary idle outliers. V41 derives one checkpoint from exact update-26
   and update-25 parents without changing runtime, reward, features, roots, or
   action authority. Config/umbrella hashes are `c4705974f18512a...` /
-  `7ce8f5cf640978ef...`; dev-v37 is reserved value-free in `[5B,6B)` but is not
-  created. No V41 construction or episode has run. Held-out-v6 remains sealed.
+  `7ce8f5cf640978ef...`. The 44/44 exact-config reward gate passes at report
+  SHA `995d9db2f866d5f2...`. Dev-v37 is frozen value-free and unopened in
+  `[5B,6B)`; its membership/receipt hashes are `7874f5abaf230665...` /
+  `277264b80c6456f7...`. The constructor now preserves config-selected reward
+  schema while retaining legacy v1 behavior (224 Python tests pass). Under the
+  pinned WSL Torch 2.12.1 toolchain, independent A/B constructions are exact:
+  checkpoint `b6b5e98ddee56740...`, model state `93594bd64193740a...`, and
+  canonical lineage `37c4b1e571fca96c...`. Fresh selected-only reusable
+  baselines and dual scorecards are next. No V41 episode has run; dev-v37 and
+  held-out-v6 access remain prohibited.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
