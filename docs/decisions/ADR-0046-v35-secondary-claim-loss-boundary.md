@@ -106,3 +106,37 @@ cross-process/reset/seed determinism, the 664-checkpoint 16,200-tick golden
 replay, and intentional one-line negative replay all pass. Every pretraining
 boundary in Decision 9 is green; replica A is authorized. No model work has yet
 begun, and dev-v31 plus held-out-v4 remain unopened.
+
+## Outcome
+
+V35's exact replicas both select update 8 at 9/10 reusable wins, mean return
+`3.85778`, mean core health `721.8`, and mean idle `0.05600096`. Checkpoint,
+model-state, checkpoint-replay, canonical full-run, and direct-lineage digests
+are respectively `dd64ec3d8768f7f...`, `ce6f29fac599795d...`,
+`9c49e3b0f58c1312...`, `515c292d12332566...`, and `56a70dc65f85f4b3...`.
+The official manifest comparator and direct-lineage verifier both pass.
+
+Fresh V35-runtime permanent baselines produce random 4/10 and greedy 8/10.
+Reusable preflight beats every permanent and matched win-rate comparator, and
+matched-greedy idle improves by `-0.11184187` with CI entirely below zero.
+V35 nevertheless fails the dual scorecard: permanent-greedy idle regresses by
+`+0.01815752` with 95% CI `[+0.00077632,+0.04116776]`. Permanent announcements
+and recovery are uncertain; matched announcements miss exact non-regression by
+an upper CI endpoint of `+0.00006397`, and matched duplicates are uncertain.
+
+A reusable-only fixed-seat trace explains the remaining permanent idle gap.
+Mean idle ticks are `[390.1,8.1,380.0]`; V35 corrected scripted seat 1, but the
+learned seat now selects the `+1.0`-biased schematic at tick 0, loses the atomic
+claim, and idles exactly 250 ticks in all ten episodes. Removing that prior from
+the rejected checkpoint makes seat 0 choose `BUILD_LINE` at tick 0 on every
+seed, but the retrospective off-contract run wins only 6/10. The checkpoint
+cannot become successor evidence; a collision-free opening must retrain from
+scratch under its own precommit.
+
+V35 is rejected, dev-v31 is retired unopened, and held-out-v4 remains sealed.
+The baseline records/aggregate hashes are `4c1c654cc32a0502...` and
+`72d8a3dec8416859...`; the learned records/aggregate/preflight hashes are
+`a75e8826c4f49938...`, `c7f0e58cef9e6144...`, and `fcea6fb297a90399...`.
+The fixed-seat diagnostic is `runs/m8-selector-v35-seat0-idle.json`, SHA-256
+`4ea36d7d149c5071070cda856b085da20f195b1bf246032e556ba607dbf428d0`.
+No dev-v31 or held-out-v4 outcome was observed.

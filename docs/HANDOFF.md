@@ -801,12 +801,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Construct V35 replica A.** Every pretraining gate passes from implementation
-   commit `673042bfd0`. Use the exact V35 config and pinned WSL2 runtime; require
-   at least 9/10 reusable construction wins and idle below 0.25.
-2. **Authorize replica B only after auditing A.** If A passes construction,
-   reproduce the complete governed checkpoint/frontier/model/replay/teacher/
-   canonical/direct-lineage evidence before opening any confirmation set.
+1. **Precommit a collision-free opening successor.** V35 exact twins pass
+   construction but reusable preflight rejects permanent idle. The learned seat
+   loses the biased tick-0 schematic claim in all ten episodes; its unadjusted
+   first choice is `BUILD_LINE`. Do not reuse the off-contract V35 checkpoint.
+2. **Retrain from scratch only after governance passes.** Preserve V35 runtime,
+   rewards, teachers, budgets, and gates; freeze a new disjoint confirmation set
+   and keep it unopened through exact twins plus both reusable scorecards.
 3. **Keep held-out-v4 sealed.** Dev-v29 and dev-v30 are retired unopened; freeze
    a new disjoint confirmation set but do not open it before exact replicas and
    both reusable scorecards pass. No successor may
@@ -823,8 +824,8 @@ reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
 ADR-0045 precommits and records V34's all-seat claim-loss boundary rejection at
-the complete public candidate gate; ADR-0046 precommits V35's fixed-secondary-
-seat correction.
+the complete public candidate gate; ADR-0046 precommits and records V35's exact
+fixed-secondary-seat construction and reusable scorecard rejection.
 
 ## Deviations from the brief in this scaffold
 

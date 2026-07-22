@@ -1502,6 +1502,19 @@ cross-process/reset/seed determinism, the 16,200-tick golden replay, and negativ
 replay all pass. Replica A is authorized; dev-v31 and held-out-v4 remain
 unopened. M8.5 remains unmet.
 
+V35's exact replicas select update 8 at 9/10, return `3.85778`, core health
+`721.8`, and idle `0.05600096`; all checkpoint/replay/full-run/direct-lineage
+comparisons are exact. Fresh V35 baselines are random 4/10 and greedy 8/10.
+Learned wins 9/10 and improves matched-greedy idle/recovery, but reusable
+preflight rejects permanent-greedy idle by `+0.01815752` with 95% CI
+`[+0.00077632,+0.04116776]`; several announcement/recovery/duplicate intervals
+remain uncertain. A fixed-seat trace finds mean idle ticks `[390.1,8.1,380.0]`:
+seat 1 is corrected, but learned seat 0 loses its biased schematic claim at
+tick 0 and idles 250 ticks in every episode. Removing the prior flips the first
+choice to `BUILD_LINE` but the already-trained off-contract checkpoint falls to
+6/10, so it cannot be reused. V35 is rejected, dev-v31 is retired unopened,
+held-out-v4 stays sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

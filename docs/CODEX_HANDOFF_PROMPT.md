@@ -118,10 +118,14 @@ final atomic `claim_lost`; seat 0 and seat 2 preserve V32 scheduling. The focuse
 positive seat-1/negative seat-0 check, pinned Java build, and complete public
 gate already pass; public survival is 5/5 with all five staging starts restored.
 From implementation commit `673042bfd0`, smoke, determinism, the 16,200-tick
-golden replay, and negative replay also pass. Construct replica A with the exact
-V35 config and pinned WSL2 runtime, then audit the 9/10 and idle-below-0.25
-construction boundary before replica B. Dev-v31 is frozen at disjoint roots
-`284001..284160` but unopened; held-out-v4 remains sealed.
+golden replay, and negative replay also pass. Exact replicas select update 8 at
+9/10 and reproduce every governed digest, but reusable preflight rejects
+permanent-greedy idle by `+0.01815752` with CI entirely above zero. Learned seat
+0 loses the biased tick-0 schematic claim and idles 250 ticks in every episode;
+without the prior its first choice is `BUILD_LINE`, but the off-contract
+checkpoint wins only 6/10. Reject V35 and precommit a from-scratch collision-free
+opening successor before model work. Dev-v31 is retired unopened; held-out-v4
+remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

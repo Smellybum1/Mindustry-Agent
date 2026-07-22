@@ -1454,6 +1454,17 @@ repository-evidence mapping used for the M6 audit is:
   restored. From implementation commit `673042bfd0`, smoke, cross-process/reset/
   seed determinism, the 16,200-tick golden replay, and negative replay all pass.
   Replica A is authorized; dev-v31 and held-out-v4 remain unopened.
+- V35's exact replicas select update 8 at 9/10, return `3.85778`, core health
+  `721.8`, and idle `0.05600096`; checkpoint/model/replay/full-run/direct-lineage
+  digests all reproduce. Fresh baselines are random 4/10 and greedy 8/10.
+  Reusable preflight beats every win comparator and strongly improves matched
+  idle/recovery, but rejects permanent-greedy idle by `+0.01815752` (95% CI
+  `[+0.00077632,+0.04116776]`) with other uncertain intervals. Per-seat idle is
+  `[390.1,8.1,380.0]`: learned seat 0 loses the biased tick-0 schematic claim
+  and idles 250 ticks in every episode. Removing the prior chooses `BUILD_LINE`
+  but the off-contract checkpoint wins only 6/10, so a successor must retrain.
+  V35 is rejected, dev-v31 is retired unopened, held-out-v4 remains sealed, and
+  M8.5 is unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
