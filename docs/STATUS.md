@@ -1779,6 +1779,14 @@ repository-evidence mapping used for the M6 audit is:
   `3fe4454202460b4...` / `eafe2ce3faf8baba...` / `8453b0c4b75cd681...`.
   Dev-v36 is retired unopened/unconsumed; held-out-v6 remains sealed and
   unconsumed. No confirmation or final episode ran.
+- ADR-0055 precommits V41's single 50/50 adjacent-frontier midpoint. A canonical
+  reusable-only diagnostic proves V40 updates 25, 26, and 28 are all 10/10 and
+  all fail the same announcement/idle/recovery rows; updates 25 and 26 have
+  complementary idle outliers. V41 derives one checkpoint from exact update-26
+  and update-25 parents without changing runtime, reward, features, roots, or
+  action authority. Config/umbrella hashes are `c4705974f18512a...` /
+  `7ce8f5cf640978ef...`; dev-v37 is reserved value-free in `[5B,6B)` but is not
+  created. No V41 construction or episode has run. Held-out-v6 remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

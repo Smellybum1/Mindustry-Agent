@@ -45,6 +45,21 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0038](ADR-0038-v27-successful-teacher-trajectory-warmup.md) | V27 successful teacher-trajectory warmup |
 | [0039](ADR-0039-v28-successful-teacher-trajectory-rehearsal.md) | V28 successful teacher-trajectory rehearsal |
 | [0040](ADR-0040-v29-diverse-successful-teacher-corpus.md) | V29 diverse successful teacher corpus |
+| [0041](ADR-0041-v30-budgeted-diverse-teacher-corpus.md) | V30 budgeted diverse successful teacher corpus |
+| [0042](ADR-0042-v31-initial-schematic-prior.md) | V31 initial schematic prior |
+| [0043](ADR-0043-v32-resource-actionability-staging.md) | V32 resource actionability and proactive staging |
+| [0044](ADR-0044-v33-secondary-seat-staging.md) | V33 targeted secondary-seat staging |
+| [0045](ADR-0045-v34-claim-loss-decision-boundary.md) | V34 atomic claim-loss decision boundary |
+| [0046](ADR-0046-v35-secondary-claim-loss-boundary.md) | V35 secondary-seat claim-loss boundary |
+| [0047](ADR-0047-v36-build-line-opening-prior.md) | V36 collision-free build-line opening prior |
+| [0048](ADR-0048-v37-seat2-harvest-opening.md) | V37 fixed seat-2 harvest opening |
+| [0049](ADR-0049-sealed-seed-membership-exposure.md) | Retire membership-exposed sealed seed sets |
+| [0050](ADR-0050-v38-owned-schematic-staging.md) | V38 learned-seat staging beside partner-owned schematics |
+| [0051](ADR-0051-selected-only-baseline-runtime-provenance.md) | Selected-only baseline loading and runtime provenance |
+| [0052](ADR-0052-v39-structured-partner-intent-risk.md) | V39 structured partner-intent duplication risk |
+| [0053](ADR-0053-v39-sealed-test-read-repair.md) | V39 sealed-test read repair and replacement final |
+| [0054](ADR-0054-v40-partner-intent-teacher-conflict-filter.md) | V40 partner-intent teacher-conflict filter |
+| [0055](ADR-0055-v41-adjacent-frontier-midpoint.md) | V41 adjacent-frontier midpoint |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

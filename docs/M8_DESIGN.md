@@ -693,6 +693,22 @@ announcements and idle CIs cross zero, and matched-greedy recovery crosses
 zero. Both frozen scorecards therefore fail. Dev-v36 is retired unopened and
 unconsumed; held-out-v6 remains sealed and unconsumed.
 
+## V41 governed successor
+
+ADR-0055 precommits one unswept 50/50 model-state midpoint between V40 updates
+26 and 25. A canonical reusable-only diagnostic shows updates 25, 26, and 28
+are each 10/10 and each fails permanent announcements/idle and matched recovery.
+Updates 25 and 26 expose complementary idle outliers, while update 25 has the
+best recovery mean and update 26 the best idle/announcement/core means.
+
+Construction A uses Replica A's aligned parents and construction B uses Replica
+B's; exact checkpoint/model/lineage identity is required before evaluation.
+Runtime, reward, features, action authority, partner intent, scripted opening,
+roots, and RNG semantics remain V40-exact. Dev-v37 is reserved value-free in
+`[5B,6B)` and must be frozen primary-only before construction. Held-out-v6
+remains sealed. Config/umbrella hashes are `c4705974f18512a...` /
+`7ce8f5cf640978ef...`; no V41 model or evaluation work preceded the precommit.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

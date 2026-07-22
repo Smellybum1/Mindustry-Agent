@@ -317,6 +317,15 @@ Dev-v36 is retired unopened/unconsumed; held-out-v6 remains sealed/unconsumed.
 Diagnose any V41 coordinate from reusable/train-only V40 evidence, precommit it,
 and freeze a new disjoint value-free confirmation identity before model work.
 
+ADR-0055 now precommits V41's single 50/50 adjacent-frontier midpoint. The
+canonical diagnostic proves V40 updates 25, 26, and 28 are all 10/10 and all
+fail the same permanent announcement/idle and matched recovery rows; updates 25
+and 26 have complementary idle outliers. Config SHA is `c4705974f18512a...` and
+the value-free dev-v37 umbrella SHA is `7ce8f5cf640978ef...`. Dev-v37 is reserved
+in `[5B,6B)` but not created. Validate the config and unchanged-runtime gates,
+then implement/commit/run a primary-only no-read freezer before constructing
+the exact A/B midpoint checkpoints. Held-out-v6 remains sealed/unconsumed.
+
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.

@@ -1849,6 +1849,16 @@ matched-greedy recovery is uncertain. Records/aggregate/report hashes are
 V40 is rejected before confirmation. Dev-v36 is retired unopened/unconsumed;
 held-out-v6 remains sealed/unconsumed and M8.5 remains unmet.
 
+ADR-0055 precommits V41 after a canonical reusable-only frontier diagnostic
+rejects direct selection of V40 updates 25, 26, or 28: all are 10/10, and all
+fail the same permanent announcement/idle and matched recovery rows. Updates 25
+and 26 have complementary idle outliers. V41 tests one unswept 50/50 aligned
+model-state midpoint, using exact A/B parent pairs and changing no runtime,
+reward, feature, root, or action-authority field. Config/umbrella hashes are
+`c4705974f18512a...` / `7ce8f5cf640978ef...`. Dev-v37 is reserved in `[5B,6B)`
+but not created; it must be frozen value-free before construction. No V41 model
+or episode work has begun; held-out-v6 remains sealed and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

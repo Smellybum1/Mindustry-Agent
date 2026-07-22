@@ -838,6 +838,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   matched-greedy recovery remain uncertain, so both frozen scorecards fail.
   Report SHA is `8453b0c4b75cd681...`. Dev-v36 is retired unopened/unconsumed;
   held-out-v6 stays sealed/unconsumed. No confirmation/final episode ran.
+- **V41 midpoint precommitted, not constructed**: canonical reusable diagnosis
+  shows V40 updates 25/26/28 all 10/10 and all fail the same three scorecard
+  rows; updates 25 and 26 have complementary idle outliers. ADR-0055 fixes one
+  50/50 aligned-state midpoint with exact A/B parent constructions. Config /
+  umbrella hashes are `c4705974f18512a...` / `7ce8f5cf640978ef...`. Dev-v37 is
+  reserved in `[5B,6B)` but not created; held-out-v6 remains sealed.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V40 implementation/governance repository checkpoint**:
   `c288483436c1003d25dc64ce7aba968600d45f3a` (the Replica A documentation
@@ -1001,11 +1007,11 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Diagnose one V41 coordinate from reusable/train-only V40 evidence.** Do not
-   use retired dev-v36 or sealed held-out-v6 membership.
-2. **Precommit any successor before implementation or model work.** Preserve
-   ADR-0051 selected-only provenance and the dual-scorecard gate.
-3. **Freeze a new disjoint value-free confirmation identity before model work.**
+1. **Validate the committed V41 interpolation config and unchanged-runtime
+   gates.** No checkpoint construction yet.
+2. **Implement and commit the primary-only dev-v37 freezer, then freeze it
+   value-free without reading any membership.**
+3. **Only after the freeze, construct exact A/B V41 checkpoints and lineage.**
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
@@ -1034,7 +1040,7 @@ structured fixed-partner intent as evidence in the existing duplication-risk
 feature, without changing action authority. ADR-0054 records V40's narrow
 teacher-conflict filter, green pretraining boundary, value-free dev-v36 freeze,
 exact replicas, direct lineage, and reusable-scorecard rejection. A V41
-successor requires fresh reusable/train-only diagnosis and precommit.
+successor is now precommitted by ADR-0055; its config/freezer gates are next.
 
 ## Deviations from the brief in this scaffold
 
