@@ -104,6 +104,53 @@ class HumanControlTest{
         assertEquals(1, agent.revision());
     }
 
+    @Test void contextCanonicalizesRegionsAndQuietPreservesUrgentMessages(){
+        Context canonical = new Context(Set.of("EAST_LANE"), 1);
+        assertTrue(new State().apply(parsed("goal", "defend-region", "east_lane"),
+            1, canonical).accepted());
+        assertFalse(HumanControl.shouldRenderCoordination(true, "START_TASK"));
+        assertTrue(HumanControl.shouldRenderCoordination(true, "BLOCKED"));
+        assertTrue(HumanControl.shouldRenderCoordination(false, "START_TASK"));
+    }
+
+    @Test void callbackQueueCannotMutateUntilSimulationThreadDrains() throws Exception{
+        CommandQueue queue = new CommandQueue();
+        EnqueueResult[] queued = new EnqueueResult[1];
+        Thread callback = new Thread(() -> queued[0] = queue.enqueue(
+            new String[]{"goal", "defend-region", "east_lane"}, "player"));
+        callback.start();
+        callback.join();
+
+        assertTrue(queued[0].accepted());
+        assertEquals(1, queued[0].sequence());
+        assertEquals(1, queue.pending());
+        assertEquals(0, state.snapshot().revision());
+        assertTrue(state.snapshot().activeGoals().isEmpty());
+        assertEquals("agents: command queued sequence=1 type=goal",
+            HumanControl.renderQueued(queued[0]));
+
+        List<AppliedCommand> applied = queue.drain(state, 20, context);
+        assertEquals(1, applied.size());
+        assertEquals("human:goal:1", applied.get(0).event().goalId());
+        assertEquals(1, state.snapshot().revision());
+        assertEquals("agents: command applied type=goal reason=applied revision=1"
+            + " goal=human:goal:1", HumanControl.render(applied.get(0).event()));
+        assertEquals(0, queue.pending());
+    }
+
+    @Test void queuePreservesAcceptedOrderAndDoesNotQueueParseFailures(){
+        CommandQueue queue = new CommandQueue();
+        assertFalse(queue.enqueue(new String[]{"quiet", "maybe"}, "player").accepted());
+        assertEquals(0, queue.pending());
+        assertEquals(1, queue.enqueue(new String[]{"quiet", "on"}, "player").sequence());
+        assertEquals(2, queue.enqueue(new String[]{"autonomy", "low"}, "player").sequence());
+
+        List<AppliedCommand> applied = queue.drain(state, 5, context);
+        assertEquals(List.of(CommandType.QUIET, CommandType.AUTONOMY), applied.stream()
+            .map(result -> result.event().command().type()).toList());
+        assertEquals(2, state.snapshot().revision());
+    }
+
     private Command parsed(String... tokens){
         ParseResult result = HumanControl.parse(tokens, "Player.One");
         assertTrue(result.accepted(), result.reason());

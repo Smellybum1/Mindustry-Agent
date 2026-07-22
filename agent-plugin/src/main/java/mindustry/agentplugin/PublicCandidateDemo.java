@@ -1,10 +1,15 @@
 package mindustry.agentplugin;
 
 import agentcore.candidates.*;
+import agentcore.board.*;
 import agentcore.coordination.*;
+import agentcore.human.*;
+import agentcore.human.HumanActionPolicy.*;
+import agentcore.human.HumanControl.*;
 import agentcore.policy.*;
 import agentcore.policy.GreedyUtilityPolicy.*;
 import agentcore.skill.*;
+import agentcore.task.*;
 import arc.util.serialization.*;
 import mindustry.gen.*;
 import mindustry.rl.*;
@@ -22,15 +27,20 @@ final class PublicCandidateDemo{
     enum SignalType{ RESERVE_MINING, WAVE_START, WAVE_CLEAR, EXPANSION_COMPLETE, MAINTENANCE_COMPLETE }
     record Signal(SignalType type, long tick, int wave, int enemies, int coreHealth,
                   int blocks, int turrets){}
+    record GoalAvailability(long tick, String goalId, String reason){}
 
     private final DemoAgentRegistry registry;
     private final AdaptiveWorldFacts facts;
     private final EngineCandidates candidates;
     private final CoordinationAdapter coordination;
+    private final HumanControl.State humanControl;
     private final GreedyUtilityPolicy policy = new GreedyUtilityPolicy();
+    private final HumanActionPolicy humanPolicy = new HumanActionPolicy();
     private final ArrayList<String> acceptedSelections = new ArrayList<>();
     private final ArrayDeque<Signal> signals = new ArrayDeque<>();
     private final ArrayDeque<Jval> traces = new ArrayDeque<>();
+    private final ArrayDeque<GoalAvailability> goalAvailability = new ArrayDeque<>();
+    private final HashSet<String> unavailableGoals = new HashSet<>();
     private final ExpertCoordinationPlan expertPlan;
     private final boolean traceEnabled;
     private CandidateSet[] boundaryCandidates = new CandidateSet[0];
@@ -43,8 +53,14 @@ final class PublicCandidateDemo{
     private boolean reserveReported;
     private boolean started;
 
-    PublicCandidateDemo(Scenario scenario, DemoAgentRegistry registry, boolean traceEnabled){
+    PublicCandidateDemo(
+        Scenario scenario,
+        DemoAgentRegistry registry,
+        HumanControl.State humanControl,
+        boolean traceEnabled
+    ){
         this.registry = registry;
+        this.humanControl = humanControl;
         this.traceEnabled = traceEnabled;
         expertPlan = ExpertCoordinationPlans.fromScenario(scenario);
         facts = new AdaptiveWorldFacts(scenario, registry);
@@ -62,6 +78,8 @@ final class PublicCandidateDemo{
         acceptedSelections.clear();
         signals.clear();
         traces.clear();
+        goalAvailability.clear();
+        unavailableGoals.clear();
         nextDecisionTick = (long)state.tick;
         decisionRevision = coordination.decisionRevision();
         previousEnemies = enemyCount();
@@ -124,6 +142,11 @@ final class PublicCandidateDemo{
         traces.clear();
         return List.copyOf(out);
     }
+    List<GoalAvailability> drainGoalAvailability(){
+        ArrayList<GoalAvailability> out = new ArrayList<>(goalAvailability);
+        goalAvailability.clear();
+        return List.copyOf(out);
+    }
     Jval metrics(){ return coordination.metrics(); }
     boolean started(){ return started; }
     int taskCount(){ return coordination.board().tasks().size(); }
@@ -138,6 +161,45 @@ final class PublicCandidateDemo{
         return preparationComplete() ? "reserve-mining" : "opening";
     }
     int selectionCount(){ return acceptedSelections.size(); }
+    boolean taskCompleted(String taskId){
+        TaskState task = coordination.board().task(taskId);
+        return task != null && task.status() == TaskStatus.COMPLETED;
+    }
+    int taskOwner(String taskId){
+        TaskState task = coordination.board().task(taskId);
+        return task == null || task.owner() == null ? -1 : task.owner().index();
+    }
+    boolean lowIsolation(String goalId, int assignedAgent){
+        for(int i = 0; i < registry.size(); i++){
+            String current = coordination.currentTaskId(i);
+            if(i == assignedAgent){
+                if(!current.equals(goalId)) return false;
+            }else if(!current.isEmpty() && !current.equals("runtime:wait")){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void controlApplied(Event event){
+        if(!event.accepted()) return;
+        if(started){
+            switch(event.command().type()){
+                case CANCEL -> abandonGoal(event.goalId(), "human_goal_cancelled");
+                case ASSIGN -> enforceExplicitAssignment(event.agentIndex(), event.goalId());
+                case RELEASE -> {
+                    if(humanControl.snapshot().autonomy() == AutonomyLevel.LOW){
+                        releaseAgentIfTask(event.agentIndex(), event.goalId());
+                    }
+                }
+                case AUTONOMY -> {
+                    if(event.command().autonomy() == AutonomyLevel.LOW) enforceLowAutonomy();
+                }
+                case GOAL, QUIET -> { }
+            }
+        }
+        nextDecisionTick = Math.min(nextDecisionTick, event.tick());
+    }
 
     String selectionDigest(){
         try{
@@ -158,13 +220,36 @@ final class PublicCandidateDemo{
         }
 
         CandidateWorldSnapshot world = candidates.snapshot();
+        Snapshot controls = humanControl.snapshot();
         boundaryCandidates = new CandidateSet[registry.size()];
         ArrayList<AgentView> views = new ArrayList<>();
         Jval[] masks = new Jval[registry.size()];
+        Jval[] rawMasks = new Jval[registry.size()];
+        HashSet<String> matchedGoals = new HashSet<>();
         for(DemoAgentRegistry.Agent agent : registry.agents()){
-            CandidateSet set = candidates.generate(agent, world);
+            HumanGoalResolver.Resolution resolution = candidates.generate(agent, world, controls);
+            CandidateSet set = resolution.candidates();
+            for(HumanGoalResolver.GoalResult result : resolution.goals()){
+                if(result.matched()) matchedGoals.add(result.goalId());
+            }
             boundaryCandidates[agent.index()] = set;
-            Jval rawMask = coordination.actionMask(agent.index(), set);
+            rawMasks[agent.index()] = coordination.actionMask(agent.index(), set);
+        }
+        recordGoalAvailability(tick, controls, matchedGoals);
+        ArrayList<AgentBoundary> humanBoundaries = new ArrayList<>();
+        for(DemoAgentRegistry.Agent agent : registry.agents()){
+            int index = agent.index();
+            humanBoundaries.add(new AgentBoundary(index, coordination.currentTaskId(index),
+                boundaryCandidates[index], baseMask(rawMasks[index], boundaryCandidates[index])));
+        }
+        Map<Integer, String> bindings = humanPolicy.bindings(controls, humanBoundaries);
+        for(DemoAgentRegistry.Agent agent : registry.agents()){
+            int index = agent.index();
+            CandidateSet set = boundaryCandidates[index];
+            AgentBoundary boundary = humanBoundaries.get(index);
+            BaseMask constrained = humanPolicy.constrain(boundary, controls, bindings);
+            Jval rawMask = applyConstraints(rawMasks[index], constrained,
+                bindings.containsKey(index) || controls.autonomy() == AutonomyLevel.LOW);
             masks[agent.index()] = rawMask;
             SkillResult result = agent.controller().lastResult();
             views.add(new AgentView(agent.index(), agent.controller().activeType(),
@@ -197,6 +282,112 @@ final class PublicCandidateDemo{
         }
         decisionRevision = coordination.decisionRevision();
         nextDecisionTick = tick + decisionInterval;
+    }
+
+    private static Jval applyConstraints(Jval raw, BaseMask constrained, boolean restricted){
+        Jval out = Jval.read(raw.toString(Jval.Jformat.plain));
+        Jval select = Jval.newArray();
+        for(boolean allowed : constrained.candidateTask()) select.add(allowed);
+        out.add("candidate_task", select);
+        out.put("continue_current_task", constrained.continueCurrentTask());
+        boolean anyCandidate = constrained.candidateTask().stream().anyMatch(Boolean::booleanValue);
+        out.put("wait", raw.getBool("wait", false) || restricted && !anyCandidate);
+        if(restricted){
+            out.put("request_help", false);
+            out.add("offer_help", falseArray(raw.get("offer_help")));
+            out.add("accept_help", falseArray(raw.get("accept_help")));
+            out.add("decline_help", falseArray(raw.get("decline_help")));
+        }
+        return out;
+    }
+
+    private static BaseMask baseMask(Jval raw, CandidateSet candidates){
+        ArrayList<Boolean> select = new ArrayList<>();
+        for(int i = 0; i < candidates.candidates().size(); i++){
+            select.add(maskValue(raw, i));
+        }
+        return new BaseMask(select, raw.getBool("continue_current_task", false),
+            raw.getBool("abandon", false));
+    }
+
+    private void recordGoalAvailability(long tick, Snapshot controls, Set<String> matched){
+        HashSet<String> active = new HashSet<>();
+        for(Goal goal : controls.activeGoals()){
+            active.add(goal.id());
+            if(matched.contains(goal.id()) || coordination.board().task(goal.id()) != null){
+                unavailableGoals.remove(goal.id());
+            }else if(unavailableGoals.add(goal.id())){
+                goalAvailability.add(new GoalAvailability(tick, goal.id(), "no_valid_candidate"));
+            }
+        }
+        unavailableGoals.retainAll(active);
+    }
+
+    private void enforceExplicitAssignment(int agentIndex, String goalId){
+        for(int i = 0; i < registry.size(); i++){
+            String current = coordination.currentTaskId(i);
+            if(i == agentIndex){
+                if(!current.isEmpty() && !current.equals(goalId)){
+                    displace(i, "human_assignment");
+                }
+            }else if(current.equals(goalId)){
+                release(i);
+            }
+        }
+    }
+
+    private void enforceLowAutonomy(){
+        Map<Integer, String> assigned = new TreeMap<>();
+        for(Assignment assignment : humanControl.snapshot().assignments()){
+            assigned.put(assignment.agentIndex(), assignment.goalId());
+        }
+        for(int i = 0; i < registry.size(); i++){
+            String current = coordination.currentTaskId(i);
+            if(current.isEmpty()) continue;
+            if(!current.equals(assigned.get(i))) displace(i, "autonomy_low");
+        }
+    }
+
+    private void abandonGoal(String goalId, String reason){
+        for(int i = 0; i < registry.size(); i++){
+            if(coordination.currentTaskId(i).equals(goalId)) abandon(i, reason);
+        }
+    }
+
+    private void releaseAgentIfTask(int agentIndex, String goalId){
+        if(coordination.currentTaskId(agentIndex).equals(goalId)) release(agentIndex);
+    }
+
+    private void displace(int agentIndex, String reason){
+        if(coordination.currentTaskHumanOrigin(agentIndex)) release(agentIndex);
+        else abandon(agentIndex, reason);
+    }
+
+    private void release(int agentIndex){
+        coordination.releaseCurrent(agentIndex, (long)state.tick);
+        policy.resetAgent(agentIndex);
+    }
+
+    private void abandon(int agentIndex, String reason){
+        Jval payload = Jval.newArray();
+        payload.add(action(Action.abandon(agentIndex, reason)));
+        coordination.applyActions(payload, boundaryCandidates);
+        policy.resetAgent(agentIndex);
+    }
+
+    private static boolean maskValue(Jval mask, int index){
+        if(mask == null) return false;
+        Jval values = mask.get("candidate_task");
+        return values != null && values.isArray() && index >= 0 && index < values.asArray().size
+            && values.asArray().get(index).asBool();
+    }
+
+    private static Jval falseArray(Jval source){
+        Jval result = Jval.newArray();
+        if(source != null && source.isArray()){
+            for(int i = 0; i < source.asArray().size; i++) result.add(false);
+        }
+        return result;
     }
 
     private Jval trace(long tick, CandidateWorldSnapshot world, List<AgentView> views,

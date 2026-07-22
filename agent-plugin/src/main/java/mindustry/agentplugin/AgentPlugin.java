@@ -13,6 +13,14 @@ import mindustry.mod.*;
 import mindustry.net.Administration.*;
 import mindustry.rl.*;
 
+import java.nio.charset.*;
+import java.security.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HexFormat;
+import java.util.Locale;
+import java.util.function.*;
+
 import static mindustry.Vars.*;
 
 /** Stock dedicated-server entry point for the private M6 cooperative-agent demo. */
@@ -28,8 +36,10 @@ public final class AgentPlugin extends Plugin{
     public void init(){
         Events.on(ServerLoadEvent.class, event -> {
             String mode = System.getProperty(modeProperty, "manual").trim().toLowerCase();
-            if(mode.equals("probe") || mode.equals("join") || mode.equals("survival")){
-                Core.app.post(() -> startDemo(mode.equals("join"), mode.equals("probe")));
+            if(mode.equals("probe") || mode.equals("join") || mode.equals("survival")
+                || mode.equals("human")){
+                Core.app.post(() -> startDemo(mode.equals("join"),
+                    mode.equals("probe") || mode.equals("human")));
             }else{
                 Log.info("[agents] plugin loaded; run 'agents start' or use DEMO_JOIN=1.");
             }
@@ -51,24 +61,26 @@ public final class AgentPlugin extends Plugin{
 
     @Override
     public void registerServerCommands(CommandHandler handler){
-        handler.register("agents", "<status|start|pause|resume|stop>",
+        handler.register("agents", "<action> [arguments...]",
             "Control the cooperative demo agents.", args -> {
-                String result = command(args[0]);
+                String result = command(tokens(args), "server", message -> Log.info("@", message));
                 Log.info("@", result);
             });
     }
 
     @Override
     public void registerClientCommands(CommandHandler handler){
-        handler.<mindustry.gen.Player>register("agents", "<status|pause|resume|stop>",
+        handler.<mindustry.gen.Player>register("agents", "<action> [arguments...]",
             "Control the cooperative demo agents.", (args, player) -> {
-                String result = command(args[0]);
+                Consumer<String> response = message -> player.sendMessage("[accent]" + message);
+                String result = command(tokens(args), authorId(player), response);
                 player.sendMessage("[accent]" + result);
             });
     }
 
-    private String command(String action){
-        return switch(action.toLowerCase()){
+    private String command(String[] tokens, String authorId, Consumer<String> response){
+        if(tokens.length == 0) return "agents: command rejected reason=missing_command";
+        return switch(tokens[0].toLowerCase(Locale.ROOT)){
             case "start" -> {
                 if(coordinator == null) startDemo(false, false);
                 yield coordinator == null ? "agents failed to start" : coordinator.status();
@@ -77,8 +89,32 @@ public final class AgentPlugin extends Plugin{
             case "pause" -> coordinator == null ? "agents: no demo world" : coordinator.pause();
             case "resume" -> coordinator == null ? "agents: no demo world" : coordinator.resume();
             case "stop" -> coordinator == null ? "agents: no demo world" : coordinator.stop();
-            default -> "agents: expected status, start, pause, resume, or stop";
+            case "goal", "cancel", "assign", "release", "autonomy", "quiet" ->
+                coordinator == null ? "agents: no demo world"
+                    : coordinator.queueHumanCommand(tokens, authorId, response);
+            default -> "agents: expected status, start, pause, resume, stop, goal, cancel,"
+                + " assign, release, autonomy, or quiet";
         };
+    }
+
+    private static String[] tokens(String[] arguments){
+        ArrayList<String> tokens = new ArrayList<>();
+        for(String argument : arguments){
+            if(argument == null || argument.isBlank()) continue;
+            tokens.addAll(Arrays.asList(argument.trim().split("\\s+")));
+        }
+        return tokens.toArray(String[]::new);
+    }
+
+    private static String authorId(Player player){
+        String identity = player.uuid() == null ? "unknown" : player.uuid();
+        try{
+            byte[] digest = MessageDigest.getInstance("SHA-256")
+                .digest(identity.getBytes(StandardCharsets.UTF_8));
+            return "player:" + HexFormat.of().formatHex(digest, 0, 8);
+        }catch(NoSuchAlgorithmException e){
+            throw new IllegalStateException("SHA-256 unavailable", e);
+        }
     }
 
     private void startDemo(boolean openServer, boolean probe){
@@ -128,13 +164,13 @@ public final class AgentPlugin extends Plugin{
         }
     }
 
-    private static Map demoMap(Scenario scenario){
+    private static mindustry.maps.Map demoMap(Scenario scenario){
         StringMap tags = StringMap.of(
             "name", "Bootstrap Defense v0",
             "author", "mindustry-coop-agents",
             "description", "Private cooperative-agent demonstration"
         );
-        return new Map(customMapDirectory.child("bootstrap-defense-v0.msav"),
+        return new mindustry.maps.Map(customMapDirectory.child("bootstrap-defense-v0.msav"),
             scenario.width, scenario.height, tags, true);
     }
 

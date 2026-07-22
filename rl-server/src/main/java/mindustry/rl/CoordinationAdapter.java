@@ -1084,6 +1084,28 @@ public final class CoordinationAdapter{
     }
 
     public long decisionRevision(){ return decisionRevision; }
+    public String currentTaskId(int agentIndex){
+        Assignment assignment = current(agentIndex);
+        return assignment == null ? "" : assignment.taskId;
+    }
+
+    public boolean currentTaskHumanOrigin(int agentIndex){
+        Assignment assignment = current(agentIndex);
+        return assignment != null && assignment.spec.origin() == TaskOrigin.HUMAN;
+    }
+
+    /** Release the current task back to OPEN without terminally consuming its stable id. */
+    public boolean releaseCurrent(int agentIndex, long tick){
+        Assignment assignment = current(agentIndex);
+        AgentRuntimeRegistry.Agent agent = registry.get(agentIndex);
+        if(assignment == null || agent == null) return false;
+        OpResult released = board.release(assignment.taskId, AgentId.of(agentIndex), tick);
+        if(!released.ok()) return false;
+        rememberTransition(agentIndex, assignment.spec, tick, false);
+        clearAssignment(agentIndex, agent);
+        markDecision("task_released");
+        return true;
+    }
 
     public String lastDecisionReason(){ return lastDecisionReason; }
 

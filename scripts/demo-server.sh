@@ -53,6 +53,35 @@ case "${DEMO_PUBLIC_POLICY:-1}" in
     *) echo "DEMO_PUBLIC_POLICY must be 0 or 1" >&2; exit 2 ;;
 esac
 
+if [[ "${DEMO_HUMAN_CONTROL:-0}" == "1" ]]; then
+    LOG="$ROOT/runs/demo-server-human-control.log"
+    echo "demo-server: deterministic queued human-control probe (no network port)"
+    cd "$RUNTIME"
+    set +e
+    "$JAVA_BIN" "${POLICY_ARGS[@]}" -Dmindustry.agents.demo.mode=human -jar server.jar 2>&1 | tee "$LOG"
+    server_status=${PIPESTATUS[0]}
+    set -e
+    cd "$ROOT"
+    [[ $server_status -eq 0 ]] || exit "$server_status"
+    grep -F "AGENT-DEMO HUMAN CONTROL OK" "$LOG" >/dev/null
+    for command in GOAL CANCEL ASSIGN RELEASE AUTONOMY QUIET; do
+        grep -F "\"command\":\"$command\"" "$LOG" >/dev/null
+    done
+    if grep -F 'AGENT-DEMO HUMAN CONTROL {' "$LOG" | grep -F '"accepted":false' >/dev/null; then
+        echo "demo-server: human control command was rejected" >&2
+        exit 1
+    fi
+    grep -F '"task_id":"human:goal:1"' "$LOG" >/dev/null
+    grep -F 'low=true high=true' "$LOG" >/dev/null
+    grep -F 'AGENT-DEMO CHAT SUPPRESSED' "$LOG" >/dev/null
+    if grep -F "Opened a server on port" "$LOG" >/dev/null; then
+        echo "demo-server: human probe unexpectedly opened a network port" >&2
+        exit 1
+    fi
+    echo "demo-server: HUMAN CONTROL OK"
+    exit 0
+fi
+
 if [[ "${DEMO_SURVIVAL:-0}" == "1" ]]; then
     LOG="$ROOT/runs/demo-server-survival.log"
     echo "demo-server: real-time three-wave survival probe (no network port)"

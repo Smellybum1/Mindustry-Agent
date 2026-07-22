@@ -366,6 +366,27 @@ and exits cleanly.
 
 Reserved for later: `GetMetadataRequest`, `GetStateHashRequest` (brief §18.4).
 
+### 2.5 Demo human control plane (not protocol v1)
+
+The real-time `agent-plugin` command surface is deliberately separate from the
+externally stepped protocol and does not change `protocol_version`. Its grammar
+is pinned in `docs/M10_DESIGN.md`. Client/server callbacks emit an immediate
+queued or parse-rejected acknowledgement and enqueue only immutable structured
+intent. The simulation thread later emits this authoritative record:
+
+```text
+{sequence, tick, author_id, command, accepted, reason, revision,
+ goal_id, agent_index}
+```
+
+`command` is `GOAL|CANCEL|ASSIGN|RELEASE|AUTONOMY|QUIET`; `reason` is a stable
+machine code such as `applied`, `unknown_region`, `unknown_goal`, `goal_limit`,
+or `no_change`. Goal/task ids are deterministic `human:goal:<sequence>` values.
+Display text is rendered from this record. The author id is a one-way short hash
+of client identity; raw UUID and player display text are not authoritative or
+logged. Empty control does not add fields to protocol-v1 observations, selector
+tensors, or autonomous state hashes.
+
 ## 3. Protocol invariants (brief §18.5)
 
 1. Every request has a monotonically unique request ID.

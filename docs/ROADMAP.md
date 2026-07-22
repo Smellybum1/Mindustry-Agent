@@ -2002,13 +2002,19 @@ oracle, and command implementation is next.
 The first command packet is now implemented in `agent-core`: an engine-free
 strict parser and simulation-thread-owned control state provide bounded ordered
 goals, assignments, autonomy/quiet settings, deterministic ids/revisions,
-stable result reasons, and reset behavior. Candidate overlay and queued plugin
-application remain pending, so no command is exposed end to end and no M10 exit
-criterion is checked. The engine-free overlay core is now present: explicit
+stable result reasons, and reset behavior. The engine-free overlay core is also
+present: explicit
 human task provenance wraps only already-valid structured ordinary candidates,
 reserves bounded slots in goal order, and preserves WAIT. Empty control omits
 the metadata, leaving autonomous canonical bytes, observations, and hashes
-unchanged. Engine matching, assignment masks, and command queuing remain next.
+unchanged. Engine matching, assignment masks, and command queuing are now live:
+callbacks enqueue only, the simulation thread applies structured commands, and
+the public path honors explicit assignment plus LOW/NORMAL/HIGH and quiet
+semantics. A deterministic no-port probe completes an assigned human build-line
+goal, exercises LOW and HIGH defense goals, and releases/cancels all state; the
+exact public digest and full-health stock survival remain green. Human build-
+plan reservation/yield and conflict notification remain pending, so neither
+M10.1 nor a milestone exit criterion is checked.
 
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,
   `/agents cancel <goal-id>`, `/agents assign <agent> <goal-id>`,

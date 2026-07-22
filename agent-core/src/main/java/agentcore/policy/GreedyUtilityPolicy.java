@@ -85,6 +85,14 @@ public final class GreedyUtilityPolicy{
         logisticsSeats.clear();
     }
 
+    public void resetAgent(int agentIndex){
+        replanTicks.remove(agentIndex);
+        lastTicks.remove(agentIndex);
+        preferredTypes.remove(agentIndex);
+        pendingPreferred.remove(agentIndex);
+        logisticsSeats.remove(agentIndex);
+    }
+
     /** Advance preference state only after the authoritative adapter accepts a selection. */
     public void observeActionResults(List<ActionResult> results){
         for(ActionResult result : results == null ? List.<ActionResult>of() : results){

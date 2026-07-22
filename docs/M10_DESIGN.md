@@ -33,7 +33,7 @@ real-time path now runs that fallback through
 reservations, and skills. Its probe has reached full readiness after ordinary
 wave-damage recovery and agent rebind. All prerequisite gates are green, and
 `DEMO_PUBLIC_POLICY=0` retains the old shared driver only as an explicit
-regression oracle. Human commands are not implemented. The stock-clock
+regression oracle. The stock-clock
 public-path survival gate is green through tick 8100 with core health 1100: its
 authoritative world-state telemetry records all three wave clears, both post-
 wave expansion schematics, both maintenance completions, and productive reserve
@@ -51,9 +51,19 @@ and revisions, and reset behavior. Explicit `TaskOrigin`/source-goal provenance
 and the engine-free `HumanGoalResolver` are also implemented: only an already-
 valid structured ordinary candidate may be wrapped, goal order reserves bounded
 slots, and WAIT remains last. Autonomous task bytes, observations, and hashes
-omit the new metadata and remain unchanged. The engine adapter/assignment masks
-and queued plugin command application remain pending; no human command is
-exposed yet.
+omit the new metadata and remain unchanged. Engine matching, assignment masks,
+and queued plugin command application are now integrated. Server/client
+callbacks parse and enqueue only; the simulation thread applies stable
+structured results before policy decisions. Structured scenario matching,
+human-priority rescoring, explicit and NORMAL implicit assignment masks,
+LOW/NORMAL/HIGH behavior, terminal cancellation, reversible release, and quiet rendering are
+live. `DEMO_HUMAN_CONTROL=1` completes an assigned human BUILD_LINE through
+candidate → mask → typed action → board → skill, then exercises assigned LOW
+defense, release and stable-id reassignment, unassigned HIGH defense, cancel,
+and quiet suppression. The
+no-command public digest and stock-clock tick-8100/full-health survival remain
+unchanged. Human build-plan reservation detection/yield and session capture
+remain pending; M10.1 and the milestone exit criteria are therefore not closed.
 
 ## Command grammar
 
@@ -195,3 +205,10 @@ M10.1 is complete only when all of the following pass:
    command help remain truthful.
 
 No item may be checked from parser-only, board-only, or demo-only evidence.
+
+Current evidence (2026-07-23): gates 1–5 pass for the implemented command
+surface, including the thread-boundary unit test, exact no-command parity,
+golden determinism, stock survival, and the no-port human-control probe. Gate 6
+is not implemented: detecting and reserving human build plans, deterministic
+yield, resource floors, and the exactly-once conflict notification are next.
+Gate 7 remains continuously enforced but cannot close M10.1 ahead of gate 6.

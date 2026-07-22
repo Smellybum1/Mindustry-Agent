@@ -23,6 +23,12 @@ the server log; tasks and controllers remain attached to the same stable slot.
 Both the server console and an ordinary client can use the agent controls:
 
 - `/agents status`
+- `/agents goal <task-type> <region-id>`
+- `/agents cancel <goal-id>`
+- `/agents assign <agent-index> <goal-id>`
+- `/agents release <agent-index>`
+- `/agents autonomy low|normal|high`
+- `/agents quiet on|off`
 - `/agents pause`
 - `/agents resume`
 - `/agents stop` — immediate emergency stop; clears mining, build plans,
@@ -40,6 +46,9 @@ bash scripts/demo-server.sh
 # Full real-time three-wave survival probe. Also opens no network port.
 DEMO_SURVIVAL=1 bash scripts/demo-server.sh
 
+# Deterministic queued-command/candidate/mask/board/skill acceptance probe.
+DEMO_HUMAN_CONTROL=1 bash scripts/demo-server.sh
+
 # Explicit human-join mode. This is the only path that opens the game socket.
 DEMO_JOIN=1 bash scripts/demo-server.sh
 ```
@@ -54,3 +63,12 @@ does not install into the user's real Mindustry mod folder. The stock ArcNet
 provider binds the selected game port on available interfaces, so join mode is
 for a trusted private LAN/loopback environment and must never be exposed through
 port forwarding.
+
+Human commands are parsed and queued in the server/client callback. The stock
+simulation thread validates scenario/agent/goal state and applies them before
+the next policy decision, then sends a distinct applied/rejected result. Goal
+ids are allocated as `human:goal:<sequence>` and are shown in the applied
+response. `LOW` permits only explicitly assigned human goals, `NORMAL` binds an
+unassigned goal to the highest-utility capable idle seat, and `HIGH` leaves
+unassigned human goals advisory while preserving explicit assignments. Quiet
+mode suppresses nonurgent rendered chat only; structured events remain logged.

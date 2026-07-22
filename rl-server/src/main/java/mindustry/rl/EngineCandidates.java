@@ -3,6 +3,8 @@ package mindustry.rl;
 import agentcore.*;
 import agentcore.candidates.*;
 import agentcore.coordination.*;
+import agentcore.human.*;
+import agentcore.human.HumanControl.*;
 import agentcore.skill.*;
 import agentcore.task.*;
 import agentcore.utility.*;
@@ -27,6 +29,7 @@ public final class EngineCandidates{
     private final AdaptiveWorldFacts facts;
     private final ExpertCoordinationPlan expertPlan;
     private final CandidateGenerator generator = new CandidateGenerator();
+    private final HumanGoalResolver humanGoals = new HumanGoalResolver();
     private final Scenario.ObjectiveSpec harvest;
     private final Scenario.ObjectiveSpec buildLine;
     private final Scenario.ObjectiveSpec schematic;
@@ -148,18 +151,108 @@ public final class EngineCandidates{
     }
 
     public CandidateSet generate(AgentRuntimeRegistry.Agent agent, CandidateWorldSnapshot world){
+        HandTunedUtility utility = utility(world);
+        return ordinary(agent, world, utility);
+    }
+
+    public HumanGoalResolver.Resolution generate(
+        AgentRuntimeRegistry.Agent agent,
+        CandidateWorldSnapshot world,
+        Snapshot controls
+    ){
+        HandTunedUtility utility = utility(world);
+        CandidateSet ordinary = ordinary(agent, world, utility);
+        return humanGoals.resolve(controls, ordinary, utility, AgentId.of(agent.index()),
+            world.tick(), this::matchesHumanRegion);
+    }
+
+    private CandidateSet ordinary(
+        AgentRuntimeRegistry.Agent agent,
+        CandidateWorldSnapshot world,
+        HandTunedUtility utility
+    ){
         float assignmentRange = facts.assignmentRange();
         String cargoItem = agent.unit().item() == null ? "" : agent.unit().item().name;
         AgentSnapshot snapshot = new AgentSnapshot(AgentId.of(agent.index()), agent.unit().x,
             agent.unit().y, assignmentRange, ALPHA_CAPABILITIES, cargoItem,
             agent.unit().stack().amount);
-        HandTunedUtility utility = new HandTunedUtility(
-            new EngineFeatureSource(scenario, registry, world, assignmentRange, coordination));
         boolean liveSchematicOwnedByOther = coordination != null
             && coordination.liveBuildSchematicOwnedByOther(agent.index());
         CandidateSet generated = generator.generate(snapshot, world, utility,
             liveSchematicOwnedByOther);
         return overlapProbe ? withOverlapProbe(generated) : generated;
+    }
+
+    private HandTunedUtility utility(CandidateWorldSnapshot world){
+        return new HandTunedUtility(new EngineFeatureSource(scenario, registry, world,
+            facts.assignmentRange(), coordination));
+    }
+
+    private boolean matchesHumanRegion(TaskSpec task, String regionId){
+        if(task.target() instanceof RegionTarget target){
+            if(target.regionId().equalsIgnoreCase(regionId)) return true;
+            int[] anchor = schematicAnchor(target.regionId());
+            return anchor != null && contains(humanRegion(regionId), anchor[0], anchor[1]);
+        }
+        if(task.target() instanceof EntityTarget target){
+            Scenario.RegionSpec region = humanRegion(regionId);
+            if(region == null) return false;
+            for(Building building : StateHasher.worldBuildings()){
+                if(building.id == target.entityId()){
+                    return contains(region, building.tileX(), building.tileY());
+                }
+            }
+            return false;
+        }
+        if(task.target() instanceof ResourceTarget){
+            if(harvest.targetRef().equalsIgnoreCase(regionId)) return true;
+            Scenario.RegionSpec region = humanRegion(regionId);
+            return region != null && rectanglesOverlap(region, harvestPatch.x, harvestPatch.y,
+                harvestPatch.w, harvestPatch.h);
+        }
+        return false;
+    }
+
+    private Scenario.RegionSpec humanRegion(String id){
+        for(Scenario.RegionSpec region : scenario.regions.values()){
+            if(region.id().equalsIgnoreCase(id)) return region;
+        }
+        return null;
+    }
+
+    private int[] schematicAnchor(String id){
+        if(id.equals(scenario.buildLineId)){
+            return new int[]{scenario.buildLineAnchorX, scenario.buildLineAnchorY};
+        }
+        if(id.equals(scenario.referenceSchematicId)){
+            return new int[]{scenario.referenceAnchorX, scenario.referenceAnchorY};
+        }
+        ExpertCoordinationPlan.Schematic fortification = expertPlan.fortification();
+        if(id.equals(fortification.name())){
+            return new int[]{fortification.anchorX(), fortification.anchorY()};
+        }
+        for(ExpertCoordinationPlan.Schematic expansion : expertPlan.expansions()){
+            if(id.equals(expansion.name())){
+                return new int[]{expansion.anchorX(), expansion.anchorY()};
+            }
+        }
+        return null;
+    }
+
+    private static boolean contains(Scenario.RegionSpec region, int x, int y){
+        return region != null && x >= region.x() && x < region.x() + region.w()
+            && y >= region.y() && y < region.y() + region.h();
+    }
+
+    private static boolean rectanglesOverlap(
+        Scenario.RegionSpec region,
+        int x,
+        int y,
+        int width,
+        int height
+    ){
+        return x < region.x() + region.w() && x + width > region.x()
+            && y < region.y() + region.h() && y + height > region.y();
     }
 
     /** Validation-only scenario option: expose a second task over the same footprint. */

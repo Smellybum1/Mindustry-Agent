@@ -200,8 +200,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   candidates, reserve bounded goal-order slots, preserve WAIT, and return the
   exact original candidate set for empty control. Autonomous bytes,
   observations, and hashes omit provenance. Engine matching, assignment masks,
-  and queued plugin application remain pending; no human command is exposed end
-  to end.
+  and queued plugin application are now live on the public path. Callbacks parse
+  and enqueue only; simulation-thread application emits structured results.
+  Explicit and NORMAL implicit assignment, LOW/NORMAL/HIGH masks, terminal
+  cancellation, reversible release, and quiet rendering pass unit and no-port integration probes.
+  The probe completes assigned `human:goal:1` BUILD_LINE, exercises assigned LOW
+  defense, stable-id reassignment, and advisory HIGH defense, applies 16/16
+  commands, restores empty/NORMAL state, and suppresses four nonurgent messages. Exact public parity and stock tick-
+  8100/full-health survival remain green. Human build-plan reservation/yield and
+  the exactly-once conflict notification remain pending, so M10.1 is open.
   M8.5 evaluation machinery is real, but the candidate did not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.

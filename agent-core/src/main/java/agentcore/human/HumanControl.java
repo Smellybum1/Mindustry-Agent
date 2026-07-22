@@ -62,11 +62,86 @@ public final class HumanControl{
     }
     public record Event(long tick, Command command, boolean accepted, String reason,
                         long revision, String goalId, int agentIndex){}
+    public record EnqueueResult(ParseResult parsed, long sequence){
+        public boolean accepted(){ return parsed.accepted(); }
+    }
+    public record AppliedCommand(long sequence, Event event){}
     public record Context(Set<String> regionIds, int agentCount){
         public Context{
-            regionIds = Set.copyOf(regionIds == null ? Set.of() : regionIds);
+            TreeSet<String> canonical = new TreeSet<>();
+            for(String region : regionIds == null ? Set.<String>of() : regionIds){
+                canonical.add(canonicalIdentity(region, "region"));
+            }
+            regionIds = Set.copyOf(canonical);
             if(agentCount < 0) throw new IllegalArgumentException("agentCount must be non-negative");
         }
+    }
+
+    /** Thread-safe parser queue; only {@link #drain} may touch mutable control state. */
+    public static final class CommandQueue{
+        private final ArrayDeque<QueuedCommand> pending = new ArrayDeque<>();
+        private long nextSequence;
+
+        public EnqueueResult enqueue(String[] tokens, String authorId){
+            ParseResult parsed = parse(tokens, authorId);
+            if(!parsed.accepted()) return new EnqueueResult(parsed, 0L);
+            synchronized(pending){
+                long sequence = ++nextSequence;
+                pending.addLast(new QueuedCommand(sequence, parsed.command()));
+                return new EnqueueResult(parsed, sequence);
+            }
+        }
+
+        public List<AppliedCommand> drain(State state, long tick, Context context){
+            Objects.requireNonNull(state, "state");
+            Objects.requireNonNull(context, "context");
+            ArrayList<QueuedCommand> commands = new ArrayList<>();
+            synchronized(pending){
+                while(!pending.isEmpty()) commands.add(pending.removeFirst());
+            }
+            ArrayList<AppliedCommand> results = new ArrayList<>(commands.size());
+            for(QueuedCommand queued : commands){
+                results.add(new AppliedCommand(queued.sequence(),
+                    state.apply(queued.command(), tick, context)));
+            }
+            return List.copyOf(results);
+        }
+
+        public int pending(){
+            synchronized(pending){
+                return pending.size();
+            }
+        }
+
+        public void clear(){
+            synchronized(pending){
+                pending.clear();
+            }
+        }
+    }
+
+    public static String renderQueued(EnqueueResult result){
+        Objects.requireNonNull(result, "result");
+        if(!result.accepted()) return "agents: command rejected reason=" + result.parsed().reason();
+        return "agents: command queued sequence=" + result.sequence() + " type="
+            + result.parsed().command().type().name().toLowerCase(Locale.ROOT);
+    }
+
+    public static String render(Event event){
+        Objects.requireNonNull(event, "event");
+        StringBuilder line = new StringBuilder("agents: command ")
+            .append(event.accepted() ? "applied" : "rejected")
+            .append(" type=")
+            .append(event.command().type().name().toLowerCase(Locale.ROOT))
+            .append(" reason=").append(event.reason())
+            .append(" revision=").append(event.revision());
+        if(!event.goalId().isEmpty()) line.append(" goal=").append(event.goalId());
+        if(event.agentIndex() >= 0) line.append(" agent=").append(event.agentIndex());
+        return line.toString();
+    }
+
+    public static boolean shouldRenderCoordination(boolean quiet, String act){
+        return !quiet || "BLOCKED".equals(act);
     }
 
     /** Stateless token parser; no scenario, board, registry, or world reads occur here. */
@@ -277,6 +352,8 @@ public final class HumanControl{
     private static void requireAgent(int agentIndex){
         if(agentIndex < 0) throw new IllegalArgumentException("agent required");
     }
+
+    private record QueuedCommand(long sequence, Command command){}
 
     private HumanControl(){}
 }
