@@ -1982,21 +1982,22 @@ goals are applied. M10 implementation has begun only on that prerequisite; it
 does not start M9, authorize V43, or access any governed seed membership. The first
 behavior-neutral prerequisite now exists: `AgentRuntimeRegistry` removes the
 public candidate/coordination adapters' concrete training-registry dependency;
-`DemoAgentRegistry` implements that boundary for deterministic spawn/rebind, but
-the plugin policy port itself remains pending. A tested engine-neutral Java
-`GreedyUtilityPolicy` now mirrors selection, replan throttling, wave preemption,
-and combat logistics preference over public candidates/masks. The opt-in
-`DEMO_PUBLIC_POLICY=1` no-port probe now runs the full candidate -> mask -> typed
-action -> board -> reservation -> skill path and reached readiness after ordinary
-wave-damage recovery and rebind. Its stock-clock public-path survival gate now
+`DemoAgentRegistry` implements that boundary for deterministic spawn/rebind. A
+tested engine-neutral Java `GreedyUtilityPolicy` now mirrors selection, replan
+throttling, wave preemption, and combat logistics preference over public
+candidates/masks. The default
+real-time plugin now runs the full candidate -> mask -> typed action -> board ->
+reservation -> skill path and reached readiness after ordinary wave-damage
+recovery and rebind. Its stock-clock public-path survival gate
 passes through tick 8100 at full core health, with structured evidence for all
 three wave clears, both expansion/maintenance completions, and reserve mining.
 Exact public-path parity also passes: Python matches 390 real plugin candidate/
 mask boundaries and all 1,170 Java actions, while two fresh JVMs reproduce 225
 accepted selections with digest `aaf2e734ea384fe4b537cbdf3bd5342fb5e954f3432a91470ebce311fa503714`.
 A persistent logistics seat reduces seven abandon/reclaim cycles to two phase-
-entry rebalances and seven unassigned waits. All prerequisites are green; only
-the separate reviewed default switch remains before command implementation.
+entry rebalances and seven unassigned waits. All prerequisites and default
+promotion are green; `DEMO_PUBLIC_POLICY=0` preserves the legacy regression
+oracle, and command implementation is next.
 
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,
   `/agents assign <agent> <task>`, `/agents release <agent>`,

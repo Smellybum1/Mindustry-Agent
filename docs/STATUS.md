@@ -1870,14 +1870,13 @@ repository-evidence mapping used for the M6 audit is:
   make demo adoption of the public candidate/typed-action path a prerequisite.
   `AgentRuntimeRegistry` now removes the candidate/coordination adapters'
   concrete dependency on `RlAgentRegistry`. `DemoAgentRegistry` implements the
-  seam and owns real-time spawn/rebind; the plugin policy port remains pending
-  and no command behavior has changed. The engine-neutral Java
+  seam and owns real-time spawn/rebind. The engine-neutral Java
   `GreedyUtilityPolicy` fallback is implemented and tested over public
   candidates/masks, including deterministic ties, replan throttling, wave
-  preemption, and combat supply/defense preference. The opt-in
-  `DEMO_PUBLIC_POLICY=1` no-port runtime now uses `EngineCandidates`, masks,
+  preemption, and combat supply/defense preference. The default real-time
+  runtime now uses `EngineCandidates`, masks,
   typed actions, `CoordinationAdapter`, board, reservations, and skills end to
-  end; the latest stock-clock probe reached readiness at tick 5664 after
+  end; an earlier stock-clock probe reached readiness at tick 5664 after
   wave-damage recovery and one rebind (89 accepted selections). These real-time
   counts are diagnostic, not a deterministic parity baseline. The public-path
   stock-clock survival gate is now green through tick 8100 with core health
@@ -1891,8 +1890,8 @@ repository-evidence mapping used for the M6 audit is:
   cycles to two phase-entry rebalances plus seven unassigned waits.
   Probe engine delta, pathfinding, entity iteration, and physics/global RNG are
   deterministic; stock survival remains real-time. All public-path prerequisite
-  gates are green; the accepted default remains on the shared driver pending a
-  separate reviewed promotion change.
+  gates and the default promotion are green. `DEMO_PUBLIC_POLICY=0` keeps the
+  shared driver as an explicit regression oracle; human commands remain next.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,

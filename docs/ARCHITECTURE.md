@@ -45,32 +45,26 @@ point* differ (ADR-0006, brief §7.3).
    policy process OR in-process scripted fallback
 ```
 
-M7.2's `ExpertCoordinationDriver` remains the one in-process coordination
-driver used by the real-time plugin and the fixed-step parity option. M7.3's
-primary training expert instead selects the public candidate table through the
-external task-action contract—the exact seam a learned selector will use. Both
-paths share `ExpertCoordinationPlan`, `HandTunedUtility`, board semantics, and
-skills. The remaining stage-local candidate construction in the in-process
-driver is explicitly tracked in `docs/CANDIDATE_GAPS.md`; policy code has not
-been copied back into `agent-plugin`.
+The real-time plugin now defaults to `PublicCandidateDemo`: the engine-neutral
+Java fallback selects the public candidate table through the same typed task-
+action contract used by the externally stepped training expert. Both paths use
+`EngineCandidates`, masks, `CoordinationAdapter`, board semantics, reservations,
+and skills. M7.2's `ExpertCoordinationDriver` remains available only through
+`DEMO_PUBLIC_POLICY=0` as the accepted legacy regression oracle.
 
-ADR-0057 makes elimination of that remaining seam a prerequisite for M10 human
-commands. The plugin must first select through the public candidate table,
-masks, typed actions, `CoordinationAdapter`, board, reservations, and skills.
-Only then may structured human goals overlay candidates. Command callbacks parse
-and enqueue immutable input; the simulation thread validates and applies it.
-`docs/M10_DESIGN.md` pins the accepted contract. This is architecture only at
-present—the demo policy port and human-control implementation do not yet exist.
-The first behavior-neutral prerequisite is implemented:
+ADR-0057 made elimination of that seam a prerequisite for M10 human commands;
+the prerequisite is now met. Structured human goals may next overlay candidates.
+Command callbacks will parse and enqueue immutable input, and the simulation
+thread will validate and apply it. `docs/M10_DESIGN.md` pins that accepted
+contract; the human-control implementation does not yet exist.
 `AgentRuntimeRegistry` decouples candidates, adaptive facts, feature extraction,
 action decoding, and coordination from the training registry while preserving
 `RlAgentRegistry` as the existing runtime facade. `DemoAgentRegistry` now
 implements that contract and owns deterministic demo spawn/rebind lifecycle;
 the engine-neutral Java `GreedyUtilityPolicy` mirrors the accepted fallback's
-candidate/mask decisions. The opt-in `PublicCandidateDemo` now wires the
-real-time plugin through public candidates, masks, typed actions, board,
-reservations, and skills; the accepted default remains unchanged until its
-separate promotion change. The public path now
+candidate/mask decisions. `PublicCandidateDemo` wires the default real-time
+plugin through public candidates, masks, typed actions, board, reservations,
+and skills. The public path
 derives survival telemetry from simulation-thread world state and has passed
 the stock-clock three-wave acceptance at tick 8100 with core health 1100. Its
 probe-only trace supplies the exact candidate/mask/action/result sequence to a

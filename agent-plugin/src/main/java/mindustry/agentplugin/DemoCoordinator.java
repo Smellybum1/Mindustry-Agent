@@ -43,7 +43,7 @@ final class DemoCoordinator{
         this.waitForPlayer = waitForPlayer;
         this.survivalProbe = System.getProperty(AgentPlugin.modeProperty, "")
             .equalsIgnoreCase("survival");
-        this.publicPolicy = Boolean.getBoolean(AgentPlugin.publicPolicyProperty);
+        this.publicPolicy = publicPolicyEnabled();
         this.registry = new DemoAgentRegistry(scenario);
         this.driver = new ExpertCoordinationDriver(
             ExpertCoordinationPlans.fromScenario(scenario), new DemoPort());
@@ -361,6 +361,14 @@ final class DemoCoordinator{
         return publicPolicy ? publicDemo.taskCount() : driver.board().tasks().size();
     }
     private String phase(){ return publicPolicy ? publicDemo.phase() : driver.phase(); }
+
+    private static boolean publicPolicyEnabled(){
+        String configured = System.getProperty(AgentPlugin.publicPolicyProperty, "true").trim();
+        if(configured.equalsIgnoreCase("true")) return true;
+        if(configured.equalsIgnoreCase("false")) return false;
+        throw new IllegalArgumentException(AgentPlugin.publicPolicyProperty
+            + " must be true or false, got: " + configured);
+    }
 
     private static List<String> blockNames(Scenario.SchematicSpec spec){
         ArrayList<String> result = new ArrayList<>();

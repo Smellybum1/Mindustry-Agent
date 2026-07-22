@@ -26,13 +26,13 @@ The implementation order is therefore:
 4. add opt-in session capture and only later learned-policy demo inference.
 
 Current implementation state: the shared runtime-registry seam, real-time
-registry, and engine-neutral Java greedy fallback are complete. An explicit
-`DEMO_PUBLIC_POLICY=1` no-port path now runs that fallback through
+registry, and engine-neutral Java greedy fallback are complete. The default
+real-time path now runs that fallback through
 `EngineCandidates`, masks, typed actions, `CoordinationAdapter`, the board,
 reservations, and skills. Its probe has reached full readiness after ordinary
-wave-damage recovery and agent rebind. All prerequisite gates are now green; it
-remains opt-in pending the separate reviewed default switch, and human commands
-are not implemented. The stock-clock
+wave-damage recovery and agent rebind. All prerequisite gates are green, and
+`DEMO_PUBLIC_POLICY=0` retains the old shared driver only as an explicit
+regression oracle. Human commands are not implemented. The stock-clock
 public-path survival gate is green through tick 8100 with core health 1100: its
 authoritative world-state telemetry records all three wave clears, both post-
 wave expansion schematics, both maintenance completions, and productive reserve

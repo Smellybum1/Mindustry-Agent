@@ -46,10 +46,12 @@ cp "$PLUGIN_JAR" \
 
 JAVA_BIN="${JAVA_BIN:-java}"
 DEMO_PORT="${DEMO_PORT:-6567}"
-POLICY_ARGS=()
-if [[ "${DEMO_PUBLIC_POLICY:-0}" == "1" ]]; then
-    POLICY_ARGS=(-Dmindustry.agents.demo.public-policy=true)
-fi
+# Public candidates are the production default; 0 retains the legacy regression oracle.
+case "${DEMO_PUBLIC_POLICY:-1}" in
+    1) POLICY_ARGS=(-Dmindustry.agents.demo.public-policy=true) ;;
+    0) POLICY_ARGS=(-Dmindustry.agents.demo.public-policy=false) ;;
+    *) echo "DEMO_PUBLIC_POLICY must be 0 or 1" >&2; exit 2 ;;
+esac
 
 if [[ "${DEMO_SURVIVAL:-0}" == "1" ]]; then
     LOG="$ROOT/runs/demo-server-survival.log"

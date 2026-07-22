@@ -181,18 +181,19 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   commands are added. The behavior-neutral `AgentRuntimeRegistry` prerequisite
   is implemented and tested, and `DemoAgentRegistry` now owns real-time spawn/
   rebind behind it. The tested Java `GreedyUtilityPolicy` fallback exists over
-  public candidates/masks. `DEMO_PUBLIC_POLICY=1` wires an opt-in no-port probe
-  through the complete public typed-action path and has reached readiness after
-  wave damage/rebind. Its stock-clock survival gate is green through tick 8100
+  public candidates/masks. The real-time default now uses the complete public
+  typed-action path and has reached readiness after wave damage/rebind;
+  `DEMO_PUBLIC_POLICY=0` is the explicit legacy regression oracle. Its stock-
+  clock survival gate is green through tick 8100
   with core health 1100, three structured wave clears, both expansion and
   maintenance completions, and reserve mining. Exact public-path parity is green:
   390 traced candidate/mask boundaries and 1,170 Java actions match Python, and
   two fresh JVMs reproduce 225 accepted selections with digest
   `aaf2e734ea384fe4b537cbdf3bd5342fb5e954f3432a91470ebce311fa503714`.
   A persistent logistics seat reduces seven repeated abandon/reclaim cycles to
-  two phase-entry rebalances and seven unassigned waits. All prerequisites pass;
-  only the separate reviewed default switch remains before human commands. M8.5
-  evaluation machinery is real, but the candidate did not promote.
+  two phase-entry rebalances and seven unassigned waits. All prerequisites and
+  the default promotion pass; human commands are next. M8.5 evaluation machinery
+  is real, but the candidate did not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
 - **Post-failure governance**: ADR-0013 freezes the 40-root, globally disjoint

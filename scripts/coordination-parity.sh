@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# M7.2 decision-sequence parity over one recorded scenario snapshot trace.
+# Legacy M7.2 decision parity; the public runtime has its own promoted-default gate.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,7 +12,7 @@ export PYTHONPATH="$ROOT/python/src${PYTHONPATH:+:$PYTHONPATH}"
 FIXED_OUTPUT="$(python -m mindustry_agents.tools.shared_policy_check)"
 printf '%s\n' "$FIXED_OUTPUT"
 
-bash scripts/demo-server.sh
+DEMO_PUBLIC_POLICY=0 bash scripts/demo-server.sh
 DEMO_LINE="$(grep -F 'AGENT-DEMO DECISION DIGEST' runs/demo-server-probe.log | tail -n 1)"
 printf '%s\n' "$DEMO_LINE"
 

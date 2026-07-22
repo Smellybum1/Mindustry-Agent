@@ -7,7 +7,7 @@ cd "$ROOT"
 source "$(dirname "${BASH_SOURCE[0]}")/python-command.sh"
 
 export PYTHONPATH="$ROOT/python/src${PYTHONPATH:+:$PYTHONPATH}"
-DEMO_PUBLIC_POLICY=1 bash scripts/demo-server.sh
+bash scripts/demo-server.sh
 EXPECTED="PUBLIC-DEMO-PARITY OK boundaries=390 actions=1170 selections=225 "
 EXPECTED+="rebalances=2 combat_waits=7 "
 EXPECTED+="digest=aaf2e734ea384fe4b537cbdf3bd5342fb5e954f3432a91470ebce311fa503714"
