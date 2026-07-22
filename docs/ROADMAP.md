@@ -1983,7 +1983,10 @@ M9, authorize V43, or access any governed seed membership. The first
 behavior-neutral prerequisite now exists: `AgentRuntimeRegistry` removes the
 public candidate/coordination adapters' concrete training-registry dependency;
 `DemoAgentRegistry` implements that boundary for deterministic spawn/rebind, but
-the plugin policy port itself remains pending.
+the plugin policy port itself remains pending. A tested engine-neutral Java
+`GreedyUtilityPolicy` now mirrors selection, replan throttling, wave preemption,
+and combat logistics preference over public candidates/masks; it is not yet the
+active demo policy.
 
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,
   `/agents assign <agent> <task>`, `/agents release <agent>`,
