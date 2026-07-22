@@ -800,6 +800,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   frontier hashes are `1af02875472f54a6...` / `181ed3e7069b429b...`.
   Replica B and scorecards are prohibited. Dev-v35 is retired unopened and
   unconsumed; held-out-v6 remains sealed and unconsumed.
+- **V40 precommitted, not implemented**: reusable/train-only diagnosis finds
+  752 exact partner-intent teacher-label conflicts among 3,956 eligible warmup
+  transitions, with 177 warmup and 734 rehearsal presentations. ADR-0054
+  filters only those exact conflicts from teacher imitation; PPO policy/value,
+  runtime, reward, model, roots, budget, and RNGs stay V39-exact. Config SHA is
+  `230759e7e02dcca9...`. A value-free umbrella reserves primary-only dev-v36 in
+  `[4B,5B)`; no membership, implementation, baseline, or model work exists.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V39 implementation/governance repository checkpoint**:
   `e31e4daf7151661f285511ce29db6232a48a2242` (the documentation-only V39
@@ -963,12 +970,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Perform primary-level reusable-only diagnosis of V39's construction miss.**
-   Do not inspect dev-v35 or held-out-v6 membership.
-2. **Choose and precommit at most one narrow V40 coordinate before any model
-   work.** Preserve ADR-0051's direct-loading/provenance contract.
-3. **Reserve a new confirmation identity before V40 model work.** Dev-v35 is
-   retired unopened; held-out-v6 remains sealed.
+1. **Implement ADR-0054's exact teacher-conflict filter and focused diagnostic.**
+   Preserve omitted-config byte parity and record exclusion/presentation counts.
+2. **Run every V39 pretraining gate under the immutable V40 config.** Any
+   public/runtime/replay/reward regression rejects V40 before model work.
+3. **Only after green gates, construct dev-v36 primary-only and run replica A.**
+   Dev-v35 is retired; held-out-v6 remains sealed. Replica B requires 9/10 and
+   idle `<0.25` from A.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.

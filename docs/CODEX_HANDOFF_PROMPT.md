@@ -271,8 +271,15 @@ V39 replica A has now failed construction after all 32 updates: rank-best
 update 25 is 8/10 with idle `0.01845563475648595`, checkpoint
 `1af02875472f54a6...`, and frontier `181ed3e7069b429b...`. Replica B is
 prohibited. Dev-v35 is retired unopened/unconsumed; held-out-v6 stays sealed.
-Next perform primary-level reusable-only diagnosis and precommit at most one
-narrow V40 coordinate before model work.
+ADR-0054 subsequently precommits one narrow V40 training coordinate. Exact
+partner-intent teacher-label conflicts are excluded from warmup, rehearsal,
+and PPO teacher imitation only; PPO policy/value, runtime, reward, model,
+roots, budget, and RNGs remain V39-exact. The immutable config hashes to
+`230759e7e02dcca9a6b7608f7784b20f85845c40da0f7a28dd1ec13641d0013a`.
+A value-free umbrella reserves primary-only dev-v36 in `[4B,5B)`. Implement
+and gate this exact filter next. Do not construct/read dev-v36 or start model
+work until the committed pretraining boundary passes; never inspect
+held-out-v6 membership.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

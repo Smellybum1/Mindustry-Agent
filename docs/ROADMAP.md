@@ -1797,6 +1797,18 @@ Replica B is prohibited and V39 is rejected before reusable scorecards.
 Dev-v35 is retired unopened/unconsumed; held-out-v6 remains sealed/unconsumed.
 M8.5 remains unmet.
 
+ADR-0054 precommits V40 after reusable/train-only diagnosis rejects a risk
+magnitude change: all ten openings cross within `0.100813646..0.110020827`.
+The exact V39 teacher corpus instead contains 752 partner-intent conflicts
+among 3,956 eligible transitions, including 177 warmup and 734 rehearsal
+presentations. V40 filters only those exact action-index conflicts from warmup,
+rehearsal, and PPO teacher imitation; runtime, PPO policy/value learning,
+reward, model, roots, budgets, and RNGs remain V39-exact. The immutable config
+hash is `230759e7e02dcca9...`. A value-free umbrella reserves dev-v36 in the
+disjoint `[4B,5B)` namespace before membership creation. Implementation and all
+pretraining gates are next; replica A, dev-v36 construction/access, and
+held-out-v6 access remain prohibited.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

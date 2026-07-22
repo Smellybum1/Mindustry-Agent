@@ -1729,6 +1729,17 @@ repository-evidence mapping used for the M6 audit is:
   `1af02875472f54a6...` / `181ed3e7069b429b...`. No selected manifest or
   replica B exists. V39 is rejected; dev-v35 is retired unopened/unconsumed,
   held-out-v6 remains sealed/unconsumed, and M8.5 remains unmet.
+- ADR-0054 precommits one training-only V40 coordinate from reusable/train-only
+  evidence. V39's partner-intent feature flips every reusable opening in the
+  same narrow risk interval, so a scalar change is rejected. Instead V40
+  excludes from teacher imitation only the exact labels whose action index is
+  simultaneously marked as partner-intent duplicate risk. The fixed warmup
+  schedule contains 752 such conflicts among 3,956 teacher-eligible
+  transitions; V39 presented 177 in warmup and 734 in rehearsal. PPO
+  policy/value learning, runtime, reward, model, roots, budget, and RNGs remain
+  exact. Config SHA is `230759e7e02dcca9...`; a committed value-free umbrella
+  reserves primary-only dev-v36 in `[4B,5B)`. No V40 implementation, membership
+  construction, baseline episode, or model work has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

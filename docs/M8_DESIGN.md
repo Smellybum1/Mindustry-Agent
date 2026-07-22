@@ -630,6 +630,28 @@ the frozen 9/10 floor, despite rank-best idle `0.01845563475648595`. V39 is
 rejected before replica B or scorecards. Dev-v35 is retired unopened and
 unconsumed; held-out-v6 remains sealed and unconsumed.
 
+## V40 governed successor
+
+ADR-0054 identifies contradictory teacher supervision as the only narrow V40
+coordinate. On V39's fixed warmup schedule, 752 of 3,956 teacher-eligible
+transitions label an action that the same structured boundary marks as exact
+partner-intent duplicate risk. The successful teacher corpus retains 188 such
+transitions; deterministic V39 sampling presents them 177 times in warmup and
+734 times in rehearsal, while PPO's 0.05 teacher term is also unfiltered.
+
+V40 excludes only those exact action-index conflicts from teacher warmup,
+teacher rehearsal, and PPO teacher imitation. The transition remains available
+to PPO policy, value, entropy, reward, and trace construction. Historical
+configs omit the filter and remain exact. Runtime selection, partner intent,
+feature shape, action authority, reward, model, optimizer coefficients, roots,
+budgets, RNGs, and checkpoint ranking remain V39-exact.
+
+The immutable preimplementation config SHA-256 is
+`230759e7e02dcca9a6b7608f7784b20f85845c40da0f7a28dd1ec13641d0013a`.
+The value-free dev-v36 umbrella reserves 160 roots in `[4B,5B)` without a
+membership read. Dev-v36 construction/access is primary-only after the
+precommit and required gates; held-out-v6 remains sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

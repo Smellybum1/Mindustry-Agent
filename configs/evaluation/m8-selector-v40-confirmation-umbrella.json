@@ -1,0 +1,47 @@
+{
+  "schema": "m8_confirmation_evaluation_umbrella_v1",
+  "candidate_version": "v40",
+  "status": "reserved_before_membership_creation",
+  "created_date": "2026-07-22",
+  "repository_parent_commit": "b31023b8325b5df194d8901581ab372de0699cf5",
+  "training_config": {
+    "path": "configs/training/m8-selector-v40-partner-intent-teacher-conflict-filter.json",
+    "sha256": "230759e7e02dcca9a6b7608f7784b20f85845c40da0f7a28dd1ec13641d0013a"
+  },
+  "access_owner": "primary_agent_only",
+  "delegation_forbidden": true,
+  "replacement_set": {
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v36",
+    "seed_set_version": 36,
+    "split": "dev",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v36.json",
+    "exclusive_namespace": {
+      "minimum_inclusive": 4000000000,
+      "maximum_exclusive": 5000000000
+    },
+    "membership_state_at_reservation": "not_created",
+    "exclusive_umbrella_attempt": "runs/m8-selector-v40-dev-v36-umbrella-attempt.json",
+    "replaces": "bootstrap-defense-v1-dev-v35"
+  },
+  "sealed_final_binding": {
+    "seed_set_id": "bootstrap-defense-v1-held-out-v6",
+    "seed_set_version": 6,
+    "split": "held-out",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-held-out-v6.json",
+    "sha256": "2bf4aa04ef54d873e961ff367db849c14c72b83bb4d280c4e31ba75bdeefa51c",
+    "consumption_state": "sealed_unconsumed",
+    "membership_read_for_v40_reservation": false
+  },
+  "rules": [
+    "This reservation and the exact V40 coordinate must be committed before dev-v36 membership is created or read.",
+    "Membership construction and disjointness verification are primary-agent-only and must not render seed values into agent output.",
+    "Dev-v36 must be generated solely within [4000000000,5000000000), disjoint by namespace from every prior governed set without reading their membership.",
+    "The committed one-way consumer must atomically create the dev-v36 umbrella attempt before its first manifest read or baseline episode.",
+    "A started, aborted, failed, exposed, or completed dev-v36 attempt consumes that set permanently.",
+    "No dev-v36 access is authorized until exact replicas and reusable permanent-greedy and matched-greedy scorecards pass.",
+    "Held-out-v6 remains governed by ADR-0053 and cannot be read until dev-v36 passes every frozen gate."
+  ]
+}
