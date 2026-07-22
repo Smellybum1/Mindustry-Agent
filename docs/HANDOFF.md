@@ -654,8 +654,27 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   are saved and seed 2002 seat 2 contributes 617/658 of the reduction. Its mean
   authoritative idle is `0.05223`; all 48 masks have clean traces, while seeds
   2005/2010 flip to losses. It cannot measure announcement/recovery parity.
-  Both coordinates are rejected; no V38 precommit exists and M8.5 remains
-  unmet.
+  Both coordinates are rejected; the subsequent V38 precommit follows.
+- **Actionability evidence and V38 precommit**: artifact
+  `0500a74377b740556e3012635491318acbde3939c7f179bd24e79aa46ebf2099` matches
+  V37's complete 1,128-boundary action/tick/state-hash sequence exactly and
+  reproduces 9/10 wins, core health `805.5`, and idle `[4,658,342,2,840]`. Every
+  one of the 4,658 learned-seat idle ticks overlaps fortification; 4,611 occur
+  while seat 1 owns its running `BUILD_SCHEMATIC`. No-valid-non-WAIT/no-staging
+  intervals account for 1,607 ticks, six harvest claim losses account for
+  3,011, and no idle interval exposes valid staging. ADR-0050 therefore holds
+  V37 exact and exposes only the existing nonexclusive proactive
+  `DEFEND_REGION` candidate to learned seat 0 while another seat owns a live
+  `BUILD_SCHEMATIC` in the quiet pre-defend-lead window. It does not force,
+  mask, redirect, or alter scripted seats; retraining and fresh baselines are
+  required. Config SHA-256 is
+  `d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf` and the
+  umbrella reservation SHA-256 is
+  `a2e2389925797a5f5a8c93224561f68f36fd443afbebdc07f888aaf6bef6f27a`.
+  The governance/config/umbrella/test packet is committed at `de597c8462`
+  before membership access, with the Python suite at 166/166. Dev-v34 and
+  held-out-v5 identities are reserved, but membership documents do not exist
+  yet. No V38 implementation/model work exists; M8.5 remains unmet.
 - **Current branch**: `coop-agent/v159.7`
 - **Current commit**: see `git rev-parse HEAD` (this scaffold is committed in
   several small commits; the pre-existing HEAD was `c9686eb5`).
@@ -818,30 +837,23 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Investigate learned-seat task actionability and fortification from reusable
-   evidence only.** V37 is 9/10 and passes matched greedy strongly, but
-   permanent-greedy announcement/idle/recovery intervals remain uncertain. The
-   rejected collision-redirect and partner-intent-mask diagnostics show that
-   broader collision rerouting either shifts idle to seat 2 or harms survival
-   without materially reducing learned-seat idle. Isolate the learned seat's
-   actionable task/fortification sequence before precommitting any V38
-   coordinate.
-2. **Do not reinterpret uncertainty as a pass.** V37 is rejected under the
-   frozen dual-scorecard rule; no dev-v33 confirmation is authorized.
-3. **Keep dev-v32 unopened and dev-v33/held-out-v4 retired unexecuted.** Their
-   membership was exposed under ADR-0049; never use them. A successor needs new
-   globally disjoint dev-v34 and held-out-v5 sets plus a committed umbrella
-   one-way marker before baseline execution.
-   No successor may
-   open a new confirmation set without exact replicas,
-   reusable dual-scorecard parity, and its own one-way confirmation pass.
+1. **Primary-only generate, verify, and freeze replacement memberships without
+   rendering them into agent output.** Dev-v34 and held-out-v5 identities are
+   reserved, but their membership documents do not exist yet. Verify global
+   disjointness under the committed umbrella before any baseline episode.
+2. **Implement the precommitted learned-seat-only V38 candidate exposure.** Keep
+   V37 exact outside the quiet pre-defend-lead condition, preserve ordinary
+   learned selection, and add focused fail-closed tests before model work.
+3. **Retrain exact replicas and refresh reusable baselines only after gates
+   pass.** No successor may open confirmation without exact replicas, reusable
+   dual-scorecard parity, and its own one-way confirmation pass.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0049` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0050` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -851,7 +863,8 @@ fixed-secondary-seat construction and reusable scorecard rejection; ADR-0047
 records V36's collision-free build-line opening prior, green pretraining gates,
 and rejection when replica A tops out at 7/10; ADR-0048 records V37's fixed
 scripted-seat-2 harvest opening and reusable rejection; ADR-0049 retires the
-membership-exposed but unexecuted dev-v33 and held-out-v4 sets.
+membership-exposed but unexecuted dev-v33 and held-out-v4 sets; ADR-0050
+precommits V38's learned-seat-only proactive staging exposure.
 
 ## Deviations from the brief in this scaffold
 

@@ -1556,8 +1556,29 @@ repository-evidence mapping used for the M6 audit is:
   reduction. Mean authoritative idle is `0.05223`; 48 masks produce clean
   traces with no invalid or unaccepted learned action, but seeds 2005/2010 flip
   to losses. Announcement/recovery parity is not measurable from this
-  diagnostic. Both coordinates are rejected, no V38 precommit exists, and
-  M8.5 remains unmet.
+  diagnostic. Both coordinates are rejected; the subsequent V38 precommit is
+  described below. M8.5 remains unmet.
+- The read-only actionability artifact
+  `0500a74377b740556e3012635491318acbde3939c7f179bd24e79aa46ebf2099` preserves
+  V37 exactly across all 1,128 action/tick/state-hash boundaries: 9/10 wins,
+  mean core health `805.5`, and idle `[4,658,342,2,840]`. All 4,658 learned-seat
+  idle ticks overlap the fortification board task, including 4,611 while its
+  `BUILD_SCHEMATIC` is `RUNNING` under seat 1. There are 1,607 learned-idle ticks
+  with no valid non-WAIT action and no exposed staging candidate; six harvest
+  claim losses contribute 3,011 ticks. No learned-idle interval exposes a valid
+  proactive staging action.
+- ADR-0050 precommits V38 as V37 plus one learned-seat-only catalog exposure:
+  the existing nonexclusive proactive `DEFEND_REGION` candidate may be present
+  while another seat owns a live `BUILD_SCHEMATIC` in the quiet pre-defend-lead
+  window. There is no force, mask, redirect, or scripted-seat change; retraining
+  and fresh baselines are required. Config SHA-256 is
+  `d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`.
+  Umbrella reservation SHA-256
+  `a2e2389925797a5f5a8c93224561f68f36fd443afbebdc07f888aaf6bef6f27a` is part
+  of the governance/config/umbrella/test packet committed at `de597c8462`
+  before membership access. The Python suite is 166/166. Dev-v34 and held-out-v5
+  identities are reserved, but no membership documents exist yet. No
+  implementation or model work has begun, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1614,8 +1614,32 @@ and 617 of the 658 total savings come from seed 2002 seat 2. Mean authoritative
 idle is `0.05223`. All 48 masks have clean traces with no invalid or unaccepted
 learned action, while seeds 2005 and 2010 flip from win to loss. The diagnostic
 does not carry the event evidence required for announcement or recovery parity.
-This coordinate is also rejected, and no V38 precommit exists. M8.5 remains
-unmet.
+This coordinate is also rejected; the subsequent V38 precommit is recorded
+below. M8.5 remains unmet.
+
+The behavior-preserving actionability trace
+(`0500a74377b740556e3012635491318acbde3939c7f179bd24e79aa46ebf2099`)
+matches all 1,128 V37 action/tick/state-hash boundaries exactly and reproduces
+9/10 wins, mean core health `805.5`, and idle ticks `[4,658,342,2,840]`. All
+4,658 learned-seat idle ticks overlap the structured fortification task; 4,611
+occur while its `BUILD_SCHEMATIC` is `RUNNING` under seat 1. Of learned-seat
+idle, 1,607 ticks have no valid non-WAIT action and no exposed proactive staging
+candidate. Six simultaneous harvest claim losses account for 3,011 ticks, and
+no learned-idle interval exposes a valid staging action.
+
+ADR-0050 precommits V38 from that reusable evidence. V38 holds V37 exact except
+that learned seat 0 may receive the existing nonexclusive proactive
+`DEFEND_REGION` candidate while another seat owns a live `BUILD_SCHEMATIC` in
+the quiet pre-defend-lead window. It does not force, mask, redirect, or change
+any scripted-seat action; the candidate remains subject to ordinary learned
+selection. V38 requires retraining and fresh baselines. Config SHA-256 is
+`d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`.
+The umbrella reservation SHA-256 is
+`a2e2389925797a5f5a8c93224561f68f36fd443afbebdc07f888aaf6bef6f27a`.
+The governance/config/umbrella/test packet is committed at `de597c8462` before
+any replacement membership generation or read, and the Python suite is
+166/166. Dev-v34 and held-out-v5 identities are reserved, but their membership
+documents do not exist yet. No V38 implementation or model work has begun.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
