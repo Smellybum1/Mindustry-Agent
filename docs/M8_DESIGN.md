@@ -657,7 +657,11 @@ The filter implementation is committed at `c9459c58f4`. The bound train-only
 diagnostic reproduces the complete schedule and corrected 189 successful-
 corpus conflicts; its report/payload hashes are `4fe2960225d659cb...` /
 `8484c36bf959fd9e...`. The 208-test Python suite passes. Runtime and reward
-gates remain before dev-v36 construction or model work.
+gates also pass: pinned Java, public 5/5 survival with 10 staging starts,
+focused wake/staging, smoke, accepted determinism digests, golden/negative
+replay, and 44/44 exact-config reward adversaries. Reward evidence hashes to
+`9677e5caed4d891...`. Dev-v36 construction remains primary-only and must be
+committed before model work.
 
 ## M8.1 acceptance review
 

@@ -809,6 +809,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `[4B,5B)`. Implementation commit `c9459c58f4`, 208 Python tests, and the
   corrected bound diagnostic pass; report SHA is `4fe2960225d659cb...`. No
   membership, baseline, or model work exists.
+- **V40 pretraining gates green**: pinned Java, public 5/5 survival with 10
+  staging starts, focused wake/staging, smoke, accepted determinism digests,
+  664-checkpoint/16,200-tick golden plus negative replay, and 44/44 exact-config
+  reward adversaries pass. Reward report SHA is `9677e5caed4d891...`.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V39 implementation/governance repository checkpoint**:
   `e31e4daf7151661f285511ce29db6232a48a2242` (the documentation-only V39
@@ -972,13 +976,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run every remaining V39 pretraining gate under the immutable V40 config.**
-   Pinned Java, public/runtime/replay, and exact-config reward evidence remain.
-2. **Reject V40 on any public/runtime/replay/reward regression.** Only a fully
-   green boundary authorizes primary-only dev-v36 construction.
-3. **Only after green gates, construct dev-v36 primary-only and run replica A.**
-   Dev-v35 is retired; held-out-v6 remains sealed. Replica B requires 9/10 and
-   idle `<0.25` from A.
+1. **Add and commit the primary-only dev-v36 freezer without reading any prior
+   membership.** Use only the reserved `[4B,5B)` namespace.
+2. **Freeze dev-v36 value-free and review its receipt primary-only.** Never
+   render or delegate membership values; held-out-v6 remains sealed.
+3. **Only after the committed freeze, run V40 replica A.** Replica B requires
+   at least 9/10 reusable wins and idle `<0.25` from A.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.

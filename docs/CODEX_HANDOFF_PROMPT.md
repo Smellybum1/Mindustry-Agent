@@ -279,10 +279,11 @@ roots, budget, and RNGs remain V39-exact. The immutable config hashes to
 A value-free umbrella reserves primary-only dev-v36 in `[4B,5B)`. The exact
 filter implementation is committed at
 `c9459c58f4`; 208 Python tests and the bound train-only diagnostic pass, with
-report SHA `4fe2960225d659cb...`. Run the remaining pinned Java,
-public/runtime/replay, and exact-config reward gates next. Do not
-construct/read dev-v36 or start model work until the complete committed
-pretraining boundary passes; never inspect held-out-v6 membership.
+report SHA `4fe2960225d659cb...`. Pinned Java, public/runtime/replay, and all
+44 exact-config reward gates now pass; reward report SHA is
+`9677e5caed4d891...`. Commit that evidence, then add and commit a primary-only
+dev-v36 freezer using only `[4B,5B)` before construction. Never render or
+delegate membership, and never inspect held-out-v6 membership.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

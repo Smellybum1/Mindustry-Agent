@@ -119,3 +119,15 @@ conflicts. The ignored report SHA-256 is
 `4fe2960225d659cb5e2d78e02ab199484b6c09dbfd8b09a9393bfb60c1de387e`;
 its deterministic payload digest is
 `8484c36bf959fd9efffba60a0540b388e6e470fae854d657d5b4df897bfe4096`.
+
+The complete pretraining boundary subsequently passed: 208 Python tests;
+pinned `agent-core:test`, `rl-server:test`, and `agent-plugin:classes`; public
+candidate survival 5/5 with 10 proactive staging starts; focused secondary-wake
+and owned-schematic staging checks; smoke; determinism at cross-process
+`20a97f36407167597981e77c`, reset `a2cf4a73ee901c844f30f486`, and alternate
+seed `495ba05fa71697bdc8ff2951`; 664-checkpoint/16,200-tick golden replay plus
+negative mutation control; and all 44 exact-config reward adversaries. The
+ignored reward report SHA-256 is
+`9677e5caed4d891cb9f31c6a34475e1f276359dfa5c794f8b13210cd9ffe0dd5`.
+No confirmation membership, baseline episode, or model work preceded the
+green boundary.

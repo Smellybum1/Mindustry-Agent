@@ -1809,9 +1809,12 @@ disjoint `[4B,5B)` namespace before membership creation. Implementation and all
 pretraining gates were authorized. The exact filter is now implemented at
 `c9459c58f4`; 208 Python tests and the bound 256-episode train-only diagnostic
 pass. Its report hashes to `4fe2960225d659cb...` and records the corrected 189
-successful-corpus conflicts. Pinned Java, public/runtime/replay, and reward
-gates remain before primary-only dev-v36 construction or replica A. Dev-v36 and
-held-out-v6 access remain prohibited.
+successful-corpus conflicts. Pinned Java, public 5/5 survival with 10 staging
+starts, focused wake/staging, smoke, determinism, golden/negative replay, and
+44/44 exact-config reward gates now pass; the reward report hashes to
+`9677e5caed4d891...`. The complete boundary authorizes primary-only dev-v36
+construction after this evidence is committed. Replica A remains prohibited
+until that value-free freeze is committed; held-out-v6 access stays prohibited.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

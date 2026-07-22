@@ -1743,6 +1743,13 @@ repository-evidence mapping used for the M6 audit is:
   diagnostic reproduces all counts, including the corrected 189 successful-
   corpus conflicts, and hashes to `4fe2960225d659cb...`. No dev-v36 membership
   construction, baseline episode, or model work has begun.
+- V40's complete pretraining boundary is green: 208 Python tests, pinned Java,
+  public survival 5/5 with 10 staging starts, focused wake/staging, smoke,
+  accepted cross-process/reset/alternate-seed determinism, the 664-checkpoint
+  16,200-tick golden plus negative control, and 44/44 exact-config reward
+  adversaries. The reward report hashes to `9677e5caed4d891...`. Primary-only
+  dev-v36 freezer construction is next; membership, baselines, and model work
+  remain absent.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
