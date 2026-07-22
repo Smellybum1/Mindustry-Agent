@@ -8,10 +8,12 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from mindustry_agents.evaluation.human_scorecard import human_teammate_scorecard
+from mindustry_agents.telemetry.human_session import CAPTURE_PROVENANCE_FIELDS
 
 EVIDENCE_SCHEMA = "human_teammate_evidence_v1"
 MINIMUM_SERIOUS_SESSIONS = 3
-IDENTITY_FIELDS = (
+BASE_IDENTITY_FIELDS = (
+    "capture_schema_version",
     "engine_tag",
     "engine_commit",
     "arc_version",
@@ -20,6 +22,7 @@ IDENTITY_FIELDS = (
     "scenario_version",
     "policy",
 )
+IDENTITY_FIELDS = BASE_IDENTITY_FIELDS + CAPTURE_PROVENANCE_FIELDS
 MEAN_METRICS = (
     "human_intervention_rate",
     "plan_conflicts_per_session",
@@ -75,16 +78,25 @@ def human_evidence_report(
             raise ValueError(f"duplicate human session digest: {digest}")
         seen.add(digest)
         start = records[0]
-        missing = [field for field in IDENTITY_FIELDS if field not in start]
+        required_identity = (
+            IDENTITY_FIELDS
+            if start.get("capture_schema_version", 0) >= 2
+            else BASE_IDENTITY_FIELDS
+        )
+        missing = [field for field in required_identity if field not in start]
         if missing:
             raise ValueError(
                 "human evidence session identity missing: " + ", ".join(missing)
             )
-        identity = {field: start[field] for field in IDENTITY_FIELDS}
+        provenance_complete = start["capture_schema_version"] >= 2
+        identity = {
+            field: start.get(field) for field in IDENTITY_FIELDS
+        }
         rows.append(
             {
                 "session_content_sha256": digest,
                 "identity": identity,
+                "provenance_complete": provenance_complete,
                 "serious_session": scorecard["metrics"]["serious_session"],
                 "metrics": scorecard["metrics"],
             }
@@ -101,13 +113,20 @@ def human_evidence_report(
     for key in sorted(grouped, key=lambda value: tuple(str(item) for item in value)):
         group_rows = grouped[key]
         serious_rows = [row for row in group_rows if row["serious_session"]]
-        floor_met = len(serious_rows) >= MINIMUM_SERIOUS_SESSIONS
+        provenance_complete = all(
+            row["provenance_complete"] for row in group_rows
+        )
+        floor_met = (
+            provenance_complete
+            and len(serious_rows) >= MINIMUM_SERIOUS_SESSIONS
+        )
         pin_floor_met = pin_floor_met or floor_met
         groups.append(
             {
                 "identity": dict(zip(IDENTITY_FIELDS, key, strict=True)),
                 "session_count": len(group_rows),
                 "serious_session_count": len(serious_rows),
+                "provenance_complete": provenance_complete,
                 "serious_session_floor_met": floor_met,
                 "session_content_sha256": [
                     row["session_content_sha256"] for row in group_rows
@@ -118,10 +137,11 @@ def human_evidence_report(
 
     serious_rows = [row for row in rows if row["serious_session"]]
     blockers = [
-        "capture_v1_lacks_repository_artifact_provenance",
         "scorecard_targets_not_precommitted",
         "agents_present_vs_absent_not_measured_by_rating_v1",
     ]
+    if any(not row["provenance_complete"] for row in rows):
+        blockers.insert(0, "legacy_capture_v1_excluded_from_acceptance")
     if not pin_floor_met:
         blockers.insert(0, "fewer_than_three_pin_compatible_serious_sessions")
     return {

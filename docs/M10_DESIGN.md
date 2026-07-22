@@ -211,15 +211,18 @@ The existing training `state_hash` and selector tensor schema do not change for
 the empty-control default. Any later policy-visible control observation requires
 an explicit protocol/feature-schema version and fresh learning governance.
 
-Capture schema v1 is implemented in `DemoSessionCapture` and documented in
-`docs/HUMAN_SESSIONS.md`. An explicit `mindustry.agents.demo.capture-path`
+Capture schema v2 is implemented in `DemoSessionCapture` and documented in
+`docs/HUMAN_SESSIONS.md`; the Python loader retains legacy-v1 readability. An
+explicit `mindustry.agents.demo.capture-path`
 creates a new UTF-8 JSONL file and refuses overwrite. It records pinned session
 metadata, the existing public-candidate trajectory at every decision boundary,
 applied control events, authoritative coordination events with render outcome,
 and human-plan/recent-construction changes. The terminal line carries a record
 count and SHA-256 over every preceding line. The dependency-free Python loader
 fails closed on pin, ordering, structure, replay-revision, count, or digest
-drift and produces deterministic pace/role/plan-change summaries.
+drift and produces deterministic pace/role/plan-change summaries. V2 adds the
+project commit plus exact agent-plugin and server JAR SHA-256 values; the Git
+Bash/Linux launcher derives and injects them after building the artifacts.
 
 The five M10.3 partner styles have a versioned executable profile catalog at
 `configs/partners/human-scripted-v1.json`. Their engine-neutral deterministic
@@ -231,10 +234,11 @@ It must pass complete-file/digest validation, control replay, statistics, and
 all five profile contracts without opening a network port. This closes the
 capture/statistics/model implementation slice, but not the roadmap item or M10
 exit checkbox: population activation is an M9 action and remains gated.
-Two fresh deterministic probe JVMs reproduce the complete capture digest
-`3e864f35ffc3cf3c52bb72cfe28fec8d970f1a63a990efb2325294f0b963346b`
-and control schedule digest
+The historical v1 probe digest is
+`3e864f35ffc3cf3c52bb72cfe28fec8d970f1a63a990efb2325294f0b963346b`.
+The v2 working-tree gate passes with unchanged control schedule digest
 `d30d529355b07ce18c45d074f58a11d4c444b3dff0a2ec70b89bfeb8cbbef6ce`.
+A committed v2 reference capture is the next verification step.
 
 M10.4 scorecard v1 is derived only from capture structure. Intervention rate
 uses unique accepted-control ticks intersecting trajectory boundaries; plan
@@ -261,9 +265,9 @@ pairs, rejects duplicate digests, and groups only exact engine/Arc/protocol/
 scenario/policy identities. Serious ratings count toward the roadmap's
 three-session floor, but the report keeps acceptance `not_evaluated`: scorecard
 targets are not yet precommitted, and rating v1 does not measure a paired
-agents-present versus agents-absent preference. Capture v1 also lacks project
-commit and executable hashes, which is an explicit report blocker. This
-prevents operational
+agents-present versus agents-absent preference. Legacy capture v1 lacks project
+commit and executable hashes and is excluded from the collection floor; v2
+groups require all three exact values. This prevents operational
 scripted sessions from being mislabeled as learned-team or north-star evidence.
 The deterministic probe currently yields 5/83 intervention ticks, one conflict
 with zero-tick yield latency, 1/1 eligible goal compliance, no observed help

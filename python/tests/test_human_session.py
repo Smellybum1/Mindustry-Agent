@@ -22,10 +22,19 @@ def _line(value: dict) -> bytes:
     return (json.dumps(value, separators=(",", ":")) + "\n").encode()
 
 
-def _capture(path: Path) -> None:
+def _capture(path: Path, schema_version: int = 2) -> None:
+    provenance = (
+        {
+            "repository_commit": "1" * 40,
+            "agent_plugin_sha256": "2" * 64,
+            "server_sha256": "3" * 64,
+        }
+        if schema_version >= 2
+        else {}
+    )
     records = [
         {
-            "capture_schema_version": 1,
+            "capture_schema_version": schema_version,
             "record_type": "session_start",
             "tick": 0,
             "engine_tag": "v159.7",
@@ -37,9 +46,10 @@ def _capture(path: Path) -> None:
             "policy": "public-greedy-candidates-v1",
             "python_lockfile": "not_applicable_demo_runtime",
             "training_config": "not_applicable_demo_runtime",
+            **provenance,
         },
         {
-            "capture_schema_version": 1,
+            "capture_schema_version": schema_version,
             "record_type": "control",
             "tick": 10,
             "control": {
@@ -60,7 +70,7 @@ def _capture(path: Path) -> None:
             },
         },
         {
-            "capture_schema_version": 1,
+            "capture_schema_version": schema_version,
             "record_type": "coordination",
             "tick": 11,
             "announcement_status": "rendered",
@@ -69,7 +79,7 @@ def _capture(path: Path) -> None:
     ]
     raw = b"".join(_line(record) for record in records)
     end = {
-        "capture_schema_version": 1,
+        "capture_schema_version": schema_version,
         "record_type": "session_end",
         "tick": 12,
         "reason": "test",
@@ -96,6 +106,27 @@ def test_load_replay_and_style_summary():
         assert session_summary(records)["session_content_sha256"] == records[-1][
             "content_sha256"
         ]
+        assert session_summary(records)["capture_schema_version"] == 2
+
+
+def test_legacy_v1_capture_remains_readable():
+    root = Path(__file__).parents[2]
+    with TemporaryDirectory(dir=root / "runs") as directory:
+        path = Path(directory) / "session-v1.jsonl"
+        _capture(path, schema_version=1)
+        records = load_session(path)
+        assert session_summary(records)["capture_schema_version"] == 1
+
+
+def test_v2_capture_rejects_invalid_artifact_provenance():
+    root = Path(__file__).parents[2]
+    with TemporaryDirectory(dir=root / "runs") as directory:
+        path = Path(directory) / "session-v2.jsonl"
+        _capture(path)
+        raw = path.read_bytes()
+        path.write_bytes(raw.replace(b'"server_sha256":"333', b'"server_sha256":"X33'))
+        with pytest.raises(ValueError, match="server_sha256 is not lowercase hex"):
+            load_session(path)
 
 
 def test_digest_and_control_tick_fail_closed():

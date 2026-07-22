@@ -10,7 +10,13 @@ from typing import Any
 
 from mindustry_agents import ARC_VERSION, ENGINE_COMMIT, ENGINE_TAG, PROTOCOL_VERSION
 
-CAPTURE_SCHEMA_VERSION = 1
+CAPTURE_SCHEMA_VERSION = 2
+SUPPORTED_CAPTURE_SCHEMA_VERSIONS = (1, 2)
+CAPTURE_PROVENANCE_FIELDS = (
+    "repository_commit",
+    "agent_plugin_sha256",
+    "server_sha256",
+)
 POPULATION_SCHEMA = "scripted_human_partner_population_v1"
 PROFILE_IDS = (
     "fast-expert",
@@ -43,8 +49,11 @@ def load_session(path: Path) -> list[dict[str, Any]]:
             raise ValueError(f"invalid JSONL at line {line_number}") from exc
         if not isinstance(value, dict):
             raise ValueError(f"human session line {line_number} is not an object")
-        if value.get("capture_schema_version") != CAPTURE_SCHEMA_VERSION:
+        schema_version = value.get("capture_schema_version")
+        if schema_version not in SUPPORTED_CAPTURE_SCHEMA_VERSIONS:
             raise ValueError(f"unsupported capture schema at line {line_number}")
+        if records and schema_version != records[0]["capture_schema_version"]:
+            raise ValueError(f"mixed capture schema at line {line_number}")
         if value.get("record_type") not in RECORD_TYPES:
             raise ValueError(f"unsupported record type at line {line_number}")
         records.append(value)
@@ -75,6 +84,20 @@ def load_session(path: Path) -> list[dict[str, Any]]:
     ):
         if field not in start:
             raise ValueError(f"human session start missing {field}")
+    if start["capture_schema_version"] >= 2:
+        lengths = {
+            "repository_commit": 40,
+            "agent_plugin_sha256": 64,
+            "server_sha256": 64,
+        }
+        for field in CAPTURE_PROVENANCE_FIELDS:
+            value = start.get(field)
+            if (
+                not isinstance(value, str)
+                or len(value) != lengths[field]
+                or any(character not in "0123456789abcdef" for character in value)
+            ):
+                raise ValueError(f"human session {field} is not lowercase hex")
 
     ticks = [int(record.get("tick", -1)) for record in records]
     if any(tick < 0 for tick in ticks):
@@ -297,7 +320,7 @@ def session_summary(
     """Return the deterministic local summary used by the capture gate."""
 
     result = {
-        "capture_schema_version": CAPTURE_SCHEMA_VERSION,
+        "capture_schema_version": records[0]["capture_schema_version"],
         "session_content_sha256": records[-1]["content_sha256"],
         "style": partner_style_statistics(records),
         "control_replay": replay_controls(records),

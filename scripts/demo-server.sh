@@ -8,6 +8,7 @@ cd "$ROOT"
 ./gradlew agent-plugin:dist server:dist --console=plain
 
 PLUGIN_JAR="$ROOT/agent-plugin/build/libs/mindustry-coop-agents-plugin.jar"
+SERVER_JAR="$ROOT/server/build/libs/server-release.jar"
 PLUGIN_ENTRIES="$(jar tf "$PLUGIN_JAR")"
 for required in \
     plugin.json \
@@ -41,7 +42,7 @@ cleanup(){
 trap cleanup EXIT
 
 mkdir -p "$RUNTIME/config/mods"
-cp "$ROOT/server/build/libs/server-release.jar" "$RUNTIME/server.jar"
+cp "$SERVER_JAR" "$RUNTIME/server.jar"
 cp "$PLUGIN_JAR" \
     "$RUNTIME/config/mods/mindustry-coop-agents-plugin.jar"
 
@@ -99,7 +100,15 @@ if [[ "${DEMO_HUMAN_CAPTURE:-0}" == "1" && -z "$CAPTURE_FILE" ]]; then
 fi
 if [[ -n "$CAPTURE_FILE" ]]; then
     check_new_output "$CAPTURE_FILE" "capture"
-    CAPTURE_ARGS=(-Dmindustry.agents.demo.capture-path="$CAPTURE_FILE")
+    REPOSITORY_COMMIT="$(git rev-parse --verify HEAD)"
+    PLUGIN_SHA256="$(sha256sum -- "$PLUGIN_JAR" | awk '{print $1}')"
+    SERVER_SHA256="$(sha256sum -- "$SERVER_JAR" | awk '{print $1}')"
+    CAPTURE_ARGS=(
+        -Dmindustry.agents.demo.capture-path="$CAPTURE_FILE"
+        -Dmindustry.agents.demo.repository-commit="$REPOSITORY_COMMIT"
+        -Dmindustry.agents.demo.plugin-sha256="$PLUGIN_SHA256"
+        -Dmindustry.agents.demo.server-sha256="$SERVER_SHA256"
+    )
 fi
 
 if [[ "${DEMO_JOIN:-0}" == "1" ]]; then

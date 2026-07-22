@@ -12,7 +12,10 @@ import java.util.*;
 
 /** Opt-in, simulation-thread-owned JSONL capture for human demo sessions. */
 final class DemoSessionCapture{
-    static final int schemaVersion = 1;
+    static final int schemaVersion = 2;
+    static final String repositoryCommitProperty = "mindustry.agents.demo.repository-commit";
+    static final String pluginSha256Property = "mindustry.agents.demo.plugin-sha256";
+    static final String serverSha256Property = "mindustry.agents.demo.server-sha256";
 
     private final Path path;
     private final BufferedWriter writer;
@@ -23,6 +26,9 @@ final class DemoSessionCapture{
     private String closeReason = "";
 
     private DemoSessionCapture(Path path, Scenario scenario, long tick){
+        String repositoryCommit = requireHexProperty(repositoryCommitProperty, 40);
+        String pluginSha256 = requireHexProperty(pluginSha256Property, 64);
+        String serverSha256 = requireHexProperty(serverSha256Property, 64);
         this.path = path;
         try{
             Path parent = path.getParent();
@@ -46,6 +52,9 @@ final class DemoSessionCapture{
         start.put("scenario_id", scenario.id);
         start.put("scenario_version", scenario.version);
         start.put("policy", "public-greedy-candidates-v1");
+        start.put("repository_commit", repositoryCommit);
+        start.put("agent_plugin_sha256", pluginSha256);
+        start.put("server_sha256", serverSha256);
         start.put("python_lockfile", "not_applicable_demo_runtime");
         start.put("training_config", "not_applicable_demo_runtime");
         write(start, true);
@@ -70,6 +79,20 @@ final class DemoSessionCapture{
         if(configured == null || configured.isBlank()) return null;
         Path path = Path.of(configured.trim()).toAbsolutePath().normalize();
         return new DemoSessionCapture(path, scenario, tick);
+    }
+
+    private static String requireHexProperty(String name, int length){
+        String value = System.getProperty(name, "").trim();
+        if(value.length() != length){
+            throw new IllegalArgumentException("demo capture requires " + name);
+        }
+        for(int i = 0; i < value.length(); i++){
+            char character = value.charAt(i);
+            if((character < '0' || character > '9') && (character < 'a' || character > 'f')){
+                throw new IllegalArgumentException("demo capture requires lowercase hex " + name);
+            }
+        }
+        return value;
     }
 
     Path path(){ return path; }

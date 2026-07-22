@@ -2049,9 +2049,11 @@ are complete; opt-in session capture is next.
   leaves ratings null. A create-new rating tool binds four explicit human
   answers to the validated capture digest and rejects extra/free-text fields;
   a create-new evidence report rejects duplicates and separates incompatible
-  runtime/scenario/policy groups. Per ADR-0058, three serious compatible
-  sessions meet only the collection floor: learned/scripted targets and a paired
-  agents-present/absent protocol must be precommitted before acceptance
+  runtime/scenario/policy groups. Capture v2 now adds the project commit and
+  exact plugin/server JAR hashes; legacy v1 remains readable but cannot count
+  toward the provenance-complete floor. Per ADR-0058, three serious compatible
+  v2 sessions meet only the collection floor: learned/scripted targets and a
+  paired agents-present/absent protocol must be precommitted before acceptance
   collection. Real serious sessions and human-entered ratings are still
   required.
 - 10.5 Learned policy in the demo seat: latency budget (decision within one
