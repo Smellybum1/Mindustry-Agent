@@ -78,7 +78,11 @@ class TestPpoSelector(unittest.TestCase):
             )
 
     def test_teacher_warmup_schedule_is_separate_deterministic_and_optional(self):
+        import torch
+
         from mindustry_agents.training.ppo_selector import (
+            _policy_logit_adjustment,
+            _task_type_logit_bias,
             _teacher_rehearsal_policy,
             _teacher_warmup_policy,
             _teacher_warmup_seed_schedule,
@@ -189,6 +193,57 @@ class TestPpoSelector(unittest.TestCase):
                     "teacher_rehearsal_minibatch_seed": 125,
                     "teacher_rehearsal_samples_per_epoch": -1,
                 }
+            )
+        adjustment = _policy_logit_adjustment(
+            {
+                "policy_logit_adjustment": {
+                    "schema": "initial_task_type_logit_bias_v1",
+                    "tick": 0,
+                    "task_type": "BUILD_SCHEMATIC",
+                    "bias": 1.0,
+                }
+            }
+        )
+        bias = _task_type_logit_bias(
+            [
+                {"task_type": "BUILD_LINE"},
+                {"task_type": "BUILD_SCHEMATIC"},
+            ],
+            torch.ones(10, dtype=torch.bool),
+            tick=0,
+            adjustment=adjustment,
+        )
+        self.assertIsNotNone(bias)
+        self.assertEqual(bias.tolist(), [0.0, 1.0] + [0.0] * 8)
+        self.assertIsNone(
+            _task_type_logit_bias(
+                [{"task_type": "BUILD_SCHEMATIC"}],
+                torch.ones(10, dtype=torch.bool),
+                tick=1,
+                adjustment=adjustment,
+            )
+        )
+        with self.assertRaisesRegex(ValueError, "unsupported"):
+            _policy_logit_adjustment(
+                {"policy_logit_adjustment": {"schema": "unknown"}}
+            )
+        with self.assertRaisesRegex(ValueError, "invalid initial"):
+            _policy_logit_adjustment(
+                {
+                    "policy_logit_adjustment": {
+                        "schema": "initial_task_type_logit_bias_v1",
+                        "tick": 0,
+                        "task_type": "BUILD_SCHEMATIC",
+                        "bias": 0.0,
+                    }
+                }
+            )
+        with self.assertRaisesRegex(RuntimeError, "matched no valid candidate"):
+            _task_type_logit_bias(
+                [{"task_type": "BUILD_LINE"}],
+                torch.ones(10, dtype=torch.bool),
+                tick=0,
+                adjustment=adjustment,
             )
 
     def test_quality_gated_checkpoint_selection_is_strict_and_ranked(self):
@@ -622,6 +677,31 @@ class TestPpoSelector(unittest.TestCase):
             metrics["successful_teacher_imitation_loss"], expected, places=6
         )
 
+        biased_model = SelectorActorCritic(1)
+        transition.policy_logit_bias = torch.tensor([1.0] + [0.0] * 9)
+        with torch.no_grad():
+            _, biased_logits, _ = biased_model(
+                transition.candidates[None, :],
+                transition.scalars[None, :],
+                transition.candidate_present[None, :],
+                transition.action_mask[None, :],
+            )
+            biased_expected = -torch.log_softmax(
+                biased_logits + transition.policy_logit_bias[None, :], dim=-1
+            )[0, 0].item()
+        biased_metrics = ppo_update(
+            biased_model,
+            torch.optim.Adam(biased_model.parameters(), lr=0.0),
+            [episode],
+            config,
+            torch.Generator().manual_seed(3),
+        )
+        self.assertAlmostEqual(
+            biased_metrics["successful_teacher_imitation_loss"],
+            biased_expected,
+            places=6,
+        )
+
     def test_full_teacher_imitation_includes_losing_unforced_transition(self):
         import torch
 
@@ -871,6 +951,53 @@ class TestPpoSelector(unittest.TestCase):
                 ]
             ],
             [2],
+        )
+        biased_transition = Transition(
+            candidates=transition.candidates,
+            scalars=transition.scalars,
+            candidate_present=transition.candidate_present,
+            action_mask=transition.action_mask,
+            action=transition.action,
+            old_log_prob=transition.old_log_prob,
+            old_value=transition.old_value,
+            reward=transition.reward,
+            advanced_ticks=transition.advanced_ticks,
+            done=transition.done,
+            policy_loss_mask=transition.policy_loss_mask,
+            teacher_action=transition.teacher_action,
+            policy_logit_bias=torch.tensor([1.0] + [0.0] * 9),
+        )
+        biased_episode = EpisodeRollout(
+            seed=4,
+            outcome="win",
+            tick=60,
+            core_health=1.0,
+            transitions=[biased_transition],
+            reward_components={},
+            trace=[],
+            coordination_metrics={},
+        )
+        biased_model = SelectorActorCritic(12)
+        with torch.no_grad():
+            _, biased_logits, _ = biased_model(
+                biased_transition.candidates[None, :],
+                biased_transition.scalars[None, :],
+                biased_transition.candidate_present[None, :],
+                biased_transition.action_mask[None, :],
+            )
+            biased_expected = -torch.log_softmax(
+                biased_logits + biased_transition.policy_logit_bias[None, :],
+                dim=-1,
+            )[0, 0].item()
+        biased_metrics = teacher_trajectory_warmup_update(
+            biased_model,
+            torch.optim.Adam(biased_model.parameters(), lr=0.0),
+            [biased_episode],
+            dict(config) | {"teacher_warmup_epochs": 1},
+            torch.Generator().manual_seed(17),
+        )
+        self.assertAlmostEqual(
+            biased_metrics["mean_cross_entropy"], biased_expected, places=6
         )
         transition.action_mask[0] = False
         invalid_model = SelectorActorCritic(9)

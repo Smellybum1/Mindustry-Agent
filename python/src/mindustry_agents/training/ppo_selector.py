@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import platform
 import random
@@ -50,6 +51,7 @@ QUALITY_GATE_RANKING = (
     "mean_core_health_desc",
     "update_asc",
 )
+POLICY_LOGIT_ADJUSTMENT_SCHEMA = "initial_task_type_logit_bias_v1"
 
 ARC_HASH = "208a754044"
 LEARNED_SEAT = 0
@@ -72,6 +74,7 @@ class Transition:
     policy_loss_mask: bool
     successful_episode: bool = False
     teacher_action: int | None = None
+    policy_logit_bias: torch.Tensor | None = None
 
 
 @dataclass
@@ -236,6 +239,53 @@ def _teacher_rehearsal_policy(config: dict[str, Any]) -> dict[str, int] | None:
             raise ValueError("teacher_rehearsal_samples_per_epoch must be positive")
         policy["samples_per_epoch"] = samples_per_epoch
     return policy
+
+
+def _policy_logit_adjustment(config: dict[str, Any]) -> dict[str, Any] | None:
+    """Validate an optional deterministic structured-boundary policy prior."""
+
+    adjustment = config.get("policy_logit_adjustment")
+    if adjustment is None:
+        return None
+    if (
+        not isinstance(adjustment, dict)
+        or adjustment.get("schema") != POLICY_LOGIT_ADJUSTMENT_SCHEMA
+    ):
+        raise ValueError("unsupported policy_logit_adjustment schema")
+    tick = int(adjustment.get("tick", -1))
+    task_type = str(adjustment.get("task_type", ""))
+    bias = float(adjustment.get("bias", 0.0))
+    if tick < 0 or not task_type or not math.isfinite(bias) or bias == 0.0:
+        raise ValueError("invalid initial task-type policy logit adjustment")
+    return {
+        "schema": POLICY_LOGIT_ADJUSTMENT_SCHEMA,
+        "tick": tick,
+        "task_type": task_type,
+        "bias": bias,
+    }
+
+
+def _task_type_logit_bias(
+    candidates: list[dict[str, Any]],
+    action_mask: torch.Tensor,
+    *,
+    tick: int,
+    adjustment: dict[str, Any] | None,
+) -> torch.Tensor | None:
+    """Return the configured candidate bias only at its exact structured tick."""
+
+    if adjustment is None or tick != int(adjustment["tick"]):
+        return None
+    bias = torch.zeros(action_mask.shape, dtype=torch.float32)
+    for index, candidate in enumerate(candidates[:8]):
+        if (
+            bool(action_mask[index])
+            and str(candidate.get("task_type", "")) == adjustment["task_type"]
+        ):
+            bias[index] = float(adjustment["bias"])
+    if not bool(torch.any(bias != 0.0)):
+        raise RuntimeError("policy logit adjustment matched no valid candidate")
+    return bias
 
 
 def _dev_checkpoint_selection_policy(
@@ -462,7 +512,11 @@ def rollout_episode(
     reward_schema: str = REWARD_SCHEMA,
     quality_reward: dict[str, float] | None = None,
     teacher_controlled: bool = False,
+    policy_logit_adjustment: dict[str, Any] | None = None,
 ) -> EpisodeRollout:
+    policy_logit_adjustment = _policy_logit_adjustment(
+        {"policy_logit_adjustment": policy_logit_adjustment}
+    )
     reset = env.reset(
         seed,
         scenario_id=scenario_id,
@@ -509,6 +563,14 @@ def rollout_episode(
         )
         with torch.no_grad():
             raw_logits, masked_logits, value, tensors = _model_outputs(model, features)
+        logit_bias = _task_type_logit_bias(
+            observations[LEARNED_SEAT]["task_candidates"],
+            features.action_mask,
+            tick=tick,
+            adjustment=policy_logit_adjustment,
+        )
+        if logit_bias is not None:
+            masked_logits = masked_logits + logit_bias
 
         scripted_action = _canonical_scripted_action(
             scripted_bundle[LEARNED_SEAT],
@@ -633,6 +695,7 @@ def rollout_episode(
                 done=done,
                 policy_loss_mask=features.policy_loss_mask and not forced,
                 teacher_action=teacher_index,
+                policy_logit_bias=logit_bias,
             )
         )
         trace.append(
@@ -655,6 +718,11 @@ def rollout_episode(
                 "masked_logits": [float(value) for value in masked_logits.tolist()],
                 "log_probability": log_prob,
                 "value_prediction": float(value.item()),
+                **(
+                    {"policy_logit_bias": [float(item) for item in logit_bias]}
+                    if logit_bias is not None
+                    else {}
+                ),
                 "reward_components": breakdown.components,
                 **(
                     {
@@ -754,6 +822,16 @@ def ppo_update(
     scalars = torch.stack([item.scalars for item in transitions])
     present = torch.stack([item.candidate_present for item in transitions])
     masks = torch.stack([item.action_mask for item in transitions])
+    logit_biases = None
+    if any(item.policy_logit_bias is not None for item in transitions):
+        logit_biases = torch.stack(
+            [
+                item.policy_logit_bias
+                if item.policy_logit_bias is not None
+                else torch.zeros(item.action_mask.shape, dtype=torch.float32)
+                for item in transitions
+            ]
+        )
     actions = torch.tensor([item.action for item in transitions], dtype=torch.long)
     old_log_probs = torch.tensor(
         [item.old_log_prob for item in transitions], dtype=torch.float32
@@ -806,6 +884,8 @@ def ppo_update(
             _, masked_logits, values = model(
                 candidates[index], scalars[index], present[index], masks[index]
             )
+            if logit_biases is not None:
+                masked_logits = masked_logits + logit_biases[index]
             all_log_probs = torch.log_softmax(masked_logits, dim=-1)
             log_probs = all_log_probs.gather(
                 1, actions[index, None]
@@ -948,6 +1028,16 @@ def _teacher_trajectory_imitation_update(
     scalars = torch.stack([item.scalars for item in transitions])
     present = torch.stack([item.candidate_present for item in transitions])
     masks = torch.stack([item.action_mask for item in transitions])
+    logit_biases = None
+    if any(item.policy_logit_bias is not None for item in transitions):
+        logit_biases = torch.stack(
+            [
+                item.policy_logit_bias
+                if item.policy_logit_bias is not None
+                else torch.zeros(item.action_mask.shape, dtype=torch.float32)
+                for item in transitions
+            ]
+        )
     teacher_actions = torch.tensor(
         [int(item.teacher_action) for item in transitions], dtype=torch.long
     )
@@ -965,6 +1055,8 @@ def _teacher_trajectory_imitation_update(
             _, masked_logits, _ = model(
                 candidates[index], scalars[index], present[index], masks[index]
             )
+            if logit_biases is not None:
+                masked_logits = masked_logits + logit_biases[index]
             loss = functional.cross_entropy(masked_logits, teacher_actions[index])
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -1068,6 +1160,11 @@ def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
                 "outcome",
             )
         }
+        | (
+            {"policy_logit_bias": transition["policy_logit_bias"]}
+            if "policy_logit_bias" in transition
+            else {}
+        )
         for transition in episode.trace
     ]
     return {
@@ -1096,6 +1193,7 @@ def _evaluate(
     port: int,
 ) -> list[EpisodeRollout]:
     model.eval()
+    policy_logit_adjustment = _policy_logit_adjustment(config)
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
     with RlServerProcess(
         LaunchConfig(port=port, java=java, build_if_missing=False)
@@ -1112,6 +1210,7 @@ def _evaluate(
                 action_generator=generator,
                 reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
                 quality_reward=config.get("quality_reward"),
+                policy_logit_adjustment=policy_logit_adjustment,
             )
             for seed in seeds
         ]
@@ -1520,6 +1619,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     selection_policy = _dev_checkpoint_selection_policy(config)
     teacher_warmup_policy = _teacher_warmup_policy(config)
     teacher_rehearsal_policy = _teacher_rehearsal_policy(config)
+    policy_logit_adjustment = _policy_logit_adjustment(config)
     _configure_torch(config)
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
     teacher_warmup_set = _teacher_warmup_train_set(root, train_set, config)
@@ -1604,6 +1704,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
                     quality_reward=config.get("quality_reward"),
                     teacher_controlled=True,
+                    policy_logit_adjustment=policy_logit_adjustment,
                 )
                 for seed in teacher_warmup_seeds
             ]
@@ -1658,6 +1759,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     action_generator=action_generator,
                     reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
                     quality_reward=config.get("quality_reward"),
+                    policy_logit_adjustment=policy_logit_adjustment,
                 )
                 for seed in seeds[start : start + episodes_per_update]
             ]

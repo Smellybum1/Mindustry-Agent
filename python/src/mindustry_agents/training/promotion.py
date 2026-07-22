@@ -36,6 +36,7 @@ from mindustry_agents.training.ppo_selector import (
     _canonical_scripted_action,
     _configure_torch,
     _git_evidence,
+    _policy_logit_adjustment,
     _scripted_index,
     _sha256,
     load_checkpoint,
@@ -363,6 +364,7 @@ def main(argv: list[str] | None = None) -> int:
     checkpoint_config_match = checkpoint_payload.get("config_sha256") == _sha256(
         args.config.resolve()
     )
+    policy_logit_adjustment = _policy_logit_adjustment(config)
     lineage = validate_lineage_manifest(
         manifest_path=args.lineage_manifest,
         config_path=args.config,
@@ -427,6 +429,7 @@ def main(argv: list[str] | None = None) -> int:
                         action_generator=generator,
                         reward_schema=reward_schema,
                         quality_reward=config.get("quality_reward"),
+                        policy_logit_adjustment=policy_logit_adjustment,
                     )
                 else:
                     rollout = rollout_control_episode(

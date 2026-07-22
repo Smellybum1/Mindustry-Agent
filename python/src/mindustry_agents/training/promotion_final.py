@@ -34,6 +34,7 @@ from mindustry_agents.training.model import SelectorActorCritic
 from mindustry_agents.training.ppo_selector import (
     _configure_torch,
     _git_evidence,
+    _policy_logit_adjustment,
     _sha256,
     load_checkpoint,
     REWARD_SCHEMA,
@@ -322,6 +323,7 @@ def main(argv: list[str] | None = None) -> int:
 
     records: list[dict[str, Any]] = []
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
+    policy_logit_adjustment = _policy_logit_adjustment(config)
     with RlServerProcess(
         LaunchConfig(port=args.port, java=args.java, build_if_missing=False)
     ) as env:
@@ -340,6 +342,7 @@ def main(argv: list[str] | None = None) -> int:
                         action_generator=generator,
                         reward_schema=reward_schema,
                         quality_reward=config.get("quality_reward"),
+                        policy_logit_adjustment=policy_logit_adjustment,
                     )
                     record = _record(
                         rollout,
