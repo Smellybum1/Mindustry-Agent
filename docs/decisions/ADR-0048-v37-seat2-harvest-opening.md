@@ -110,4 +110,13 @@ The subsequent implementation applies the opening through every governed
 rollout path, archives the full structured action, and fails before stepping on
 candidate drift. Focused positive, legacy-identity, and fail-closed coverage
 bring the complete Python suite to 165 passing tests. The inherited live/Java/
-determinism gates and all V37 model work remain pending.
+determinism gates and all V37 model work remained pending at that implementation
+commit.
+
+From implementation commit `0c4a09659f`, the pinned Java build/tests, focused
+seat-1 wake check, complete 5/5 public gate with all five proactive-staging
+starts, smoke, cross-process/reset/seed determinism, 664-checkpoint/16,200-tick
+golden replay, negative replay, and all 44 exact-config reward adversaries pass.
+The adversary report reproduces SHA-256
+`6df5481af4652c58de05442b3ccc72e0a603a573ed228f8a6006d7a217791028`.
+Replica A is authorized; dev-v33 and held-out-v4 remain unopened.

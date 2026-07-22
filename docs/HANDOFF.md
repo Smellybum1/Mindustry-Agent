@@ -801,13 +801,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run every pretraining gate from the committed V37 implementation.** The
-   fail-closed opening is wired through all governed rollout paths and 165
-   Python tests pass. Run inherited V35 focused/public/Java, smoke,
-   determinism, golden replay, and negative replay from that commit.
-2. **Authorize only replica A if every gate is green.** Train from scratch with
-   the exact V37 config; require at least 9/10 reusable wins and mean idle below
-   0.25 before replica B.
+1. **Train exact V37 replica A from scratch.** Every pretraining gate is green
+   from implementation commit `0c4a09659f`. Use the pinned WSL2 lock/toolchain
+   and the immutable V37 config; require at least 9/10 reusable wins and mean
+   idle below 0.25 before replica B.
+2. **Do not launch replica B below the floor.** If A passes, run exact B and
+   require checkpoint/frontier/model/replay/teacher/full-run/direct-lineage
+   equality before reusable scorecards.
 3. **Keep dev-v32 retired unopened, dev-v33 unopened, and held-out-v4 sealed.**
    No successor may
    open a new confirmation set without exact replicas,

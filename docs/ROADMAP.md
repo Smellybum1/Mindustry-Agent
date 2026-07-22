@@ -1559,8 +1559,12 @@ collection, reusable evaluation, checkpoint replay, matched controls,
 confirmation, and final evaluation. Full structured action evidence is archived
 without changing legacy-config behavior or permanent public baselines. Missing,
 duplicate, invalid, and masked matches fail before the step; 165 Python tests
-pass. The inherited live/Java/determinism gates remain pending, dev-v33 and
-held-out-v4 remain sealed, and no V37 model work has begun.
+pass. From implementation commit `0c4a09659f`, the pinned Java build/tests,
+focused fixed-seat check, 5/5 public gate with five proactive-staging starts,
+smoke, cross-process/reset/seed determinism, 664-checkpoint/16,200-tick golden
+replay, negative replay, and all 44 exact-config reward adversaries pass.
+Replica A is authorized; dev-v33 and held-out-v4 remain sealed, and no V37 model
+work has begun.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

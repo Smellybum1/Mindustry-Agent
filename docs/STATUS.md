@@ -1504,8 +1504,13 @@ repository-evidence mapping used for the M6 audit is:
   candidate selection, archives the full action in decision traces, leaves
   legacy configs and permanent public baselines unchanged, and rejects missing,
   duplicate, invalid, or masked candidates before stepping. The complete Python
-  suite is 165/165. Inherited live/Java/determinism gates remain pending; no V37
-  model work has begun and M8.5 remains unmet.
+  suite is 165/165. From implementation commit `0c4a09659f`, the pinned Java
+  build/tests, focused seat-1 wake check, and complete public gate pass; public
+  survival is 5/5 with all five proactive-staging starts. Smoke, cross-process/
+  reset/seed determinism, the 664-checkpoint/16,200-tick golden replay, negative
+  replay, and all 44 exact-config reward adversaries pass. Replica A is
+  authorized; dev-v33 and held-out-v4 remain unopened, no V37 model work has
+  begun, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

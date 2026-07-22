@@ -155,10 +155,13 @@ checkpoint wins 9/10 off-contract with mean core health `720.0` and idle ticks
 Config/seed governance and all 44 reward adversaries pass. The fail-closed
 opening is implemented across training, replay, matched controls, confirmation,
 and final evaluation; the full structured action is archived, legacy configs
-and permanent public baselines remain unchanged, and 165 Python tests pass. Run
-the inherited focused/public/Java/smoke/determinism/golden/negative gates from
-the committed implementation before replica A. Dev-v33 is frozen at disjoint
-roots `286001..286160` but unopened; held-out-v4 remains sealed.
+and permanent public baselines remain unchanged, and 165 Python tests pass.
+From implementation commit `0c4a09659f`, pinned Java build/tests, focused and
+5/5 public gates, smoke, cross-process/reset/seed determinism, the 664-checkpoint/
+16,200-tick golden replay, negative replay, and all 44 exact-config reward
+adversaries pass. Train exact V37 replica A from scratch; require at least 9/10
+reusable wins and mean idle below 0.25 before replica B. Dev-v33 is frozen at
+disjoint roots `286001..286160` but unopened; held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
