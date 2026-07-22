@@ -1580,6 +1580,22 @@ digest `614c071b7f3003b0...` match. Direct lineage passes from training commit
 `3c17cfdf02a43fcb...`. Reusable permanent-greedy and matched-greedy scorecards
 must pass before dev-v33 can be opened; held-out-v4 remains sealed.
 
+V37's reusable preflight is ineligible. Candidate wins are 9/10 versus permanent
+random 4/10, permanent greedy 8/10, matched random 5/10, and matched greedy
+3/10. The complete matched-greedy scorecard passes, including idle
+`-0.13391229` and recovery `-88.95` ticks. Permanent-greedy parity fails because
+announcement, idle, and recovery intervals remain uncertain; idle is
+`+0.01323943` with 95% CI `[-0.00258843,+0.03051348]`. V37 is rejected under
+the frozen rule, dev-v33 is retired without execution, and
+M8.5 remains unmet. The report hashes to `faac2dc071489f25...`.
+
+ADR-0049 records that a delegated read-only review subsequently exposed the
+membership of dev-v33 and held-out-v4 despite an explicit prohibition. No
+episode or outcome was observed, but both sets are retired unexecuted and may
+never be used. Any successor must precommit globally disjoint dev-v34 and
+held-out-v5 sets and a committed umbrella marker that precedes membership reads
+and baseline episodes.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

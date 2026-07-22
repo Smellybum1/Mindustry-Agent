@@ -801,14 +801,16 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run V37's reusable dual scorecards.** Exact replicas reproduce at update
-   16 with 9/10 wins and idle `0.05108287`; canonical full-run and direct
-   lineage gates pass. Refresh/reuse governed permanent baselines and evaluate
-   candidate, matched greedy, and matched random on dev-v1.
-2. **Open dev-v33 only if both reusable scorecards pass.** Require win-rate
-   comparisons plus non-regression against permanent greedy and matched greedy;
-   otherwise reject V37 without confirmation.
-3. **Keep dev-v32 retired unopened, dev-v33 unopened, and held-out-v4 sealed.**
+1. **Diagnose V37's remaining permanent-greedy parity gap from reusable evidence
+   only.** V37 is 9/10 and passes matched greedy strongly, but permanent-greedy
+   announcement/idle/recovery intervals remain uncertain. Isolate per-seat and
+   accepted-task causes before precommitting one V38 coordinate.
+2. **Do not reinterpret uncertainty as a pass.** V37 is rejected under the
+   frozen dual-scorecard rule; no dev-v33 confirmation is authorized.
+3. **Keep dev-v32 unopened and dev-v33/held-out-v4 retired unexecuted.** Their
+   membership was exposed under ADR-0049; never use them. A successor needs new
+   globally disjoint dev-v34 and held-out-v5 sets plus a committed umbrella
+   one-way marker before baseline execution.
    No successor may
    open a new confirmation set without exact replicas,
    reusable dual-scorecard parity, and its own one-way confirmation pass.
@@ -818,7 +820,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0048` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0049` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -826,8 +828,9 @@ ADR-0045 precommits and records V34's all-seat claim-loss boundary rejection at
 the complete public candidate gate; ADR-0046 precommits and records V35's exact
 fixed-secondary-seat construction and reusable scorecard rejection; ADR-0047
 records V36's collision-free build-line opening prior, green pretraining gates,
-and rejection when replica A tops out at 7/10; ADR-0048 precommits V37's fixed
-scripted-seat-2 harvest opening.
+and rejection when replica A tops out at 7/10; ADR-0048 records V37's fixed
+scripted-seat-2 harvest opening and reusable rejection; ADR-0049 retires the
+membership-exposed but unexecuted dev-v33 and held-out-v4 sets.
 
 ## Deviations from the brief in this scaffold
 

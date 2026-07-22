@@ -143,3 +143,22 @@ the lineage artifact SHA-256 is
 `3c17cfdf02a43fcbb8b7d42b2445466cbf94794f1a9a24b088630f5a8406673b`.
 Reusable permanent-greedy and matched-greedy scorecards are now authorized;
 dev-v33 and held-out-v4 remain unopened.
+
+The reusable preflight is ineligible. Candidate wins are 9/10 versus permanent
+random 4/10, permanent greedy 8/10, matched random 5/10, and matched greedy
+3/10. Every observed matched-greedy scorecard metric passes; candidate idle
+improves by `-0.13391229` and recovery by `-88.95` ticks. Against permanent
+greedy, announcements are `-0.00364304` (95% CI
+`[-0.01624392,+0.01056959]`), idle is `+0.01323943`
+(`[-0.00258843,+0.03051348]`), and recovery is `-12.9` ticks
+(`[-94.5525,+51.5525]`), so the frozen non-regression gate fails uncertainty.
+V37 is rejected; dev-v33 is retired without execution. ADR-0049 subsequently
+retires both dev-v33 and held-out-v4 after delegated manifest membership
+exposure; no episode outcomes were produced.
+The preflight report, records, aggregate, baseline records, and baseline
+aggregate hash to
+`faac2dc071489f25e4bb15f038fe511430d491aec643fae57692398a3b4720ec`,
+`1ad3e57a489ceb936b5c79c5cb5f36c3943e48e160ab9db3f2a00f5565be3b9a`,
+`a0ca76b3a736950a48bd11e24ac5e1c8c5726a40edfc9e9605e1211e211b9108`,
+`4c1c654cc32a0502030502e1d9e2fc8b0db01131d35bd73bf8c1dd913b1c8364`,
+and `72d8a3dec8416859bfbd45c5429c67bbaa847c575d526cb465e121e98e67e7d5`.

@@ -165,9 +165,15 @@ health `805.5`, and idle
 `a9a55110fe2266b8...`, `21b665232664f79e...`, `9b67d5d468f86a55...`, and
 `614c071b7f3003b0...`. Replica B reproduces checkpoint/model/replay/teacher/
 canonical-frontier/full-run evidence exactly, and direct lineage passes with
-digest `fd69503ae40e977b...`. Run reusable permanent-greedy and matched-greedy
-scorecards on dev-v1; open dev-v33 only if both pass. Dev-v33 is frozen at
-disjoint roots `286001..286160` but unopened; held-out-v4 remains sealed.
+digest `fd69503ae40e977b...`. Reusable preflight is ineligible: candidate wins
+9/10 and strongly passes matched greedy, but permanent-greedy announcement,
+idle, and recovery intervals remain uncertain; idle is `+0.01323943` with 95%
+CI `[-0.00258843,+0.03051348]`. Reject V37 and isolate one causal V38 coordinate
+from reusable per-seat/accepted-task evidence only.
+After rejection, a delegated review improperly read dev-v33 and held-out-v4
+manifests. ADR-0049 retires both unexecuted; no outcomes were observed. A
+successor needs globally disjoint dev-v34 and held-out-v5 sets and a committed
+umbrella marker before any membership read or baseline episode.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

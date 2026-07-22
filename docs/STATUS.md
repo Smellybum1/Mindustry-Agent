@@ -1526,6 +1526,22 @@ repository-evidence mapping used for the M6 audit is:
   `fd69503ae40e977b...` and artifact SHA-256 `3c17cfdf02a43fcb...` from training
   commit `8d323a3c72`. Reusable permanent-greedy and matched-greedy scorecards
   are next. Dev-v33 and held-out-v4 remain unopened.
+- V37's reusable preflight is ineligible despite 9/10 candidate wins versus
+  permanent random 4/10, permanent greedy 8/10, matched random 5/10, and matched
+  greedy 3/10. The matched-greedy scorecard passes every observed metric, with
+  idle improved by `-0.13391229` and recovery by `-88.95` ticks. The required
+  permanent-greedy scorecard fails uncertainty: announcements are
+  `-0.00364304` (95% CI `[-0.01624392,+0.01056959]`), idle is `+0.01323943`
+  (`[-0.00258843,+0.03051348]`), and recovery is `-12.9` ticks
+  (`[-94.5525,+51.5525]`). V37 is rejected under the frozen non-regression rule;
+  dev-v33 is retired without execution, and M8.5 is unmet.
+  The preflight report SHA-256 is `faac2dc071489f25...`.
+- ADR-0049 records a post-rejection governance incident: a delegated read-only
+  review opened the dev-v33 and held-out-v4 seed manifests despite an explicit
+  prohibition. No episode or outcome was produced, but membership exposure
+  retires both sets unexecuted. Neither may ever be used. The next successor
+  must precommit globally disjoint dev-v34 and held-out-v5 sets plus an umbrella
+  one-way marker created before any membership read or baseline episode.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
