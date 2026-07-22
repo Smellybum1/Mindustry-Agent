@@ -1,6 +1,7 @@
 package mindustry.agentplugin;
 
 import agentcore.candidates.*;
+import agentcore.coordination.*;
 import agentcore.policy.*;
 import agentcore.policy.GreedyUtilityPolicy.*;
 import agentcore.skill.*;
@@ -18,21 +19,31 @@ import static mindustry.Vars.*;
 final class PublicCandidateDemo{
     private static final long decisionInterval = 30L;
 
+    enum SignalType{ RESERVE_MINING, WAVE_START, WAVE_CLEAR, EXPANSION_COMPLETE, MAINTENANCE_COMPLETE }
+    record Signal(SignalType type, long tick, int wave, int enemies, int coreHealth,
+                  int blocks, int turrets){}
+
     private final DemoAgentRegistry registry;
     private final AdaptiveWorldFacts facts;
     private final EngineCandidates candidates;
     private final CoordinationAdapter coordination;
     private final GreedyUtilityPolicy policy = new GreedyUtilityPolicy();
     private final ArrayList<String> acceptedSelections = new ArrayList<>();
+    private final ArrayDeque<Signal> signals = new ArrayDeque<>();
+    private final ExpertCoordinationPlan expertPlan;
     private CandidateSet[] boundaryCandidates = new CandidateSet[0];
     private long nextDecisionTick;
     private long decisionRevision;
     private int previousEnemies;
     private int previousCoreHealth;
+    private int waveClears;
+    private int reportedExpansions;
+    private boolean reserveReported;
     private boolean started;
 
     PublicCandidateDemo(Scenario scenario, DemoAgentRegistry registry){
         this.registry = registry;
+        expertPlan = ExpertCoordinationPlans.fromScenario(scenario);
         facts = new AdaptiveWorldFacts(scenario, registry);
         candidates = new EngineCandidates(scenario, registry, facts);
         coordination = new CoordinationAdapter(scenario, registry, facts);
@@ -46,10 +57,14 @@ final class PublicCandidateDemo{
         facts.reset();
         policy.reset();
         acceptedSelections.clear();
+        signals.clear();
         nextDecisionTick = (long)state.tick;
         decisionRevision = coordination.decisionRevision();
         previousEnemies = enemyCount();
         previousCoreHealth = coreHealth();
+        waveClears = 0;
+        reportedExpansions = 0;
+        reserveReported = false;
         decide((long)state.tick);
     }
 
@@ -61,6 +76,14 @@ final class PublicCandidateDemo{
 
         int enemies = enemyCount();
         int health = coreHealth();
+        if(previousEnemies == 0 && enemies > 0){
+            signals.add(new Signal(SignalType.WAVE_START, tick, waveClears + 1,
+                enemies, health, 0, candidates.snapshot().turrets().size()));
+        }else if(previousEnemies > 0 && enemies == 0){
+            waveClears++;
+            signals.add(new Signal(SignalType.WAVE_CLEAR, tick, waveClears,
+                0, health, 0, candidates.snapshot().turrets().size()));
+        }
         boolean worldBoundary = (previousEnemies == 0) != (enemies == 0)
             || health < previousCoreHealth;
         if(tick >= nextDecisionTick || coordination.decisionRevision() != decisionRevision
@@ -69,6 +92,7 @@ final class PublicCandidateDemo{
         }
         previousEnemies = enemies;
         previousCoreHealth = health;
+        recordReadinessSignals(tick);
     }
 
     void stop(String reason){
@@ -86,6 +110,11 @@ final class PublicCandidateDemo{
     }
 
     Jval drainEvents(){ return coordination.drainEvents(); }
+    List<Signal> drainSignals(){
+        ArrayList<Signal> out = new ArrayList<>(signals);
+        signals.clear();
+        return List.copyOf(out);
+    }
     Jval metrics(){ return coordination.metrics(); }
     boolean started(){ return started; }
     int taskCount(){ return coordination.board().tasks().size(); }
@@ -156,6 +185,34 @@ final class PublicCandidateDemo{
         policy.observeActionResults(accepted);
         decisionRevision = coordination.decisionRevision();
         nextDecisionTick = tick + decisionInterval;
+    }
+
+    private void recordReadinessSignals(long tick){
+        if(!reserveReported && preparationComplete()){
+            reserveReported = true;
+            signals.add(new Signal(SignalType.RESERVE_MINING, tick, waveClears, 0,
+                coreHealth(), 0, candidates.snapshot().turrets().size()));
+        }
+        while(reportedExpansions < Math.min(waveClears, expertPlan.expansions().size())){
+            ExpertCoordinationPlan.Schematic expansion = expertPlan.expansions().get(reportedExpansions);
+            if(!schematicComplete(expansion)) break;
+            reportedExpansions++;
+            int turrets = candidates.snapshot().turrets().size();
+            signals.add(new Signal(SignalType.EXPANSION_COMPLETE, tick, reportedExpansions,
+                0, coreHealth(), expansion.blocks().size(), turrets));
+            signals.add(new Signal(SignalType.MAINTENANCE_COMPLETE, tick, reportedExpansions,
+                0, coreHealth(), expansion.blocks().size(), turrets));
+        }
+    }
+
+    private static boolean schematicComplete(ExpertCoordinationPlan.Schematic schematic){
+        for(BuildSpec block : schematic.blocks()){
+            Building building = world.build(schematic.anchorX() + block.offsetX(),
+                schematic.anchorY() + block.offsetY());
+            if(building == null || !building.block.name.equals(block.block())
+                || building.rotation != block.rotation()) return false;
+        }
+        return true;
     }
 
     private static ActionMask mask(Jval raw){

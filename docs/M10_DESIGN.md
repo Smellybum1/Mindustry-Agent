@@ -31,8 +31,11 @@ registry, and engine-neutral Java greedy fallback are complete. An explicit
 `EngineCandidates`, masks, typed actions, `CoordinationAdapter`, the board,
 reservations, and skills. Its probe has reached full readiness after ordinary
 wave-damage recovery and agent rebind. It remains opt-in while public-path
-survival telemetry, deterministic parity evidence, and combat logistics churn
-are closed; human commands are not implemented.
+deterministic parity evidence and combat logistics churn are closed; human
+commands are not implemented. The stock-clock public-path survival gate is
+green through tick 8100 with core health 1100: its authoritative world-state
+telemetry records all three wave clears, both post-wave expansion schematics,
+both maintenance completions, and productive reserve mining.
 
 ## Command grammar
 

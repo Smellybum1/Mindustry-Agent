@@ -1988,8 +1988,11 @@ the plugin policy port itself remains pending. A tested engine-neutral Java
 and combat logistics preference over public candidates/masks. The opt-in
 `DEMO_PUBLIC_POLICY=1` no-port probe now runs the full candidate -> mask -> typed
 action -> board -> reservation -> skill path and reached readiness after ordinary
-wave-damage recovery and rebind; default promotion, public-path survival/parity,
-and combat logistics churn remain open.
+wave-damage recovery and rebind. Its stock-clock public-path survival gate now
+passes through tick 8100 at full core health, with structured evidence for all
+three wave clears, both expansion/maintenance completions, and reserve mining.
+Default promotion, exact deterministic public-path parity, and combat logistics
+churn remain open.
 
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,
   `/agents assign <agent> <task>`, `/agents release <agent>`,

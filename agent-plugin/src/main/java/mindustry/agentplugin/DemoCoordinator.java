@@ -81,6 +81,7 @@ final class DemoCoordinator{
         long tick = (long)state.tick;
         if(publicPolicy){
             publicDemo.update();
+            drainPublicSignals();
             drainPublicAnnouncements();
             if(survivalProbe && !survivalReported && tick >= scenario.winTick){
                 Building core = scenario.coreTeam.core();
@@ -224,6 +225,27 @@ final class DemoCoordinator{
         }
     }
 
+    private void drainPublicSignals(){
+        for(PublicCandidateDemo.Signal signal : publicDemo.drainSignals()){
+            switch(signal.type()){
+                case RESERVE_MINING -> Log.info(
+                    "AGENT-DEMO RESERVE MINING tick=@ reason=public_policy", signal.tick());
+                case WAVE_START -> Log.info(
+                    "AGENT-DEMO WAVE START tick=@ enemies=@ core_health=@",
+                    signal.tick(), signal.enemies(), signal.coreHealth());
+                case WAVE_CLEAR -> Log.info(
+                    "AGENT-DEMO WAVE CLEAR tick=@ wave=@ core_health=@",
+                    signal.tick(), signal.wave(), signal.coreHealth());
+                case EXPANSION_COMPLETE -> Log.info(
+                    "AGENT-DEMO EXPANSION COMPLETE wave=@ turrets=@ blocks=@",
+                    signal.wave(), signal.turrets(), signal.blocks());
+                case MAINTENANCE_COMPLETE -> Log.info(
+                    "AGENT-DEMO MAINTENANCE COMPLETE tick=@ wave=@",
+                    signal.tick(), signal.wave());
+            }
+        }
+    }
+
     private void finishProbeIfReady(){
         if(publicPolicy){
             finishPublicProbeIfReady();
@@ -284,7 +306,6 @@ final class DemoCoordinator{
 
         probeReported = true;
         Log.info("AGENT-DEMO EXPERT READY tick=@ public_candidates=true", (long)state.tick);
-        Log.info("AGENT-DEMO RESERVE MINING tick=@ reason=public_policy", (long)state.tick);
         Log.info("AGENT-DEMO DECISION DIGEST digest=@ selections=@",
             publicDemo.selectionDigest(), publicDemo.selectionCount());
         Log.info("AGENT-DEMO PARITY OK decisions=@ path=public-candidates",

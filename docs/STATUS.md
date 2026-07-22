@@ -1879,9 +1879,13 @@ repository-evidence mapping used for the M6 audit is:
   typed actions, `CoordinationAdapter`, board, reservations, and skills end to
   end; the latest stock-clock probe reached readiness at tick 5664 after
   wave-damage recovery and one rebind (89 accepted selections). These real-time
-  counts are diagnostic, not a deterministic parity baseline. The accepted
-  default stays on the shared driver until public-path survival/parity telemetry
-  and repeated combat logistics rebalance are closed.
+  counts are diagnostic, not a deterministic parity baseline. The public-path
+  stock-clock survival gate is now green through tick 8100 with core health
+  1100; structured world-state telemetry records three wave clears, both
+  expansion schematics at 8/10 turrets, both maintenance completions, and
+  reserve mining. The accepted default stays on the shared driver until exact
+  deterministic public-path parity and repeated combat logistics rebalance are
+  closed.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,

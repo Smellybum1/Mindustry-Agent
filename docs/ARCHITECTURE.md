@@ -70,7 +70,9 @@ the engine-neutral Java `GreedyUtilityPolicy` mirrors the accepted fallback's
 candidate/mask decisions. The opt-in `PublicCandidateDemo` now wires the
 real-time plugin through public candidates, masks, typed actions, board,
 reservations, and skills; the accepted default remains unchanged until its
-survival/parity/telemetry gates close.
+deterministic parity and combat-logistics-churn gates close. The public path now
+derives survival telemetry from simulation-thread world state and has passed
+the stock-clock three-wave acceptance at tick 8100 with core health 1100.
 
 ## Module responsibilities
 
