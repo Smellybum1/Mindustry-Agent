@@ -19,7 +19,7 @@ and what is unverified.
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
   client, parallel-env facade, vector collector) is stdlib-only too. The
   governed **33-test core boundary passes under `python -S`** with no third-party
-  packages; the complete dev/RL suite passes all **248 tests** (verified
+  packages; the complete dev/RL suite passes all **254 tests** (verified
   2026-07-23).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
   machine (JDK 21 Temurin, Python 3.12.5, Git 2.46). Verified working in Git Bash.
@@ -1916,7 +1916,19 @@ repository-evidence mapping used for the M6 audit is:
   agent once, protects completed construction for 600 ticks, and resumes the
   stable goal after expiry. M10.1 and M10.2 are complete. Exact no-command
   parity remains 390/1,170/225 with digest `aaf2e734...714`; stock survival
-  remains tick 8100 at 1100 health. Opt-in human session capture is next.
+  remains tick 8100 at 1100 health. M10.3's local opt-in capture substrate is
+  now implemented: `CREATE_NEW` UTF-8 JSONL includes pinned session metadata,
+  the same public candidate/mask/action/result trajectories, applied human
+  controls with queued/applied ticks, authoritative coordination events plus
+  render status, and human presence changes. A terminal count/SHA-256 is
+  validated by a dependency-free loader that deterministically replays control
+  state and derives pace/role/plan-change statistics. The no-port capture gate
+  produced 504 records (84 trajectory boundaries, 16/16 controls, four presence
+  changes, and one human-yield event). Two fresh JVM captures reproduce content
+  SHA-256 `3e864f35ffc3cf3c...` and control-schedule SHA-256
+  `d30d529355b07ce1...` exactly. Five executable scripted partner profiles
+  are versioned in `configs/partners/human-scripted-v1.json`; they remain staged,
+  not active in training, because M8 has not authorized M9.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,
@@ -1926,8 +1938,8 @@ repository-evidence mapping used for the M6 audit is:
   M8.4 feature/tensor adapter, audited reward, model, PPO optimizer,
   checkpoint/replay, manifest path, mixed-seat ablations, reproducible
   checkpoint interpolation, dev preflight, and one-way final gate; `telemetry`
-  remains a documented
-  skeleton.
+  now contains the M10.3 human-session validator, replay, summaries, and staged
+  scripted partner-model contract.
 - **`scenarios/bootstrap-defense-v0/`**: **fully loaded** by `rl-server` (world,
   ore, waves, termination, objective IDs/targets/thresholds, named regions, and
   reference schematic), plus the delayed-loadout adaptive probe. M5.1 turns
@@ -1953,7 +1965,7 @@ repository-evidence mapping used for the M6 audit is:
   reproducible five-package dev lock, runs `make test`, and builds the custom
   distributions. The inherited upstream workflows are guarded to run only in
   `Anuken/Mindustry`, so this fork never follows their Arc `master` checkout.
-  Local equivalents pass (248 Python tests, Java suites/custom-module compile,
+  Local equivalents pass (254 Python tests, Java suites/custom-module compile,
   and distributions). A detached clean Ubuntu 24.04 worktree at `43d3b17db6`
   also passed literal `make bootstrap && make test` with an isolated JDK
   21.0.11, GNU Make 4.3, empty Gradle cache, and the 33-test zero-dependency

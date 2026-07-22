@@ -42,11 +42,14 @@ final class DemoCoordinator{
     private final Object humanCommandLock = new Object();
     private final ConcurrentHashMap<Long, Consumer<String>> humanResponses =
         new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, Long> humanQueuedTicks = new ConcurrentHashMap<>();
     private volatile Snapshot publishedHumanControl = new Snapshot(List.of(), List.of(),
         AutonomyLevel.NORMAL, false, 0L);
     private final DemoAgentRegistry registry;
     private final ExpertCoordinationDriver driver;
     private final PublicCandidateDemo publicDemo;
+    private final DemoSessionCapture capture;
+    private volatile long publishedSimulationTick;
 
     private boolean paused;
     private boolean stopped;
@@ -61,6 +64,9 @@ final class DemoCoordinator{
     private BuildPlan probeHumanPlan;
     private Plan probePresence;
     private long probeRecentExpiry = -1L;
+    private boolean exitAfterUpdate;
+    private boolean exiting;
+    private String exitCaptureReason = "closed";
 
     DemoCoordinator(Scenario scenario, boolean probe, boolean waitForPlayer){
         this.scenario = scenario;
@@ -71,13 +77,20 @@ final class DemoCoordinator{
         this.humanProbe = System.getProperty(AgentPlugin.modeProperty, "")
             .equalsIgnoreCase("human");
         this.publicPolicy = publicPolicyEnabled();
+        String capturePath = System.getProperty(AgentPlugin.capturePathProperty, "");
+        if(!capturePath.isBlank() && !publicPolicy){
+            throw new IllegalArgumentException("demo capture requires the public candidate policy");
+        }
+        this.capture = DemoSessionCapture.open(capturePath, scenario, (long)state.tick);
+        this.publishedSimulationTick = (long)state.tick;
         this.humanRegions = humanRegions(scenario);
         this.registry = new DemoAgentRegistry(scenario);
         this.driver = new ExpertCoordinationDriver(
             ExpertCoordinationPlans.fromScenario(scenario), new DemoPort());
         this.publicDemo = new PublicCandidateDemo(scenario, registry, humanControl,
-            probe && !humanProbe);
+            capture != null || probe && !humanProbe);
         driver.reset(1L);
+        if(capture != null) Log.info("[agents] opt-in session capture: @", capture.path());
     }
 
     void spawn(){
@@ -107,6 +120,8 @@ final class DemoCoordinator{
     }
 
     void update(){
+        if(exiting) return;
+        publishedSimulationTick = (long)state.tick;
         driveHumanProbe();
         drainHumanCommands();
         if(publicPolicy && started()) syncHumanPresence();
@@ -117,6 +132,12 @@ final class DemoCoordinator{
             drainPublicSignals();
             drainPublicTraces();
             drainPublicAnnouncements();
+            if(exitAfterUpdate){
+                closeCapture(exitCaptureReason);
+                exiting = true;
+                Core.app.exit();
+                return;
+            }
             if(survivalProbe && !survivalReported && tick >= scenario.winTick){
                 Building core = scenario.coreTeam.core();
                 if(core == null || core.health <= 0f){
@@ -124,6 +145,7 @@ final class DemoCoordinator{
                 }
                 survivalReported = true;
                 Log.info("AGENT-DEMO SURVIVAL OK tick=@ core_health=@", tick, Math.round(core.health));
+                closeCapture("survival_complete");
                 Core.app.exit();
                 return;
             }
@@ -183,6 +205,7 @@ final class DemoCoordinator{
         for(DemoAgentRegistry.Agent agent : registry.agents()) agent.controller().stopNow();
         if(publicPolicy) drainPublicAnnouncements();
         else drainAnnouncements();
+        closeCapture("human_emergency_stop");
         return "agents: emergency stop complete at tick " + tick;
     }
 
@@ -212,6 +235,7 @@ final class DemoCoordinator{
             if(queued.accepted() && response != null){
                 humanResponses.put(queued.sequence(), response);
             }
+            if(queued.accepted()) humanQueuedTicks.put(queued.sequence(), publishedSimulationTick);
         }
         return HumanControl.renderQueued(queued);
     }
@@ -226,8 +250,13 @@ final class DemoCoordinator{
         for(AppliedCommand result : applied){
             Event event = result.event();
             if(publicPolicy) publicDemo.controlApplied(event);
-            Jval structured = controlEvent(result.sequence(), event);
+            Long queuedTick = humanQueuedTicks.remove(result.sequence());
+            if(queuedTick == null){
+                throw new IllegalStateException("missing queued tick for command " + result.sequence());
+            }
+            Jval structured = controlEvent(result.sequence(), queuedTick, event);
             Log.info("AGENT-DEMO HUMAN CONTROL @", structured.toString(Jval.Jformat.plain));
+            if(capture != null) capture.control(structured);
             Consumer<String> response = humanResponses.remove(result.sequence());
             if(response != null){
                 try{
@@ -239,9 +268,10 @@ final class DemoCoordinator{
         }
     }
 
-    private static Jval controlEvent(long sequence, Event event){
+    private static Jval controlEvent(long sequence, long queuedTick, Event event){
         Jval out = Jval.newObject();
         out.put("sequence", sequence);
+        out.put("queued_tick", queuedTick);
         out.put("tick", event.tick());
         out.put("author_id", event.command().authorId());
         out.put("command", event.command().type().name());
@@ -250,6 +280,24 @@ final class DemoCoordinator{
         out.put("revision", event.revision());
         out.put("goal_id", event.goalId());
         out.put("agent_index", event.agentIndex());
+        Jval command = Jval.newObject();
+        command.put("type", event.command().type().name());
+        command.put("author_id", event.command().authorId());
+        switch(event.command().type()){
+            case GOAL -> {
+                command.put("task_type", event.command().taskType().name());
+                command.put("region_id", event.command().regionId());
+            }
+            case CANCEL -> command.put("goal_id", event.command().goalId());
+            case ASSIGN -> {
+                command.put("agent_index", event.command().agentIndex());
+                command.put("goal_id", event.command().goalId());
+            }
+            case RELEASE -> command.put("agent_index", event.command().agentIndex());
+            case AUTONOMY -> command.put("autonomy", event.command().autonomy().name());
+            case QUIET -> command.put("quiet", event.command().quiet());
+        }
+        out.add("canonical_command", command);
         return out;
     }
 
@@ -309,24 +357,35 @@ final class DemoCoordinator{
                 || event.getString("task_id", "").startsWith("human:goal:")){
                 Log.info("AGENT-DEMO COORDINATION @", event.toString(Jval.Jformat.plain));
             }
-            if(!event.getBool("announce", false)) continue;
+            String announcementStatus = "not_requested";
+            if(!event.getBool("announce", false)){
+                if(capture != null) capture.coordination(event, announcementStatus);
+                continue;
+            }
             if(event.getString("reason_code", "").equals("yield_to_human")){
                 humanYieldNotices++;
             }
             if(!HumanControl.shouldRenderCoordination(humanControl.snapshot().quiet(),
                 event.getString("act", ""), event.getString("reason_code", ""))){
                 suppressedAnnouncements++;
+                announcementStatus = "suppressed";
                 Log.info("AGENT-DEMO CHAT SUPPRESSED message_id=@ reason=quiet",
                     event.getString("message_id", ""));
+                if(capture != null) capture.coordination(event, announcementStatus);
                 continue;
             }
             String line = event.getString("announcement", "");
-            if(line.isBlank()) continue;
+            if(line.isBlank()){
+                if(capture != null) capture.coordination(event, "empty");
+                continue;
+            }
             announcements++;
+            announcementStatus = "rendered";
             Log.info("AGENT-DEMO CHAT @", line);
             for(Player player : Groups.player){
                 if(player.team() == scenario.coreTeam) player.sendMessage("[accent]" + line);
             }
+            if(capture != null) capture.coordination(event, announcementStatus);
         }
     }
 
@@ -358,7 +417,10 @@ final class DemoCoordinator{
 
     private void drainPublicTraces(){
         for(Jval trace : publicDemo.drainTraces()){
-            Log.info("AGENT-DEMO PUBLIC TRACE @", trace.toString(Jval.Jformat.plain));
+            if(probe && !humanProbe){
+                Log.info("AGENT-DEMO PUBLIC TRACE @", trace.toString(Jval.Jformat.plain));
+            }
+            if(capture != null) capture.trajectory(trace);
         }
     }
 
@@ -523,8 +585,10 @@ final class DemoCoordinator{
             Plan presence = presence(probeHumanPlan);
             if(presence != null) plans.put(presence.id(), presence);
         }
-        publicDemo.applyHumanPresence(humanPresence.update(plans.values(), (long)state.tick),
-            (long)state.tick);
+        long tick = (long)state.tick;
+        Change change = humanPresence.update(plans.values(), tick);
+        if(capture != null && !change.empty()) capture.humanPresence(tick, change);
+        publicDemo.applyHumanPresence(change, tick);
     }
 
     private static Plan presence(BuildPlan plan){
@@ -660,8 +724,13 @@ final class DemoCoordinator{
         }
         Log.info("AGENT-DEMO HUMAN CONTROL OK tick=@ low=true high=true suppressed=@ yields=1",
             (long)state.tick, suppressedAnnouncements);
-        Core.app.exit();
+        exitAfterUpdate = true;
+        exitCaptureReason = "human_probe_complete";
         humanProbePhase = 9;
+    }
+
+    void closeCapture(String reason){
+        if(capture != null) capture.close((long)state.tick, reason);
     }
 
     private final class DemoPort implements ExpertCoordinationDriver.Port{

@@ -211,6 +211,31 @@ The existing training `state_hash` and selector tensor schema do not change for
 the empty-control default. Any later policy-visible control observation requires
 an explicit protocol/feature-schema version and fresh learning governance.
 
+Capture schema v1 is implemented in `DemoSessionCapture` and documented in
+`docs/HUMAN_SESSIONS.md`. An explicit `mindustry.agents.demo.capture-path`
+creates a new UTF-8 JSONL file and refuses overwrite. It records pinned session
+metadata, the existing public-candidate trajectory at every decision boundary,
+applied control events, authoritative coordination events with render outcome,
+and human-plan/recent-construction changes. The terminal line carries a record
+count and SHA-256 over every preceding line. The dependency-free Python loader
+fails closed on pin, ordering, structure, replay-revision, count, or digest
+drift and produces deterministic pace/role/plan-change summaries.
+
+The five M10.3 partner styles have a versioned executable profile catalog at
+`configs/partners/human-scripted-v1.json`. Their engine-neutral deterministic
+decision function is implemented and tested. The catalog remains staged for
+M9: it cannot enter training until M8 promotion authorizes M9 work.
+
+The reproducible M10.3 substrate gate is `bash scripts/human-session-check.sh`.
+It must pass complete-file/digest validation, control replay, statistics, and
+all five profile contracts without opening a network port. This closes the
+capture/statistics/model implementation slice, but not the roadmap item or M10
+exit checkbox: population activation is an M9 action and remains gated.
+Two fresh deterministic probe JVMs reproduce the complete capture digest
+`3e864f35ffc3cf3c52bb72cfe28fec8d970f1a63a990efb2325294f0b963346b`
+and control schedule digest
+`d30d529355b07ce18c45d074f58a11d4c444b3dff0a2ec70b89bfeb8cbbef6ce`.
+
 ## Acceptance gates
 
 M10.1 is complete only when all of the following pass:

@@ -1,0 +1,49 @@
+{
+  "schema": "scripted_human_partner_population_v1",
+  "version": 1,
+  "status": "staged_for_m9_after_promotion_authorization",
+  "capture_schema_version": 1,
+  "tick_rate": 60,
+  "profiles": [
+    {
+      "id": "fast-expert",
+      "decision_interval_ticks": 30,
+      "role_preference": ["BUILD_LINE", "DEFEND_REGION", "SUPPLY_TURRET"],
+      "plan_change_interval_ticks": 900,
+      "help_request_after_blocked_ticks": 180,
+      "autonomy": "HIGH"
+    },
+    {
+      "id": "slow-beginner",
+      "decision_interval_ticks": 180,
+      "role_preference": ["HARVEST_RESOURCE", "BUILD_LINE"],
+      "plan_change_interval_ticks": 1800,
+      "help_request_after_blocked_ticks": 600,
+      "autonomy": "NORMAL"
+    },
+    {
+      "id": "cautious",
+      "decision_interval_ticks": 90,
+      "role_preference": ["DEFEND_REGION", "REPAIR_REGION", "SUPPLY_TURRET"],
+      "plan_change_interval_ticks": 1200,
+      "help_request_after_blocked_ticks": 240,
+      "autonomy": "LOW"
+    },
+    {
+      "id": "plan-changer",
+      "decision_interval_ticks": 60,
+      "role_preference": ["BUILD_LINE", "HARVEST_RESOURCE", "DEFEND_REGION"],
+      "plan_change_interval_ticks": 240,
+      "help_request_after_blocked_ticks": 300,
+      "autonomy": "NORMAL"
+    },
+    {
+      "id": "help-requester",
+      "decision_interval_ticks": 75,
+      "role_preference": ["REQUEST_HELP", "ASSIST_BUILD", "DEFEND_REGION"],
+      "plan_change_interval_ticks": 720,
+      "help_request_after_blocked_ticks": 90,
+      "autonomy": "NORMAL"
+    }
+  ]
+}

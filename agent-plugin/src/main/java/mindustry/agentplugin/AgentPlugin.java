@@ -28,6 +28,7 @@ public final class AgentPlugin extends Plugin{
     public static final String modeProperty = "mindustry.agents.demo.mode";
     public static final String portProperty = "mindustry.agents.demo.port";
     public static final String publicPolicyProperty = "mindustry.agents.demo.public-policy";
+    public static final String capturePathProperty = "mindustry.agents.demo.capture-path";
 
     private DemoCoordinator coordinator;
     private boolean deterministicProbe;

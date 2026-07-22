@@ -15,6 +15,7 @@ for required in \
     mindustry/agentplugin/DemoAgentRegistry.class \
     mindustry/agentplugin/DemoAgentController.class \
     mindustry/agentplugin/PublicCandidateDemo.class \
+    mindustry/agentplugin/DemoSessionCapture.class \
     mindustry/agentplugin/FixedProbeGraphics.class \
     agentcore/board/TaskBoard.class \
     agentcore/skill/ExecuteSchematic.class \
@@ -53,12 +54,31 @@ case "${DEMO_PUBLIC_POLICY:-1}" in
     *) echo "DEMO_PUBLIC_POLICY must be 0 or 1" >&2; exit 2 ;;
 esac
 
-if [[ "${DEMO_HUMAN_CONTROL:-0}" == "1" ]]; then
+CAPTURE_ARGS=()
+CAPTURE_FILE="${DEMO_CAPTURE_PATH:-}"
+if [[ "${DEMO_HUMAN_CAPTURE:-0}" == "1" && -z "$CAPTURE_FILE" ]]; then
+    CAPTURE_FILE="$RUNTIME/human-session.jsonl"
+fi
+if [[ -n "$CAPTURE_FILE" ]]; then
+    capture_parent="$(dirname "$CAPTURE_FILE")"
+    [[ -d "$capture_parent" ]] || {
+        echo "demo-server: capture parent does not exist: $capture_parent" >&2
+        exit 2
+    }
+    [[ ! -e "$CAPTURE_FILE" ]] || {
+        echo "demo-server: refusing to overwrite capture: $CAPTURE_FILE" >&2
+        exit 2
+    }
+    CAPTURE_ARGS=(-Dmindustry.agents.demo.capture-path="$CAPTURE_FILE")
+fi
+
+if [[ "${DEMO_HUMAN_CONTROL:-0}" == "1" || "${DEMO_HUMAN_CAPTURE:-0}" == "1" ]]; then
     LOG="$ROOT/runs/demo-server-human-control.log"
     echo "demo-server: deterministic queued human-control probe (no network port)"
     cd "$RUNTIME"
     set +e
-    "$JAVA_BIN" "${POLICY_ARGS[@]}" -Dmindustry.agents.demo.mode=human -jar server.jar 2>&1 | tee "$LOG"
+    "$JAVA_BIN" "${POLICY_ARGS[@]}" "${CAPTURE_ARGS[@]}" \
+        -Dmindustry.agents.demo.mode=human -jar server.jar 2>&1 | tee "$LOG"
     server_status=${PIPESTATUS[0]}
     set -e
     cd "$ROOT"
@@ -84,6 +104,17 @@ if [[ "${DEMO_HUMAN_CONTROL:-0}" == "1" ]]; then
         echo "demo-server: human probe unexpectedly opened a network port" >&2
         exit 1
     fi
+    if [[ "${DEMO_HUMAN_CAPTURE:-0}" == "1" ]]; then
+        [[ -s "$CAPTURE_FILE" ]] || {
+            echo "demo-server: human capture was not written" >&2
+            exit 1
+        }
+        export PYTHONPATH="$ROOT/python/src${PYTHONPATH:+:$PYTHONPATH}"
+        source "$ROOT/scripts/python-command.sh"
+        "$PY" -m mindustry_agents.tools.human_session \
+            --session "$CAPTURE_FILE" \
+            --population "$ROOT/configs/partners/human-scripted-v1.json"
+    fi
     echo "demo-server: HUMAN CONTROL OK"
     exit 0
 fi
@@ -93,7 +124,8 @@ if [[ "${DEMO_SURVIVAL:-0}" == "1" ]]; then
     echo "demo-server: real-time three-wave survival probe (no network port)"
     cd "$RUNTIME"
     set +e
-    "$JAVA_BIN" "${POLICY_ARGS[@]}" -Dmindustry.agents.demo.mode=survival -jar server.jar 2>&1 | tee "$LOG"
+    "$JAVA_BIN" "${POLICY_ARGS[@]}" "${CAPTURE_ARGS[@]}" \
+        -Dmindustry.agents.demo.mode=survival -jar server.jar 2>&1 | tee "$LOG"
     server_status=${PIPESTATUS[0]}
     set -e
     cd "$ROOT"
@@ -139,7 +171,7 @@ PY
     echo "demo-server: explicit join mode; opening private game port $DEMO_PORT"
     echo "demo-server: connect a stock v159.7 client to localhost:$DEMO_PORT"
     cd "$RUNTIME"
-    "$JAVA_BIN" "${POLICY_ARGS[@]}" \
+    "$JAVA_BIN" "${POLICY_ARGS[@]}" "${CAPTURE_ARGS[@]}" \
         -Dmindustry.agents.demo.mode=join \
         -Dmindustry.agents.demo.port="$DEMO_PORT" \
         -jar server.jar
@@ -150,7 +182,8 @@ LOG="$ROOT/runs/demo-server-probe.log"
 echo "demo-server: isolated acceptance probe (no network port will be opened)"
 cd "$RUNTIME"
 set +e
-"$JAVA_BIN" "${POLICY_ARGS[@]}" -Dmindustry.agents.demo.mode=probe -jar server.jar 2>&1 | tee "$LOG"
+"$JAVA_BIN" "${POLICY_ARGS[@]}" "${CAPTURE_ARGS[@]}" \
+    -Dmindustry.agents.demo.mode=probe -jar server.jar 2>&1 | tee "$LOG"
 server_status=${PIPESTATUS[0]}
 set -e
 cd "$ROOT"

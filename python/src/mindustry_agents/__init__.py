@@ -19,4 +19,5 @@ __all__ = ["protocol"]
 PROTOCOL_VERSION = 1
 ENGINE_TAG = "v159.7"
 ENGINE_COMMIT = "c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c"
+ARC_VERSION = "208a754044"
 __version__ = "0.0.1"

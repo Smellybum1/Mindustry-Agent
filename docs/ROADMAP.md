@@ -2029,11 +2029,14 @@ are complete; opt-in session capture is next.
   human-priority reservations (board rule exists — wire the detection), agents
   yield + announce the conflict exactly once; never deconstruct human work;
   never consume the human's reserved resource budget below a floor.
-- 10.3 Human session capture (local, opt-in): demo sessions record the same
+- **IN PROGRESS (capture/statistics/models implemented 2026-07-23; M9 activation gated) — 10.3 Human session capture (local, opt-in):** demo sessions record the same
   event/trajectory JSONL as training episodes + human actions; from these,
   (a) partner-style statistics (pace, role preference, plan-changes) and
   (b) scripted human-partner models (fast-expert / slow-beginner / cautious /
-  plan-changer / help-requester) join the M9 partner population.
+  plan-changer / help-requester) join the M9 partner population. Capture,
+  deterministic control replay/statistics, and all five executable profiles are
+  complete; actual population activation remains blocked on M8 promotion and
+  M9 authorization, so the M10 exit checkbox remains open.
 - 10.4 Teammate scorecard v1 (human terms): human intervention rate, plan
   conflicts per session, yield latency, goal-compliance rate, time-to-help on
   human requests, announcement usefulness rating, post-session preference
