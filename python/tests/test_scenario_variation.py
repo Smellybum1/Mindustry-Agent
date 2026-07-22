@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 
 import pytest
@@ -1546,3 +1547,116 @@ def test_v37_seat2_harvest_opening_and_dev_v33_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v33"] == path.name
+
+
+def test_v38_owned_schematic_staging_and_sealed_sets_are_reserved():
+    config_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    evaluation_dir = DEFAULT_SEED_SET.parent
+    v37_path = config_dir / "m8-selector-v37-seat2-harvest-opening.json"
+    v38_path = config_dir / "m8-selector-v38-owned-schematic-staging.json"
+    umbrella_path = (
+        evaluation_dir / "m8-selector-v38-sealed-evaluation-umbrella.json"
+    )
+
+    v37 = json.loads(v37_path.read_text(encoding="utf-8"))
+    v38 = json.loads(v38_path.read_text(encoding="utf-8"))
+    expected_changes = {
+        "candidate_version": "v38",
+        "runtime_contract": (
+            "abandon_wait_resource_scoped_retry_agent_death_available_idle_"
+            "resource_actionability_staging_secondary_claim_loss_wake_"
+            "owned_schematic_staging_v10"
+        ),
+        "quality_intervention": (
+            "resource_actionability_staging_secondary_claim_wake_seat2_"
+            "harvest_and_owned_schematic_staging_v11"
+        ),
+        "confirmation_seed_set": (
+            "configs/evaluation/bootstrap-defense-v1-dev-v34.json"
+        ),
+        "held_out_seed_set_id": "bootstrap-defense-v1-held-out-v5",
+        "held_out_seed_set_version": 5,
+    }
+    assert {key: v38[key] for key in expected_changes} == expected_changes
+    for key in expected_changes:
+        v37.pop(key)
+        v38.pop(key)
+    assert v38 == v37
+
+    umbrella = json.loads(umbrella_path.read_text(encoding="utf-8"))
+    assert umbrella["schema"] == "m8_sealed_evaluation_umbrella_v1"
+    assert umbrella["candidate_version"] == "v38"
+    assert umbrella["status"] == "reserved_before_membership_creation"
+    assert umbrella["training_config"] == {
+        "path": "configs/training/m8-selector-v38-owned-schematic-staging.json",
+        "sha256": "d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf",
+    }
+    assert hashlib.sha256(v38_path.read_bytes()).hexdigest() == (
+        umbrella["training_config"]["sha256"]
+    )
+    assert umbrella["access_owner"] == "primary_agent_only"
+    assert umbrella["delegation_forbidden"] is True
+
+    expected_sets = [
+        {
+            "role": "confirmation",
+            "seed_set_id": "bootstrap-defense-v1-dev-v34",
+            "seed_set_version": 34,
+            "split": "dev",
+            "count": 160,
+            "path": "configs/evaluation/bootstrap-defense-v1-dev-v34.json",
+            "membership_state_at_reservation": "not_created",
+            "exclusive_umbrella_attempt": (
+                "runs/m8-selector-v38-dev-v34-umbrella-attempt.json"
+            ),
+            "replaces": "bootstrap-defense-v1-dev-v33",
+        },
+        {
+            "role": "final",
+            "seed_set_id": "bootstrap-defense-v1-held-out-v5",
+            "seed_set_version": 5,
+            "split": "held-out",
+            "count": 160,
+            "path": (
+                "configs/evaluation/bootstrap-defense-v1-held-out-v5.json"
+            ),
+            "membership_state_at_reservation": "not_created",
+            "exclusive_umbrella_attempt": (
+                "runs/m8-selector-v38-held-out-v5-umbrella-attempt.json"
+            ),
+            "replaces": "bootstrap-defense-v1-held-out-v4",
+        },
+    ]
+    assert umbrella["replacement_sets"] == expected_sets
+    assert umbrella["rules"] == [
+        (
+            "This reservation must be committed before either membership "
+            "document is created or read."
+        ),
+        (
+            "Membership construction and disjointness verification are "
+            "primary-agent-only and must not render seed values into agent "
+            "output."
+        ),
+        (
+            "The committed one-way consumer must atomically create the "
+            "set-specific umbrella attempt before its first manifest read or "
+            "baseline episode."
+        ),
+        (
+            "A started, aborted, failed, exposed, or completed attempt consumes "
+            "that set permanently."
+        ),
+        (
+            "No confirmation access is authorized until exact replicas and "
+            "reusable permanent-greedy and matched-greedy scorecards pass."
+        ),
+        (
+            "No final access is authorized until confirmation passes every "
+            "frozen gate."
+        ),
+    ]
+
+    repository_root = DEFAULT_SEED_SET.parents[2]
+    for reserved in expected_sets:
+        assert not (repository_root / reserved["path"]).exists()

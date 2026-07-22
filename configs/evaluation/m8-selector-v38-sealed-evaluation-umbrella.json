@@ -1,0 +1,45 @@
+{
+  "schema": "m8_sealed_evaluation_umbrella_v1",
+  "candidate_version": "v38",
+  "status": "reserved_before_membership_creation",
+  "created_date": "2026-07-22",
+  "repository_parent_commit": "6f7b19b0dfcb8531d360d2effd1f829cddca35eb",
+  "training_config": {
+    "path": "configs/training/m8-selector-v38-owned-schematic-staging.json",
+    "sha256": "d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf"
+  },
+  "access_owner": "primary_agent_only",
+  "delegation_forbidden": true,
+  "replacement_sets": [
+    {
+      "role": "confirmation",
+      "seed_set_id": "bootstrap-defense-v1-dev-v34",
+      "seed_set_version": 34,
+      "split": "dev",
+      "count": 160,
+      "path": "configs/evaluation/bootstrap-defense-v1-dev-v34.json",
+      "membership_state_at_reservation": "not_created",
+      "exclusive_umbrella_attempt": "runs/m8-selector-v38-dev-v34-umbrella-attempt.json",
+      "replaces": "bootstrap-defense-v1-dev-v33"
+    },
+    {
+      "role": "final",
+      "seed_set_id": "bootstrap-defense-v1-held-out-v5",
+      "seed_set_version": 5,
+      "split": "held-out",
+      "count": 160,
+      "path": "configs/evaluation/bootstrap-defense-v1-held-out-v5.json",
+      "membership_state_at_reservation": "not_created",
+      "exclusive_umbrella_attempt": "runs/m8-selector-v38-held-out-v5-umbrella-attempt.json",
+      "replaces": "bootstrap-defense-v1-held-out-v4"
+    }
+  ],
+  "rules": [
+    "This reservation must be committed before either membership document is created or read.",
+    "Membership construction and disjointness verification are primary-agent-only and must not render seed values into agent output.",
+    "The committed one-way consumer must atomically create the set-specific umbrella attempt before its first manifest read or baseline episode.",
+    "A started, aborted, failed, exposed, or completed attempt consumes that set permanently.",
+    "No confirmation access is authorized until exact replicas and reusable permanent-greedy and matched-greedy scorecards pass.",
+    "No final access is authorized until confirmation passes every frozen gate."
+  ]
+}
