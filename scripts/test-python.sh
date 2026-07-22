@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# test-python.sh — run the Python unit tests. Prefers pytest; falls back to the
-# stdlib unittest runner so a bare checkout with zero third-party deps still runs.
+# test-python.sh — run the Python unit tests. Prefers pytest for the complete
+# suite; falls back to the governed stdlib-only core boundary so a bare checkout
+# with zero third-party deps still runs.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,6 +13,8 @@ if "$PY" -m pytest --version >/dev/null 2>&1; then
   echo "== pytest =="
   exec "$PY" -m pytest python/tests -q
 else
-  echo "== unittest (pytest not installed) =="
-  exec "$PY" -m unittest discover -s python/tests -p 'test_*.py' -v
+  echo "== unittest core boundary (pytest not installed) =="
+  export PYTHONPATH="$ROOT/python/src:$ROOT/python/tests${PYTHONPATH:+:$PYTHONPATH}"
+  exec "$PY" -S -m unittest -v \
+    test_import test_protocol test_env test_supervisor
 fi

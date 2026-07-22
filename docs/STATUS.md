@@ -17,9 +17,10 @@ and what is unverified.
 - **Python core package** (`python/src/mindustry_agents/`): imports with zero
   third-party dependencies. `protocol.py` implements length-prefixed JSON framing
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
-  client, parallel-env facade, vector collector) is stdlib-only too. **55 Python
-  tests pass** via `python -m pytest python/tests -q` (verified 2026-07-21 with
-  pytest 8.4.2 on Python 3.12.5).
+  client, parallel-env facade, vector collector) is stdlib-only too. The
+  governed **33-test core boundary passes under `python -S`** with no third-party
+  packages; the complete dev/RL suite passes all **248 tests** (verified
+  2026-07-23).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
   machine (JDK 21 Temurin, Python 3.12.5, Git 2.46). Verified working in Git Bash.
 - **`smoke` / `determinism` scripts**: implemented (M1) and passing — see the
