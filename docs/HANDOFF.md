@@ -695,10 +695,34 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   one-line `MINE` change. All 44 exact-config reward adversaries pass for config
   `d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`; the
   temporary, uncommitted report SHA-256 is
-  `e44865297a31ab1625bf4a43116cf1ff712b96657043c200c0af629ddd4f59bf`. No
-  baseline episode or model work has begun. M8.5 remains unmet.
+  `e44865297a31ab1625bf4a43116cf1ff712b96657043c200c0af629ddd4f59bf`. At that
+  implementation checkpoint, no baseline episode or model work had begun.
+- **V38 replica A passes its exact authorization gate**: from committed
+  repository `3effefed781b88c2e71354d784db58eb787ed7e6`, config
+  `d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`, and
+  lock `8d865c8c710a61d7e37b8896b38166a1dcf121e40d17fbb1a47e948b4861bf6c`,
+  replica A completed 256 warmup episodes, 2,048 training episodes, and 32
+  updates. Selected update 20 is 9/10 with return `4.859680000000006`, core
+  health `565.2`, and idle `0.021071738935729764`. Checkpoint/model-state hashes
+  are `3bc4a3a1cc9c2ef4450e20c689c3909a8bf9ae8ba35b194e8710df1acf737b5e` and
+  `b9f592ffe58d1b866f200cd3544a2ecfd48f6d662f517aece3dffa745fa66540`.
+  Both replay passes are bit-exact at
+  `272dfb7a5793c1b79be95ce9b7e2407c3752cb6ee183cf9440dbe388ee4553af`;
+  action-state is
+  `5ba7991a0dd10f0d857c5fcbf75ccbbb573eb7a7c59b975967c3432463f3c68c`,
+  canonical full-run is
+  `356a2065c8c2001ba6e9b2b480949e0c4ff3fdfd39b88ac8747c49e2838f57a2`,
+  frontier is
+  `9955422e926e955700370f6dcf792c1c1054e6501e8b5b46afb151911ea78c7b`,
+  and manifest is
+  `e61516546eabb0cf35d53f699c1e24fa20f214f9a534678cf69ff5361ecd63ad`.
+  The precommitted `>=9/10` and idle `<0.25` gate passes exactly. Exact replica
+  B is authorized from the same commit/config/toolchain in an independent
+  output. Dev-v34 and held-out-v5 remain unconsumed; no scorecard,
+  confirmation, or final episode has run. M8.5 remains unmet.
 - **Current branch**: `coop-agent/v159.7`
-- **Current V38 implementation checkpoint**: `8b3f9cc749`.
+- **Current V38 replica-A repository checkpoint**:
+  `3effefed781b88c2e71354d784db58eb787ed7e6`.
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
 - **Uncommitted changes intentionally preserved**: the user's modified
@@ -858,14 +882,15 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run V38 replica A and refresh the reusable baselines from the committed
-   runtime.** Keep dev-v34 and held-out-v5 unconsumed.
-2. **Start replica B only if replica A reaches at least 9/10 construction wins
-   with mean idle below `0.25`.** Otherwise stop and record the governed
-   rejection.
-3. **Run reusable preflight only after exact replicas and fresh baselines.** No
-   successor may open confirmation without reusable dual-scorecard parity and
-   its own one-way confirmation pass.
+1. **Run exact V38 replica B from commit
+   `3effefed781b88c2e71354d784db58eb787ed7e6`, the exact V38 config/toolchain,
+   and an independent output.** Replica A passed the authorization gate exactly.
+2. **Require replica B to reproduce replica A's governed checkpoint, model,
+   replay, action-state, frontier, canonical full-run, and manifest evidence.**
+   Keep dev-v34 and held-out-v5 unconsumed.
+3. **Refresh reusable baselines and run reusable preflight only after exact
+   replicas.** No successor may open confirmation without reusable
+   dual-scorecard parity and its own one-way confirmation pass.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.

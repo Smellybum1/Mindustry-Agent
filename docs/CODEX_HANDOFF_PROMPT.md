@@ -175,6 +175,22 @@ manifests. ADR-0049 retires both unexecuted; no outcomes were observed. A
 successor needs globally disjoint dev-v34 and held-out-v5 sets and a committed
 umbrella marker before any membership read or baseline episode.
 
+ADR-0050's V38 replica A has now completed from committed repository
+`3effefed781b88c2e71354d784db58eb787ed7e6`, exact config
+`d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`, and
+lock `8d865c8c710a61d7e37b8896b38166a1dcf121e40d17fbb1a47e948b4861bf6c`.
+After 256 warmup and 2,048 training episodes/32 updates, update 20 was selected
+at 9/10 wins, return `4.859680000000006`, core health `565.2`, and idle
+`0.021071738935729764`. Checkpoint/model hashes are `3bc4a3a1cc9c2ef4...` and
+`b9f592ffe58d1b86...`; both replay passes are bit-exact at
+`272dfb7a5793c1b79...`, with action-state `5ba7991a0dd10f0d...`, canonical
+full-run `356a2065c8c2001b...`, frontier `9955422e926e9557...`, and manifest
+`e61516546eabb0cf...`. The precommitted `>=9/10` and idle `<0.25` gate passes
+exactly. Run exact replica B next from the same commit/config/toolchain in an
+independent output and require governed digest reproduction. Dev-v34 and
+held-out-v5 remain unconsumed; do not run scorecard, confirmation, or final
+episodes. M8.5 remains unmet.
+
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.

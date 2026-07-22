@@ -166,7 +166,33 @@ and two episodes; the negative control detects a one-line `MINE` mutation. All
 `d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`; the
 temporary, uncommitted report hashes to
 `e44865297a31ab1625bf4a43116cf1ff712b96657043c200c0af629ddd4f59bf`.
-Dev-v34 and held-out-v5 remain unconsumed, and no baseline episode or model work
-has begun. M8.5 remains unmet. Replica A and fresh reusable baselines are next;
-replica B is permitted only if replica A reaches at least 9/10 construction
-wins with mean idle below `0.25`.
+At that implementation checkpoint, dev-v34 and held-out-v5 remained unconsumed,
+and no baseline episode or model work had begun. Replica B remained prohibited
+unless replica A reached at least 9/10 construction wins with mean idle below
+`0.25`.
+
+V38 replica A subsequently completed from committed repository
+`3effefed781b88c2e71354d784db58eb787ed7e6` with the exact config above and
+lock SHA-256
+`8d865c8c710a61d7e37b8896b38166a1dcf121e40d17fbb1a47e948b4861bf6c`.
+It completed 256 warmup episodes, 2,048 training episodes, and all 32 updates.
+The governed selector chose update 20 at 9/10 construction wins, mean return
+`4.859680000000006`, mean core health `565.2`, and mean idle
+`0.021071738935729764`. The checkpoint and model-state SHA-256 digests are
+`3bc4a3a1cc9c2ef4450e20c689c3909a8bf9ae8ba35b194e8710df1acf737b5e` and
+`b9f592ffe58d1b866f200cd3544a2ecfd48f6d662f517aece3dffa745fa66540`.
+Both replay passes are bit-exact at
+`272dfb7a5793c1b79be95ce9b7e2407c3752cb6ee183cf9440dbe388ee4553af`;
+the action-state digest is
+`5ba7991a0dd10f0d857c5fcbf75ccbbb573eb7a7c59b975967c3432463f3c68c`,
+the canonical full-run digest is
+`356a2065c8c2001ba6e9b2b480949e0c4ff3fdfd39b88ac8747c49e2838f57a2`,
+the frontier SHA-256 is
+`9955422e926e955700370f6dcf792c1c1054e6501e8b5b46afb151911ea78c7b`,
+and the manifest SHA-256 is
+`e61516546eabb0cf35d53f699c1e24fa20f214f9a534678cf69ff5361ecd63ad`.
+Replica A therefore passes the precommitted gate exactly: wins are at the
+`>=9/10` floor and idle is below `0.25`. Exact replica B is now authorized from
+the same repository commit, config, and toolchain in an independent output.
+Dev-v34 and held-out-v5 remain unconsumed; no scorecard, confirmation, or final
+episode has run. M8.5 remains unmet.
