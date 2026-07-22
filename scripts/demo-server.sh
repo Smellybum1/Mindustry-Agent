@@ -114,6 +114,14 @@ if [[ "${DEMO_HUMAN_CONTROL:-0}" == "1" || "${DEMO_HUMAN_CAPTURE:-0}" == "1" ]];
         "$PY" -m mindustry_agents.tools.human_session \
             --session "$CAPTURE_FILE" \
             --population "$ROOT/configs/partners/human-scripted-v1.json"
+        SCORECARD_FILE="$RUNTIME/human-scorecard.json"
+        "$PY" -m mindustry_agents.tools.human_scorecard \
+            --session "$CAPTURE_FILE" \
+            --output "$SCORECARD_FILE"
+        [[ -s "$SCORECARD_FILE" ]] || {
+            echo "demo-server: human scorecard was not written" >&2
+            exit 1
+        }
     fi
     echo "demo-server: HUMAN CONTROL OK"
     exit 0

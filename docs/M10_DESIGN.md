@@ -236,6 +236,19 @@ Two fresh deterministic probe JVMs reproduce the complete capture digest
 and control schedule digest
 `d30d529355b07ce18c45d074f58a11d4c444b3dff0a2ec70b89bfeb8cbbef6ce`.
 
+M10.4 scorecard v1 is derived only from capture structure. Intervention rate
+uses unique accepted-control ticks intersecting trajectory boundaries; plan
+conflicts use `yield_to_human`; presence additions pair FIFO with conflict
+events for yield latency; cancelled-before-completion goals are excluded from
+goal compliance; and task-ID help requests pair with `help_fulfilled`. Human
+announcement usefulness, team preference, scripted-team comparison, and
+serious-session status may enter only through a separate schema-v1 rating file
+bound to the session content SHA-256. The writer refuses overwrite and the
+probe supplies no rating. See `docs/HUMAN_SESSIONS.md`.
+The deterministic probe currently yields 5/83 intervention ticks, one conflict
+with zero-tick yield latency, 1/1 eligible goal compliance, no observed help
+request, and 10 rendered/four suppressed announcements.
+
 ## Acceptance gates
 
 M10.1 is complete only when all of the following pass:

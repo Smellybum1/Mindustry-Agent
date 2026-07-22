@@ -46,7 +46,7 @@ help: ## List available targets
 	@echo "  training-gate WSL2 event collector + inference + 10k resets (M8.3)"
 	@echo "  train-selector WSL2 audited one-seat PPO + exact checkpoint replay (M8.4)"
 	@echo "  demo-server   human-joinable real-time server (M6/M10)"
-	@echo "  human-session-check opt-in M10.3 capture/replay/profile gate"
+	@echo "  human-session-check M10.3 capture/replay + M10.4 scorecard gate"
 
 codex-status: ## Print compact read-only takeover status
 	@bash $(SCRIPTS)/codex-status.sh

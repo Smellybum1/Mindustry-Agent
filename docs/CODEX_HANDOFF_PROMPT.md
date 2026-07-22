@@ -360,7 +360,7 @@ determinism, the 664-checkpoint/16,200-tick golden and negative replay, and all
 44 exact-config reward adversaries (`272ac291ef143fa6...`). The primary-only
 freezer/freeze commits are `3e328ce91e` / `949b73f987`; dev-v38 membership/
 receipt hashes are `3f4b0d012cf87303...` / `fea431ae993d1072...`. The receipt
-records zero membership reads and no values emitted; the full suite passes 254
+records zero membership reads and no values emitted; the full suite passes 257
 tests. Exact pinned-toolchain replicas from training commit `12980ee2b9` both
 select update 2 at 9/10 wins, return `4.73976`, core `568.8`, and idle
 `0.03455784384563236`; all 32 checkpoint files and the canonical comparator are

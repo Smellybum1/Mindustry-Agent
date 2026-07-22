@@ -2037,11 +2037,14 @@ are complete; opt-in session capture is next.
   deterministic control replay/statistics, and all five executable profiles are
   complete; actual population activation remains blocked on M8 promotion and
   M9 authorization, so the M10 exit checkbox remains open.
-- 10.4 Teammate scorecard v1 (human terms): human intervention rate, plan
+- **IN PROGRESS (objective derivation/rating protocol implemented 2026-07-23; real sessions pending) — 10.4 Teammate scorecard v1 (human terms):** human intervention rate, plan
   conflicts per session, yield latency, goal-compliance rate, time-to-help on
   human requests, announcement usefulness rating, post-session preference
   ("keep this team?" + comparative rating vs scripted team). Session protocol
-  documented; results logged per session in runs/.
+  documented; results logged per session in runs/. The create-new local tool
+  derives every objective field from capture and accepts only an explicit,
+  digest-bound rating file. The deterministic probe leaves ratings null; real
+  serious sessions and human-entered ratings are still required.
 - 10.5 Learned policy in the demo seat: latency budget (decision within one
   real-time tick), safety invariants live (stop/pause instant, autonomy
   levels honored), fallback to scripted brain on policy-process failure.

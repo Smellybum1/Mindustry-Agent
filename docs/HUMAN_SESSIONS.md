@@ -37,6 +37,16 @@ PYTHONPATH=python/src python -m mindustry_agents.tools.human_session \
   --population configs/partners/human-scripted-v1.json
 ```
 
+Create the objective M10.4 scorecard without asserting any human rating:
+
+```bash
+PYTHONPATH=python/src python -m mindustry_agents.tools.human_scorecard \
+  --session runs/human-session-001.jsonl \
+  --output runs/human-session-001.scorecard.json
+```
+
+Both capture and scorecard output are create-new and refuse overwrite.
+
 ## Capture schema v1
 
 Every line has `capture_schema_version`, `record_type`, and simulation `tick`.
@@ -75,3 +85,49 @@ the deterministic fast-expert, slow-beginner, cautious, plan-changer, and
 help-requester models. They are **staged, not activated**: M9 training remains
 closed until the M8 promotion gate authorizes it. No held-out or confirmation
 membership is read by capture, validation, statistics, or profile execution.
+
+## Human teammate scorecard v1
+
+The objective scorecard uses only captured structure:
+
+- human intervention rate is the fraction of trajectory-boundary ticks with at
+  least one accepted human control;
+- plan conflicts are `yield_to_human` coordination events;
+- yield latency pairs human-presence additions FIFO with later conflict events;
+- goal compliance counts completed human goals over goals that were not
+  cancelled before completion (unresolved uncancelled goals remain eligible);
+- time-to-help pairs `REQUEST_HELP` intent by task ID with `help_fulfilled`;
+- rendered and quiet-suppressed announcement counts come from recorded render
+  status, not reconstructed chat text.
+
+Human judgments live in a separate local JSON file and are never inferred. A
+rating file must match this exact schema and capture digest:
+
+```json
+{
+  "schema": "human_session_rating_v1",
+  "version": 1,
+  "session_content_sha256": "<64 lowercase hex characters from session_end>",
+  "announcement_usefulness_rating": 4,
+  "keep_this_team": true,
+  "comparative_rating_vs_scripted": 1,
+  "serious_session": true
+}
+```
+
+Announcement usefulness is an integer from 1 (not useful) to 5 (very useful).
+Comparison is -2 (much worse than the scripted team), -1, 0 (same), 1, or 2
+(much better). `serious_session` distinguishes north-star evidence from a smoke
+test. Bind and write the rated scorecard with:
+
+```bash
+PYTHONPATH=python/src python -m mindustry_agents.tools.human_scorecard \
+  --session runs/human-session-001.jsonl \
+  --rating runs/human-session-001.rating.json \
+  --output runs/human-session-001.scorecard.json
+```
+
+The rating file contains no free-text field, identity, or secret. Real ratings
+must be entered by the human after play; the probe deliberately emits
+`rating_status=not_provided` and cannot satisfy the project-owner preference
+exit criterion.

@@ -19,7 +19,7 @@ and what is unverified.
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
   client, parallel-env facade, vector collector) is stdlib-only too. The
   governed **33-test core boundary passes under `python -S`** with no third-party
-  packages; the complete dev/RL suite passes all **254 tests** (verified
+  packages; the complete dev/RL suite passes all **257 tests** (verified
   2026-07-23).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
   machine (JDK 21 Temurin, Python 3.12.5, Git 2.46). Verified working in Git Bash.
@@ -1929,6 +1929,15 @@ repository-evidence mapping used for the M6 audit is:
   `d30d529355b07ce1...` exactly. Five executable scripted partner profiles
   are versioned in `configs/partners/human-scripted-v1.json`; they remain staged,
   not active in training, because M8 has not authorized M9.
+  M10.4's objective scorecard substrate is also implemented. It derives human
+  intervention rate, plan conflicts, yield latency, goal compliance,
+  time-to-help, and announcement counts from authoritative capture records.
+  Optional usefulness/preference/comparison/serious-session judgments require a
+  separate human-entered schema-v1 rating whose session digest must match; the
+  create-new writer refuses overwrite. The no-port gate deliberately reports
+  `rating_status=not_provided`, with 5/83 intervention ticks, one conflict at
+  zero-tick yield latency, 1/1 eligible goal compliance, and 10 rendered/four
+  suppressed announcements. No human preference result is claimed.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,
@@ -1965,7 +1974,7 @@ repository-evidence mapping used for the M6 audit is:
   reproducible five-package dev lock, runs `make test`, and builds the custom
   distributions. The inherited upstream workflows are guarded to run only in
   `Anuken/Mindustry`, so this fork never follows their Arc `master` checkout.
-  Local equivalents pass (254 Python tests, Java suites/custom-module compile,
+  Local equivalents pass (257 Python tests, Java suites/custom-module compile,
   and distributions). A detached clean Ubuntu 24.04 worktree at `43d3b17db6`
   also passed literal `make bootstrap && make test` with an isolated JDK
   21.0.11, GNU Make 4.3, empty Gradle cache, and the 33-test zero-dependency
