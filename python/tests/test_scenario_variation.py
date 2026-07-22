@@ -1841,3 +1841,23 @@ def test_v39_partner_intent_coordinate_and_confirmation_umbrella_are_frozen():
     assert final_umbrella["replacement_final"]["membership_state_at_reservation"] == (
         "not_created"
     )
+    final_path = evaluation_dir / "bootstrap-defense-v1-held-out-v6.json"
+    final_freeze_path = evaluation_dir / "m8-selector-v39-held-out-v6-freeze.json"
+    assert final_path.is_file()
+    final_freeze = json.loads(final_freeze_path.read_text(encoding="utf-8"))
+    assert final_freeze["schema"] == "m8_final_seed_freeze_v1"
+    assert final_freeze["status"] == "membership_frozen_unconsumed"
+    assert final_freeze["values_emitted"] is False
+    assert final_freeze["membership_documents_read"] == 0
+    assert final_freeze["confirmation_membership_read"] is False
+    assert final_freeze["retired_final_membership_read"] is False
+    assert final_freeze["set"]["seed_set_id"] == (
+        "bootstrap-defense-v1-held-out-v6"
+    )
+    assert final_freeze["set"]["count"] == 160
+    assert final_freeze["set"]["sha256"] == (
+        "2bf4aa04ef54d873e961ff367db849c14c72b83bb4d280c4e31ba75bdeefa51c"
+    )
+    assert hashlib.sha256(final_freeze_path.read_bytes()).hexdigest() == (
+        "4f31a7078e5cd45628c4c8e25843b7baac4c598c40782870942ec9559d3b9d3e"
+    )

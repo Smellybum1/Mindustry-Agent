@@ -269,7 +269,7 @@ reserves dev-v35 for primary-only construction after the precommit; never
 delegate or render its membership. Replica A remains prohibited until all
 implementation gates pass, and dev-v35 remains prohibited until exact replicas
 and strict reusable scorecards pass. Dev-v34 and held-out-v5 are retired;
-held-out-v6 is reserved but not yet created. Do not inspect any membership or
+held-out-v6 is frozen value-free and unconsumed. Do not inspect any membership or
 run confirmation/final episodes. Keep ADR-0051 unchanged.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,

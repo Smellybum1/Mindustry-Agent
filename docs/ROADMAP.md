@@ -1783,8 +1783,10 @@ with zero membership reads. Held-out-v5 is retired without outcomes and a new
 committed umbrella reserves held-out-v6 in a disjoint no-read namespace.
 Focused feature/parity checks, public 5/5 survival/staging, suites, smoke,
 determinism, replay controls, and the initial exact-config reward gate pass.
-The revised-hash 44/44 reward gate passes; only the value-free held-out-v6
-freeze remains before model work. M8.5 remains unmet.
+The revised-hash 44/44 reward gate passes. Held-out-v6 is frozen value-free with
+zero membership reads and remains unconsumed; its receipt/membership hashes are
+`4f31a7078e5cd456...` / `2bf4aa04ef54d873...`. Replica A is authorized; M8.5
+remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

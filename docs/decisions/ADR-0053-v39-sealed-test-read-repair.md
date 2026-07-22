@@ -45,3 +45,11 @@ emitted values. It remains frozen and unconsumed.
   runtime code changed.
 - No model work may begin until the replacement-final umbrella and freezer are
   committed and held-out-v6 is frozen value-free.
+
+The primary-only freezer was committed at `dbb3955ab9` before construction.
+Its value-free receipt records zero membership reads and no confirmation or
+retired-final access. The receipt SHA-256 is
+`4f31a7078e5cd45628c4c8e25843b7baac4c598c40782870942ec9559d3b9d3e`;
+held-out-v6 membership SHA-256 is
+`2bf4aa04ef54d873e961ff367db849c14c72b83bb4d280c4e31ba75bdeefa51c`.
+Held-out-v6 remains unconsumed and no values were emitted.

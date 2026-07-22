@@ -788,7 +788,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   The value-free umbrella reserved dev-v35 for primary-only construction after
   the precommit. Dev-v34 remains retired;
   held-out-v5 is retired without outcomes after a legacy test manifest read;
-  held-out-v6 is reserved but not yet created. Dev-v35 is frozen value-free and
+  held-out-v6 is frozen value-free and unconsumed. Its receipt/membership hashes
+  are `4f31a7078e5cd456...` / `2bf4aa04ef54d873...`. Dev-v35 is frozen value-free and
   unconsumed. M8.5 remains unmet. Implementation passes 198 Python tests,
   pinned Java, public/runtime/replay gates, and the revised 44/44 reward gate;
   the ignored report hashes to
@@ -955,13 +956,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement ADR-0052's exact partner-intent duplication-risk feature.** Do
-   not add masking, redirects, action changes, a feature dimension, or reward.
-2. **Run focused disabled-feature parity plus the complete public/reward/runtime
-   gates.** Preserve ADR-0051's direct-loading/provenance contract.
-3. **Commit and run the primary-only held-out-v6 freezer without opening any
-   membership.** The revised-config reward gate already passes. Dev-v35 is frozen
-   unconsumed; held-out-v5 is retired without outcomes.
+1. **Begin V39 replica A from the exact committed config/toolchain.** The revised
+   reward gate passes; dev-v35 and held-out-v6 are frozen unconsumed. Replica B
+   remains prohibited until A reaches the frozen construction/idle gate.
+2. **If replica A passes, run exact replica B and compare every governed digest.**
+3. **Only exact twins may refresh permanent baselines and run reusable dual
+   scorecards.** Preserve ADR-0051's direct-loading/provenance contract.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.

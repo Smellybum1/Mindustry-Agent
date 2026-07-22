@@ -1713,8 +1713,10 @@ repository-evidence mapping used for the M6 audit is:
   A value-free umbrella reserves dev-v35 for primary-only construction after
   this precommit. Dev-v35 is now frozen value-free with zero membership reads
   and remains unconsumed. Held-out-v5 is retired without outcomes; a committed
-  replacement umbrella reserves held-out-v6 in a disjoint no-read namespace.
-  Replica A, confirmation consumption, and final access are not yet authorized.
+  replacement umbrella now freezes held-out-v6 in a disjoint no-read namespace.
+  Its value-free receipt hashes to `4f31a7078e5cd45628c4c8e25843b7baac4c598c40782870942ec9559d3b9d3e`;
+  membership SHA is `2bf4aa04ef54d873e961ff367db849c14c72b83bb4d280c4e31ba75bdeefa51c`.
+  Confirmation consumption and final access remain prohibited.
   M8.5 remains unmet. The implementation passes 198 Python tests, pinned Java,
   public 5/5 survival/staging, smoke, determinism/replay controls, and 44/44
   exact-config reward adversaries for the revised hash. The ignored revised

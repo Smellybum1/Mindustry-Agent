@@ -621,8 +621,9 @@ The value-free confirmation umbrella reserves dev-v35. Dev-v35 membership
 may be constructed only by the primary agent after this precommit is committed,
 and may not be consumed until exact replicas and strict reusable scorecards
 pass. Dev-v35 is frozen unconsumed with zero prior membership reads. A legacy
-test read retired held-out-v5 without outcomes; ADR-0053 reserves held-out-v6
-in a separate no-read namespace.
+test read retired held-out-v5 without outcomes; ADR-0053 freezes held-out-v6
+value-free in a separate no-read namespace. Neither dev-v35 nor held-out-v6
+may be consumed before its frozen one-way gate.
 
 ## M8.1 acceptance review
 
