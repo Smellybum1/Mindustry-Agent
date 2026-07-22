@@ -38,6 +38,7 @@ from mindustry_agents.training.ppo_selector import (
     _canonical_scripted_action,
     _configure_torch,
     _git_evidence,
+    _partner_intent_duplication_risk,
     _policy_logit_adjustment,
     _scripted_partner_opening,
     _scripted_index,
@@ -435,6 +436,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
+    partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     lineage = validate_lineage_manifest(
         manifest_path=args.lineage_manifest,
         config_path=args.config,
@@ -512,6 +514,9 @@ def main(argv: list[str] | None = None) -> int:
                         quality_reward=config.get("quality_reward"),
                         policy_logit_adjustment=policy_logit_adjustment,
                         scripted_partner_opening=scripted_partner_opening,
+                        partner_intent_duplication_risk=(
+                            partner_intent_duplication_risk
+                        ),
                     )
                 else:
                     rollout = rollout_control_episode(

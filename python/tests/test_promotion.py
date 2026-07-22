@@ -29,6 +29,33 @@ def _record(policy, seed, win, score):
 
 
 class TestPromotion(unittest.TestCase):
+    def test_partner_intent_duplication_risk_uses_shared_validator(self):
+        from mindustry_agents.training.promotion import (
+            _partner_intent_duplication_risk,
+        )
+
+        intervention = {
+            "schema": "fixed_partner_selected_task_duplication_risk_v1",
+            "agent_ids": [1, 2],
+            "match": "task_id",
+            "feature": "utility_features.duplication_risk",
+            "value": 1.0,
+        }
+        self.assertEqual(
+            _partner_intent_duplication_risk(
+                {"partner_intent_duplication_risk": intervention}
+            ),
+            intervention,
+        )
+
+        malformed = dict(intervention, match="task_type")
+        with self.assertRaisesRegex(
+            ValueError, "invalid partner_intent_duplication_risk config"
+        ):
+            _partner_intent_duplication_risk(
+                {"partner_intent_duplication_risk": malformed}
+            )
+
     def test_matched_control_canonicalizes_catalog_wait_before_indexing(self):
         from mindustry_agents.training.promotion import _canonical_control_action
 
