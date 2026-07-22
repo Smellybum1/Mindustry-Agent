@@ -1161,6 +1161,16 @@ public final class CoordinationAdapter{
         return false;
     }
 
+    /** Whether another seat owns any live schematic build at this boundary. */
+    public boolean liveBuildSchematicOwnedByOther(int agentIndex){
+        AgentId self = AgentId.of(agentIndex);
+        for(TaskState state : board().tasks()){
+            if(!state.terminal() && state.spec().type() == TaskType.BUILD_SCHEMATIC
+                && state.owner() != null && !state.owner().equals(self)) return true;
+        }
+        return false;
+    }
+
     private void rememberTransition(int agentIndex, TaskSpec task, long tick, boolean failed){
         if(agentIndex < 0 || agentIndex >= previousTasks.length) return;
         previousTasks[agentIndex] = task;

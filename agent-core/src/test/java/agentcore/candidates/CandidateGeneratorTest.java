@@ -136,6 +136,52 @@ class CandidateGeneratorTest{
             .noneMatch(candidate -> candidate.task().taskId().contains(":stage:")));
     }
 
+    @Test void partnerOwnedSchematicExposesLearnedSeatStagingBesideOrdinaryWork(){
+        CandidateWorldSnapshot world = quietWorldWithOrdinaryWork(1200f, 0);
+        CandidateSet candidates = new CandidateGenerator().generate(
+            AGENT, world, UTILITY, true);
+
+        assertTrue(candidates.candidates().stream()
+            .anyMatch(candidate -> candidate.task().type() == TaskType.HARVEST_RESOURCE));
+        TaskSpec staging = stagingCandidate(candidates).task();
+        assertEquals("T5:stage:east_lane:wave-1:agent-0:at-50", staging.taskId());
+        assertEquals(1.0, staging.priority(), 1e-12);
+        assertFalse(staging.exclusive());
+    }
+
+    @Test void defaultGenerationRemainsUnchangedBesideOrdinaryWork(){
+        CandidateWorldSnapshot world = quietWorldWithOrdinaryWork(1200f, 0);
+
+        assertArrayEquals(
+            new CandidateGenerator().generate(AGENT, world, UTILITY).canonicalBytes(),
+            new CandidateGenerator().generate(AGENT, world, UTILITY, false).canonicalBytes());
+        assertTrue(new CandidateGenerator().generate(AGENT, world, UTILITY).candidates().stream()
+            .noneMatch(candidate -> candidate.task().taskId().contains(":stage:")));
+    }
+
+    @Test void partnerOwnedSchematicNeverExposesStagingToScriptedSeat(){
+        AgentSnapshot partner = new AgentSnapshot(AgentId.of(1),
+            100f, 100f, 1000f, ALL_CAPABILITIES);
+        CandidateSet candidates = new CandidateGenerator().generate(
+            partner, quietWorldWithOrdinaryWork(1200f, 0), UTILITY, true);
+
+        assertTrue(candidates.candidates().stream()
+            .noneMatch(candidate -> candidate.task().taskId().contains(":stage:")));
+    }
+
+    @Test void partnerOwnedSchematicDoesNotStageDuringCombatOrAtDefendLead(){
+        CandidateGenerator generator = new CandidateGenerator();
+        CandidateSet combat = generator.generate(
+            AGENT, quietWorldWithOrdinaryWork(1200f, 1), UTILITY, true);
+        CandidateSet defendLead = generator.generate(
+            AGENT, quietWorldWithOrdinaryWork(600f, 0), UTILITY, true);
+
+        assertTrue(combat.candidates().stream()
+            .noneMatch(candidate -> candidate.task().taskId().contains(":stage:")));
+        assertTrue(defendLead.candidates().stream()
+            .noneMatch(candidate -> candidate.task().taskId().contains(":stage:")));
+    }
+
     @Test void proactiveDefenseStagingIsScopedToTheLearnedSeat(){
         AgentSnapshot partner = new AgentSnapshot(AgentId.of(1),
             100f, 100f, 1000f, ALL_CAPABILITIES);
@@ -259,6 +305,32 @@ class CandidateGeneratorTest{
             0, 260f, 196f, "defense_block",
             0, timeToNextWave, defense(1.0, 0.0), 300f, 196f, "east_lane"
         );
+    }
+
+    private static CandidateWorldSnapshot quietWorldWithOrdinaryWork(
+        float timeToNextWave,
+        int enemyCount
+    ){
+        CandidateWorldSnapshot world = activeWorld(List.of());
+        return new CandidateWorldSnapshot(
+            world.tick(), world.tileSize(), world.harvestTaskId(), world.buildLineTaskId(),
+            world.schematicTaskId(), world.supplyTaskId(), world.rebuildTaskId(),
+            world.defendTaskId(), world.coreCopper(), world.harvestCopperThreshold(),
+            world.buildLineComplete(), world.economy(), world.buildLineCopperCost(),
+            world.schematicComplete(), world.schematicCopperCost(), world.harvestWorldX(),
+            world.harvestWorldY(), world.buildLineWorldX(), world.buildLineWorldY(),
+            world.buildLineId(), world.schematicWorldX(), world.schematicWorldY(),
+            world.schematicId(), world.waveNumber(), world.plannedSchematics(), world.turrets(),
+            world.turretTargetAmmo(), world.brokenBlockCount(), world.rebuildWorldX(),
+            world.rebuildWorldY(), world.rebuildRegionId(), enemyCount, timeToNextWave,
+            defense(0.0, 0.0), world.defendWorldX(), world.defendWorldY(),
+            world.defendRegionId());
+    }
+
+    private static TaskCandidate stagingCandidate(CandidateSet set){
+        return set.candidates().stream()
+            .filter(candidate -> candidate.task().taskId().contains(":stage:"))
+            .findFirst().orElseThrow();
     }
 
     private static TaskCandidate supplyCandidate(CandidateSet set){

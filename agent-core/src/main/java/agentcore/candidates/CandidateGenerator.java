@@ -39,6 +39,15 @@ public final class CandidateGenerator{
         CandidateWorldSnapshot world,
         TaskUtility utility
     ){
+        return generate(agent, world, utility, false);
+    }
+
+    public CandidateSet generate(
+        AgentSnapshot agent,
+        CandidateWorldSnapshot world,
+        TaskUtility utility,
+        boolean liveSchematicOwnedByOther
+    ){
         Objects.requireNonNull(agent, "agent");
         Objects.requireNonNull(world, "world");
         Objects.requireNonNull(utility, "utility");
@@ -132,7 +141,8 @@ public final class CandidateGenerator{
                 .exclusive(false).build(), world.defendWorldX(), world.defendWorldY()));
         }
 
-        if(agent.id().index() == 0 && pending.isEmpty() && world.enemyCount() == 0
+        if(agent.id().index() == 0 && (pending.isEmpty() || liveSchematicOwnedByOther)
+            && world.enemyCount() == 0
             && world.timeToNextWave() > defense.defendLeadTicks()){
             int stagingTicks = Math.max(1,
                 (int)Math.ceil(world.timeToNextWave() - defense.defendLeadTicks()));

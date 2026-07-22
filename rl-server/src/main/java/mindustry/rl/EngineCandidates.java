@@ -155,7 +155,10 @@ public final class EngineCandidates{
             agent.unit.stack().amount);
         HandTunedUtility utility = new HandTunedUtility(
             new EngineFeatureSource(scenario, registry, world, assignmentRange, coordination));
-        CandidateSet generated = generator.generate(snapshot, world, utility);
+        boolean liveSchematicOwnedByOther = coordination != null
+            && coordination.liveBuildSchematicOwnedByOther(agent.index);
+        CandidateSet generated = generator.generate(snapshot, world, utility,
+            liveSchematicOwnedByOther);
         return overlapProbe ? withOverlapProbe(generated) : generated;
     }
 
