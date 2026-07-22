@@ -1525,6 +1525,13 @@ V35-exact. Dev-v31 is retired unopened. Dev-v32 freezes globally disjoint roots
 governance, 161 Python tests, and all 44 exact-config reward adversaries pass.
 No V36 model work preceded the precommit. M8.5 remains unmet.
 
+From committed packet `f8b191c582`, V36's focused seat-1 positive/seat-0
+negative wake check, pinned Java build, and complete public candidate-policy
+gate pass; public survival is 5/5 with five proactive-staging starts. Smoke,
+cross-process/reset/seed determinism, the 16,200-tick golden replay, and the
+negative replay control also pass. Replica A is authorized. Dev-v32 and
+held-out-v4 remain unopened; M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

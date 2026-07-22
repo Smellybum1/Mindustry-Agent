@@ -1473,6 +1473,12 @@ repository-evidence mapping used for the M6 audit is:
   `285001..285160` and remains unopened; held-out-v4 stays sealed. Config/seed
   governance, 161 Python tests, and all 44 exact-config reward adversaries pass.
   No V36 model work has begun.
+- From committed V36 packet `f8b191c582`, the focused seat-1 positive/seat-0
+  negative wake check, pinned Java build, and complete public candidate gate
+  pass. Public survival is 5/5 and proactive staging starts in all five seeds.
+  Smoke, cross-process/reset/seed determinism, the 16,200-tick golden replay,
+  and negative replay pass. Replica A is authorized; dev-v32 and held-out-v4
+  remain unopened.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

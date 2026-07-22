@@ -130,9 +130,12 @@ remains sealed.
 ADR-0047 precommits V36. It changes only the existing tick-0 `+1.0` prior from
 `BUILD_SCHEMATIC` to `BUILD_LINE`; runtime/reward/teacher/training fields remain
 V35-exact. Config/seed governance, 161 Python tests, and all reward adversaries
-pass. Reverify inherited focused/public/Java, smoke, determinism, and negative
-replay from the committed packet before replica A. Dev-v32 is frozen at disjoint
-roots `285001..285160` but unopened; held-out-v4 remains sealed.
+pass. From committed packet `f8b191c582`, inherited focused/public/Java, smoke,
+cross-process/reset/seed determinism, the 16,200-tick golden replay, and negative
+replay all pass. Replica A is authorized and must be trained from scratch under
+the exact V36 config; require at least 9/10 reusable wins and mean idle below
+0.25 before replica B. Dev-v32 is frozen at disjoint roots `285001..285160` but
+unopened; held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

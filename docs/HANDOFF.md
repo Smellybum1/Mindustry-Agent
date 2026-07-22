@@ -801,16 +801,17 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run V36's inherited pretraining gates.** ADR-0047 changes only the
-   training-time tick-0 prior to `BUILD_LINE`; config/seed governance, 161 Python
-   tests, and reward adversaries already pass. Reverify focused/public/Java,
-   smoke, determinism, and negative replay from the committed packet.
-2. **Construct replica A only if every gate stays green.** Retrain from scratch
-   under the exact V36 config; require at least 9/10 reusable wins and idle below
-   0.25 before replica B. Keep dev-v32 and held-out-v4 sealed.
-3. **Keep held-out-v4 sealed.** Dev-v29 and dev-v30 are retired unopened; freeze
-   a new disjoint confirmation set but do not open it before exact replicas and
-   both reusable scorecards pass. No successor may
+1. **Construct V36 replica A.** From committed packet `f8b191c582`, every
+   inherited pretraining gate is green: focused/public/Java, smoke, determinism,
+   16,200-tick golden replay, and negative replay. Retrain from scratch under the
+   exact V36 config; require at least 9/10 reusable wins and idle below 0.25
+   before replica B.
+2. **Construct and prove replica B only if A clears that floor.** Require exact
+   checkpoint/frontier/model/replay/teacher/full-run/direct-lineage parity before
+   any scorecard can advance.
+3. **Refresh permanent baselines and run both reusable scorecards.** Keep
+   dev-v32 and held-out-v4 sealed until permanent-greedy and matched-greedy
+   scorecards both pass. No successor may
    open a new confirmation set without exact replicas,
    reusable dual-scorecard parity, and its own one-way confirmation pass.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
@@ -826,7 +827,8 @@ and records V33's targeted secondary-seat staging rejection before model work;
 ADR-0045 precommits and records V34's all-seat claim-loss boundary rejection at
 the complete public candidate gate; ADR-0046 precommits and records V35's exact
 fixed-secondary-seat construction and reusable scorecard rejection; ADR-0047
-precommits V36's collision-free build-line opening prior.
+precommits V36's collision-free build-line opening prior and records all
+inherited pretraining gates green from committed packet `f8b191c582`.
 
 ## Deviations from the brief in this scaffold
 

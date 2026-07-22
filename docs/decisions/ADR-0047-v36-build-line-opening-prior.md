@@ -1,6 +1,6 @@
 # ADR-0047: V36 collision-free build-line opening prior
 
-**Status:** Accepted
+**Status:** Accepted; pretraining gates verified
 
 ## Context
 
@@ -81,3 +81,10 @@ hashes to
 `ccb5ede0e0efda855d125063371aa0121d2488bff629d218210f01f6a0e20400`.
 No V36 model work, dev-v32 evidence, or held-out evidence preceded this
 precommit.
+
+From committed packet `f8b191c582`, the inherited fixed-seat wake check,
+pinned Java build, and complete public candidate-policy gate pass. The public
+gate survives 5/5 seeds with proactive staging beginning in all five. Smoke,
+cross-process/reset/seed determinism, the 16,200-tick golden scripted replay,
+and its deliberate-mismatch negative control also pass. V36 replica A is
+therefore authorized under decision 4; dev-v32 and held-out-v4 remain unopened.
