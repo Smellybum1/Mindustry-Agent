@@ -88,3 +88,18 @@ hashes to
 `a126ca2424341732bdd17dcac469e48200efc1c4365eadea3bc97f353edadaa5`.
 No V35 runtime implementation, live outcome, teacher collection, model work,
 dev-v31 evidence, or held-out evidence preceded this precommit.
+
+## Implementation checkpoint
+
+The adapter implements Decision 2 with a fixed `agent.index == 1` guard at
+final pending-selection resolution. `secondary-claim-wake-check` finds real
+exclusive contests from the live authoritative catalog and proves both sides of
+the contract: seat 1 loses `T1:harvest:copper:at-0` to seat 2 and returns
+`claim_lost` after one fixed tick, while seat 0 loses the same task to seat 1
+without triggering a boundary. In both cases the winner alone owns the running
+task and no synthetic `CLAIM_LOST` board event exists.
+
+The pinned Java build passes. The complete public candidate command also passes
+5/5 with all five proactive-staging starts restored; core health by seed is
+`[299,1100,263,1091,1091]`. Smoke, determinism, and negative replay remain hard
+gates to run from the committed implementation packet before model work.

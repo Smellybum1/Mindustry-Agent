@@ -114,11 +114,12 @@ reusable defect is scripted seat 1. The experiment was removed and V32 rebuilt;
 its complete gate again passes.
 
 ADR-0046 precommits V35's fixed-seat correction. Wake only scripted seat 1 on
-final atomic `claim_lost`; seat 0 and seat 2 must preserve V32 scheduling. Add a
-focused live check for both positive seat-1 and negative seat-0 behavior, then
-run pinned Java, the complete public gate including staging, smoke, determinism,
-and negative replay before model work. Dev-v31 is frozen at disjoint roots
-`284001..284160` but unopened; held-out-v4 remains sealed.
+final atomic `claim_lost`; seat 0 and seat 2 preserve V32 scheduling. The focused
+positive seat-1/negative seat-0 check, pinned Java build, and complete public
+gate already pass; public survival is 5/5 with all five staging starts restored.
+Commit the implementation packet, then run smoke, determinism, and negative
+replay before model work. Dev-v31 is frozen at disjoint roots `284001..284160`
+but unopened; held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

@@ -141,6 +141,16 @@ With stop-on-event enabled the response returns on that release tick; it must
 not advance until an unrelated wave, damage, or task event while the seat has no
 assignment.
 
+During M8's single-learned-seat deployment, a mask-valid simultaneous exclusive
+selection from fixed scripted seat 1 that loses final atomic resolution returns
+`accepted=false, reason=claim_lost` and emits structured decision boundary
+reason `claim_lost`. It does not create a loser assignment or synthetic board
+event and is not an invalid action. With stop-on-event enabled and at least one
+tick requested, the server advances exactly one fixed engine tick before
+returning. Identical losses from learned seat 0 and scripted seat 2 retain the
+V32 scheduling contract; M9 must revisit the fixed-seat scope when all seats are
+learned.
+
 **`agent_actions[]` entry (M3, additive — docs/M3_DESIGN.md D5):**
 
 ```json

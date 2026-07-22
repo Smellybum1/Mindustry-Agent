@@ -1446,6 +1446,12 @@ repository-evidence mapping used for the M6 audit is:
   held-out-v4 stays sealed. Config/seed governance, 160 Python tests, and all 44
   exact-config reward adversaries pass. Implementation and pretraining gates are
   next; no V35 model work has begun.
+- V35's implementation checkpoint passes the focused fixed-seat live check,
+  pinned Java build, and complete public candidate gate. Seat 1 wakes after one
+  tick on a real harvest `claim_lost`; seat 0 loses the same task without a
+  boundary. Winner ownership remains authoritative and no fake board event is
+  emitted. The public gate is 5/5 with all five proactive-staging starts
+  restored. Smoke, determinism, and negative replay remain before model work.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

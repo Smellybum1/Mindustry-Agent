@@ -13,7 +13,8 @@ SCRIPTS := scripts
 
 .PHONY: help codex-status bootstrap build test test-java test-python smoke \
         determinism stress-reset benchmark scripted-demo evaluate-scripted \
-        candidate-policy-check coordination-parity adaptive-planning-check \
+        candidate-policy-check secondary-claim-wake-check coordination-parity \
+        adaptive-planning-check \
         scenario-variation-check evaluate-ladder verify-rl-boundary \
         training-gate demo-server
 
@@ -32,6 +33,7 @@ help: ## List available targets
 	@echo "  scripted-demo headless public greedy team (M7.3)"
 	@echo "  evaluate-scripted five-seed greedy summaries (M7.3)"
 	@echo "  candidate-policy-check public greedy candidate-policy survival (M7.3)"
+	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
 	@echo "  adaptive-planning-check adaptive-vs-frozen variant probe (M7.4)"
 	@echo "  scenario-variation-check bounded scenario-v2 dev acceptance (M7.5)"
@@ -79,6 +81,9 @@ evaluate-scripted: ## Evaluate the public M7.3 greedy expert
 
 candidate-policy-check: ## Evaluate the public greedy candidate policy
 	@bash $(SCRIPTS)/candidate-policy-check.sh
+
+secondary-claim-wake-check: ## Verify V35's fixed-seat claim-loss boundary
+	@bash $(SCRIPTS)/secondary-claim-wake-check.sh
 
 coordination-parity: ## Shared fixed-step/demo decision parity (M7.2)
 	@bash $(SCRIPTS)/coordination-parity.sh

@@ -222,6 +222,7 @@ public final class CoordinationAdapter{
                 results[selection.actionIndex] = result(selection.agent.index, false,
                     "claim_lost", selection.actionType, selection.candidate.task().taskId());
                 duplicateWorkIncidents++;
+                if(selection.agent.index == 1) markDecision("claim_lost");
                 continue;
             }
             Skill skill = skillFor(selection.agent, selection.candidate.task());

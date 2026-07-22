@@ -665,6 +665,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-21. |
 | `make determinism` | Runs the legacy 79-boundary cross-process replay, reset purity with deterministic unique episode IDs, seed sensitivity, then the checked-in golden (664 checkpoints / 16,200 ticks / two wins). Exit 0. Verified 2026-07-21; `REPLAY_NEGATIVE=1` also passes. |
 | `make candidate-policy-check` | Runs the pure public greedy selector over all five pinned seeds; requires 5/5 wins through the ordinary candidate/mask/task-action seam. Verified 2026-07-21. |
+| `make secondary-claim-wake-check` | Proves V35 wakes fixed scripted seat 1 after atomic claim loss while preserving learned-seat scheduling. Verified 2026-07-22. |
 | `make coordination-parity` | Compares two complete recorded decision sequences, runs the fixed-step shared expert, then boots the no-port plugin and requires identical live-opening digest/count. Current result: 356 recorded decisions; live digest `1571…a6c2`, 43 selections. Verified 2026-07-21. |
 | `make adaptive-planning-check` | Runs adaptive-v1 and frozen M6 on fixed+delayed-loadout scenarios. Requires adaptive 2/2 wins, fixed frozen win, probe frozen loss, all four decision-event reasons, lower mean idle fraction (0.125 < 0.878), and lower defense-ready tick (817 < 5251). Verified 2026-07-21. |
 | `make scenario-variation-check` | Validates all scenario-v2 axes, disjoint seed governance, same-seed repeated/fresh-JVM reset and idle-through-wave hashes, frozen-dev adaptive survival, and an undefended v2 pathing/loss run. Current result: 8/10 wins (80%); held-out sets are refused. Verified 2026-07-21. |
@@ -800,13 +801,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement ADR-0046 exactly.** Wake only fixed scripted seat 1 after final
-   atomic claim loss. Preserve seat 0/2 scheduling, winner state, board history,
-   telemetry, and invalid-action treatment.
-2. **Pass every pretraining boundary before model work.** Require a focused live
-   check proving seat 1 wakes after one tick and seat 0 does not, then pinned
-   Java, complete 5/5 candidate including staging, smoke, determinism, and
-   negative replay from the committed packet.
+1. **Run V35's remaining committed pretraining gates.** Focused fixed-seat live,
+   pinned Java, and the complete 5/5 public candidate command already pass.
+   Run smoke, determinism, and negative replay from the implementation commit.
+2. **Begin replica A only if every gate stays green.** Use the exact V35 config
+   and pinned WSL2 runtime; require at least 9/10 construction wins and idle
+   below 0.25 before authorizing replica B.
 3. **Keep held-out-v4 sealed.** Dev-v29 and dev-v30 are retired unopened; freeze
    a new disjoint confirmation set but do not open it before exact replicas and
    both reusable scorecards pass. No successor may
