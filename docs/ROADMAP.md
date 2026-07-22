@@ -1458,6 +1458,20 @@ experiment was removed and the accepted V32 runtime restored; replica A never
 began. Dev-v29 remains unopened and is retired, held-out-v4 stays sealed, and
 M8.5 remains unmet.
 
+ADR-0045 precommits V34 from a fresh reusable-only V32 trace. In every one of
+the ten wins, scripted seat 1 loses a mask-valid simultaneous supply claim and
+then a harvest claim; the latter returns structured `claim_lost` at tick 254
+but does not wake stop-on-event, leaving the unassigned seat idle until the
+unrelated tick-660 economy boundary. V34 preserves V32's complete task catalog,
+partner policy, learned policy, reward, teacher/training construction, and
+scorecards. It only exposes final atomic loss as structured decision boundary
+`claim_lost`, without assigning or penalizing the loser or synthesizing a board
+event. Dev-v29 is retired unopened. Dev-v30 freezes globally disjoint roots
+`283001..283160` and remains unopened; held-out-v4 stays sealed. Config/seed
+governance, 159 Python tests, and all 44 exact-config reward adversaries pass.
+No V34 runtime implementation, live outcome, or model work preceded the
+precommit. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

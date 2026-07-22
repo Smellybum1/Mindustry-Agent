@@ -102,8 +102,17 @@ ADR-0044 records V33's pretraining rejection. Reusable idle ticks by seat were
 1 only. The hard live boundary failed before training: seed 23456 lost at tick
 7593 and the gate was only 4/5. The experimental runtime edit was removed and
 the accepted V32 runtime restored. V33 is rejected, dev-v29 is retired unopened,
-and no model work began. Diagnose a non-disruptive reusable intervention and
-precommit it before implementation. Held-out-v4 remains sealed.
+and no model work began.
+
+ADR-0045 precommits V34 from the reusable trace at
+`runs/m8-selector-v32-partner-idle.json`. In all ten wins, seat 1's mask-valid
+harvest claim loses at tick 254 but does not advance the decision revision, so
+the unassigned seat remains idle until tick 660. Implement only the precommitted
+structured `claim_lost` wake: retain atomic winner state, create no loser
+assignment or fake board event, and charge no invalid penalty. Then run the
+pinned Java/live/public/smoke/determinism/negative-replay gates before any model
+work. Dev-v30 is frozen at disjoint roots `283001..283160` but unopened;
+held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

@@ -1418,6 +1418,18 @@ repository-evidence mapping used for the M6 audit is:
   so the gate fell to 4/5 even with seat 2 preserved. The experimental runtime
   edit was removed and V32 restored; no replica or model work began. Dev-v29 is
   retired unopened, held-out-v4 remains sealed, and M8.5 is unmet.
+- ADR-0045 precommits V34 from a fresh reusable-only V32 trace. Every dev-v1
+  win repeats the same seat-1 mask-valid supply and harvest claim losses; the
+  latter returns `claim_lost` at tick 254 without advancing the decision
+  revision, leaving the unassigned seat idle until tick 660. V34 preserves V32's
+  task catalog, partner/learned policies, reward, teacher/training construction,
+  and scorecards exactly. It only exposes final atomic loss as structured
+  decision boundary `claim_lost`, without assigning or penalizing the loser or
+  synthesizing a board event. Dev-v29 is retired unopened; dev-v30 freezes
+  disjoint roots `283001..283160` and remains unopened; held-out-v4 stays sealed.
+  Config/seed governance, 159 Python tests, and all 44 exact-config reward
+  adversaries pass. Runtime implementation and pretraining gates are next; no
+  V34 model work has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
