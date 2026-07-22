@@ -54,10 +54,10 @@ bootstrap: ## Verify/print toolchain versions (works today)
 build: ## Build Java modules + Python package
 	@bash $(SCRIPTS)/build.sh
 
-test: test-python ## All fast tests (Java pending harness wiring)
-	@echo "test: Python tests passed; Java test harness pending (see docs/ROADMAP.md#milestone-0)"
+test: test-python test-java ## All fast tests
+	@echo "test: Python and Java tests passed"
 
-test-java: ## JUnit tests (pending)
+test-java: ## JUnit tests and custom-module compile checks
 	@bash $(SCRIPTS)/test-java.sh
 
 test-python: ## Python unit tests

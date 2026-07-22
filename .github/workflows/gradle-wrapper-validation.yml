@@ -3,6 +3,7 @@ on: [push, pull_request]
 
 jobs:
   validation:
+    if: github.repository == 'Anuken/Mindustry'
     name: "Validation"
     runs-on: ubuntu-latest
     steps:

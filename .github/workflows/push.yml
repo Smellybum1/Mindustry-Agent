@@ -5,6 +5,7 @@ on: [push, workflow_dispatch]
 permissions: {}
 jobs:
   runPush:
+    if: github.repository == 'Anuken/Mindustry'
     permissions:
       contents: write # for Update bundles
 

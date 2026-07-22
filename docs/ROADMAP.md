@@ -1,7 +1,7 @@
 # Roadmap
 
 Milestones M0–M10 from brief §25, as trackable checklists with exit criteria.
-Checkboxes reflect **truthful** current state (date 2026-07-22). A box is ticked
+Checkboxes reflect **truthful** current state (date 2026-07-23). A box is ticked
 only when its exit criterion is genuinely met.
 
 Anchors used by `scripts/*.sh` and the Makefile are the GitHub-style slugs of the
@@ -19,14 +19,19 @@ Deliverables:
 - [x] Server build command verified (`./gradlew server:dist` green; jar boots
       headless and shuts down cleanly, 2026-07-20)
 - [x] Python project created (`python/pyproject.toml`, zero-dep core)
-- [ ] Python lockfile created
+- [x] Python lockfiles created (`requirements-rl-linux-py312.lock` for the
+      pinned CPU training runtime and `requirements-dev-linux-py312.lock` for
+      the CI test tools; both hash-locked and reproducible with uv 0.11.16)
 - [x] `AGENTS.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `STATUS.md`, `HANDOFF.md`
-- [ ] CI builds Java and runs basic Python tests
+- [ ] CI builds Java and runs basic Python tests (`coop-agent-ci.yml` is
+      implemented with SHA-pinned actions and hash-locked Python dependencies;
+      the first hosted run remains pending because this local task must not push)
 - [x] One-command bootstrap for reference runtime (`make bootstrap` / `scripts/bootstrap.sh`)
 
 Exit criteria:
-- [ ] Fresh checkout can run `make bootstrap` and `make test` (bootstrap ✔;
-      `make test` runs Python tests ✔, Java tests pending)
+- [ ] Fresh checkout can run `make bootstrap` and `make test` (bootstrap and
+      both underlying test scripts are green locally; literal `make test` awaits
+      the first Linux CI run because `make` is absent on the Windows host)
 - [x] Build does not depend on an unpinned `latest`
 - [x] Current upstream modifications are zero or documented (`docs/UPSTREAM_PATCHES.md`)
 

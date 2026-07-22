@@ -1,6 +1,6 @@
 # Status
 
-**Date:** 2026-07-21
+**Date:** 2026-07-23
 **Branch:** `coop-agent/v159.7`
 **Engine pin:** tag `v159.7`, commit `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`, Arc `208a754044`
 
@@ -1895,7 +1895,14 @@ repository-evidence mapping used for the M6 audit is:
   build + JUnit suite are now verified** (`./gradlew agent-core:test` → 108 tests
   green, including 31 M3/M4 skill tests). `agent-plugin:dist` and its isolated
   real-server acceptance probe are verified.
-- **No CI** configured yet.
+- **Project CI is configured but not yet hosted-run verified.**
+  `.github/workflows/coop-agent-ci.yml` uses SHA-pinned checkout/JDK/Python
+  actions on Ubuntu 24.04, installs the existing hash-locked RL runtime plus the
+  reproducible five-package dev lock, runs `make test`, and builds the custom
+  distributions. The inherited upstream workflows are guarded to run only in
+  `Anuken/Mindustry`, so this fork never follows their Arc `master` checkout.
+  Local equivalents pass (248 Python tests, Java suites/custom-module compile,
+  and distributions); the no-push rule leaves the first hosted run pending.
 - **RL lock is verified** for Linux CPython 3.12 CPU; core remains dependency
   free. Native Windows training, CUDA, and other Python/platform locks are not
   certified and require an explicit later decision.

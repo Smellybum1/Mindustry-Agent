@@ -145,6 +145,22 @@ purpose-specific, and listed here with reason and diff summary.** Never hand-edi
   having no observable effect. Placement effect/sound emission now requires
   `!headless`; graphical play is unchanged.
 
+### 7. `.github/workflows/{pr,push,gradle-wrapper-validation}.yml` — upstream-only guards
+
+- **Reason**: the inherited Mindustry workflows are designed for
+  `Anuken/Mindustry`; two fetch Arc from the moving `master` branch and all
+  exercise upstream build surfaces rather than this fork's pinned custom
+  modules and Python package. Allowing them to run in the fork would violate the
+  source-pin rule and duplicate the project-owned CI workflow.
+- **Diff summary**: each inherited job has one job-level
+  `if: github.repository == 'Anuken/Mindustry'` guard. Their upstream behavior
+  is otherwise byte-for-byte unchanged. The additive
+  `.github/workflows/coop-agent-ci.yml` owns fork CI with pinned action SHAs,
+  hash-locked Python dependencies, Java/Python tests, and custom distributions.
+- **Risk**: minimal — upstream runs are unaffected; fork runs skip only jobs
+  that were unsafe and irrelevant here.
+- **Introduced by**: Milestone 0 CI closure packet (2026-07-23).
+
 ## M1 decision: pathfinder threads — reflection, not an upstream patch
 
 The brief sanctioned a minimal upstream edit to force the two free-running
@@ -184,6 +200,8 @@ engine classes on the classpath (no `--add-opens` needed):
   (`AGENTS.md`, `CLAUDE.md`, `NOTICE.md`, `ENGINE_VERSION`, `Makefile`) are
   **additions**, not modifications of upstream files, and do not require an entry
   here.
+- `.github/workflows/coop-agent-ci.yml` is a project-owned additive workflow;
+  only the three inherited workflow guards are counted as upstream patches.
 - `tests/golden/bootstrap-defense-v0-scripted-v1.jsonl` is an additive M6
   project-owned replay fixture in the roadmap-mandated golden directory. It
   modifies no upstream test source or build configuration.
