@@ -93,3 +93,24 @@ All 44 exact-config reward adversaries pass; the report at
 `dc9f1b3886c610ec71b3a4c6bd25a4185b967206f4ede4569f5dd8aabf9c7da5`.
 No V34 runtime implementation, live candidate outcome, teacher collection,
 model work, dev-v30 evidence, or held-out evidence preceded this precommit.
+
+## Outcome
+
+The pinned Java build and focused live claim-loss check passed, and the public
+policy still survived all five seeds. The complete candidate gate nevertheless
+rejected V34 before training because proactive staging starts fell from V32's
+required five to zero. The gate reported `five-seed candidate gate observed no
+proactive staging`; per Decision 6, survival alone cannot waive that failure.
+
+A temporary diagnostic counted final atomic losses by fixed seat for each
+public seed: `[[9,0,0], [14,0,0], [10,0,0], [10,0,0], [9,0,0]]`. Every public
+loss belonged to learned seat 0, whereas the reusable 406-tick defect belongs
+to scripted seat 1. The all-seat boundary therefore perturbed the learned-seat
+public sequence even though it targeted a downstream partner defect.
+
+The uncommitted runtime/protocol/check experiment was removed, the accepted V32
+runtime rebuilt, and its full candidate gate restored to 5/5 wins with five
+proactive-staging starts. V34 is rejected, replica A never began, dev-v30 is
+retired unopened, and held-out-v4 remains sealed. The public diagnostic is
+`runs/m8-selector-v34-public-claim-diagnostic.json`, SHA-256
+`7a1fc0d50117cefd40b8c955e6fa6327dfe2ee34f7338ff22339f1d60127ce7b`.

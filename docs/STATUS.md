@@ -1430,6 +1430,13 @@ repository-evidence mapping used for the M6 audit is:
   Config/seed governance, 159 Python tests, and all 44 exact-config reward
   adversaries pass. Runtime implementation and pretraining gates are next; no
   V34 model work has begun.
+- V34 is rejected at the complete public pretraining boundary. The all-seat
+  wake preserved 5/5 survival but reduced required proactive-staging starts
+  from five to zero. A temporary diagnostic found every public claim loss on
+  learned seat 0 (`[9,14,10,10,9]` by seed) while the reusable 406-tick defect
+  is on scripted seat 1. The experiment was removed and V32 rebuilt; its gate
+  again passes 5/5 with five staging starts. Replica A never began, dev-v30 is
+  retired unopened, held-out-v4 stays sealed, and M8.5 is unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

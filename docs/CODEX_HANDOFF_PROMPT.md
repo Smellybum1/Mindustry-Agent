@@ -107,11 +107,12 @@ and no model work began.
 ADR-0045 precommits V34 from the reusable trace at
 `runs/m8-selector-v32-partner-idle.json`. In all ten wins, seat 1's mask-valid
 harvest claim loses at tick 254 but does not advance the decision revision, so
-the unassigned seat remains idle until tick 660. Implement only the precommitted
-structured `claim_lost` wake: retain atomic winner state, create no loser
-assignment or fake board event, and charge no invalid penalty. Then run the
-pinned Java/live/public/smoke/determinism/negative-replay gates before any model
-work. Dev-v30 is frozen at disjoint roots `283001..283160` but unopened;
+the unassigned seat remains idle until tick 660. Its all-seat wake was rejected:
+survival stayed 5/5 but proactive-staging starts fell from five to zero. Every
+public claim loss was learned-seat 0 (`[9,14,10,10,9]` by seed), whereas the
+reusable defect is scripted seat 1. The experiment was removed and V32 rebuilt;
+its complete gate again passes. Precommit any seat-1-only successor before
+implementation, preserving V32 everywhere else. Dev-v30 is retired unopened;
 held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,

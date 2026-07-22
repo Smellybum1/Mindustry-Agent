@@ -1472,6 +1472,16 @@ governance, 159 Python tests, and all 44 exact-config reward adversaries pass.
 No V34 runtime implementation, live outcome, or model work preceded the
 precommit. M8.5 remains unmet.
 
+V34 is rejected at its complete public pretraining boundary. The all-seat
+claim-loss wake preserved 5/5 survival but reduced required proactive-staging
+starts from five to zero, so the candidate command failed and later gates/model
+work did not run. Public claim losses by fixed seat were
+`[[9,0,0],[14,0,0],[10,0,0],[10,0,0],[9,0,0]]`: every affected public action
+belonged to learned seat 0, while the reusable defect belongs to scripted seat
+1. The experiment was removed and V32 rebuilt; its gate again passes 5/5 with
+five staging starts. Dev-v30 remains unopened and is retired, held-out-v4 stays
+sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -800,14 +800,15 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement ADR-0045's claim-loss wake exactly.** Preserve the V32 catalog
-   and partner policies; expose final mask-valid atomic loss as structured
-   decision boundary `claim_lost` without a fake board event or invalid penalty.
-2. **Pass every pretraining boundary before model work.** Add engine-free/live
-   claim-loss checks, then require pinned Java, 5/5 public candidate, smoke,
-   determinism, and negative replay gates from the committed V34 packet.
-3. **Keep held-out-v4 sealed.** Dev-v29 is retired unopened and dev-v30 is
-   frozen but unopened; no successor may
+1. **Precommit a seat-1-only claim-loss successor.** ADR-0045 proves all public
+   claim losses are learned-seat 0 while the reusable defect is scripted seat 1.
+   Preserve V32 exactly and scope any wake to fixed seat 1 before implementation.
+2. **Pass every pretraining boundary before model work.** Require focused scope/
+   live checks, pinned Java, the complete 5/5 public candidate command including
+   staging, smoke, determinism, and negative replay from the committed packet.
+3. **Keep held-out-v4 sealed.** Dev-v29 and dev-v30 are retired unopened; freeze
+   a new disjoint confirmation set but do not open it before exact replicas and
+   both reusable scorecards pass. No successor may
    open a new confirmation set without exact replicas,
    reusable dual-scorecard parity, and its own one-way confirmation pass.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
@@ -820,7 +821,8 @@ See `docs/decisions/ADR-0001..0045` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
-ADR-0045 precommits V34's atomic claim-loss decision-boundary correction.
+ADR-0045 precommits and records V34's all-seat claim-loss boundary rejection at
+the complete public candidate gate.
 
 ## Deviations from the brief in this scaffold
 
