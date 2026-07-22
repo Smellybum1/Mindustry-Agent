@@ -3,7 +3,8 @@
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
 `coop-agent/v159.7`, after ADR-0056 precommits and implements V42's training-only
 partner-intent teacher-conflict relabel. The complete public/pretraining boundary
-is green. No V42 model work or dev-v38 membership construction has begun.
+is green and dev-v38 is frozen value-free and unopened. No V42 model work or
+restricted membership access has begun.
 
 Read first, in order:
 
@@ -355,10 +356,12 @@ plus deterministic telemetry. The live diagnostic reproduces 752 conflicts,
 `0e609742ba171c60...`. The complete 2026-07-23 boundary passes 243 Python tests,
 Java, public policy (5/5, 10 proactive starts), both focused checks, smoke,
 determinism, the 664-checkpoint/16,200-tick golden and negative replay, and all
-44 exact-config reward adversaries (`272ac291ef143fa6...`). Commit and preserve
-that green boundary, then prepare and review the primary-only dev-v38 value-free
-freezer before any seed construction or model work. Held-out-v6 remains sealed
-and unconsumed.
+44 exact-config reward adversaries (`272ac291ef143fa6...`). The primary-only
+freezer/freeze commits are `3e328ce91e` / `949b73f987`; dev-v38 membership/
+receipt hashes are `3f4b0d012cf87303...` / `fea431ae993d1072...`. The receipt
+records zero membership reads and no values emitted; the full suite passes 248
+tests. Keep dev-v38 unopened until exact V42 replicas and every reusable gate
+pass. Held-out-v6 remains sealed and unconsumed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

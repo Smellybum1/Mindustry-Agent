@@ -863,8 +863,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   filtering. ADR-0056 freezes adaptive-preference-preserving relabeling across
   warmup, rehearsal, and generic PPO teacher imitation without changing runtime
   actions, masks, reward, model, roots, budget, or RNGs. Config/umbrella hashes
-  are `3fcb0c8800c638a3...` / `c1644d2dd6dde231...`. Dev-v38 is reserved
-  primary-only in `[6B,7B)` but has not been constructed. The production/test
+  are `3fcb0c8800c638a3...` / `c1644d2dd6dde231...`. Dev-v38 is frozen
+  primary-only and unopened in `[6B,7B)`. The production/test
   packet keeps original/effective labels separate and implements all three
   generic teacher paths plus deterministic telemetry. Its live diagnostic
   reproduces 752 conflicts, 682 relabels, and 70 fallbacks; report/payload/
@@ -872,14 +872,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `0e609742ba171c60...`. The 2026-07-23 boundary passes 243 Python tests, Java,
   public policy (5/5, 10 proactive starts), both focused coordination checks,
   smoke, determinism, the 664-checkpoint/16,200-tick golden and negative replay,
-  and all 44 exact-config reward adversaries (`272ac291ef143fa6...`). Held-out-v6
+  and all 44 exact-config reward adversaries (`272ac291ef143fa6...`). Freezer /
+  freeze commits are `3e328ce91e` / `949b73f987`; membership/receipt hashes are
+  `3f4b0d012cf87303...` / `fea431ae993d1072...`. The receipt records zero reads
+  and no emitted values, and the full suite now passes 248 tests. Held-out-v6
   remains sealed/unconsumed; no V42 model work or restricted access has begun.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
   `AGENTS.md` source of truth.
-- **Current V42 implementation checkpoint**:
-  `2aae0bee39bf3efa83deb6916f3338b664fa162d` (V40 training parents remain
+- **Current V42 governance checkpoint**:
+  `949b73f987ea4758fc941e55923861e8949680a2` (V40 training parents remain
   bound to `c288483436c1003d25dc64ce7aba968600d45f3a`).
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
@@ -1042,15 +1045,11 @@ queue.
 
 1. **Preserve the committed green ADR-0056 pretraining boundary.** Do not alter
    runtime behavior, reward, model, roots, budgets, RNGs, or engine pins.
-2. **Prepare and review the primary-only dev-v38 value-free freezer.** Test it
-   without constructing, reading, rendering, or delegating membership.
-3. **Only after the freezer implementation is committed, construct dev-v38
-   value-free before replica A.** No membership may be rendered or delegated.
-   Dev-v38 access still requires exact replicas and reusable gates. Do not begin
-   model work before the value-free freeze is committed. Held-out-v6 remains
-   sealed.
-4. **Construct V42 replicas A/B and require exact checkpoint/model/lineage
-   identity before reusable scorecards or any confirmation access.**
+2. **Preserve frozen dev-v38 unopened and unconsumed.** No membership may be
+   read, rendered, or delegated before exact replicas and reusable gates pass.
+3. **Construct V42 replicas A/B under the pinned training toolchain.**
+4. **Require exact checkpoint/model/lineage identity before reusable scorecards
+   or any confirmation access.**
 5. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 

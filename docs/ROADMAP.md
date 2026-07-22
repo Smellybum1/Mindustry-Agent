@@ -1881,11 +1881,11 @@ teacher's current preference/return state and selecting the highest-utility
 nonrisk candidate with stable index tie breaking. Original scripted trajectory
 actions, runtime masks and authority, reward, features, model, roots, budgets,
 RNGs, and engine pins remain V40-exact. Config/umbrella hashes are
-`3fcb0c8800c638a3...` / `c1644d2dd6dde231...`. Dev-v38 is reserved
-primary-only in `[6B,7B)` but may not be constructed until the committed
-implementation and complete public/pretraining gates pass. Held-out-v6 remains
-sealed/unconsumed. No V42 model work or restricted membership access preceded
-the precommit. The production/test packet now implements separate original and
+`3fcb0c8800c638a3...` / `c1644d2dd6dde231...`. Dev-v38 is primary-only in
+`[6B,7B)` and remained unconstructed until the committed implementation and
+complete public/pretraining gates passed. Held-out-v6 remains sealed/unconsumed.
+No V42 model work or restricted membership access preceded the precommit. The
+production/test packet now implements separate original and
 effective teacher labels, pure adaptive-preference relabeling, V40 fallback,
 all-three-path CE handling, and deterministic telemetry. The complete public/
 runtime/Java/replay/reward boundary passed on 2026-07-23. The production
@@ -1896,8 +1896,12 @@ tests and Java; public policy is 5/5 with 10 proactive staging starts; both
 focused coordination checks and smoke pass; deterministic replay yields 664
 checkpoints / 16,200 ticks / two wins and the negative mutation is detected;
 all 44 exact-config reward adversaries pass with report SHA
-`272ac291ef143fa6...`. Dev-v38 remains unconstructed, no model work or
-restricted access has begun, and M8.5 remains unmet.
+`272ac291ef143fa6...`. The freezer was committed at `3e328ce91e`; dev-v38 and
+its value-free receipt were then committed at `949b73f987`. Membership/receipt
+hashes are `3f4b0d012cf87303...` / `fea431ae993d1072...`; the receipt records
+zero membership reads and no values emitted. The full suite passes 248 tests.
+Dev-v38 remains unopened/unconsumed, no model work or restricted access has
+begun, and M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

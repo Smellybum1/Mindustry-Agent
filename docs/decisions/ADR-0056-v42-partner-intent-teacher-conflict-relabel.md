@@ -145,5 +145,12 @@ cross-process, reset, and alternate-seed determinism hashes are
 two wins and negative replay detects the mutation. All 44 exact-config reward
 adversaries pass; report SHA is
 `272ac291ef143fa65170c06ddcd7b245b6602e99dfaf232d1fc35bb757f5268a`.
-No optimizer run, dev-v38 membership construction, confirmation access, or
-held-out-v6 access occurred.
+After that committed boundary, the primary-only freezer was committed at
+`3e328ce91e` and created dev-v38 solely within `[6B,7B)`. The freeze commit is
+`949b73f987`; membership and value-free receipt hashes are
+`3f4b0d012cf8730301917a303ca5dfda14b3552ecff357cb3bb25d5ac1976224` and
+`fea431ae993d10723432c661a2cc76073696bd8d420015af064256e40d3152cb`.
+The receipt records zero membership-document reads, no values emitted, and no
+held-out access. The full Python suite passes 248 tests. Dev-v38 remains
+unopened/unconsumed. No optimizer run, confirmation access, or held-out-v6
+access occurred.

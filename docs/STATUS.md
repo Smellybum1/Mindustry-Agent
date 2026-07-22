@@ -1811,8 +1811,8 @@ repository-evidence mapping used for the M6 audit is:
   for 682 conflicts and 174/189 successful-corpus conflicts; 70 retain filter
   fallback. ADR-0056 precommits V42 to that pure adaptive-preference-preserving
   relabel only. Config/umbrella hashes are `3fcb0c8800c638a3...` /
-  `c1644d2dd6dde231...`. Dev-v38 is reserved primary-only in `[6B,7B)` but is
-  not constructed; held-out-v6 remains sealed/unconsumed. The implementation
+  `c1644d2dd6dde231...`. Dev-v38 is primary-only in `[6B,7B)` and is now frozen
+  value-free and unopened; held-out-v6 remains sealed/unconsumed. The implementation
   separates original/effective labels, applies the shared V42 rule to all three
   generic teacher paths, and records deterministic relabel/fallback/schedule
   telemetry. The production diagnostic reproduces the exact 752/682/70 split
@@ -1825,9 +1825,13 @@ repository-evidence mapping used for the M6 audit is:
   `20a97f3640716759...` / `a2cf4a73ee901c84...` /
   `495ba05fa71697bd...`; golden replay is 664 checkpoints / 16,200 ticks / two
   wins and negative replay detects the mutation. All 44 reward adversaries pass
-  under the exact config; report SHA is `272ac291ef143fa6...`. No model work,
-  dev-v38 construction or membership read, confirmation episode, or held-out-v6
-  access has begun.
+  under the exact config; report SHA is `272ac291ef143fa6...`. The freezer was
+  committed at `3e328ce91e`, then dev-v38 and its value-free receipt were
+  committed at `949b73f987`. Membership/receipt hashes are
+  `3f4b0d012cf87303...` / `fea431ae993d1072...`; zero membership documents were
+  read and no values were emitted. The freezer packet lifts the full suite to
+  248 Python tests. No model work, dev-v38 access, confirmation episode, or
+  held-out-v6 access has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -749,9 +749,9 @@ label changes across warmup, rehearsal, and PPO teacher imitation.
 Runtime actions and masks, fixed partners, features, reward, model, optimizer
 coefficients, roots, budget, RNGs, checkpoint ranking, and engine pins remain
 V40-exact. Config/umbrella hashes are `3fcb0c8800c638a3...` /
-`c1644d2dd6dde231...`. Dev-v38 is reserved primary-only in `[6B,7B)` but may
-not be constructed until the committed implementation and complete public/
-pretraining boundary pass. Held-out-v6 remains sealed and unconsumed. No model
+`c1644d2dd6dde231...`. Dev-v38 is reserved primary-only in `[6B,7B)` and was
+not constructed until the committed implementation and complete public/
+pretraining boundary passed. Held-out-v6 remains sealed and unconsumed. No model
 work or restricted membership access preceded this precommit.
 
 The implementation now keeps original and effective teacher labels separate,
@@ -769,8 +769,12 @@ Java gate, public 5/5 survival with 10 proactive staging starts, secondary-claim
 and owned-schematic checks, smoke, deterministic cross-process/reset/seed
 checks, the 664-checkpoint/16,200-tick golden plus negative replay, and all 44
 exact-config reward adversaries. The reward report SHA is
-`272ac291ef143fa6...`. Dev-v38 remains unconstructed; no seed membership was
-read or rendered, no model work began, and held-out-v6 remains sealed.
+`272ac291ef143fa6...`. The primary-only freezer was committed at `3e328ce91e`
+and then created dev-v38 value-free. The freeze commit is `949b73f987`;
+membership/receipt hashes are `3f4b0d012cf87303...` /
+`fea431ae993d1072...`. The receipt records zero membership-document reads and
+no values emitted. The full suite passes 248 tests. Dev-v38 remains unopened;
+no model work began, and held-out-v6 remains sealed.
 
 ## M8.1 acceptance review
 
