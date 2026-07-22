@@ -8,7 +8,7 @@ construction has begun.
 
 Read first, in order:
 
-1. `AGENTS.md` in full; obey its delegation and sealed-data rules.
+1. `AGENTS.md` in full; obey its no-agent-delegation and sealed-data rules.
 2. `docs/HANDOFF.md`, focusing on the V41 rejection, V42 precommit, and the
    next-five queue.
 3. M8.5 and the M8 exit criteria in `docs/ROADMAP.md`.

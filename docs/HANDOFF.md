@@ -870,6 +870,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   suite. Held-out-v6 remains sealed/unconsumed; no live pretraining gate, V42
   model work, or restricted access has begun.
 - **Current branch**: `coop-agent/v159.7`
+- **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
+  create, or use subagents for any task; see the protected user-owned
+  `AGENTS.md` source of truth.
 - **Current repository checkpoint**:
   `30e16e99b852f2f90141e174e9806978fc6a365b` (V40 training parents remain
   bound to `c288483436c1003d25dc64ce7aba968600d45f3a`).
