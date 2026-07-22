@@ -20,26 +20,12 @@ import static mindustry.Vars.*;
 
 /** Real-time pacing, I/O, and engine binding for the shared coordination driver. */
 final class DemoCoordinator{
-    private static final String[] names = {"agent-copper", "agent-shield", "agent-relay"};
-
-    private static final class Agent{
-        final int index;
-        Unit unit;
-        final DemoAgentController controller;
-
-        Agent(int index, Unit unit, DemoAgentController controller){
-            this.index = index;
-            this.unit = unit;
-            this.controller = controller;
-        }
-    }
-
     private final Scenario scenario;
     private final boolean probe;
     private final boolean waitForPlayer;
     private final boolean survivalProbe;
     private final AnnouncementRenderer renderer = new AnnouncementRenderer();
-    private final Seq<Agent> agents = new Seq<>();
+    private final DemoAgentRegistry registry;
     private final ExpertCoordinationDriver driver;
 
     private boolean paused;
@@ -54,23 +40,15 @@ final class DemoCoordinator{
         this.waitForPlayer = waitForPlayer;
         this.survivalProbe = System.getProperty(AgentPlugin.modeProperty, "")
             .equalsIgnoreCase("survival");
+        this.registry = new DemoAgentRegistry(scenario);
         this.driver = new ExpertCoordinationDriver(
             ExpertCoordinationPlans.fromScenario(scenario), new DemoPort());
         driver.reset(1L);
     }
 
     void spawn(){
-        Building core = scenario.coreTeam.core();
-        if(core == null) throw new IllegalStateException("demo scenario has no core");
-        for(int i = 0; i < names.length; i++){
-            Unit unit = UnitTypes.alpha.spawn(scenario.coreTeam,
-                core.x + (3 + i) * tilesize, core.y);
-            DemoAgentController controller = new DemoAgentController(i);
-            unit.controller(controller);
-            Units.notifyUnitSpawn(unit);
-            agents.add(new Agent(i, unit, controller));
-        }
-        Log.info("[agents] spawned @ controlled alpha units.", agents.size);
+        registry.spawn();
+        Log.info("[agents] spawned @ controlled alpha units.", registry.size());
     }
 
     void playerJoined(Player player){
@@ -117,7 +95,7 @@ final class DemoCoordinator{
     String pause(){
         if(stopped) return "agents: stopped";
         paused = true;
-        for(Agent agent : agents) agent.controller.pauseNow();
+        for(DemoAgentRegistry.Agent agent : registry.agents()) agent.controller().pauseNow();
         return "agents: paused at tick " + (long)state.tick;
     }
 
@@ -128,7 +106,7 @@ final class DemoCoordinator{
             if(waitForPlayer && state.isPaused()) state.set(State.playing);
         }
         paused = false;
-        for(Agent agent : agents) agent.controller.resumeNow();
+        for(DemoAgentRegistry.Agent agent : registry.agents()) agent.controller().resumeNow();
         return "agents: running at tick " + (long)state.tick;
     }
 
@@ -138,7 +116,7 @@ final class DemoCoordinator{
         paused = false;
         long tick = (long)state.tick;
         driver.stop(tick, "human_emergency_stop");
-        for(Agent agent : agents) agent.controller.stopNow();
+        for(DemoAgentRegistry.Agent agent : registry.agents()) agent.controller().stopNow();
         drainAnnouncements();
         return "agents: emergency stop complete at tick " + tick;
     }
@@ -147,9 +125,11 @@ final class DemoCoordinator{
         String mode = stopped ? "stopped" : paused ? "paused"
             : driver.started() ? "running" : "waiting";
         int active = 0;
-        for(Agent agent : agents) if(agent.controller.activeSkill() != null) active++;
+        for(DemoAgentRegistry.Agent agent : registry.agents()){
+            if(agent.controller().activeSkill() != null) active++;
+        }
         return "agents: " + mode + " tick=" + (long)state.tick + " active=" + active
-            + "/" + agents.size + " tasks=" + driver.board().tasks().size()
+            + "/" + registry.size() + " tasks=" + driver.board().tasks().size()
             + " announcements=" + announcements + " phase=" + driver.phase();
     }
 
@@ -228,21 +208,21 @@ final class DemoCoordinator{
             driver.decisions().size(), String.join(",", driver.lineOrder()),
             String.join(",", driver.defenseOrder()));
         pause();
-        for(Agent agent : agents){
-            if(agent.controller.enabled() || !agent.unit.vel.isZero()){
-                throw new IllegalStateException("pause did not halt agent " + agent.index);
+        for(DemoAgentRegistry.Agent agent : registry.agents()){
+            if(agent.controller().enabled() || !agent.unit().vel.isZero()){
+                throw new IllegalStateException("pause did not halt agent " + agent.index());
             }
         }
         resume();
-        for(Agent agent : agents){
-            if(!agent.controller.enabled()){
-                throw new IllegalStateException("resume did not enable agent " + agent.index);
+        for(DemoAgentRegistry.Agent agent : registry.agents()){
+            if(!agent.controller().enabled()){
+                throw new IllegalStateException("resume did not enable agent " + agent.index());
             }
         }
         stop();
-        for(Agent agent : agents){
-            if(agent.controller.enabled() || agent.controller.activeSkill() != null){
-                throw new IllegalStateException("stop did not cancel agent " + agent.index);
+        for(DemoAgentRegistry.Agent agent : registry.agents()){
+            if(agent.controller().enabled() || agent.controller().activeSkill() != null){
+                throw new IllegalStateException("stop did not cancel agent " + agent.index());
             }
         }
         Log.info("AGENT-DEMO CONTROLS OK pause/resume/stop halted all three agents");
@@ -259,50 +239,39 @@ final class DemoCoordinator{
     private final class DemoPort implements ExpertCoordinationDriver.Port{
         @Override
         public SkillResult lastResult(int agentIndex){
-            Agent agent = agent(agentIndex);
-            return agent == null ? SkillResult.ready() : agent.controller.lastResult();
+            DemoAgentRegistry.Agent agent = registry.get(agentIndex);
+            return agent == null ? SkillResult.ready() : agent.controller().lastResult();
         }
 
         @Override
         public Skill activeSkill(int agentIndex){
-            Agent agent = agent(agentIndex);
-            return agent == null ? null : agent.controller.activeSkill();
+            DemoAgentRegistry.Agent agent = registry.get(agentIndex);
+            return agent == null ? null : agent.controller().activeSkill();
         }
 
         @Override
         public void setSkill(int agentIndex, Skill skill){
-            Agent agent = agent(agentIndex);
-            if(agent != null) agent.controller.setSkill(skill);
+            DemoAgentRegistry.Agent agent = registry.get(agentIndex);
+            if(agent != null) agent.controller().setSkill(skill);
         }
 
         @Override
         public void cancelWork(int agentIndex){
-            Agent agent = agent(agentIndex);
+            DemoAgentRegistry.Agent agent = registry.get(agentIndex);
             if(agent == null) return;
-            agent.controller.pauseNow();
-            agent.controller.clearSkill();
-            if(!stopped) agent.controller.resumeNow();
+            agent.controller().pauseNow();
+            agent.controller().clearSkill();
+            if(!stopped) agent.controller().resumeNow();
         }
 
         @Override
         public void ensureAgent(int agentIndex){
-            Agent agent = agent(agentIndex);
-            if(agent == null || (agent.unit != null && agent.unit.isValid() && !agent.unit.dead())) return;
-            Building core = scenario.coreTeam.core();
-            if(core == null) throw new IllegalStateException("cannot rebind agent without a core");
-            Unit replacement = UnitTypes.alpha.spawn(scenario.coreTeam,
-                core.x + (3 + agent.index) * tilesize, core.y);
-            replacement.controller(agent.controller);
-            Units.notifyUnitSpawn(replacement);
-            agent.unit = replacement;
-            agent.controller.resumeNow();
-            Log.warn("AGENT-DEMO REBOUND agent=@ replacement_unit=@", agent.index, replacement.id);
+            registry.ensureAgent(agentIndex);
         }
 
         @Override
         public boolean agentAvailable(int agentIndex){
-            Agent agent = agent(agentIndex);
-            return agent != null && agent.unit != null && agent.unit.isValid() && !agent.unit.dead();
+            return registry.available(agentIndex);
         }
 
         @Override
@@ -315,10 +284,6 @@ final class DemoCoordinator{
         public boolean buildingMatches(ExpertCoordinationDriver.BuildPlacement placement){
             Building building = world.build(placement.x(), placement.y());
             return building != null && building.block.name.equals(placement.block());
-        }
-
-        private Agent agent(int index){
-            return index >= 0 && index < agents.size ? agents.get(index) : null;
         }
     }
 }

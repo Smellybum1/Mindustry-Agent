@@ -32,6 +32,7 @@ tasks.register('dist', Jar){
     from(project(":rl-server").sourceSets.main.output){
         include "mindustry/rl/Scenario*.class"
         include "mindustry/rl/ExpertCoordinationPlans*.class"
+        include "mindustry/rl/AgentRuntimeRegistry*.class"
         include "mindustry/rl/SkillController*.class"
     }
 

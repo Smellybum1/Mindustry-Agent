@@ -64,7 +64,9 @@ present—the demo policy port and human-control implementation do not yet exist
 The first behavior-neutral prerequisite is implemented:
 `AgentRuntimeRegistry` decouples candidates, adaptive facts, feature extraction,
 action decoding, and coordination from the training registry while preserving
-`RlAgentRegistry` as the existing runtime facade.
+`RlAgentRegistry` as the existing runtime facade. `DemoAgentRegistry` now
+implements that contract and owns deterministic demo spawn/rebind lifecycle;
+the demo policy still awaits migration to the public candidate/action path.
 
 ## Module responsibilities
 

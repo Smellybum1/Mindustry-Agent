@@ -1982,6 +1982,7 @@ goals are applied. No M10 implementation exists yet; this packet does not start
 M9, authorize V43, or access any governed seed membership. The first
 behavior-neutral prerequisite now exists: `AgentRuntimeRegistry` removes the
 public candidate/coordination adapters' concrete training-registry dependency;
+`DemoAgentRegistry` implements that boundary for deterministic spawn/rebind, but
 the plugin policy port itself remains pending.
 
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,

@@ -12,6 +12,7 @@ PLUGIN_ENTRIES="$(jar tf "$PLUGIN_JAR")"
 for required in \
     plugin.json \
     mindustry/agentplugin/AgentPlugin.class \
+    mindustry/agentplugin/DemoAgentRegistry.class \
     mindustry/agentplugin/DemoAgentController.class \
     mindustry/agentplugin/FixedProbeGraphics.class \
     agentcore/board/TaskBoard.class \

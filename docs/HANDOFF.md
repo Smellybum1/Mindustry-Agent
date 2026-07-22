@@ -179,7 +179,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   future work. `docs/M10_DESIGN.md` and ADR-0057 now accept its architecture and
   require the plugin to adopt the public candidate/typed-action path before
   commands are added. The behavior-neutral `AgentRuntimeRegistry` prerequisite
-  is implemented and tested, but the plugin policy port is not. M8.5 evaluation
+  is implemented and tested, and `DemoAgentRegistry` now owns real-time spawn/
+  rebind behind it; the plugin policy port is still incomplete. M8.5 evaluation
   machinery is real, but the candidate did not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
