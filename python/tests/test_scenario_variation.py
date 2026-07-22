@@ -1557,6 +1557,7 @@ def test_v38_owned_schematic_staging_and_sealed_sets_are_reserved():
     umbrella_path = (
         evaluation_dir / "m8-selector-v38-sealed-evaluation-umbrella.json"
     )
+    freeze_path = evaluation_dir / "m8-selector-v38-sealed-evaluation-freeze.json"
 
     v37 = json.loads(v37_path.read_text(encoding="utf-8"))
     v38 = json.loads(v38_path.read_text(encoding="utf-8"))
@@ -1658,5 +1659,100 @@ def test_v38_owned_schematic_staging_and_sealed_sets_are_reserved():
     ]
 
     repository_root = DEFAULT_SEED_SET.parents[2]
+    expected_hashes = {
+        "bootstrap-defense-v1-dev-v34": (
+            "bef6bb17c7759530dc216961733839808dbff228bb96a09232dced89a7ca5ac7"
+        ),
+        "bootstrap-defense-v1-held-out-v5": (
+            "1118ef59b0953aacd86176737777013bb2c6498e128f28bcbb7850e6ad586910"
+        ),
+    }
+    reserved_paths = {
+        (repository_root / reserved["path"]).resolve()
+        for reserved in expected_sets
+    }
+    reserved_seeds: set[int] = set()
     for reserved in expected_sets:
-        assert not (repository_root / reserved["path"]).exists()
+        path = (repository_root / reserved["path"]).resolve()
+        document = json.loads(path.read_text(encoding="utf-8"))
+        assert document["seed_set_id"] == reserved["seed_set_id"]
+        assert document["seed_set_version"] == reserved["seed_set_version"]
+        assert document["scenario_id"] == "bootstrap-defense-v1"
+        assert document["scenario_version"] == 2
+        assert document["split"] == reserved["split"]
+        assert "One-way V38" in document["policy"]
+        assert "primary-only" in document["policy"]
+        seeds = document["seeds"]
+        assert len(seeds) == reserved["count"]
+        assert len(seeds) == len(set(seeds))
+        assert all(1_000_000_000 <= seed < 2_000_000_000 for seed in seeds)
+        assert reserved_seeds.isdisjoint(seeds)
+        reserved_seeds.update(seeds)
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == expected_hashes[
+            reserved["seed_set_id"]
+        ]
+
+    for other in evaluation_dir.glob("bootstrap-defense-*.json"):
+        if other.resolve() in reserved_paths:
+            continue
+        document = json.loads(other.read_text(encoding="utf-8"))
+        assert reserved_seeds.isdisjoint(document["seeds"]), other.name
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v34"] == "bootstrap-defense-v1-dev-v34.json"
+
+    freeze = json.loads(freeze_path.read_text(encoding="utf-8"))
+    assert freeze["schema"] == "m8_sealed_evaluation_freeze_v1"
+    assert freeze["candidate_version"] == "v38"
+    assert freeze["status"] == "membership_frozen_unconsumed"
+    assert freeze["umbrella"] == {
+        "path": "configs/evaluation/m8-selector-v38-sealed-evaluation-umbrella.json",
+        "sha256": (
+            "a2e2389925797a5f5a8c93224561f68f36fd443afbebdc07f888aaf6bef6f27a"
+        ),
+        "commit": "de597c84623bae4f1eee6139992938bb46fe5108",
+    }
+    assert freeze["generator_commit"] == (
+        "a7504a478177d2f751740ce2d15df377d66119f9"
+    )
+    assert freeze["repository_head_before_generation"] == (
+        "a7504a478177d2f751740ce2d15df377d66119f9"
+    )
+    assert freeze["values_emitted"] is False
+    assert freeze["global_disjointness_verified"] is True
+    assert freeze["sets"] == [
+        {
+            **{
+                key: expected_sets[0][key]
+                for key in (
+                    "role",
+                    "seed_set_id",
+                    "seed_set_version",
+                    "split",
+                    "count",
+                    "path",
+                )
+            },
+            "sha256": expected_hashes[expected_sets[0]["seed_set_id"]],
+            "consumption_state": "unconsumed",
+        },
+        {
+            **{
+                key: expected_sets[1][key]
+                for key in (
+                    "role",
+                    "seed_set_id",
+                    "seed_set_version",
+                    "split",
+                    "count",
+                    "path",
+                )
+            },
+            "sha256": expected_hashes[expected_sets[1]["seed_set_id"]],
+            "consumption_state": "unconsumed",
+        },
+    ]
+    assert hashlib.sha256(freeze_path.read_bytes()).hexdigest() == (
+        "7282a3cd405f2d6b00dd3942fb8da2b2f62eb3a8f567dc067edc07756787018e"
+    )

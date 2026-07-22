@@ -78,8 +78,11 @@ atomically to a fixed partner.
    globally disjoint roots each for dev-v34 and held-out-v5 without rendering
    membership into agent output. Both documents must be committed before V38
    runtime implementation or model work begins.
-10. A committed one-way consumer must atomically create the set-specific
-    umbrella attempt before its first manifest read or baseline episode. A
+10. Primary-only construction may internally read membership for disjointness
+    and hash verification provided no value is rendered into agent output.
+    After the freeze documents are committed, a committed one-way consumer must
+    atomically create the set-specific umbrella attempt before the first
+    semantic membership load for episode scheduling or any baseline episode. A
     started, aborted, failed, exposed, or completed attempt consumes the set.
     Confirmation requires exact replicas and reusable parity; final evaluation
     additionally requires a passing confirmation.
@@ -132,3 +135,14 @@ The pre-membership umbrella reservation SHA-256 is
 `a2e2389925797a5f5a8c93224561f68f36fd443afbebdc07f888aaf6bef6f27a`.
 No V38 runtime implementation, model work, replacement membership document,
 confirmation baseline, or final evidence preceded this decision.
+
+The umbrella was committed in `de597c8462` before membership construction. The
+primary-only freezer committed at `a7504a4781` then generated both documents,
+verified global disjointness internally, and emitted no seed value. Dev-v34 and
+held-out-v5 contain 160 unique roots each and hash to
+`bef6bb17c7759530dc216961733839808dbff228bb96a09232dced89a7ca5ac7` and
+`1118ef59b0953aacd86176737777013bb2c6498e128f28bcbb7850e6ad586910`.
+The value-free freeze record hashes to
+`7282a3cd405f2d6b00dd3942fb8da2b2f62eb3a8f567dc067edc07756787018e`.
+Both sets remain unconsumed; no baseline episode or policy evidence has used
+either membership.
