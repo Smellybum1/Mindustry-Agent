@@ -1543,6 +1543,17 @@ public seeds, so a server-side initial wake is not isolated from V34's staging
 failure. V36 is rejected, dev-v32 is retired unopened, held-out-v4 stays
 sealed, and M8.5 remains unmet.
 
+ADR-0048 precommits V37 from reusable accepted-task timelines. V37 restores the
+complete V35 learned/runtime construction and changes only fixed scripted seat
+2's tick-0 opening from its colliding schematic choice to valid
+`HARVEST_RESOURCE`. The unchanged V35 checkpoint then wins 9/10 off-contract
+with mean core health `720.0` and idle ticks `[267.0,0.7,308.2]`; a seat-2 line
+opening and the learned alternatives win only 6/10. Dev-v32 is retired unopened;
+dev-v33 freezes disjoint roots `286001..286160` and remains unopened;
+held-out-v4 stays sealed. Config/seed governance and all 44 exact-config reward
+adversaries pass, and the Python suite is 162/162. No V37 implementation or
+model work preceded the precommit. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

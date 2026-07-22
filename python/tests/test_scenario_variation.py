@@ -1495,3 +1495,54 @@ def test_v36_build_line_opening_and_dev_v32_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v32"] == path.name
+
+
+def test_v37_seat2_harvest_opening_and_dev_v33_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v33.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v33"
+    assert confirmation["seed_set_version"] == 33
+    assert confirmation["seeds"] == list(range(286001, 286161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v35 = json.loads(
+        (
+            training_dir / "m8-selector-v35-secondary-claim-loss-wake.json"
+        ).read_text(encoding="utf-8")
+    )
+    v37 = json.loads(
+        (
+            training_dir / "m8-selector-v37-seat2-harvest-opening.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert v37.pop("candidate_version") == "v37"
+    assert v37.pop("quality_intervention") == (
+        "resource_actionability_staging_secondary_claim_wake_and_"
+        "seat2_harvest_opening_v10"
+    )
+    assert v37.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v33.json"
+    )
+    assert v37.pop("scripted_partner_opening") == {
+        "schema": "fixed_seat_initial_task_type_v1",
+        "tick": 0,
+        "agent_id": 2,
+        "task_type": "HARVEST_RESOURCE",
+    }
+    assert v35.pop("candidate_version") == "v35"
+    assert v35.pop("quality_intervention") == (
+        "resource_actionability_staging_and_secondary_claim_loss_wake_v9"
+    )
+    assert v35.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v31.json"
+    )
+    assert v37 == v35
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v33"] == path.name

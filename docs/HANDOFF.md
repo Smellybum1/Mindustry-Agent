@@ -801,14 +801,15 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Diagnose V36's rank-best accepted-task timeline.** Replica A tops out at
-   7/10 and replica B is prohibited. Compare update 5's seed-2001/2003/2004
-   losses with V35 update 8's wins using reusable evidence only; do not guess
-   another opening or combine unrelated coordinates.
-2. **Precommit a successor only after one causal coordinate is isolated.** Its
-   ADR/config/reward adversaries and globally disjoint confirmation roots must
-   be committed before implementation or model work.
-3. **Keep dev-v32 retired unopened and held-out-v4 sealed.** No successor may
+1. **Implement ADR-0048's V37 partner opening.** Validate the fixed-seat schema
+   and replace only scripted seat 2's exact tick-0 selection with the unique
+   valid/mask-selectable harvest candidate across training, replay, matched
+   controls, confirmation, and final evaluation. Fail closed on drift.
+2. **Run every pretraining gate from the committed implementation.** Add focused
+   positive and legacy-identity tests, then run Python, inherited V35
+   focused/public/Java, smoke, determinism, golden replay, and negative replay.
+3. **Keep dev-v32 retired unopened, dev-v33 unopened, and held-out-v4 sealed.**
+   No successor may
    open a new confirmation set without exact replicas,
    reusable dual-scorecard parity, and its own one-way confirmation pass.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
@@ -817,7 +818,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0047` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0048` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -825,7 +826,8 @@ ADR-0045 precommits and records V34's all-seat claim-loss boundary rejection at
 the complete public candidate gate; ADR-0046 precommits and records V35's exact
 fixed-secondary-seat construction and reusable scorecard rejection; ADR-0047
 records V36's collision-free build-line opening prior, green pretraining gates,
-and rejection when replica A tops out at 7/10.
+and rejection when replica A tops out at 7/10; ADR-0048 precommits V37's fixed
+scripted-seat-2 harvest opening.
 
 ## Deviations from the brief in this scaffold
 
