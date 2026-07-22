@@ -1865,10 +1865,11 @@ repository-evidence mapping used for the M6 audit is:
   metrics are wired through M5.6; the shared M7.2 expert uses that surface.
   M8.4 selector rewards/training and the complete M8.5 lineage/dev/one-way-final
   machinery are implemented. V1, V8, and V9 failed promotion; their consumed
-  held-out gates cannot be rerun. The next governed final set is held-out-v4.
+  held-out gates cannot be rerun. Held-out-v6 remains sealed and unconsumed.
 - **`agent-plugin`** is no longer a stub. Its scripted M6 path and queued M10
-  human goal/assignment/autonomy/quiet surface are implemented; human build-
-  plan reservation/yield and study instrumentation remain unimplemented.
+  human goal/assignment/autonomy/quiet surface plus human build-plan and recent-
+  construction reservation/yield are implemented; study instrumentation remains
+  unimplemented.
   `docs/M10_DESIGN.md` and ADR-0057 accept the structured command contract and
   make demo adoption of the public candidate/typed-action path a prerequisite.
   `AgentRuntimeRegistry` now removes the candidate/coordination adapters'
@@ -1906,13 +1907,16 @@ repository-evidence mapping used for the M6 audit is:
   fields, and hashes omit provenance and remain unchanged. Engine matching,
   assignment masks, and queued plugin application are now live on the public
   path. Callbacks enqueue only and simulation-thread application emits stable
-  structured results. `DEMO_HUMAN_CONTROL=1` passes at tick 2195 after
+  structured results. `DEMO_HUMAN_CONTROL=1` passes at tick 2189 after
   completing assigned `human:goal:1` BUILD_LINE, observing assigned LOW and
   stable-id-reassigned LOW plus advisory HIGH defense tasks, applying 16/16
-  commands, cancelling all goals, restoring NORMAL, and suppressing four nonurgent messages. Exact no-command
+  commands, cancelling all goals, restoring NORMAL, and suppressing four
+  nonurgent messages. The probe also converts an engine build plan into exact
+  tile and rules-scaled resource reservations, yields/clears the overlapping
+  agent once, protects completed construction for 600 ticks, and resumes the
+  stable goal after expiry. M10.1 and M10.2 are complete. Exact no-command
   parity remains 390/1,170/225 with digest `aaf2e734...714`; stock survival
-  remains tick 8100 at 1100 health. Human build-plan reservation/yield and its
-  exactly-once conflict notification remain unimplemented, so M10.1 is open.
+  remains tick 8100 at 1100 health. Opt-in human session capture is next.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,

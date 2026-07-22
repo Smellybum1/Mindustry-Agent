@@ -93,8 +93,12 @@ public final class ReservationRegistry{
                 return ReservationOutcome.ofRejected(ReservationResult.REJECTED_CAPACITY, c);
             }
         }
+        List<ReservationConflict> conflicts = human
+            ? yieldResourcesForHuman(taskId, agent, item, amount, tick)
+            : List.of();
         resources.add(new ResourceReservation(taskId, agent, item, amount, human));
-        return ReservationOutcome.ofGranted();
+        return conflicts.isEmpty() ? ReservationOutcome.ofGranted()
+            : ReservationOutcome.ofHumanOverride(conflicts);
     }
 
     /** Total amount of {@code item} currently reserved (always &ge; 0). */
@@ -104,6 +108,40 @@ public final class ReservationRegistry{
             if(r.item().equals(item)) total += r.amount();
         }
         return total;
+    }
+
+    /** Reserved amount filtered by human/agent ownership. */
+    public int reservedAmount(String item, boolean human){
+        int total = 0;
+        for(ResourceReservation r : resources){
+            if(r.item().equals(item) && r.human() == human) total += r.amount();
+        }
+        return total;
+    }
+
+    /** Whether an agent could reserve this amount under the current human resource floor. */
+    public boolean canAgentReserve(String item, int amount){
+        if(amount < 0) throw new IllegalArgumentException("amount must be non-negative");
+        return !capacity.containsKey(item) || reservedAmount(item) + amount <= capacity.get(item);
+    }
+
+    /**
+     * Yield newest agent resource tasks until the live stock can preserve every
+     * active human reservation. Human demand may itself exceed stock, but agent
+     * work is never allowed to make that deficit worse.
+     */
+    public ReservationOutcome enforceHumanFloor(
+        String winnerTaskId,
+        AgentId winnerAgent,
+        String item,
+        int available,
+        long tick
+    ){
+        if(available < 0) throw new IllegalArgumentException("available must be non-negative");
+        List<ReservationConflict> conflicts = yieldAgentResourceTasks(winnerTaskId,
+            winnerAgent, item, reservedAmount(item), available, tick);
+        return conflicts.isEmpty() ? ReservationOutcome.ofGranted()
+            : ReservationOutcome.ofHumanOverride(conflicts);
     }
 
     /** Active resource reservations in deterministic acquisition order. */
@@ -220,7 +258,7 @@ public final class ReservationRegistry{
     private List<ReservationConflict> commitYields(List<Reservation> yielded, String winnerTaskId, AgentId winnerAgent,
                                                    boolean winnerHuman, long tick, String what){
         if(yielded.isEmpty()) return List.of();
-        List<ReservationConflict> conflicts = new ArrayList<>();
+        LinkedHashMap<String, Reservation> yieldedTasks = new LinkedHashMap<>();
         for(Reservation e : yielded){
             if(e instanceof TileReservation tile){
                 tiles.remove(tile);
@@ -229,10 +267,59 @@ public final class ReservationRegistry{
             }else{
                 throw new IllegalStateException("only tile and region reservations may yield");
             }
+            yieldedTasks.putIfAbsent(e.taskId(), e);
+        }
+        List<ReservationConflict> conflicts = new ArrayList<>();
+        for(Reservation e : yieldedTasks.values()){
             ReservationConflict c = new ReservationConflict(tick, e.taskId(), e.agent(),
                 winnerTaskId, winnerAgent, winnerHuman, "agent reservation yielded to human on " + what);
             conflicts.add(c);
             conflictLog.add(c);
+        }
+        return conflicts;
+    }
+
+    private List<ReservationConflict> yieldResourcesForHuman(
+        String taskId,
+        AgentId agent,
+        String item,
+        int amount,
+        long tick
+    ){
+        Integer cap = capacity.get(item);
+        if(cap == null || reservedAmount(item) + amount <= cap) return List.of();
+        return yieldAgentResourceTasks(taskId, agent, item,
+            reservedAmount(item) + amount, cap, tick);
+    }
+
+    private List<ReservationConflict> yieldAgentResourceTasks(
+        String taskId,
+        AgentId agent,
+        String item,
+        int projected,
+        int limit,
+        long tick
+    ){
+        LinkedHashMap<String, ResourceReservation> yieldedTasks = new LinkedHashMap<>();
+        for(int i = resources.size() - 1; i >= 0 && projected > limit; i--){
+            ResourceReservation reservation = resources.get(i);
+            if(reservation.human() || !reservation.item().equals(item)
+                || reservation.taskId().equals(taskId)
+                || yieldedTasks.containsKey(reservation.taskId())) continue;
+            yieldedTasks.put(reservation.taskId(), reservation);
+            for(ResourceReservation candidate : resources){
+                if(candidate.taskId().equals(reservation.taskId())
+                    && candidate.item().equals(item)) projected -= candidate.amount();
+            }
+        }
+        ArrayList<ReservationConflict> conflicts = new ArrayList<>();
+        for(ResourceReservation yielded : yieldedTasks.values()){
+            releaseAll(yielded.taskId());
+            ReservationConflict conflict = new ReservationConflict(tick, yielded.taskId(),
+                yielded.agent(), taskId, agent, true,
+                "agent resource reservation yielded to human floor on " + item);
+            conflicts.add(conflict);
+            conflictLog.add(conflict);
         }
         return conflicts;
     }

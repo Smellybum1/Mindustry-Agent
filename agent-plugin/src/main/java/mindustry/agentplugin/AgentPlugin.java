@@ -34,6 +34,10 @@ public final class AgentPlugin extends Plugin{
 
     @Override
     public void init(){
+        Events.on(BlockBuildEndEvent.class, event -> {
+            DemoCoordinator active = coordinator;
+            if(active != null) active.humanBuildCompleted(event);
+        });
         Events.on(ServerLoadEvent.class, event -> {
             String mode = System.getProperty(modeProperty, "manual").trim().toLowerCase();
             if(mode.equals("probe") || mode.equals("join") || mode.equals("survival")

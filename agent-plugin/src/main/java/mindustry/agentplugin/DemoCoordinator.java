@@ -5,6 +5,7 @@ import agentcore.coordination.*;
 import agentcore.event.*;
 import agentcore.human.*;
 import agentcore.human.HumanControl.*;
+import agentcore.human.HumanPresence.*;
 import agentcore.skill.*;
 import agentcore.task.*;
 import arc.*;
@@ -14,6 +15,8 @@ import arc.util.serialization.*;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
 import mindustry.entities.*;
+import mindustry.entities.units.*;
+import mindustry.game.EventType.*;
 import mindustry.gen.*;
 import mindustry.rl.*;
 
@@ -34,6 +37,7 @@ final class DemoCoordinator{
     private final AnnouncementRenderer renderer = new AnnouncementRenderer();
     private final HumanControl.State humanControl = new HumanControl.State();
     private final HumanControl.CommandQueue humanCommands = new HumanControl.CommandQueue();
+    private final HumanPresence.Tracker humanPresence = new HumanPresence.Tracker();
     private final Set<String> humanRegions;
     private final Object humanCommandLock = new Object();
     private final ConcurrentHashMap<Long, Consumer<String>> humanResponses =
@@ -53,6 +57,10 @@ final class DemoCoordinator{
     private int humanProbePhase;
     private boolean lowAutonomyObserved;
     private boolean highAutonomyObserved;
+    private int humanYieldNotices;
+    private BuildPlan probeHumanPlan;
+    private Plan probePresence;
+    private long probeRecentExpiry = -1L;
 
     DemoCoordinator(Scenario scenario, boolean probe, boolean waitForPlayer){
         this.scenario = scenario;
@@ -101,6 +109,7 @@ final class DemoCoordinator{
     void update(){
         driveHumanProbe();
         drainHumanCommands();
+        if(publicPolicy && started()) syncHumanPresence();
         if(!started() || paused || stopped || !state.isPlaying()) return;
         long tick = (long)state.tick;
         if(publicPolicy){
@@ -301,8 +310,11 @@ final class DemoCoordinator{
                 Log.info("AGENT-DEMO COORDINATION @", event.toString(Jval.Jformat.plain));
             }
             if(!event.getBool("announce", false)) continue;
+            if(event.getString("reason_code", "").equals("yield_to_human")){
+                humanYieldNotices++;
+            }
             if(!HumanControl.shouldRenderCoordination(humanControl.snapshot().quiet(),
-                event.getString("act", ""))){
+                event.getString("act", ""), event.getString("reason_code", ""))){
                 suppressedAnnouncements++;
                 Log.info("AGENT-DEMO CHAT SUPPRESSED message_id=@ reason=quiet",
                     event.getString("message_id", ""));
@@ -488,6 +500,51 @@ final class DemoCoordinator{
         return Set.copyOf(result);
     }
 
+    void humanBuildCompleted(BlockBuildEndEvent event){
+        if(!publicPolicy || event == null || event.breaking || event.unit == null
+            || !event.unit.isPlayer() || event.team != scenario.coreTeam
+            || event.tile == null || event.tile.block() == Blocks.air) return;
+        int rotation = event.tile.build == null ? 0 : event.tile.build.rotation;
+        BuildPlan completed = new BuildPlan(event.tile.x, event.tile.y, rotation,
+            event.tile.block());
+        humanPresence.constructionCompleted(presence(completed), (long)state.tick);
+    }
+
+    private void syncHumanPresence(){
+        TreeMap<String, Plan> plans = new TreeMap<>();
+        for(Player player : Groups.player){
+            if(player.team() != scenario.coreTeam || !player.isBuilder()) continue;
+            for(BuildPlan plan : player.unit().plans()){
+                Plan presence = presence(plan);
+                if(presence != null) plans.put(presence.id(), presence);
+            }
+        }
+        if(probeHumanPlan != null){
+            Plan presence = presence(probeHumanPlan);
+            if(presence != null) plans.put(presence.id(), presence);
+        }
+        publicDemo.applyHumanPresence(humanPresence.update(plans.values(), (long)state.tick),
+            (long)state.tick);
+    }
+
+    private static Plan presence(BuildPlan plan){
+        if(plan == null || plan.block == null) return null;
+        int x = plan.x + plan.block.sizeOffset;
+        int y = plan.y + plan.block.sizeOffset;
+        TreeMap<String, Integer> resources = new TreeMap<>();
+        if(!plan.breaking){
+            for(mindustry.type.ItemStack requirement : plan.block.requirements){
+                int amount = Math.round(requirement.amount * state.rules.buildCostMultiplier);
+                if(amount > 0) resources.merge(requirement.item.name, amount, Integer::sum);
+            }
+        }
+        String id = "human:presence:" + plan.x + ":" + plan.y + ":"
+            + plan.block.name + ":" + plan.rotation + ":"
+            + (plan.breaking ? "break" : "build");
+        return new Plan(id, new agentcore.reservation.Rect(x, y,
+            plan.block.size, plan.block.size), resources);
+    }
+
     private void driveHumanProbe(){
         if(!humanProbe || !publicPolicy || !started()) return;
         switch(humanProbePhase){
@@ -497,43 +554,89 @@ final class DemoCoordinator{
                 humanProbePhase = 1;
             }
             case 1 -> {
-                if(!publicDemo.taskCompleted("human:goal:1")) return;
+                if(publicDemo.taskOwner("human:goal:1") != 0) return;
+                startProbeHumanPresence();
+                humanProbePhase = 2;
+            }
+            case 2 -> {
+                if(publicDemo.humanReservationYields() != 1 || humanYieldNotices != 1
+                    || publicDemo.taskOwner("human:goal:1") >= 0) return;
+                if(publicDemo.agentBuildPlanOverlaps(probePresence.area())){
+                    throw new IllegalStateException("agent retained a plan inside human reservation");
+                }
+                int copper = probePresence.resources().getOrDefault("copper", 0);
+                if(copper <= 0 || publicDemo.humanReservedAmount("copper") != copper){
+                    throw new IllegalStateException("human resource floor was not reserved");
+                }
+                probeHumanPlan = null;
+                humanPresence.constructionCompleted(probePresence, (long)state.tick);
+                probeRecentExpiry = (long)state.tick + HumanPresence.RECENT_CONSTRUCTION_TICKS;
+                humanProbePhase = 3;
+            }
+            case 3 -> {
+                if(!publicDemo.hasHumanPresence(probePresence.id())) return;
+                if(publicDemo.humanReservedAmount("copper") != 0){
+                    throw new IllegalStateException("completed human plan retained resource floor");
+                }
+                if(publicDemo.taskOwner("human:goal:1") >= 0
+                    || publicDemo.agentBuildPlanOverlaps(probePresence.area())){
+                    throw new IllegalStateException("agent entered recent human construction zone");
+                }
+                if((long)state.tick < probeRecentExpiry) return;
+                humanProbePhase = 4;
+            }
+            case 4 -> {
+                if(publicDemo.hasHumanPresence(probePresence.id())
+                    || !publicDemo.taskCompleted("human:goal:1")) return;
                 probeCommand("release", "0");
                 probeCommand("cancel", "human:goal:1");
                 probeCommand("autonomy", "low");
                 probeCommand("goal", "defend-region", "east_lane");
                 probeCommand("assign", "1", "human:goal:2");
                 probeCommand("quiet", "on");
-                humanProbePhase = 2;
+                humanProbePhase = 5;
             }
-            case 2 -> {
+            case 5 -> {
                 if(publicDemo.taskOwner("human:goal:2") != 1
                     || !publicDemo.lowIsolation("human:goal:2", 1)) return;
                 lowAutonomyObserved = true;
                 probeCommand("release", "1");
                 probeCommand("assign", "2", "human:goal:2");
-                humanProbePhase = 3;
+                humanProbePhase = 6;
             }
-            case 3 -> {
+            case 6 -> {
                 if(publicDemo.taskOwner("human:goal:2") != 2
                     || !publicDemo.lowIsolation("human:goal:2", 2)) return;
                 probeCommand("cancel", "human:goal:2");
                 probeCommand("autonomy", "high");
                 probeCommand("goal", "defend-region", "east_lane");
                 probeCommand("quiet", "off");
-                humanProbePhase = 4;
+                humanProbePhase = 7;
             }
-            case 4 -> {
+            case 7 -> {
                 if(publicDemo.taskOwner("human:goal:3") < 0) return;
                 highAutonomyObserved = true;
                 probeCommand("cancel", "human:goal:3");
                 probeCommand("autonomy", "normal");
-                humanProbePhase = 5;
+                humanProbePhase = 8;
             }
-            case 5 -> finishHumanProbe();
-            case 6 -> { }
+            case 8 -> finishHumanProbe();
+            case 9 -> { }
             default -> throw new IllegalStateException("invalid human probe phase");
         }
+    }
+
+    private void startProbeHumanPresence(){
+        Scenario.SchematicSpec line = scenario.schematic(scenario.buildLineId);
+        if(line == null || line.blocks().isEmpty()){
+            throw new IllegalStateException("human probe requires build-line schematic");
+        }
+        BuildSpec block = line.blocks().get(0);
+        probeHumanPlan = new BuildPlan(scenario.buildLineAnchorX + block.offsetX(),
+            scenario.buildLineAnchorY + block.offsetY(), block.rotation(),
+            content.block(block.block()));
+        probePresence = presence(probeHumanPlan);
+        if(probePresence == null) throw new IllegalStateException("invalid human probe plan");
     }
 
     private void probeCommand(String... tokens){
@@ -552,10 +655,13 @@ final class DemoCoordinator{
         if(suppressedAnnouncements == 0){
             throw new IllegalStateException("quiet mode suppressed no rendered announcement");
         }
-        Log.info("AGENT-DEMO HUMAN CONTROL OK tick=@ low=true high=true suppressed=@",
+        if(publicDemo.humanReservationYields() != 1 || humanYieldNotices != 1){
+            throw new IllegalStateException("human conflict notification was not exactly once");
+        }
+        Log.info("AGENT-DEMO HUMAN CONTROL OK tick=@ low=true high=true suppressed=@ yields=1",
             (long)state.tick, suppressedAnnouncements);
         Core.app.exit();
-        humanProbePhase = 6;
+        humanProbePhase = 9;
     }
 
     private final class DemoPort implements ExpertCoordinationDriver.Port{

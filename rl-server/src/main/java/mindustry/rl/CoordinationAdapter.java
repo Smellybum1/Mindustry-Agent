@@ -6,6 +6,7 @@ import agentcore.board.*;
 import agentcore.candidates.*;
 import agentcore.coordination.*;
 import agentcore.event.*;
+import agentcore.human.HumanPresence.*;
 import agentcore.reservation.*;
 import agentcore.skill.*;
 import agentcore.task.*;
@@ -54,6 +55,7 @@ public final class CoordinationAdapter{
     private int policySwitches;
     private int structuredMessages;
     private int announcedMessages;
+    private int humanReservationYields;
     private TaskSpec[] previousTasks = new TaskSpec[0];
     private long[] previousTaskTicks = new long[0];
     private TaskSpec[] blockedTasks = new TaskSpec[0];
@@ -111,6 +113,7 @@ public final class CoordinationAdapter{
         policySwitches = 0;
         structuredMessages = 0;
         announcedMessages = 0;
+        humanReservationYields = 0;
         previousTasks = new TaskSpec[agentCount];
         previousTaskTicks = new long[agentCount];
         blockedTasks = new TaskSpec[agentCount];
@@ -281,7 +284,7 @@ public final class CoordinationAdapter{
         // while renewable inflow and deterministic scenario grants can expand it.
         // Existing full estimates are added so incremental build spending is not
         // counted twice.
-        int reservedCopper = board.reservations().reservedAmount("copper");
+        int reservedCopper = board.reservations().reservedAmount("copper", false);
         copperReservationCapacity = Math.max(copperReservationCapacity,
             StateHasher.coreItem(Items.copper) + reservedCopper);
         board.reservations().setCapacity("copper", copperReservationCapacity);
@@ -413,6 +416,7 @@ public final class CoordinationAdapter{
         long tick = (long)state.tick;
         for(TaskCandidate candidate : candidates.candidates()){
             select.add(idle && candidate.valid() && taskAvailable(candidate.task())
+                && humanReservationsAllow(candidate.task())
                 && !retryNotDue(agentIndex, candidate.task(), tick));
         }
         out.add("candidate_task", select);
@@ -509,6 +513,15 @@ public final class CoordinationAdapter{
             : idleAgentTicks / (double)agentTicks);
         out.put("structured_messages", structuredMessages);
         out.put("announced_messages", announcedMessages);
+        long humanTiles = board.reservations().tileReservations().stream()
+            .filter(TileReservation::human).count();
+        long humanResources = board.reservations().resourceReservations().stream()
+            .filter(ResourceReservation::human).count();
+        if(humanReservationYields > 0 || humanTiles > 0 || humanResources > 0){
+            out.put("human_reservation_yields", humanReservationYields);
+            out.put("human_tile_reservations", humanTiles);
+            out.put("human_resource_reservations", humanResources);
+        }
         if(sharedExpert != null){
             out.put("shared_policy_name", sharedExpert.policyName());
             out.put("shared_decision_count", sharedExpert.selectionCount());
@@ -1039,6 +1052,30 @@ public final class CoordinationAdapter{
         return state == null || state.status() == TaskStatus.OPEN;
     }
 
+    private boolean humanReservationsAllow(TaskSpec task){
+        if(task.type() == TaskType.BUILD_SCHEMATIC || task.type() == TaskType.BUILD_LINE){
+            boolean hasHumanTiles = board.reservations().tileReservations().stream()
+                .anyMatch(TileReservation::human);
+            if(hasHumanTiles){
+                Rect footprint = schematicFootprint(task);
+                for(TileReservation reservation : board.reservations().tileOverlaps(footprint)){
+                    if(reservation.human()) return false;
+                }
+            }
+        }
+        for(Map.Entry<String, Integer> cost : task.estimatedCost().asMap().entrySet()){
+            int human = board.reservations().reservedAmount(cost.getKey(), true);
+            if(human > 0){
+                mindustry.type.Item item = content.item(cost.getKey());
+                int stock = item == null ? 0 : StateHasher.coreItem(item);
+                int agent = board.reservations().reservedAmount(cost.getKey(), false);
+                if(!board.reservations().canAgentReserve(cost.getKey(), cost.getValue())
+                    || stock < human + agent + cost.getValue()) return false;
+            }
+        }
+        return true;
+    }
+
     private boolean dependenciesComplete(TaskSpec task){
         for(String dependency : task.dependencyTaskIds()){
             TaskState state = board.task(dependency);
@@ -1105,6 +1142,74 @@ public final class CoordinationAdapter{
         clearAssignment(agentIndex, agent);
         markDecision("task_released");
         return true;
+    }
+
+    /** Apply one sim-thread human plan/recent-construction reservation bundle. */
+    public int reserveHumanPresence(Plan presence, long tick){
+        Objects.requireNonNull(presence, "presence");
+        AgentId human = new AgentId(assignments.length, "human");
+        ReservationOutcome tiles = board.reserveTile(presence.id(), human,
+            presence.area(), true, tick);
+        int yielded = yieldToHuman(tiles.conflicts(), tick);
+        for(Map.Entry<String, Integer> resource : presence.resources().entrySet()){
+            ReservationOutcome outcome = board.reserveResource(presence.id(), human,
+                resource.getKey(), resource.getValue(), true, tick);
+            yielded += yieldToHuman(outcome.conflicts(), tick);
+            mindustry.type.Item item = content.item(resource.getKey());
+            int stock = item == null ? 0 : StateHasher.coreItem(item);
+            ReservationOutcome floor = board.enforceHumanResourceFloor(presence.id(),
+                human, resource.getKey(), stock, tick);
+            yielded += yieldToHuman(floor.conflicts(), tick);
+        }
+        return yielded;
+    }
+
+    public void releaseHumanPresence(String presenceId){
+        board.reservations().releaseAll(presenceId);
+    }
+
+    public int humanReservationYields(){ return humanReservationYields; }
+    public int humanReservedAmount(String item){
+        return board.reservations().reservedAmount(item, true);
+    }
+
+    public boolean hasHumanPresence(String presenceId){
+        return board.reservations().tileReservations().stream()
+            .anyMatch(reservation -> reservation.human()
+                && reservation.taskId().equals(presenceId));
+    }
+
+    private int yieldToHuman(List<ReservationConflict> conflicts, long tick){
+        TreeSet<String> yieldedTasks = new TreeSet<>();
+        for(ReservationConflict conflict : conflicts){
+            if(conflict.winnerHuman()) yieldedTasks.add(conflict.yieldedTaskId());
+        }
+        int yielded = 0;
+        for(String taskId : yieldedTasks){
+            for(int i = 0; i < assignments.length; i++){
+                Assignment assignment = current(i);
+                if(assignment == null || !assignment.taskId.equals(taskId)) continue;
+                AgentRuntimeRegistry.Agent agent = registry.get(i);
+                OpResult transition;
+                if(assignment.spec.origin() == TaskOrigin.HUMAN){
+                    transition = board.release(taskId, AgentId.of(i), tick);
+                }else{
+                    transition = board.yieldToHuman(taskId, AgentId.of(i), tick);
+                }
+                if(transition.ok()){
+                    if(assignment.spec.origin() != TaskOrigin.HUMAN){
+                        tasksAbandoned++;
+                        forcedTasksAbandoned++;
+                    }
+                    rememberTransition(i, assignment.spec, tick, false);
+                    clearAssignment(i, agent);
+                    humanReservationYields++;
+                    yielded++;
+                    markDecision("human_reservation_yield");
+                }
+            }
+        }
+        return yielded;
     }
 
     public String lastDecisionReason(){ return lastDecisionReason; }

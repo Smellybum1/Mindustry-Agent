@@ -2013,16 +2013,18 @@ the public path honors explicit assignment plus LOW/NORMAL/HIGH and quiet
 semantics. A deterministic no-port probe completes an assigned human build-line
 goal, exercises LOW and HIGH defense goals, and releases/cancels all state; the
 exact public digest and full-health stock survival remain green. Human build-
-plan reservation/yield and conflict notification remain pending, so neither
-M10.1 nor a milestone exit criterion is checked.
+plan detection now reserves exact footprints and rules-scaled costs, yields
+overlapping or resource-conflicting agent work, protects recent construction
+for 600 ticks, and emits exactly one rendered conflict notice. M10.1 and M10.2
+are complete; opt-in session capture is next.
 
-- 10.1 Human command surface v2: `/agents goal <task> <region>`,
+- **DONE (verified 2026-07-23) — 10.1 Human command surface v2:** `/agents goal <task> <region>`,
   `/agents cancel <goal-id>`, `/agents assign <agent> <goal-id>`,
   `/agents release <agent>`,
   `/agents autonomy low|normal|high`, `/agents quiet on|off` — human-created
   goals become high-priority board tasks entering the SAME candidate stream
   (human_priority weight already exists); validated, confirmable, revocable.
-- 10.2 Human-presence adaptation: detect human build plans/recent construction
+- **DONE (verified 2026-07-23) — 10.2 Human-presence adaptation:** detect human build plans/recent construction
   zones in the demo (plugin observes player plans), register them as
   human-priority reservations (board rule exists — wire the detection), agents
   yield + announce the conflict exactly once; never deconstruct human work;
@@ -2045,7 +2047,7 @@ M10.1 nor a milestone exit criterion is checked.
   human prefers playing WITH agents vs without on the same scenario.
 
 Exit criteria:
-- [ ] Human goals/overrides work end to end; agents never fight human plans
+- [x] Human goals/overrides work end to end; agents never fight human plans
 - [ ] Human sessions captured; human-partner models in the training population
 - [ ] Learned team scores ≥ scripted team on scorecard v1 WITH a human present
 - [ ] The project owner, playing seriously, prefers the agent team present

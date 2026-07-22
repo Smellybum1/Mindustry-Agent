@@ -387,6 +387,12 @@ of client identity; raw UUID and player display text are not authoritative or
 logged. Empty control does not add fields to protocol-v1 observations, selector
 tensors, or autonomous state hashes.
 
+Human build presence is also demo-local and simulation-thread-owned. It is
+derived from same-team player build queues and completion events, not accepted
+from the externally stepped protocol. Presence affects only the real-time demo's
+board reservations and masks; an empty player set leaves protocol-v1 behavior
+and hashes unchanged.
+
 ## 3. Protocol invariants (brief §18.5)
 
 1. Every request has a monotonically unique request ID.

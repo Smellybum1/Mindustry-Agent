@@ -141,7 +141,11 @@ public final class HumanControl{
     }
 
     public static boolean shouldRenderCoordination(boolean quiet, String act){
-        return !quiet || "BLOCKED".equals(act);
+        return shouldRenderCoordination(quiet, act, "");
+    }
+
+    public static boolean shouldRenderCoordination(boolean quiet, String act, String reason){
+        return !quiet || "BLOCKED".equals(act) || "yield_to_human".equals(reason);
     }
 
     /** Stateless token parser; no scenario, board, registry, or world reads occur here. */

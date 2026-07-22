@@ -110,6 +110,8 @@ class HumanControlTest{
             1, canonical).accepted());
         assertFalse(HumanControl.shouldRenderCoordination(true, "START_TASK"));
         assertTrue(HumanControl.shouldRenderCoordination(true, "BLOCKED"));
+        assertTrue(HumanControl.shouldRenderCoordination(true, "",
+            "yield_to_human"));
         assertTrue(HumanControl.shouldRenderCoordination(false, "START_TASK"));
     }
 

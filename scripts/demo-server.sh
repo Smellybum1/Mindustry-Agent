@@ -72,7 +72,13 @@ if [[ "${DEMO_HUMAN_CONTROL:-0}" == "1" ]]; then
         exit 1
     fi
     grep -F '"task_id":"human:goal:1"' "$LOG" >/dev/null
-    grep -F 'low=true high=true' "$LOG" >/dev/null
+    grep -F 'low=true high=true' "$LOG" | grep -F 'yields=1' >/dev/null
+    yield_notices=$(grep -F '"reason_code":"yield_to_human"' "$LOG" \
+        | grep -F '"announce":true' | wc -l | tr -d ' ')
+    if [[ "$yield_notices" != "1" ]]; then
+        echo "demo-server: expected exactly one human-yield notice, got $yield_notices" >&2
+        exit 1
+    fi
     grep -F 'AGENT-DEMO CHAT SUPPRESSED' "$LOG" >/dev/null
     if grep -F "Opened a server on port" "$LOG" >/dev/null; then
         echo "demo-server: human probe unexpectedly opened a network port" >&2

@@ -72,3 +72,8 @@ response. `LOW` permits only explicitly assigned human goals, `NORMAL` binds an
 unassigned goal to the highest-utility capable idle seat, and `HIGH` leaves
 unassigned human goals advisory while preserving explicit assignments. Quiet
 mode suppresses nonurgent rendered chat only; structured events remain logged.
+Same-team human build queues are observed on the simulation thread. Active plans
+reserve their exact footprint and rules-scaled item cost; completed human work
+keeps a tile-only reservation for 600 ticks. Agents yield immediately, clear
+overlapping plans, preserve the human resource floor, and render one conflict
+notice. With no human plans this path is inert.

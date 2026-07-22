@@ -6,12 +6,14 @@ import agentcore.coordination.*;
 import agentcore.human.*;
 import agentcore.human.HumanActionPolicy.*;
 import agentcore.human.HumanControl.*;
+import agentcore.human.HumanPresence.*;
 import agentcore.policy.*;
 import agentcore.policy.GreedyUtilityPolicy.*;
 import agentcore.skill.*;
 import agentcore.task.*;
 import arc.util.serialization.*;
 import mindustry.gen.*;
+import mindustry.entities.units.*;
 import mindustry.rl.*;
 
 import java.nio.charset.*;
@@ -161,6 +163,26 @@ final class PublicCandidateDemo{
         return preparationComplete() ? "reserve-mining" : "opening";
     }
     int selectionCount(){ return acceptedSelections.size(); }
+    void applyHumanPresence(Change change, long tick){
+        for(String presenceId : change.removed()) coordination.releaseHumanPresence(presenceId);
+        for(Plan presence : change.added()) coordination.reserveHumanPresence(presence, tick);
+        if(!change.empty()) nextDecisionTick = Math.min(nextDecisionTick, tick);
+    }
+    int humanReservationYields(){ return coordination.humanReservationYields(); }
+    int humanReservedAmount(String item){ return coordination.humanReservedAmount(item); }
+    boolean hasHumanPresence(String presenceId){ return coordination.hasHumanPresence(presenceId); }
+    boolean agentBuildPlanOverlaps(agentcore.reservation.Rect area){
+        for(DemoAgentRegistry.Agent agent : registry.agents()){
+            for(BuildPlan plan : agent.unit().plans()){
+                if(plan.breaking || plan.block == null) continue;
+                agentcore.reservation.Rect footprint = new agentcore.reservation.Rect(
+                    plan.x + plan.block.sizeOffset, plan.y + plan.block.sizeOffset,
+                    plan.block.size, plan.block.size);
+                if(footprint.overlaps(area)) return true;
+            }
+        }
+        return false;
+    }
     boolean taskCompleted(String taskId){
         TaskState task = coordination.board().task(taskId);
         return task != null && task.status() == TaskStatus.COMPLETED;

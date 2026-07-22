@@ -3,6 +3,8 @@ package agentcore.reservation;
 import agentcore.AgentId;
 import org.junit.jupiter.api.Test;
 
+import java.util.*;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -54,6 +56,18 @@ class ReservationRegistryTest{
         assertEquals(1, r.tileOverlaps(new Rect(1, 1, 1, 1)).size());
     }
 
+    @Test void humanOverrideReportsOneConflictPerYieldedTask(){
+        ReservationRegistry r = new ReservationRegistry();
+        r.acquireTile("agentTask", A, new Rect(0, 0, 2, 2), false, 0);
+        r.acquireTile("agentTask", A, new Rect(2, 0, 2, 2), false, 0);
+
+        ReservationOutcome out = r.acquireTile("humanTask", HUMAN,
+            new Rect(0, 0, 4, 2), true, 1);
+
+        assertEquals(1, out.conflicts().size());
+        assertEquals("agentTask", out.conflicts().get(0).yieldedTaskId());
+    }
+
     @Test void agentCannotOverrideHumanReservation(){
         ReservationRegistry r = new ReservationRegistry();
         r.acquireTile("humanTask", HUMAN, new Rect(0, 0, 3, 3), true, 0);
@@ -98,6 +112,42 @@ class ReservationRegistryTest{
         assertEquals(150, r.reservedAmount("copper"));
         // Now an agent cannot reserve because the human consumed the budget.
         assertFalse(r.acquireResource("t1", A, "copper", 10, false, 1).granted());
+    }
+
+    @Test void humanResourceFloorDeterministicallyYieldsNewestAgentTask(){
+        ReservationRegistry r = new ReservationRegistry();
+        r.setCapacity("copper", 100);
+        r.acquireTile("old", A, Rect.ofTile(0, 0), false, 0);
+        r.acquireResource("old", A, "copper", 40, false, 0);
+        r.acquireTile("new", B, Rect.ofTile(2, 0), false, 1);
+        r.acquireResource("new", B, "copper", 40, false, 1);
+
+        ReservationOutcome out = r.acquireResource("human", HUMAN, "copper", 50, true, 2);
+
+        assertEquals(ReservationResult.GRANTED_HUMAN_OVERRIDE, out.result());
+        assertEquals(List.of("new"), out.conflicts().stream()
+            .map(ReservationConflict::yieldedTaskId).toList());
+        assertEquals(90, r.reservedAmount("copper"));
+        assertEquals(50, r.reservedAmount("copper", true));
+        assertEquals(40, r.reservedAmount("copper", false));
+        assertEquals(0, r.countForTask("new"));
+        assertFalse(r.canAgentReserve("copper", 11));
+        assertTrue(r.canAgentReserve("copper", 10));
+    }
+
+    @Test void liveHumanFloorYieldsAgentEvenBelowHistoricalCapacity(){
+        ReservationRegistry r = new ReservationRegistry();
+        r.setCapacity("copper", 250);
+        r.acquireResource("agent", A, "copper", 80, false, 0);
+        r.acquireResource("human", HUMAN, "copper", 40, true, 1);
+
+        ReservationOutcome out = r.enforceHumanFloor("human", HUMAN,
+            "copper", 100, 2);
+
+        assertEquals(ReservationResult.GRANTED_HUMAN_OVERRIDE, out.result());
+        assertEquals(List.of("agent"), out.conflicts().stream()
+            .map(ReservationConflict::yieldedTaskId).toList());
+        assertEquals(40, r.reservedAmount("copper"));
     }
 
     @Test void regionReservationOverlapAndRelease(){

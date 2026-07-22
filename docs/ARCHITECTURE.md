@@ -57,7 +57,11 @@ the prerequisite is now met. Structured human goals now overlay only already-
 valid public candidates. Server/client callbacks parse and enqueue immutable
 commands; the simulation thread validates scenario/agent/goal state, mutates
 the control state, constrains masks, and applies board/skill transitions before
-the next policy decision. `docs/M10_DESIGN.md` pins that accepted contract.
+the next policy decision. On that same simulation thread, authoritative human
+build queues and player build-completion events drive exact tile/resource
+reservations, deterministic yield, and a 600-tick recent-construction guard.
+No human presence means no reservation diff or policy change.
+`docs/M10_DESIGN.md` pins that accepted contract.
 `AgentRuntimeRegistry` decouples candidates, adaptive facts, feature extraction,
 action decoding, and coordination from the training registry while preserving
 `RlAgentRegistry` as the existing runtime facade. `DemoAgentRegistry` now
@@ -84,7 +88,7 @@ survival retain stock real-time engine behavior.
 |---|---|---|---|
 | `rl-server` | `mindustry.rl` | `:core`, `:server` | Headless externally-stepped launcher: init content once, fixed-step loop, load scenario, reset in-process, apply atomic action bundle at decision boundary, advance exact ticks, extract observations/rewards, return deterministic state hash, serve health/handshake/reset/step/close. Disables ordinary networking unless testing parity. |
 | `agent-core` | `agentcore` | `:core` | Agent identity, task catalog + validation, shared scripted coordination driver and scenario plan, task board, intention/offer/claim/lease protocol, skill executors, candidate task generation, action masks, observation construction, reward accounting, metrics, announcement templates, structured event log. **No Python/RL dependency.** |
-| `agent-plugin` | `mindustry.agentplugin` | `:core`, `:agent-core`, selected project-owned `:rl-server` adapters | Real-time dedicated-server adapter for demo mode. A loadable stock-server plugin that starts the exact scenario, spawns/rebinds three controlled Alphas, adapts the public candidate/typed-action path to legal engine skills, renders approved announcements, and exposes queued human goals, assignments, autonomy, quiet, status, pause/resume, and emergency-stop controls. It owns pacing, engine/IO adaptation, controls, and telemetry—not a separate coordination policy. |
+| `agent-plugin` | `mindustry.agentplugin` | `:core`, `:agent-core`, selected project-owned `:rl-server` adapters | Real-time dedicated-server adapter for demo mode. A loadable stock-server plugin that starts the exact scenario, spawns/rebinds three controlled Alphas, adapts the public candidate/typed-action path to legal engine skills, renders approved announcements, observes human build presence, and exposes queued human goals, assignments, autonomy, quiet, status, pause/resume, and emergency-stop controls. It owns pacing, engine/IO adaptation, controls, and telemetry—not a separate coordination policy. |
 
 Upstream modules are preserved except for the narrowly catalogued deterministic
 external-mode patches and `settings.gradle` registration edit in

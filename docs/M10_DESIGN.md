@@ -60,10 +60,12 @@ LOW/NORMAL/HIGH behavior, terminal cancellation, reversible release, and quiet r
 live. `DEMO_HUMAN_CONTROL=1` completes an assigned human BUILD_LINE through
 candidate → mask → typed action → board → skill, then exercises assigned LOW
 defense, release and stable-id reassignment, unassigned HIGH defense, cancel,
-and quiet suppression. The
+and quiet suppression. The same probe injects an engine `BuildPlan` over an
+active goal, observes one reservation yield/notice, preserves the block's live
+resource floor, holds the completed-construction zone for 600 ticks, and proves
+that no agent plan re-enters it. The
 no-command public digest and stock-clock tick-8100/full-health survival remain
-unchanged. Human build-plan reservation detection/yield and session capture
-remain pending; M10.1 and the milestone exit criteria are therefore not closed.
+unchanged. M10.1 and M10.2 are complete; opt-in session capture remains next.
 
 ## Command grammar
 
@@ -141,6 +143,30 @@ the still-active goal to the unassigned pool. Cancel structurally abandons any
 active assignment with reason `human_goal_cancelled`, releases reservations,
 and removes the goal candidate at the next boundary.
 
+## Human presence reservations
+
+On each real-time simulation update, the plugin scans the authoritative build
+queues of same-team human players. Each plan becomes a deterministic presence
+bundle keyed only by tile, block, rotation, and build/break intent. It reserves
+the block's exact multiblock footprint and, for construction, its rules-scaled
+item requirements. Player identity and wall-clock time are not inputs.
+
+A human tile reservation overrides an overlapping agent reservation. A live
+human resource floor may also yield the newest agent resource task until current
+core stock can preserve all human requirements. The yielded controller clears
+its build plans immediately. Human-origin goals use reversible board `RELEASE`
+so their stable id can resume later; autonomous work ends with a structured,
+non-rendered `ABANDON(yield_to_human)`. The reservation-conflict board event is
+therefore the one rendered yield notice. While presence remains, masks exclude
+overlapping builds and work that would spend below the human floor.
+
+`BlockBuildEndEvent` from a human builder converts the plan to a tile-only
+recent-construction reservation for exactly 600 simulation ticks. Its resource
+floor is released because the items were consumed, while agents remain unable
+to replace or build through the completed work. Cancelled or disconnected plans
+release on the next sim-thread scan. With no human plans, the tracker emits no
+changes and the public action path remains byte-identical.
+
 ## Autonomy semantics
 
 - `LOW`: only explicitly assigned human goals may start; unassigned seats WAIT
@@ -206,9 +232,10 @@ M10.1 is complete only when all of the following pass:
 
 No item may be checked from parser-only, board-only, or demo-only evidence.
 
-Current evidence (2026-07-23): gates 1–5 pass for the implemented command
-surface, including the thread-boundary unit test, exact no-command parity,
-golden determinism, stock survival, and the no-port human-control probe. Gate 6
-is not implemented: detecting and reserving human build plans, deterministic
-yield, resource floors, and the exactly-once conflict notification are next.
-Gate 7 remains continuously enforced but cannot close M10.1 ahead of gate 6.
+Current evidence (2026-07-23): all seven gates pass. The no-port human-control
+probe covers the full command path plus engine-plan detection, deterministic
+yield, rules-scaled resource floor, recent-construction exclusion, cleared agent
+plans, and exactly one rendered conflict notification. Java tests pin presence
+diff/expiry and tile/resource override semantics. Exact no-command parity,
+golden determinism, stock survival, and the documented surfaces remain green.
+M10.1 is complete.

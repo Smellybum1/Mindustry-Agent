@@ -353,6 +353,25 @@ public final class TaskBoard{
     }
 
     /**
+     * Terminally yield an autonomous task after its reservation loses to a human.
+     * The reservation-conflict event is the sole rendered notice, so this lifecycle
+     * event remains structured but non-announcing.
+     */
+    public OpResult yieldToHuman(String taskId, AgentId agent, long tick){
+        TaskState st = requireOwner(taskId, agent);
+        if(st == null) return OpResult.rejected(taskReason(taskId, agent));
+        if(st.terminal()) return OpResult.rejected("terminal");
+        TaskStatus from = st.status();
+        st.setStatus(TaskStatus.ABANDONED);
+        st.setReasonCode("yield_to_human");
+        reservations.releaseAll(taskId);
+        CoordinationEvent ev = emit(st, CoordinationAct.ABANDON, agent, null, tick,
+            from, TaskStatus.ABANDONED, false, b -> b.reasonCode("yield_to_human"));
+        st.clearOwnership();
+        return OpResult.ok(ev);
+    }
+
+    /**
      * Voluntarily release the task back to OPEN (brief §11.2 {@code RELEASE}).
      * Unlike {@link #abandon}, the task stays alive and reclaimable; reservations
      * are released. Only the owner. Announceable.
@@ -407,6 +426,20 @@ public final class TaskBoard{
     /** Reserve a resource amount for a task. */
     public ReservationOutcome reserveResource(String taskId, AgentId agent, String item, int amount, boolean human, long tick){
         ReservationOutcome outcome = reservations.acquireResource(taskId, agent, item, amount, human, tick);
+        emitConflicts(outcome.conflicts(), tick);
+        return outcome;
+    }
+
+    /** Enforce the live human resource floor and emit one conflict per yielded task. */
+    public ReservationOutcome enforceHumanResourceFloor(
+        String taskId,
+        AgentId agent,
+        String item,
+        int available,
+        long tick
+    ){
+        ReservationOutcome outcome = reservations.enforceHumanFloor(taskId, agent,
+            item, available, tick);
         emitConflicts(outcome.conflicts(), tick);
         return outcome;
     }

@@ -260,4 +260,17 @@ class TaskBoardTest{
         assertTrue(b.events().peek().stream()
             .anyMatch(e -> "yield_to_human".equals(e.reasonCode()) && e.announce()));
     }
+
+    @Test void humanYieldLifecycleDoesNotDuplicateRenderedConflict(){
+        TaskBoard b = board();
+        b.propose(spec("a", TaskType.BUILD_SCHEMATIC), 0);
+        b.claim("a", COPPER, 1.0, 0);
+        b.reserveTile("a", COPPER, new Rect(0, 0, 2, 2), false, 1);
+        b.reserveTile("human", SHIELD, new Rect(1, 1, 2, 2), true, 2);
+
+        assertTrue(b.yieldToHuman("a", COPPER, 2).ok());
+        assertEquals(TaskStatus.ABANDONED, b.task("a").status());
+        assertEquals(1, b.events().peek().stream()
+            .filter(e -> "yield_to_human".equals(e.reasonCode()) && e.announce()).count());
+    }
 }

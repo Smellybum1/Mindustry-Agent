@@ -192,7 +192,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `aaf2e734ea384fe4b537cbdf3bd5342fb5e954f3432a91470ebce311fa503714`.
   A persistent logistics seat reduces seven repeated abandon/reclaim cycles to
   two phase-entry rebalances and seven unassigned waits. All prerequisites and
-  the default promotion pass. The first M10.1 packet now adds the engine-free
+  the default promotion pass. M10.1 now adds the engine-free
   strict `HumanControl` parser and simulation-thread state with bounded ordered
   goals, assignments, autonomy/quiet settings, deterministic ids/revisions,
   stable rejection reasons, and reset tests. Explicit task provenance and the
@@ -203,12 +203,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   and queued plugin application are now live on the public path. Callbacks parse
   and enqueue only; simulation-thread application emits structured results.
   Explicit and NORMAL implicit assignment, LOW/NORMAL/HIGH masks, terminal
-  cancellation, reversible release, and quiet rendering pass unit and no-port integration probes.
+  cancellation, reversible release, and quiet rendering pass unit and no-port
+  integration probes.
   The probe completes assigned `human:goal:1` BUILD_LINE, exercises assigned LOW
   defense, stable-id reassignment, and advisory HIGH defense, applies 16/16
-  commands, restores empty/NORMAL state, and suppresses four nonurgent messages. Exact public parity and stock tick-
-  8100/full-health survival remain green. Human build-plan reservation/yield and
-  the exactly-once conflict notification remain pending, so M10.1 is open.
+  commands, restores empty/NORMAL state, and suppresses four nonurgent messages.
+  The probe also injects an engine build plan over active work, observes one
+  deterministic yield/notice, preserves the rules-scaled resource floor, keeps
+  recent construction agent-free for 600 ticks, then resumes the stable goal.
+  M10.1 and M10.2 are complete. Exact public parity and stock tick-8100/full-
+  health survival remain green; opt-in session capture is next.
   M8.5 evaluation machinery is real, but the candidate did not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
