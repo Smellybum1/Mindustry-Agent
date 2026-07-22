@@ -1554,6 +1554,14 @@ held-out-v4 stays sealed. Config/seed governance and all 44 exact-config reward
 adversaries pass, and the Python suite is 162/162. No V37 implementation or
 model work preceded the precommit. M8.5 remains unmet.
 
+V37's fixed-seat opening is now implemented fail-closed across teacher/PPO
+collection, reusable evaluation, checkpoint replay, matched controls,
+confirmation, and final evaluation. Full structured action evidence is archived
+without changing legacy-config behavior or permanent public baselines. Missing,
+duplicate, invalid, and masked matches fail before the step; 165 Python tests
+pass. The inherited live/Java/determinism gates remain pending, dev-v33 and
+held-out-v4 remain sealed, and no V37 model work has begun.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

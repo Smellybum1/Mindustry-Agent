@@ -1496,8 +1496,16 @@ repository-evidence mapping used for the M6 audit is:
   V35 `[390.1,8.1,380.0]`; seat-2 build-line and other simple alternatives fail
   at 6/10. Dev-v32 is retired unopened, dev-v33 freezes disjoint roots
   `286001..286160`, and held-out-v4 stays sealed. Config/seed governance and all
-  44 exact-config reward adversaries pass, and the Python suite is 162/162. No
-  implementation or V37 model work has begun; M8.5 remains unmet.
+  44 exact-config reward adversaries pass, and the precommit Python suite was
+  162/162. No implementation or V37 model work preceded the precommit.
+- V37's fail-closed scripted-partner opening is implemented across teacher/PPO
+  collection, reusable evaluation, checkpoint replay, matched controls,
+  confirmation, and final evaluation. It emits an ordinary structured
+  candidate selection, archives the full action in decision traces, leaves
+  legacy configs and permanent public baselines unchanged, and rejects missing,
+  duplicate, invalid, or masked candidates before stepping. The complete Python
+  suite is 165/165. Inherited live/Java/determinism gates remain pending; no V37
+  model work has begun and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

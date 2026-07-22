@@ -293,6 +293,142 @@ class TestPpoSelector(unittest.TestCase):
         self.assertEqual(_select_dev_checkpoint_index(rows, policy), 2)
         self.assertEqual(_select_dev_checkpoint_index(rows, None), 0)
 
+    def test_scripted_partner_opening_is_validated_and_legacy_optional(self):
+        from mindustry_agents.training.ppo_selector import (
+            _scripted_partner_opening,
+        )
+
+        self.assertIsNone(_scripted_partner_opening({}))
+        opening = {
+            "schema": "fixed_seat_initial_task_type_v1",
+            "tick": 0,
+            "agent_id": 2,
+            "task_type": "HARVEST_RESOURCE",
+        }
+        self.assertEqual(
+            _scripted_partner_opening({"scripted_partner_opening": opening}),
+            opening,
+        )
+        invalid = (
+            opening | {"schema": "unknown"},
+            opening | {"tick": -1},
+            opening | {"agent_id": 0},
+            opening | {"task_type": ""},
+        )
+        for value in invalid:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                _scripted_partner_opening({"scripted_partner_opening": value})
+
+    def test_scripted_partner_opening_replaces_only_fixed_seat_at_exact_tick(self):
+        from mindustry_agents.training.ppo_selector import (
+            _apply_scripted_partner_opening,
+            _scripted_partner_opening,
+        )
+
+        opening = _scripted_partner_opening(
+            {
+                "scripted_partner_opening": {
+                    "schema": "fixed_seat_initial_task_type_v1",
+                    "tick": 0,
+                    "agent_id": 2,
+                    "task_type": "HARVEST_RESOURCE",
+                }
+            }
+        )
+        actions = [
+            {"agent_id": agent_id, "task_action": {"type": "WAIT"}}
+            for agent_id in range(3)
+        ]
+        observations = [
+            {"task_candidates": []},
+            {"task_candidates": []},
+            {
+                "task_candidates": [
+                    {"task_type": "BUILD_LINE", "valid": True},
+                    {"task_type": "HARVEST_RESOURCE", "valid": True},
+                ]
+            },
+        ]
+        masks = [
+            {"candidate_task": []},
+            {"candidate_task": []},
+            {"candidate_task": [True, True]},
+        ]
+
+        legacy, legacy_evidence = _apply_scripted_partner_opening(
+            actions, observations, masks, tick=0, opening=None
+        )
+        self.assertEqual(legacy, actions)
+        self.assertIsNone(legacy_evidence)
+        later, later_evidence = _apply_scripted_partner_opening(
+            actions, observations, masks, tick=1, opening=opening
+        )
+        self.assertEqual(later, actions)
+        self.assertIsNone(later_evidence)
+
+        bundle, evidence = _apply_scripted_partner_opening(
+            actions, observations, masks, tick=0, opening=opening
+        )
+        expected = {
+            "agent_id": 2,
+            "task_action": {
+                "type": "SELECT_CANDIDATE_TASK",
+                "candidate_index": 1,
+            },
+        }
+        self.assertEqual(bundle[:2], actions[:2])
+        self.assertEqual(bundle[2], expected)
+        self.assertEqual(evidence, expected)
+        self.assertEqual(actions[2]["task_action"], {"type": "WAIT"})
+
+    def test_scripted_partner_opening_fails_closed_on_candidate_drift(self):
+        from mindustry_agents.training.ppo_selector import (
+            _apply_scripted_partner_opening,
+        )
+
+        opening = {
+            "schema": "fixed_seat_initial_task_type_v1",
+            "tick": 0,
+            "agent_id": 2,
+            "task_type": "HARVEST_RESOURCE",
+        }
+        actions = [
+            {"agent_id": agent_id, "task_action": {"type": "WAIT"}}
+            for agent_id in range(3)
+        ]
+
+        def apply(candidates, candidate_mask):
+            return _apply_scripted_partner_opening(
+                actions,
+                [
+                    {"task_candidates": []},
+                    {"task_candidates": []},
+                    {"task_candidates": candidates},
+                ],
+                [
+                    {"candidate_task": []},
+                    {"candidate_task": []},
+                    {"candidate_task": candidate_mask},
+                ],
+                tick=0,
+                opening=opening,
+            )
+
+        with self.assertRaisesRegex(RuntimeError, "exactly one"):
+            apply([{"task_type": "BUILD_LINE", "valid": True}], [True])
+        with self.assertRaisesRegex(RuntimeError, "exactly one"):
+            apply(
+                [
+                    {"task_type": "HARVEST_RESOURCE", "valid": True},
+                    {"task_type": "HARVEST_RESOURCE", "valid": True},
+                ],
+                [True, True],
+            )
+        with self.assertRaisesRegex(RuntimeError, "invalid"):
+            apply([{"task_type": "HARVEST_RESOURCE", "valid": False}], [True])
+        with self.assertRaisesRegex(RuntimeError, "masked"):
+            apply([{"task_type": "HARVEST_RESOURCE", "valid": True}], [False])
+
     def test_quality_gated_checkpoint_selection_fails_without_eligible_row(self):
         from mindustry_agents.training.ppo_selector import (
             _dev_checkpoint_selection_policy,

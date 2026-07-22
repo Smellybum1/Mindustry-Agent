@@ -801,13 +801,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement ADR-0048's V37 partner opening.** Validate the fixed-seat schema
-   and replace only scripted seat 2's exact tick-0 selection with the unique
-   valid/mask-selectable harvest candidate across training, replay, matched
-   controls, confirmation, and final evaluation. Fail closed on drift.
-2. **Run every pretraining gate from the committed implementation.** Add focused
-   positive and legacy-identity tests, then run Python, inherited V35
-   focused/public/Java, smoke, determinism, golden replay, and negative replay.
+1. **Run every pretraining gate from the committed V37 implementation.** The
+   fail-closed opening is wired through all governed rollout paths and 165
+   Python tests pass. Run inherited V35 focused/public/Java, smoke,
+   determinism, golden replay, and negative replay from that commit.
+2. **Authorize only replica A if every gate is green.** Train from scratch with
+   the exact V37 config; require at least 9/10 reusable wins and mean idle below
+   0.25 before replica B.
 3. **Keep dev-v32 retired unopened, dev-v33 unopened, and held-out-v4 sealed.**
    No successor may
    open a new confirmation set without exact replicas,

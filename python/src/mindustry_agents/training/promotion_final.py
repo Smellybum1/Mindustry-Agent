@@ -35,6 +35,7 @@ from mindustry_agents.training.ppo_selector import (
     _configure_torch,
     _git_evidence,
     _policy_logit_adjustment,
+    _scripted_partner_opening,
     _sha256,
     load_checkpoint,
     REWARD_SCHEMA,
@@ -324,6 +325,7 @@ def main(argv: list[str] | None = None) -> int:
     records: list[dict[str, Any]] = []
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
     policy_logit_adjustment = _policy_logit_adjustment(config)
+    scripted_partner_opening = _scripted_partner_opening(config)
     with RlServerProcess(
         LaunchConfig(port=args.port, java=args.java, build_if_missing=False)
     ) as env:
@@ -343,6 +345,7 @@ def main(argv: list[str] | None = None) -> int:
                         reward_schema=reward_schema,
                         quality_reward=config.get("quality_reward"),
                         policy_logit_adjustment=policy_logit_adjustment,
+                        scripted_partner_opening=scripted_partner_opening,
                     )
                     record = _record(
                         rollout,
@@ -357,6 +360,7 @@ def main(argv: list[str] | None = None) -> int:
                         scenario_id=str(seed_set["scenario_id"]),
                         scenario_version=int(seed_set["scenario_version"]),
                         control=policy,
+                        scripted_partner_opening=scripted_partner_opening,
                     )
                     record = _record(
                         rollout,

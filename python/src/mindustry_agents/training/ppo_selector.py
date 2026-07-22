@@ -53,6 +53,7 @@ QUALITY_GATE_RANKING = (
     "update_asc",
 )
 POLICY_LOGIT_ADJUSTMENT_SCHEMA = "initial_task_type_logit_bias_v1"
+SCRIPTED_PARTNER_OPENING_SCHEMA = "fixed_seat_initial_task_type_v1"
 
 ARC_HASH = "208a754044"
 LEARNED_SEAT = 0
@@ -264,6 +265,77 @@ def _policy_logit_adjustment(config: dict[str, Any]) -> dict[str, Any] | None:
         "task_type": task_type,
         "bias": bias,
     }
+
+
+def _scripted_partner_opening(config: dict[str, Any]) -> dict[str, Any] | None:
+    """Validate an optional fixed scripted-seat candidate selection."""
+
+    opening = config.get("scripted_partner_opening")
+    if opening is None:
+        return None
+    if (
+        not isinstance(opening, dict)
+        or opening.get("schema") != SCRIPTED_PARTNER_OPENING_SCHEMA
+    ):
+        raise ValueError("unsupported scripted_partner_opening schema")
+    tick = int(opening.get("tick", -1))
+    agent_id = int(opening.get("agent_id", -1))
+    task_type = str(opening.get("task_type", ""))
+    if tick < 0 or agent_id not in (1, 2) or not task_type:
+        raise ValueError("invalid fixed-seat scripted partner opening")
+    return {
+        "schema": SCRIPTED_PARTNER_OPENING_SCHEMA,
+        "tick": tick,
+        "agent_id": agent_id,
+        "task_type": task_type,
+    }
+
+
+def _apply_scripted_partner_opening(
+    actions: list[dict[str, Any]],
+    observations: list[dict[str, Any]],
+    masks: list[dict[str, Any]],
+    *,
+    tick: int,
+    opening: dict[str, Any] | None,
+) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    """Replace one scripted action with its unique governed candidate."""
+
+    bundle = list(actions)
+    if opening is None or tick != int(opening["tick"]):
+        return bundle, None
+    agent_id = int(opening["agent_id"])
+    if (
+        agent_id >= len(bundle)
+        or agent_id >= len(observations)
+        or agent_id >= len(masks)
+    ):
+        raise RuntimeError("scripted partner opening agent is unavailable")
+    candidates = list(observations[agent_id].get("task_candidates", []))
+    matches = [
+        index
+        for index, candidate in enumerate(candidates)
+        if str(candidate.get("task_type", "")) == opening["task_type"]
+    ]
+    if len(matches) != 1:
+        raise RuntimeError("scripted partner opening requires exactly one candidate")
+    candidate_index = matches[0]
+    candidate_mask = list(masks[agent_id].get("candidate_task", []))
+    if not bool(candidates[candidate_index].get("valid", False)):
+        raise RuntimeError("scripted partner opening candidate is invalid")
+    if candidate_index >= len(candidate_mask) or not bool(
+        candidate_mask[candidate_index]
+    ):
+        raise RuntimeError("scripted partner opening candidate is masked")
+    action = {
+        "agent_id": agent_id,
+        "task_action": {
+            "type": "SELECT_CANDIDATE_TASK",
+            "candidate_index": candidate_index,
+        },
+    }
+    bundle[agent_id] = action
+    return bundle, action
 
 
 def _task_type_logit_bias(
@@ -514,9 +586,13 @@ def rollout_episode(
     quality_reward: dict[str, float] | None = None,
     teacher_controlled: bool = False,
     policy_logit_adjustment: dict[str, Any] | None = None,
+    scripted_partner_opening: dict[str, Any] | None = None,
 ) -> EpisodeRollout:
     policy_logit_adjustment = _policy_logit_adjustment(
         {"policy_logit_adjustment": policy_logit_adjustment}
+    )
+    scripted_partner_opening = _scripted_partner_opening(
+        {"scripted_partner_opening": scripted_partner_opening}
     )
     reset = env.reset(
         seed,
@@ -552,7 +628,13 @@ def rollout_episode(
     previous_dead = [bool(item["unit"]["dead"]) for item in observations]
 
     while outcome == "running" and tick < int(metadata["tick_cap"]):
-        scripted_bundle = scripted.actions(observations, masks)
+        scripted_bundle, opening_action = _apply_scripted_partner_opening(
+            scripted.actions(observations, masks),
+            observations,
+            masks,
+            tick=tick,
+            opening=scripted_partner_opening,
+        )
         features = build_selector_features(
             observations,
             masks,
@@ -710,6 +792,11 @@ def rollout_episode(
                 "teacher_action_index": teacher_index,
                 "teacher_candidate_diagnostics": _selected_candidate_diagnostics(
                     observations[LEARNED_SEAT]["task_candidates"], teacher_index
+                ),
+                **(
+                    {"scripted_partner_opening": opening_action}
+                    if opening_action is not None
+                    else {}
                 ),
                 "selected_candidate_diagnostics": _selected_candidate_diagnostics(
                     observations[LEARNED_SEAT]["task_candidates"], selected_index
@@ -1195,6 +1282,7 @@ def _evaluate(
 ) -> list[EpisodeRollout]:
     model.eval()
     policy_logit_adjustment = _policy_logit_adjustment(config)
+    scripted_partner_opening = _scripted_partner_opening(config)
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
     with RlServerProcess(
         LaunchConfig(port=port, java=java, build_if_missing=False)
@@ -1212,6 +1300,7 @@ def _evaluate(
                 reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
                 quality_reward=config.get("quality_reward"),
                 policy_logit_adjustment=policy_logit_adjustment,
+                scripted_partner_opening=scripted_partner_opening,
             )
             for seed in seeds
         ]
@@ -1423,6 +1512,7 @@ def _manifest(
 ) -> dict[str, Any]:
     lock = root / "python" / "requirements-rl-linux-py312.lock"
     selection_policy = _dev_checkpoint_selection_policy(config)
+    scripted_partner_opening = _scripted_partner_opening(config)
     manifest = {
         "schema": "selector_training_run_v1",
         "engine": {"tag": ENGINE_TAG, "commit": ENGINE_COMMIT, "arc": ARC_HASH},
@@ -1469,6 +1559,11 @@ def _manifest(
             "lifecycle_policy": LIFECYCLE_POLICY,
             "action_cadence": "server decision events with stop_on_decision_event=true",
             "jvm_cap": 4,
+            **(
+                {"scripted_partner_opening": scripted_partner_opening}
+                if scripted_partner_opening is not None
+                else {}
+            ),
         },
         "normalizers": config["normalizers"],
         "model_architecture": config["model_architecture"],
@@ -1641,6 +1736,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     teacher_warmup_policy = _teacher_warmup_policy(config)
     teacher_rehearsal_policy = _teacher_rehearsal_policy(config)
     policy_logit_adjustment = _policy_logit_adjustment(config)
+    scripted_partner_opening = _scripted_partner_opening(config)
     _configure_torch(config)
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
     teacher_warmup_set = _teacher_warmup_train_set(root, train_set, config)
@@ -1726,6 +1822,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     quality_reward=config.get("quality_reward"),
                     teacher_controlled=True,
                     policy_logit_adjustment=policy_logit_adjustment,
+                    scripted_partner_opening=scripted_partner_opening,
                 )
                 for seed in teacher_warmup_seeds
             ]
@@ -1781,6 +1878,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
                     quality_reward=config.get("quality_reward"),
                     policy_logit_adjustment=policy_logit_adjustment,
+                    scripted_partner_opening=scripted_partner_opening,
                 )
                 for seed in seeds[start : start + episodes_per_update]
             ]

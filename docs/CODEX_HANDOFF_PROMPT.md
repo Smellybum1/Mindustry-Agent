@@ -152,11 +152,13 @@ complete V35 construction and changes only fixed scripted seat 2's tick-0
 opening to the unique valid `HARVEST_RESOURCE` candidate. The unchanged V35
 checkpoint wins 9/10 off-contract with mean core health `720.0` and idle ticks
 `[267.0,0.7,308.2]`; seat-2 build-line and learned alternatives win only 6/10.
-Config/seed governance, all 44 reward adversaries, and 162 Python tests pass.
-Implement the fail-closed opening across training, replay, matched controls,
-confirmation, and final evaluation; then run focused/Python/public/Java/smoke/
-determinism/negative gates before replica A. Dev-v33 is frozen at disjoint roots
-`286001..286160` but unopened; held-out-v4 remains sealed.
+Config/seed governance and all 44 reward adversaries pass. The fail-closed
+opening is implemented across training, replay, matched controls, confirmation,
+and final evaluation; the full structured action is archived, legacy configs
+and permanent public baselines remain unchanged, and 165 Python tests pass. Run
+the inherited focused/public/Java/smoke/determinism/golden/negative gates from
+the committed implementation before replica A. Dev-v33 is frozen at disjoint
+roots `286001..286160` but unopened; held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

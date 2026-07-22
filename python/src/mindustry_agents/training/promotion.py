@@ -33,10 +33,12 @@ from mindustry_agents.training.ppo_selector import (
     LEARNED_SEAT,
     REWARD_SCHEMA,
     EpisodeRollout,
+    _apply_scripted_partner_opening,
     _canonical_scripted_action,
     _configure_torch,
     _git_evidence,
     _policy_logit_adjustment,
+    _scripted_partner_opening,
     _scripted_index,
     _sha256,
     load_checkpoint,
@@ -82,8 +84,13 @@ def rollout_control_episode(
     scenario_id: str,
     scenario_version: int,
     control: str,
+    scripted_partner_opening: dict[str, Any] | None = None,
 ) -> EpisodeRollout:
     """Run one matched seat-0 control with the learned seat's scripted lifecycle."""
+
+    scripted_partner_opening = _scripted_partner_opening(
+        {"scripted_partner_opening": scripted_partner_opening}
+    )
 
     reset = env.reset(
         seed,
@@ -114,7 +121,13 @@ def rollout_control_episode(
     final_metrics: dict[str, Any] = {}
 
     while outcome == "running" and tick < int(metadata["tick_cap"]):
-        bundle = adaptive.actions(observations, masks)
+        bundle, opening_action = _apply_scripted_partner_opening(
+            adaptive.actions(observations, masks),
+            observations,
+            masks,
+            tick=tick,
+            opening=scripted_partner_opening,
+        )
         candidates = observations[LEARNED_SEAT]["task_candidates"]
         lifecycle_action, lifecycle_index = _canonical_control_action(
             bundle[LEARNED_SEAT], candidates
@@ -195,6 +208,11 @@ def rollout_control_episode(
                 "action": selected_action["task_action"],
                 "action_index": selected_index,
                 "forced": forced,
+                **(
+                    {"scripted_partner_opening": opening_action}
+                    if opening_action is not None
+                    else {}
+                ),
                 "boundary_reasons": reasons,
                 "state_hash": response.state_hash,
                 "outcome": response.outcome,
@@ -365,6 +383,7 @@ def main(argv: list[str] | None = None) -> int:
         args.config.resolve()
     )
     policy_logit_adjustment = _policy_logit_adjustment(config)
+    scripted_partner_opening = _scripted_partner_opening(config)
     lineage = validate_lineage_manifest(
         manifest_path=args.lineage_manifest,
         config_path=args.config,
@@ -430,6 +449,7 @@ def main(argv: list[str] | None = None) -> int:
                         reward_schema=reward_schema,
                         quality_reward=config.get("quality_reward"),
                         policy_logit_adjustment=policy_logit_adjustment,
+                        scripted_partner_opening=scripted_partner_opening,
                     )
                 else:
                     rollout = rollout_control_episode(
@@ -438,6 +458,7 @@ def main(argv: list[str] | None = None) -> int:
                         scenario_id=str(seed_set["scenario_id"]),
                         scenario_version=int(seed_set["scenario_version"]),
                         control=policy,
+                        scripted_partner_opening=scripted_partner_opening,
                     )
                 records.append(
                     _record(

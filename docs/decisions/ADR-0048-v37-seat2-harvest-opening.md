@@ -105,3 +105,9 @@ All 44 exact-config reward adversaries pass; the report at
 The precommit brings the complete Python suite to 162 passing tests.
 No V37 implementation, teacher collection, model work, dev-v33 evidence, or
 held-out evidence preceded this precommit.
+
+The subsequent implementation applies the opening through every governed
+rollout path, archives the full structured action, and fails before stepping on
+candidate drift. Focused positive, legacy-identity, and fail-closed coverage
+bring the complete Python suite to 165 passing tests. The inherited live/Java/
+determinism gates and all V37 model work remain pending.
