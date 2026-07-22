@@ -114,7 +114,9 @@ or weaken the bounded variation.
 - The real-time plugin uses the shared Java utility driver and the same
   scenario plan, while the externally stepped primary expert selects through
   the public protocol seam. A future reusable policy port should eliminate the
-  remaining stage-local candidate construction in the demo driver.
+  remaining stage-local candidate construction in the demo driver. ADR-0057
+  now makes that port a hard M10.1 prerequisite; `docs/M10_DESIGN.md` accepts
+  the architecture, but no implementation exists yet.
 - WAIT retains one shared task ID, so simultaneous idle seats can produce
   harmless rejected bids. This is visible in duplicate/rejection telemetry.
 - Candidate generation does not yet produce alternative fortification anchors

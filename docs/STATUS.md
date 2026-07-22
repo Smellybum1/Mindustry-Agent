@@ -1865,7 +1865,9 @@ repository-evidence mapping used for the M6 audit is:
   machinery are implemented. V1, V8, and V9 failed promotion; their consumed
   held-out gates cannot be rerun. The next governed final set is held-out-v4.
 - **`agent-plugin`** is no longer a stub. Its scripted M6 path is implemented;
-  future M10 human goals/overrides and study instrumentation remain outside M6.
+  M10 human goals/overrides and study instrumentation remain unimplemented.
+  `docs/M10_DESIGN.md` and ADR-0057 accept the structured command contract and
+  make demo adoption of the public candidate/typed-action path a prerequisite.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,

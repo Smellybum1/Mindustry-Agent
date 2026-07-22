@@ -60,6 +60,8 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0053](ADR-0053-v39-sealed-test-read-repair.md) | V39 sealed-test read repair and replacement final |
 | [0054](ADR-0054-v40-partner-intent-teacher-conflict-filter.md) | V40 partner-intent teacher-conflict filter |
 | [0055](ADR-0055-v41-adjacent-frontier-midpoint.md) | V41 adjacent-frontier midpoint |
+| [0056](ADR-0056-v42-partner-intent-teacher-conflict-relabel.md) | V42 partner-intent teacher-conflict relabel |
+| [0057](ADR-0057-m10-human-control-and-demo-candidate-parity.md) | M10 human control and demo candidate-path parity |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

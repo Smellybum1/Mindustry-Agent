@@ -1972,6 +1972,15 @@ Objective: a skilled human plays bootstrap-defense (and variants) WITH the
 agents and rates them teammates worth keeping. Human-cooperation capability is
 built, measured, and iterated here — on the SAME brain that trains (7.2).
 
+**M10 PREIMPLEMENTATION ARCHITECTURE ACCEPTED (2026-07-23):**
+`docs/M10_DESIGN.md` and ADR-0057 pin the command/control schema, simulation-
+thread queue, autonomy/quiet semantics, telemetry, and acceptance gates. They
+also make the existing `docs/CANDIDATE_GAPS.md` seam a hard prerequisite: the
+real-time plugin must move from `ExpertCoordinationDriver`'s stage-local
+candidates to the public `EngineCandidates` / typed-action path before human
+goals are applied. No M10 implementation exists yet; this packet does not start
+M9, authorize V43, or access any governed seed membership.
+
 - 10.1 Human command surface v2: `/agents goal <task> <region>`,
   `/agents assign <agent> <task>`, `/agents release <agent>`,
   `/agents autonomy low|normal|high`, `/agents quiet on|off` — human-created

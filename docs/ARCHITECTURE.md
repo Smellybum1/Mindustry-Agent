@@ -54,6 +54,14 @@ skills. The remaining stage-local candidate construction in the in-process
 driver is explicitly tracked in `docs/CANDIDATE_GAPS.md`; policy code has not
 been copied back into `agent-plugin`.
 
+ADR-0057 makes elimination of that remaining seam a prerequisite for M10 human
+commands. The plugin must first select through the public candidate table,
+masks, typed actions, `CoordinationAdapter`, board, reservations, and skills.
+Only then may structured human goals overlay candidates. Command callbacks parse
+and enqueue immutable input; the simulation thread validates and applies it.
+`docs/M10_DESIGN.md` pins the accepted contract. This is architecture only at
+present—the demo policy port and human-control implementation do not yet exist.
+
 ## Module responsibilities
 
 ### Java (Gradle modules layered on pinned upstream engine)

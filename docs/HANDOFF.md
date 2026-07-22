@@ -175,8 +175,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   matched greedy 1/10 `[0.0,0.3]`. Permanent CI separation failed, and idle /
   abandonment regressed versus permanent greedy. The attempt marker forbids a
   rerun; held-out outcomes must not be used for policy revision.
-- **What is stubbed**: the M10 human goal/override/study surface remains future
-  work. M8.5 evaluation machinery is real, but the candidate did not promote.
+- **What is stubbed**: the M10 human goal/override/study implementation remains
+  future work. `docs/M10_DESIGN.md` and ADR-0057 now accept its architecture and
+  require the plugin to adopt the public candidate/typed-action path before
+  commands are added. M8.5 evaluation machinery is real, but the candidate did
+  not promote.
 - **What remains for M6**: nothing. The closure matrix and 15-item audit are
   recorded, and the closure commit is tagged `milestone-6`.
 - **Post-failure governance**: ADR-0013 freezes the 40-root, globally disjoint
