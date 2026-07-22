@@ -250,6 +250,11 @@ opening the server. After a normal exit it runs the same complete validation,
 replay, statistics, and objective-scorecard postprocessor as the deterministic
 probe, writing a sibling `.scorecard.unrated.json` unless an explicit
 `DEMO_SCORECARD_PATH` is supplied. It never creates or infers a human rating.
+The dependency-free `mindustry_agents.tools.human_rating` command constructs
+the exact rating schema from four explicit human answers, obtains the binding
+digest from a fully validated capture, rejects unknown fields, and writes with
+create-new semantics. This removes manual digest transcription without
+weakening human authority over preference evidence.
 The deterministic probe currently yields 5/83 intervention ticks, one conflict
 with zero-tick yield latency, 1/1 eligible goal compliance, no observed help
 request, and 10 rendered/four suppressed announcements.

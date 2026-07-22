@@ -2046,8 +2046,9 @@ are complete; opt-in session capture is next.
   digest-bound rating file. Opted-in private join mode now preflights capture
   and scorecard paths, validates the completed session, and automatically writes
   an unrated objective scorecard after normal exit. The deterministic probe
-  leaves ratings null; real serious sessions and human-entered ratings are still
-  required.
+  leaves ratings null. A create-new rating tool binds four explicit human
+  answers to the validated capture digest and rejects extra/free-text fields;
+  real serious sessions and human-entered ratings are still required.
 - 10.5 Learned policy in the demo seat: latency budget (decision within one
   real-time tick), safety invariants live (stop/pause instant, autonomy
   levels honored), fallback to scripted brain on policy-process failure.

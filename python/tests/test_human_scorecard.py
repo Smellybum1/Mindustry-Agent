@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
 
 from mindustry_agents.evaluation.human_scorecard import (
+    build_human_rating,
     human_teammate_scorecard,
     load_human_rating,
+    write_human_rating,
     write_human_scorecard,
 )
+from mindustry_agents.tools import human_rating as human_rating_tool
 
 
 def _control(tick: int, kind: str, goal_id: str, task_type: str = "") -> dict:
@@ -151,3 +155,72 @@ def test_rating_rejects_wrong_session_digest():
         wrong_rating = json.loads(path.read_text(encoding="utf-8"))
         with pytest.raises(ValueError, match="digest mismatch"):
             human_teammate_scorecard(_records(), wrong_rating)
+
+
+def test_rating_builder_is_exact_and_create_new():
+    root = Path(__file__).parents[2]
+    with TemporaryDirectory(dir=root / "runs") as directory:
+        path = Path(directory) / "rating.json"
+        rating = build_human_rating("a" * 64, 5, False, -1, True)
+        assert set(rating) == {
+            "schema",
+            "version",
+            "session_content_sha256",
+            "announcement_usefulness_rating",
+            "keep_this_team",
+            "comparative_rating_vs_scripted",
+            "serious_session",
+        }
+        write_human_rating(path, rating)
+        assert load_human_rating(path, "a" * 64) == rating
+        with pytest.raises(ValueError, match="refusing to overwrite"):
+            write_human_rating(path, rating)
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"notes": "must not be accepted"}, "fields must match schema exactly"),
+        ({"announcement_usefulness_rating": True}, "must be an integer"),
+        ({"comparative_rating_vs_scripted": 3}, "integer from -2 to 2"),
+        ({"session_content_sha256": "A" * 64}, "64 lowercase hex"),
+    ],
+)
+def test_rating_builder_rejects_out_of_contract_fields(changes, message):
+    rating = build_human_rating("a" * 64, 4, True, 0, False)
+    rating.update(changes)
+    with pytest.raises(ValueError, match=message):
+        write_human_rating(Path("unused.json"), rating)
+
+
+def test_human_rating_cli_binds_explicit_values(monkeypatch, capsys):
+    root = Path(__file__).parents[2]
+    with TemporaryDirectory(dir=root / "runs") as directory:
+        output = Path(directory) / "rating.json"
+        monkeypatch.setattr(human_rating_tool, "load_session", lambda _: _records())
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            [
+                "human_rating",
+                "--session",
+                "session.jsonl",
+                "--output",
+                str(output),
+                "--announcement-usefulness-rating",
+                "4",
+                "--keep-this-team",
+                "yes",
+                "--comparative-rating-vs-scripted",
+                "1",
+                "--serious-session",
+                "no",
+            ],
+        )
+        human_rating_tool.main()
+        rating = load_human_rating(output, "a" * 64)
+        assert rating["announcement_usefulness_rating"] == 4
+        assert rating["keep_this_team"] is True
+        assert rating["comparative_rating_vs_scripted"] == 1
+        assert rating["serious_session"] is False
+        assert "HUMAN-RATING OK serious=false keep=true" in capsys.readouterr().out

@@ -19,7 +19,7 @@ and what is unverified.
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
   client, parallel-env facade, vector collector) is stdlib-only too. The
   governed **33-test core boundary passes under `python -S`** with no third-party
-  packages; the complete dev/RL suite passes all **257 tests** (verified
+  packages; the complete dev/RL suite passes all **263 tests** (verified
   2026-07-23).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
   machine (JDK 21 Temurin, Python 3.12.5, Git 2.46). Verified working in Git Bash.
@@ -1938,7 +1938,10 @@ repository-evidence mapping used for the M6 audit is:
   by the deterministic no-port gate.
   Optional usefulness/preference/comparison/serious-session judgments require a
   separate human-entered schema-v1 rating whose session digest must match; the
-  create-new writer refuses overwrite. The no-port gate deliberately reports
+  dependency-free rating command now obtains that digest from a validated
+  capture and writes only the exact four-answer schema with create-new
+  semantics. Unknown/free-text/identity fields are rejected. The no-port gate
+  deliberately reports
   `rating_status=not_provided`, with 5/83 intervention ticks, one conflict at
   zero-tick yield latency, 1/1 eligible goal compliance, and 10 rendered/four
   suppressed announcements. No human preference result is claimed.
@@ -1978,7 +1981,7 @@ repository-evidence mapping used for the M6 audit is:
   reproducible five-package dev lock, runs `make test`, and builds the custom
   distributions. The inherited upstream workflows are guarded to run only in
   `Anuken/Mindustry`, so this fork never follows their Arc `master` checkout.
-  Local equivalents pass (257 Python tests, Java suites/custom-module compile,
+  Local equivalents pass (263 Python tests, Java suites/custom-module compile,
   and distributions). A detached clean Ubuntu 24.04 worktree at `43d3b17db6`
   also passed literal `make bootstrap && make test` with an isolated JDK
   21.0.11, GNU Make 4.3, empty Gradle cache, and the 33-test zero-dependency

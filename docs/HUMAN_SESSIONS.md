@@ -106,8 +106,22 @@ The objective scorecard uses only captured structure:
 - rendered and quiet-suppressed announcement counts come from recorded render
   status, not reconstructed chat text.
 
-Human judgments live in a separate local JSON file and are never inferred. A
-rating file must match this exact schema and capture digest:
+Human judgments live in a separate local JSON file and are never inferred.
+Create that file from explicit answers after the session; the tool validates
+the completed capture, binds its digest, uses create-new output, and accepts no
+free-text or identity field:
+
+```bash
+PYTHONPATH=python/src python -m mindustry_agents.tools.human_rating \
+  --session runs/human-session-001.jsonl \
+  --output runs/human-session-001.rating.json \
+  --announcement-usefulness-rating 4 \
+  --keep-this-team yes \
+  --comparative-rating-vs-scripted 1 \
+  --serious-session yes
+```
+
+The resulting rating file has this exact schema and capture digest:
 
 ```json
 {

@@ -9,6 +9,40 @@ from typing import Any
 
 SCORECARD_SCHEMA = "human_teammate_scorecard_v1"
 RATING_SCHEMA = "human_session_rating_v1"
+RATING_FIELDS = frozenset(
+    {
+        "schema",
+        "version",
+        "session_content_sha256",
+        "announcement_usefulness_rating",
+        "keep_this_team",
+        "comparative_rating_vs_scripted",
+        "serious_session",
+    }
+)
+
+
+def build_human_rating(
+    session_content_sha256: str,
+    announcement_usefulness_rating: int,
+    keep_this_team: bool,
+    comparative_rating_vs_scripted: int,
+    serious_session: bool,
+) -> dict[str, Any]:
+    """Build the exact local rating schema from explicit human judgments."""
+
+    return _validated_rating(
+        {
+            "schema": RATING_SCHEMA,
+            "version": 1,
+            "session_content_sha256": session_content_sha256,
+            "announcement_usefulness_rating": announcement_usefulness_rating,
+            "keep_this_team": keep_this_team,
+            "comparative_rating_vs_scripted": comparative_rating_vs_scripted,
+            "serious_session": serious_session,
+        },
+        session_content_sha256,
+    )
 
 
 def load_human_rating(path: Path, session_content_sha256: str) -> dict[str, Any]:
@@ -21,8 +55,21 @@ def load_human_rating(path: Path, session_content_sha256: str) -> dict[str, Any]
 def _validated_rating(
     value: Any, session_content_sha256: str
 ) -> dict[str, Any]:
+    if (
+        not isinstance(session_content_sha256, str)
+        or len(session_content_sha256) != 64
+        or any(
+            character not in "0123456789abcdef"
+            for character in session_content_sha256
+        )
+    ):
+        raise ValueError(
+            "session content digest must be 64 lowercase hex characters"
+        )
     if not isinstance(value, dict) or value.get("schema") != RATING_SCHEMA:
         raise ValueError("unsupported human session rating schema")
+    if set(value) != RATING_FIELDS:
+        raise ValueError("human session rating fields must match schema exactly")
     if value.get("version") != 1:
         raise ValueError("unsupported human session rating version")
     if value.get("session_content_sha256") != session_content_sha256:
@@ -207,3 +254,21 @@ def write_human_scorecard(path: Path, scorecard: dict[str, Any]) -> None:
             stream.write(rendered)
     except FileExistsError as exc:
         raise ValueError(f"refusing to overwrite scorecard: {path}") from exc
+
+
+def write_human_rating(path: Path, rating: dict[str, Any]) -> None:
+    """Write one exact, digest-bound human rating without overwriting evidence."""
+
+    digest = (
+        rating.get("session_content_sha256") if isinstance(rating, dict) else None
+    )
+    validated = _validated_rating(rating, digest)
+    parent = path.parent
+    if not parent.is_dir():
+        raise ValueError(f"rating parent directory does not exist: {parent}")
+    rendered = json.dumps(validated, sort_keys=True, separators=(",", ":")) + "\n"
+    try:
+        with path.open("x", encoding="utf-8", newline="\n") as stream:
+            stream.write(rendered)
+    except FileExistsError as exc:
+        raise ValueError(f"refusing to overwrite rating: {path}") from exc
