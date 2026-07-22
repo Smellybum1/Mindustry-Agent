@@ -137,3 +137,14 @@ The primary-only dev-v36 freezer packet adds
 generates solely within `[4B,5B)`, hashes in-memory bytes, never opens a prior,
 sealed, or generated membership document, and emits only a value-free receipt.
 The 211-test Python suite passes before the freezer is committed or run.
+
+The freezer was committed at `54db674e2e` before construction. Its value-free
+receipt records 160 roots, zero membership-document reads, no read-back of the
+generated membership, no retired-confirmation or sealed-final read, and no
+emitted values. Dev-v36 membership SHA-256 is
+`d4bfbcf88d99f4f2daee9cffbdceb7a9aa74de664da6a777800b94f18e8cdf9b`;
+receipt SHA-256 is
+`fce63a49f80d1653777ed1cae2b3d6f730928da7d1c0a8075142403edd1353d7`.
+Dev-v36 remains frozen and unconsumed; held-out-v6 remains sealed and
+unconsumed. The receipt-aware Python suite passes 212 tests without opening
+membership.

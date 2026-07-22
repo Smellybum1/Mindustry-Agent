@@ -26,6 +26,18 @@ V40_UMBRELLA = (
     / "evaluation"
     / "m8-selector-v40-confirmation-umbrella.json"
 )
+V40_RECEIPT = (
+    ROOT
+    / "configs"
+    / "evaluation"
+    / "m8-selector-v40-dev-v36-freeze.json"
+)
+V40_MEMBERSHIP = (
+    ROOT
+    / "configs"
+    / "evaluation"
+    / "bootstrap-defense-v1-dev-v36.json"
+)
 ADR_0054 = (
     ROOT
     / "docs"
@@ -38,6 +50,12 @@ V40_CONFIG_SHA256 = (
 )
 V40_UMBRELLA_SHA256 = (
     "27c1948085e53dff1abdf7a6b99a8226f8d7e4f5e60c5f58b14cd1224b44d4be"
+)
+V40_RECEIPT_SHA256 = (
+    "fce63a49f80d1653777ed1cae2b3d6f730928da7d1c0a8075142403edd1353d7"
+)
+V40_MEMBERSHIP_SHA256 = (
+    "d4bfbcf88d99f4f2daee9cffbdceb7a9aa74de664da6a777800b94f18e8cdf9b"
 )
 HELD_OUT_V6_SHA256 = (
     "2bf4aa04ef54d873e961ff367db849c14c72b83bb4d280c4e31ba75bdeefa51c"
@@ -145,3 +163,23 @@ def test_v40_value_free_reservation_precedes_governed_membership() -> None:
 
     assert V40_CONFIG_SHA256 in adr
     assert V40_UMBRELLA_SHA256 in adr
+
+
+def test_v40_frozen_receipt_is_value_free_without_membership_read() -> None:
+    receipt = _load_json(V40_RECEIPT)
+
+    assert _sha256(V40_RECEIPT) == V40_RECEIPT_SHA256
+    assert V40_MEMBERSHIP.exists()
+    assert receipt["status"] == "membership_frozen_unconsumed"
+    assert receipt["candidate_version"] == "v40"
+    assert receipt["values_emitted"] is False
+    assert receipt["membership_documents_read"] == 0
+    assert receipt["generated_membership_read_after_write"] is False
+    assert receipt["retired_confirmation_membership_read"] is False
+    assert receipt["sealed_final_membership_read"] is False
+    assert receipt["set"]["count"] == 160
+    assert receipt["set"]["sha256"] == V40_MEMBERSHIP_SHA256
+    assert receipt["set"]["exclusive_namespace"] == {
+        "minimum_inclusive": 4_000_000_000,
+        "maximum_exclusive": 5_000_000_000,
+    }

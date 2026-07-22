@@ -1816,7 +1816,11 @@ starts, focused wake/staging, smoke, determinism, golden/negative replay, and
 construction after this evidence is committed. Replica A remains prohibited
 until that value-free freeze is committed; held-out-v6 access stays prohibited.
 The primary-only freezer and its no-membership tests are now implemented, with
-211 Python tests green. Commit the freezer before constructing dev-v36.
+211 Python tests green. It was committed at `54db674e2e` before construction.
+Dev-v36 is now frozen value-free and unconsumed; membership/receipt hashes are
+`d4bfbcf88d99f4f...` / `fce63a49f80d165...`. Replica A is authorized; replica
+B, dev-v36 consumption, and held-out-v6 access remain prohibited. The
+receipt-aware suite passes 212 tests without opening membership.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

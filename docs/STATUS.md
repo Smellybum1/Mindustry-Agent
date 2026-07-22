@@ -1750,8 +1750,12 @@ repository-evidence mapping used for the M6 audit is:
   adversaries. The reward report hashes to `9677e5caed4d891...`. Primary-only
   dev-v36 freezer code and pure tests now pass within the 211-test suite. The
   freezer uses only `[4B,5B)`, hashes in-memory bytes, and reads no membership.
-  It must be committed before execution; membership, baselines, and model work
-  remain absent.
+  It was committed at `54db674e2e` before execution. Dev-v36 is now frozen
+  value-free and unconsumed: membership/receipt hashes are
+  `d4bfbcf88d99f4f...` / `fce63a49f80d165...`, with no membership reads or
+  emitted values. Held-out-v6 remains sealed; baselines and model work remain
+  absent. The receipt-aware Python suite passes 212 tests without opening
+  membership.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

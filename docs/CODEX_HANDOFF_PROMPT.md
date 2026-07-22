@@ -283,8 +283,11 @@ report SHA `4fe2960225d659cb...`. Pinned Java, public/runtime/replay, and all
 44 exact-config reward gates now pass; reward report SHA is
 `9677e5caed4d891...`; gate evidence is committed at `a94cb9e534`. The
 primary-only `[4B,5B)` dev-v36 freezer packet is prepared and the 211-test suite
-passes, but the freezer must be committed before it runs. Never render or
-delegate membership, and never inspect held-out-v6 membership.
+passes. It was committed at `54db674e2e` before construction. Dev-v36 is now
+frozen value-free and unconsumed; membership/receipt hashes are
+`d4bfbcf88d99f4f...` / `fce63a49f80d165...`. Replica A is authorized from the
+exact committed config/toolchain; 212 receipt-aware Python tests pass. Never
+render or delegate membership, and never inspect held-out-v6 membership.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

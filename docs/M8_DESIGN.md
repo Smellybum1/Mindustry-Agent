@@ -664,6 +664,11 @@ replay, and 44/44 exact-config reward adversaries. Reward evidence hashes to
 committed before model work. The dedicated freezer generates only within
 `[4B,5B)`, hashes its in-memory manifest bytes, and never reads prior, sealed,
 or generated membership; its pure tests pass in the 211-test suite.
+The freezer was committed at `54db674e2e` and then created dev-v36 value-free.
+Membership/receipt hashes are `d4bfbcf88d99f4f...` / `fce63a49f80d165...`;
+the receipt records zero membership reads and no emitted values. Dev-v36 and
+held-out-v6 remain unconsumed; 212 receipt-aware Python tests pass without
+opening membership.
 
 ## M8.1 acceptance review
 

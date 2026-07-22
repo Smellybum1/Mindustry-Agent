@@ -813,9 +813,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   staging starts, focused wake/staging, smoke, accepted determinism digests,
   664-checkpoint/16,200-tick golden plus negative replay, and 44/44 exact-config
   reward adversaries pass. Reward report SHA is `9677e5caed4d891...`.
-- **Dev-v36 freezer ready, not run**: the primary-only freezer is constrained
-  to `[4B,5B)`, hashes in-memory bytes, reads no membership, and passes the
-  211-test Python suite. Commit the freezer packet before execution.
+- **Dev-v36 frozen value-free**: the primary-only `[4B,5B)` freezer was
+  committed at `54db674e2e` before construction. It reads no membership and
+  emits no values. Membership/receipt hashes are `d4bfbcf88d99f4f...` /
+  `fce63a49f80d165...`; dev-v36 and held-out-v6 remain unconsumed. The
+  receipt-aware Python suite passes 212 tests without membership access.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V39 implementation/governance repository checkpoint**:
   `e31e4daf7151661f285511ce29db6232a48a2242` (the documentation-only V39
@@ -979,19 +981,18 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit the prepared primary-only dev-v36 freezer packet.** Do not run the
-   uncommitted generator.
-2. **Then freeze dev-v36 value-free and review its receipt primary-only.** Never
-   render or delegate membership values; held-out-v6 remains sealed.
-3. **Only after the committed freeze, run V40 replica A.** Replica B requires
-   at least 9/10 reusable wins and idle `<0.25` from A.
+1. **Run V40 replica A from the exact committed config/toolchain.** Dev-v36 and
+   held-out-v6 remain unconsumed; neither membership may be opened.
+2. **Replica B requires at least 9/10 reusable wins and idle `<0.25` from A.**
+3. **Only exact twins may refresh baselines and run reusable scorecards.**
+   ADR-0051's selected-only provenance remains authoritative.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0052` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0054` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
