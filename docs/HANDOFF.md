@@ -832,6 +832,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `cfb0ec1b21fd49fb...` / `5fdc3bdabf24ee5e...`. Fresh selected-only permanent
   baselines and reusable dual scorecards are next; dev-v36 and held-out-v6
   remain unopened/unconsumed.
+- **V40 rejected at reusable scorecards**: fresh permanent random/greedy are
+  4/10 and 8/10; candidate 10/10 and matched random/greedy 5/10 and 6/10 pass
+  every observed win comparison. Permanent-greedy announcements and idle and
+  matched-greedy recovery remain uncertain, so both frozen scorecards fail.
+  Report SHA is `8453b0c4b75cd681...`. Dev-v36 is retired unopened/unconsumed;
+  held-out-v6 stays sealed/unconsumed. No confirmation/final episode ran.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V40 implementation/governance repository checkpoint**:
   `c288483436c1003d25dc64ce7aba968600d45f3a` (the Replica A documentation
@@ -995,11 +1001,11 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Refresh V40 permanent baselines on reusable dev-v1.** ADR-0051's
-   selected-only provenance is authoritative.
-2. **Run candidate and matched reusable controls, then both frozen scorecards.**
-3. **Open dev-v36 only if the complete reusable gate passes.** Dev-v36 and
-   held-out-v6 remain unconsumed; held-out access is still prohibited.
+1. **Diagnose one V41 coordinate from reusable/train-only V40 evidence.** Do not
+   use retired dev-v36 or sealed held-out-v6 membership.
+2. **Precommit any successor before implementation or model work.** Preserve
+   ADR-0051 selected-only provenance and the dual-scorecard gate.
+3. **Freeze a new disjoint value-free confirmation identity before model work.**
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
@@ -1027,8 +1033,8 @@ is unchanged. ADR-0052 records the completed synthesis and precommits V39's
 structured fixed-partner intent as evidence in the existing duplication-risk
 feature, without changing action authority. ADR-0054 records V40's narrow
 teacher-conflict filter, green pretraining boundary, value-free dev-v36 freeze,
-exact replicas, and direct lineage. Fresh reusable baselines/scorecards are the
-next authorized work.
+exact replicas, direct lineage, and reusable-scorecard rejection. A V41
+successor requires fresh reusable/train-only diagnosis and precommit.
 
 ## Deviations from the brief in this scaffold
 

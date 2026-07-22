@@ -1771,6 +1771,14 @@ repository-evidence mapping used for the M6 audit is:
   artifact SHA `5fdc3bdabf24ee5e...`. Fresh selected-only permanent baselines
   and reusable dual scorecards are authorized next. Dev-v36 and held-out-v6
   remain unopened/unconsumed.
+- V40 is rejected at the reusable dual-scorecard gate. Fresh selected-only
+  permanent random/greedy are 4/10 and 8/10; candidate is 10/10, matched random
+  5/10, and matched greedy 6/10, so all observed win gates pass. Permanent-
+  greedy announcements and idle remain uncertain, while matched-greedy
+  recovery remains uncertain. Records/aggregate/report hashes are
+  `3fe4454202460b4...` / `eafe2ce3faf8baba...` / `8453b0c4b75cd681...`.
+  Dev-v36 is retired unopened/unconsumed; held-out-v6 remains sealed and
+  unconsumed. No confirmation or final episode ran.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

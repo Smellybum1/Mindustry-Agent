@@ -686,6 +686,13 @@ lineage validates at digest `cfb0ec1b21fd49fb...`, artifact SHA
 `5fdc3bdabf24ee5e...`. Fresh selected-only permanent baselines and both
 reusable scorecards are therefore authorized; confirmation/final access is not.
 
+Fresh reusable evidence then rejects V40 before confirmation. Candidate wins
+10/10 versus permanent random/greedy 4/10 and 8/10 and matched random/greedy
+5/10 and 6/10. All observed win comparisons pass, but permanent-greedy
+announcements and idle CIs cross zero, and matched-greedy recovery crosses
+zero. Both frozen scorecards therefore fail. Dev-v36 is retired unopened and
+unconsumed; held-out-v6 remains sealed and unconsumed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

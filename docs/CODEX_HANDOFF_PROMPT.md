@@ -308,6 +308,15 @@ selected-only permanent baselines on reusable dev-v1 next, followed by the
 candidate/matched reusable preflight and both scorecards. Only a complete pass
 may authorize the primary to open dev-v36. Held-out-v6 remains sealed.
 
+Fresh selected-only baselines and reusable preflight now reject V40 before
+confirmation. Candidate is 10/10 versus permanent random/greedy 4/10 and 8/10
+and matched random/greedy 5/10 and 6/10; all observed win gates pass. The
+permanent-greedy announcements and idle CIs and matched-greedy recovery CI cross
+zero, so both frozen scorecards fail. Report SHA is `8453b0c4b75cd681...`.
+Dev-v36 is retired unopened/unconsumed; held-out-v6 remains sealed/unconsumed.
+Diagnose any V41 coordinate from reusable/train-only V40 evidence, precommit it,
+and freeze a new disjoint value-free confirmation identity before model work.
+
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.

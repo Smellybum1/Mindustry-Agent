@@ -1840,6 +1840,15 @@ complete, authorizing fresh selected-only permanent baselines and both reusable
 scorecards. Dev-v36 and held-out-v6 remain unopened/unconsumed; confirmation
 and final access remain prohibited.
 
+Fresh selected-only V40 permanent baselines are random 4/10 and greedy 8/10.
+The reusable preflight records candidate 10/10, matched random 5/10, and matched
+greedy 6/10, passing every observed win comparison. It nevertheless fails both
+frozen scorecards: permanent-greedy announcements and idle are uncertain, and
+matched-greedy recovery is uncertain. Records/aggregate/report hashes are
+`3fe4454202460b4...` / `eafe2ce3faf8baba...` / `8453b0c4b75cd681...`.
+V40 is rejected before confirmation. Dev-v36 is retired unopened/unconsumed;
+held-out-v6 remains sealed/unconsumed and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

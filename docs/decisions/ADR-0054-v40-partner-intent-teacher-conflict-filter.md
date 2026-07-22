@@ -182,3 +182,20 @@ artifact SHA-256 is
 Exact replicas are complete. Fresh selected-only permanent baselines and both
 reusable scorecards are now authorized; dev-v36 and held-out-v6 remain
 unopened and unconsumed.
+
+Fresh selected-only permanent baselines bind evaluator commit `bc8c429512`,
+the exact V40 config, and runtime JAR `5d4fc89f...`: random-valid is 4/10 and
+greedy-utility 8/10. Records/aggregate SHA-256 are `1b5ebe1de1016633...` /
+`7e72fd49628e85f...`. An earlier artifact that used WSL Git recorded false
+line-ending dirt; it is quarantined as invalid and was never used by promotion.
+
+The corrected reusable preflight keeps V40 at 10/10 and beats all four observed
+win comparators (permanent random 4/10, permanent greedy 8/10, matched random
+5/10, matched greedy 6/10), but both frozen scorecards fail. Against permanent
+greedy, announcements CI `[-0.0098241942,0.0009867885]` and idle CI
+`[-0.0199929918,0.0107357843]` cross zero. Against matched greedy, recovery CI
+`[-81.35,29.05]` crosses zero. Under the precommitted uncertainty-is-failure
+rule, V40 is rejected before confirmation. Records/aggregate/report SHA-256 are
+`3fe4454202460b4...` / `eafe2ce3faf8baba...` / `8453b0c4b75cd681...`.
+Dev-v36 is retired unopened and unconsumed; held-out-v6 remains sealed and
+unconsumed.
