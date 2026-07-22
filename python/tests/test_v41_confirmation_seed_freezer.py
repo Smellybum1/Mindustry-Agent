@@ -1,0 +1,102 @@
+"""Pure tests for the primary-only V41 confirmation freezer."""
+
+import importlib.util
+from pathlib import Path
+import unittest
+from unittest.mock import patch
+
+
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "scripts" / "freeze-v41-confirmation-seed-set.py"
+SPEC = importlib.util.spec_from_file_location(
+    "v41_confirmation_seed_freezer", SCRIPT
+)
+assert SPEC is not None and SPEC.loader is not None
+FREEZER = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(FREEZER)
+
+
+def _umbrella():
+    return {
+        "schema": "m8_confirmation_evaluation_umbrella_v1",
+        "candidate_version": "v41",
+        "status": "reserved_before_membership_creation",
+        "training_config": {
+            "path": FREEZER.CONFIG_PATH,
+            "sha256": FREEZER.CONFIG_SHA256,
+        },
+        "access_owner": "primary_agent_only",
+        "delegation_forbidden": True,
+        "replacement_set": {
+            "role": "confirmation",
+            "seed_set_id": "bootstrap-defense-v1-dev-v37",
+            "seed_set_version": 37,
+            "split": "dev",
+            "count": 160,
+            "path": "configs/evaluation/bootstrap-defense-v1-dev-v37.json",
+            "exclusive_namespace": {
+                "minimum_inclusive": FREEZER.MIN_ROOT_SEED,
+                "maximum_exclusive": FREEZER.MAX_ROOT_SEED_EXCLUSIVE,
+            },
+            "membership_state_at_reservation": "not_created",
+            "exclusive_umbrella_attempt": (
+                "runs/m8-selector-v41-dev-v37-umbrella-attempt.json"
+            ),
+            "replaces": "bootstrap-defense-v1-dev-v36",
+        },
+        "sealed_final_binding": {
+            "seed_set_id": "bootstrap-defense-v1-held-out-v6",
+            "seed_set_version": 6,
+            "split": "held-out",
+            "count": 160,
+            "path": "configs/evaluation/bootstrap-defense-v1-held-out-v6.json",
+            "sha256": FREEZER.HELD_OUT_V6_SHA256,
+            "consumption_state": "sealed_unconsumed",
+            "membership_read_for_v41_reservation": False,
+        },
+    }
+
+
+class V41ConfirmationSeedFreezerTests(unittest.TestCase):
+    def test_exact_reservation_is_required_without_membership_access(self):
+        reserved = FREEZER._validate_reservation(
+            _umbrella(), FREEZER.CONFIG_SHA256
+        )
+        self.assertEqual(reserved["seed_set_version"], 37)
+        changed = _umbrella()
+        changed["replacement_set"]["count"] = 159
+        with self.assertRaisesRegex(ValueError, "reservation drifted"):
+            FREEZER._validate_reservation(changed, FREEZER.CONFIG_SHA256)
+
+    def test_generation_stays_in_reserved_no_read_namespace(self):
+        with patch.object(FREEZER.secrets, "randbelow", side_effect=[2, 0, 2, 1]):
+            seeds = FREEZER._generate(3)
+        self.assertEqual(
+            seeds,
+            [
+                FREEZER.MIN_ROOT_SEED,
+                FREEZER.MIN_ROOT_SEED + 1,
+                FREEZER.MIN_ROOT_SEED + 2,
+            ],
+        )
+        self.assertTrue(
+            all(
+                FREEZER.MIN_ROOT_SEED
+                <= seed
+                < FREEZER.MAX_ROOT_SEED_EXCLUSIVE
+                for seed in seeds
+            )
+        )
+
+    def test_manifest_is_value_bearing_but_freezer_output_is_value_free(self):
+        reserved = FREEZER._validate_reservation(
+            _umbrella(), FREEZER.CONFIG_SHA256
+        )
+        manifest = FREEZER._manifest(reserved, [FREEZER.MIN_ROOT_SEED + 1])
+        self.assertEqual(manifest["split"], "dev")
+        self.assertEqual(manifest["seeds"], [FREEZER.MIN_ROOT_SEED + 1])
+        self.assertIn("primary-only", manifest["policy"])
+
+
+if __name__ == "__main__":
+    unittest.main()
