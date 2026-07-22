@@ -1692,6 +1692,23 @@ exact replica B from the same commit/config/toolchain in an independent output.
 Dev-v34 and held-out-v5 remain unconsumed; no scorecard, confirmation, or final
 episode has run. M8.5 remains unmet.
 
+V38 replica B completed independently from that exact commit, config, and lock
+and reproduced update 20 exactly at 9/10 wins, return `4.859680000000006`, core
+health `565.2`, and idle `0.021071738935729764`. All 32 checkpoint files are
+byte-identical; selected checkpoint/model, replay, action-state, and canonical
+full-run remain respectively `3bc4a3a1cc9c2ef...`, `b9f592ffe58d1b86...`,
+`272dfb7a5793c1b79...`, `5ba7991a0dd10f0d...`, and `356a2065c8c2001b...`.
+Warmup raw hash matches exactly at `d1dab1c2d438ba95...`. Expected output-path
+differences change rehearsal/frontier/manifest raw hashes, while governed
+canonical validation passes. Direct lineage passes schema
+`selector_checkpoint_direct_lineage_v1`, selected update 20, and exact
+training/repository commit, checkpoint, model, and config, with digest
+`ada0bcca1d60b25b...` and artifact SHA-256 `9a608dc354ff06ba3...`.
+Exact replicas are therefore complete. Next refresh permanent random/greedy and
+matched baselines under the V38 runtime, then run reusable scorecard preflight.
+Dev-v34 and held-out-v5 remain unconsumed; confirmation/final remain prohibited
+and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

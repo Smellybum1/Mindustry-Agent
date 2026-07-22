@@ -1626,6 +1626,21 @@ repository-evidence mapping used for the M6 audit is:
   authorized from the same commit/config/toolchain in an independent output.
   Dev-v34 and held-out-v5 remain unconsumed; no scorecard, confirmation, or
   final episode has run. M8.5 remains unmet.
+- V38 replica B completed independently from the same exact training/repository
+  commit, config, and lock, selecting update 20 with the identical 9/10 wins,
+  return `4.859680000000006`, core health `565.2`, and idle
+  `0.021071738935729764`. All 32 checkpoints are byte-identical; selected
+  checkpoint/model, replay, action-state, and canonical full-run reproduce at
+  `3bc4a3a1cc9c2ef...`, `b9f592ffe58d1b86...`, `272dfb7a5793c1b79...`,
+  `5ba7991a0dd10f0d...`, and `356a2065c8c2001b...`. Warmup raw hash is exact at
+  `d1dab1c2d438ba95...`; path-bearing rehearsal/frontier/manifest raw hashes
+  differ as expected while governed canonical validation passes. Direct lineage
+  passes `selector_checkpoint_direct_lineage_v1` with exact selected update 20,
+  commit, checkpoint, model, and config; digest is `ada0bcca1d60b25b...` and
+  artifact SHA-256 is `9a608dc354ff06ba3...`. Exact replicas are complete.
+  Fresh permanent random/greedy and matched V38 baselines, followed by reusable
+  scorecard preflight, are next. Dev-v34 and held-out-v5 remain unconsumed;
+  confirmation/final remain prohibited and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

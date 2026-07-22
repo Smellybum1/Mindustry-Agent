@@ -720,8 +720,23 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   B is authorized from the same commit/config/toolchain in an independent
   output. Dev-v34 and held-out-v5 remain unconsumed; no scorecard,
   confirmation, or final episode has run. M8.5 remains unmet.
+- **V38 replica B and direct lineage are exact**: replica B ran independently
+  from the same commit, config, and lock and selected update 20 with identical
+  9/10 wins, return `4.859680000000006`, core health `565.2`, and idle
+  `0.021071738935729764`. All 32 checkpoints are byte-identical. Selected
+  checkpoint/model, replay, action-state, and canonical full-run reproduce at
+  `3bc4a3a1cc9c2ef...`, `b9f592ffe58d1b86...`, `272dfb7a5793c1b79...`,
+  `5ba7991a0dd10f0d...`, and `356a2065c8c2001b...`; warmup raw hash is exact at
+  `d1dab1c2d438ba95...`. Path-bearing rehearsal/frontier/manifest raw hashes
+  differ as expected, while governed canonical comparison passes. Direct
+  lineage passes schema `selector_checkpoint_direct_lineage_v1` for selected
+  update 20 and exact commit/checkpoint/model/config, with digest
+  `ada0bcca1d60b25b...` and artifact SHA-256 `9a608dc354ff06ba3...`. Fresh V38
+  permanent random/greedy and matched baselines, then reusable scorecard
+  preflight, are next. Both protected sets remain unconsumed; confirmation and
+  final remain prohibited. M8.5 remains unmet.
 - **Current branch**: `coop-agent/v159.7`
-- **Current V38 replica-A repository checkpoint**:
+- **Current V38 exact-replica repository checkpoint**:
   `3effefed781b88c2e71354d784db58eb787ed7e6`.
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
@@ -882,15 +897,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run exact V38 replica B from commit
-   `3effefed781b88c2e71354d784db58eb787ed7e6`, the exact V38 config/toolchain,
-   and an independent output.** Replica A passed the authorization gate exactly.
-2. **Require replica B to reproduce replica A's governed checkpoint, model,
-   replay, action-state, frontier, canonical full-run, and manifest evidence.**
-   Keep dev-v34 and held-out-v5 unconsumed.
-3. **Refresh reusable baselines and run reusable preflight only after exact
-   replicas.** No successor may open confirmation without reusable
-   dual-scorecard parity and its own one-way confirmation pass.
+1. **Refresh permanent random and permanent greedy baselines under the exact V38
+   runtime.** The V38 replicas are complete and exact.
+2. **Refresh the matched random and matched greedy V38 controls.** Preserve the
+   governed candidate/config/runtime construction used by both replicas.
+3. **Run reusable scorecard preflight against the fresh V38 baselines.** Require
+   both permanent-greedy and matched-greedy parity; uncertainty is failure.
+   Keep dev-v34 and held-out-v5 unconsumed, and do not run confirmation or final.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
@@ -907,8 +920,8 @@ fixed-secondary-seat construction and reusable scorecard rejection; ADR-0047
 records V36's collision-free build-line opening prior, green pretraining gates,
 and rejection when replica A tops out at 7/10; ADR-0048 records V37's fixed
 scripted-seat-2 harvest opening and reusable rejection; ADR-0049 retires the
-membership-exposed but unexecuted dev-v33 and held-out-v4 sets; ADR-0050
-precommits V38's learned-seat-only proactive staging exposure.
+membership-exposed but unexecuted dev-v33 and held-out-v4 sets; ADR-0050 records
+V38's learned-seat-only proactive staging exposure and exact twin replicas.
 
 ## Deviations from the brief in this scaffold
 

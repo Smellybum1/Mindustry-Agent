@@ -196,3 +196,47 @@ Replica A therefore passes the precommitted gate exactly: wins are at the
 the same repository commit, config, and toolchain in an independent output.
 Dev-v34 and held-out-v5 remain unconsumed; no scorecard, confirmation, or final
 episode has run. M8.5 remains unmet.
+
+V38 replica B then ran independently from the exact training/repository commit
+`3effefed781b88c2e71354d784db58eb787ed7e6`, config
+`d92bf9aa2050a5a4d62fc29566fb2514feec84eb421f62b6cac2e24b0969f2bf`, and lock
+`8d865c8c710a61d7e37b8896b38166a1dcf121e40d17fbb1a47e948b4861bf6c`.
+It selected update 20 with the exact same 9/10 wins, return
+`4.859680000000006`, core health `565.2`, and idle
+`0.021071738935729764`. All 32 checkpoint files are byte-identical, including
+selected checkpoint
+`3bc4a3a1cc9c2ef4450e20c689c3909a8bf9ae8ba35b194e8710df1acf737b5e`,
+update-32 checkpoint
+`c76d9638be562eeb69e994d80b06bf6d0063dd7b5b364ba5efb3d10da6050061`,
+and model state
+`b9f592ffe58d1b866f200cd3544a2ecfd48f6d662f517aece3dffa745fa66540`.
+Replay is bit-exact at
+`272dfb7a5793c1b79be95ce9b7e2407c3752cb6ee183cf9440dbe388ee4553af`;
+the replay JSONL raw SHA-256 is
+`151841cfdf4e8d23ee48943a6ba8530ad4ea8034c90c5afae084c6a91d3e6700`,
+action-state is
+`5ba7991a0dd10f0d857c5fcbf75ccbbb573eb7a7c59b975967c3432463f3c68c`,
+canonical full-run is
+`356a2065c8c2001ba6e9b2b480949e0c4ff3fdfd39b88ac8747c49e2838f57a2`,
+and training-trace raw SHA-256 is
+`dec25b683499f748e0bef3bba3746e3688c14b99f954d8f5e085b12b30543771`.
+Warmup is raw-hash exact at
+`d1dab1c2d438ba95800d43b4caea217509e7a40aa842e4e750b4b75ad026088a`.
+Path-bearing rehearsal, frontier, and manifest raw hashes differ as expected;
+their governed canonical forms match at rehearsal
+`bc1c5a88a4601a0a2b7e4bf1f549745ed24ead097da04a8282ffd1383207734c`,
+frontier `9f369a04161be4b74d041f315c3f5b7dce20ecfbbb779c82ea8d9d4ac6c40fff`,
+and manifests
+`451f0c5bc967ba51349698f01d566ce189b9413fc41839df4e26588e86e923a0`.
+
+Direct-lineage validation passes under schema
+`selector_checkpoint_direct_lineage_v1`: selected update 20 and the
+training/repository commit, checkpoint, model state, and config all match
+exactly. The lineage digest is
+`ada0bcca1d60b25bc9bcb1e5e0d2a94d890c456018b7459821bbfd76317fed40`,
+and the lineage artifact SHA-256 is
+`9a608dc354ff06ba30a922a14750361d1a877146334cd0bfd74e74b5381a3a1b`.
+The next authorized work is to refresh permanent random and greedy plus matched
+baselines under the V38 runtime, then run reusable scorecard preflight. Dev-v34
+and held-out-v5 remain unconsumed; confirmation and final evaluation remain
+prohibited. M8.5 remains unmet.
