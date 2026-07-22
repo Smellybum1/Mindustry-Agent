@@ -159,9 +159,13 @@ and permanent public baselines remain unchanged, and 165 Python tests pass.
 From implementation commit `0c4a09659f`, pinned Java build/tests, focused and
 5/5 public gates, smoke, cross-process/reset/seed determinism, the 664-checkpoint/
 16,200-tick golden replay, negative replay, and all 44 exact-config reward
-adversaries pass. Train exact V37 replica A from scratch; require at least 9/10
-reusable wins and mean idle below 0.25 before replica B. Dev-v33 is frozen at
-disjoint roots `286001..286160` but unopened; held-out-v4 remains sealed.
+adversaries pass. Replica A selects update 16 at 9/10, return `4.18676`, core
+health `805.5`, and idle
+`0.05108287`; checkpoint/model/replay/full-run digests are
+`a9a55110fe2266b8...`, `21b665232664f79e...`, `9b67d5d468f86a55...`, and
+`614c071b7f3003b0...`. Train exact replica B and require complete equality
+before scorecards. Dev-v33 is frozen at disjoint roots `286001..286160` but
+unopened; held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

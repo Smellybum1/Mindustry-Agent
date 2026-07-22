@@ -1511,6 +1511,13 @@ repository-evidence mapping used for the M6 audit is:
   replay, and all 44 exact-config reward adversaries pass. Replica A is
   authorized; dev-v33 and held-out-v4 remain unopened, no V37 model work has
   begun, and M8.5 remains unmet.
+- V37 replica A selects update 16 at the exact precommitted floor: 9/10 reusable
+  wins, mean return `4.18676`, core health `805.5`, and idle `0.05108287`.
+  Checkpoint/model/replay/full-run digests are `a9a55110fe2266b8...`,
+  `21b665232664f79e...`, `9b67d5d468f86a55...`, and
+  `614c071b7f3003b0...`; the two fresh checkpoint replays are bit-exact. Replica
+  B is authorized from the same frozen commit/config/toolchain. Dev-v33 and
+  held-out-v4 remain unopened; no scorecard or confirmation work has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

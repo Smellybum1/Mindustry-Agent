@@ -120,3 +120,14 @@ golden replay, negative replay, and all 44 exact-config reward adversaries pass.
 The adversary report reproduces SHA-256
 `6df5481af4652c58de05442b3ccc72e0a603a573ed228f8a6006d7a217791028`.
 Replica A is authorized; dev-v33 and held-out-v4 remain unopened.
+
+Replica A selects update 16 at 9/10 reusable wins, mean return `4.18676`, mean
+core health `805.5`, and mean idle `0.05108287`. Its checkpoint/model/replay/
+full-run digests are `a9a55110fe2266b8ba0c34053e79eb99ef14a06c9b12727d4810cc7513df8297`,
+`21b665232664f79e7009a0f2274655cb00b7d607765efbba27013c96e642207b`,
+`9b67d5d468f86a55bf07e015756a0c06259a40c85bd411f64e2d45b489696526`,
+and `614c071b7f3003b016e332c4540787969d3b468f0804acfbc8db1fa443cd7163`.
+The frontier hashes to
+`93e736d9969fd51809f91091b2a45100ea5ccf56331439533892d8a7a6e098f9`;
+fresh checkpoint replays are bit-exact. Replica B is authorized. Dev-v33 and
+held-out-v4 remain unopened.

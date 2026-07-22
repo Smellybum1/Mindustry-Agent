@@ -1566,6 +1566,13 @@ replay, negative replay, and all 44 exact-config reward adversaries pass.
 Replica A is authorized; dev-v33 and held-out-v4 remain sealed, and no V37 model
 work has begun.
 
+V37 replica A selects update 16 at 9/10 reusable wins, mean return `4.18676`,
+core health `805.5`, and idle `0.05108287`. Checkpoint/model/replay/full-run
+digests are `a9a55110fe2266b8...`, `21b665232664f79e...`,
+`9b67d5d468f86a55...`, and `614c071b7f3003b0...`; fresh checkpoint replays are
+bit-exact. The precommitted construction and idle floors pass, so exact replica
+B is authorized. Dev-v33 and held-out-v4 remain sealed.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
