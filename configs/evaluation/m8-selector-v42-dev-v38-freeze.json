@@ -1,0 +1,47 @@
+{
+  "candidate_version": "v42",
+  "disjointness_method": "partitioned_numeric_namespace_without_reads",
+  "generated_membership_read_after_write": false,
+  "generator_commit": "3e328ce91ee9ddc923f61bb9b7c66d8113b49e9b",
+  "global_disjointness_verified": true,
+  "membership_documents_read": 0,
+  "namespace_proof": {
+    "held_out_v6_max_exclusive": 4000000000,
+    "held_out_v6_min_inclusive": 3000000000,
+    "legacy_max_exclusive": 1000000000,
+    "v38_sealed_max_exclusive": 2000000000,
+    "v39_confirmation_max_exclusive": 2147483648,
+    "v40_confirmation_max_exclusive": 5000000000,
+    "v40_confirmation_min_inclusive": 4000000000,
+    "v41_confirmation_max_exclusive": 6000000000,
+    "v41_confirmation_min_inclusive": 5000000000,
+    "v42_confirmation_max_exclusive": 7000000000,
+    "v42_confirmation_min_inclusive": 6000000000
+  },
+  "repository_head_before_generation": "3e328ce91ee9ddc923f61bb9b7c66d8113b49e9b",
+  "retired_confirmation_membership_read": false,
+  "schema": "m8_confirmation_seed_freeze_v1",
+  "sealed_final_membership_read": false,
+  "set": {
+    "count": 160,
+    "exclusive_namespace": {
+      "maximum_exclusive": 7000000000,
+      "minimum_inclusive": 6000000000
+    },
+    "exclusive_umbrella_attempt": "runs/m8-selector-v42-dev-v38-umbrella-attempt.json",
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v38.json",
+    "replaces": "bootstrap-defense-v1-dev-v37",
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v38",
+    "seed_set_version": 38,
+    "sha256": "3f4b0d012cf8730301917a303ca5dfda14b3552ecff357cb3bb25d5ac1976224",
+    "split": "dev"
+  },
+  "status": "membership_frozen_unconsumed",
+  "umbrella": {
+    "commit": "38302f7c42c72a66305a5e58a45798191acf2e77",
+    "path": "configs/evaluation/m8-selector-v42-confirmation-umbrella.json",
+    "sha256": "c1644d2dd6dde231e3a3409632169e182bfb13ebaff84deb2225368a82371532"
+  },
+  "values_emitted": false
+}
