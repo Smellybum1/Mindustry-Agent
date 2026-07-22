@@ -882,8 +882,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   are `65f8e3dc3a41bf89...` / `4363617f8535bc8b...` /
   `d01d0dfe425d1b0d...` / `52751513f785c196...` /
   `cb719361da11ab6c...`. Direct lineage digest/artifact hashes are
-  `b1dbf1abc6a7dacd...` / `100945a4820b2039...`. Held-out-v6 remains sealed;
-  dev-v38 is unopened and reusable scorecards are next.
+  `b1dbf1abc6a7dacd...` / `100945a4820b2039...`. Fresh permanent random/greedy
+  are 4/10 and 8/10; candidate is 9/10 and matched random/greedy are 5/10 and
+  6/10, so every win comparison passes. Both frozen scorecards still fail:
+  permanent-greedy announcements and idle and matched-greedy recovery remain
+  uncertain. Records/aggregate/report hashes are `e0a78468268bc021...` /
+  `dae12fbf3868c6cc...` / `01bf941060bc7e6f...`. V42 is rejected before
+  confirmation; dev-v38 is retired unopened/unconsumed and held-out-v6 remains
+  sealed/unconsumed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1052,11 +1058,11 @@ queue.
 
 1. **Preserve the committed green ADR-0056 pretraining boundary.** Do not alter
    runtime behavior, reward, model, roots, budgets, RNGs, or engine pins.
-2. **Preserve frozen dev-v38 unopened and unconsumed.** No membership may be
-   read, rendered, or delegated before exact replicas and reusable gates pass.
-3. **Preserve the exact V42 A/B checkpoint/model/lineage identity.**
-4. **Run fresh permanent baselines and both frozen reusable scorecards.** Any
-   uncertainty is failure; no dev-v38 access is authorized before they pass.
+2. **Preserve retired dev-v38 unopened and unconsumed.** Never read, render, or
+   delegate its membership; held-out-v6 remains sealed.
+3. **Diagnose any V43 successor only from public/train/reusable V42 evidence.**
+4. **Precommit any successor before model or seed construction.** Do not reuse
+   dev-v38 or bypass the frozen scorecards.
 5. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 

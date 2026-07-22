@@ -167,5 +167,20 @@ model-state, replay, action-state, and full-run hashes are
 Direct lineage digest/artifact hashes are
 `b1dbf1abc6a7dacdb300aa84a9fa6b8ea0db8fd4d5f489d31a6f5b67ce55df0a` and
 `100945a4820b203910dc5b8278765e63948e0f13e69cfa7979d5b40737bef3d0`.
-Dev-v38 remains unopened; reusable scorecards are next. No confirmation or
-held-out-v6 access occurred.
+Fresh permanent random/greedy are 4/10 and 8/10; candidate is 9/10 and matched
+random/greedy are 5/10 and 6/10, so all four win comparisons pass. Both frozen
+scorecards nevertheless fail. Against permanent greedy, announcements have mean
+`-0.004178130793538602` with 95% CI
+`[-0.021244981053576122,+0.00920378842876899]` and idle has mean
+`+0.018837297020387483` with CI
+`[-0.0011168581878396708,+0.043252101460647424]`. Against matched greedy,
+recovery has mean `-38.3` with CI `[-117.30125,+32.30124999999998]`.
+Uncertainty is failure. Baseline records/aggregate hashes are
+`53170e04eda5c5e5431aacd9461b4d48705b4b566bebcca4f0416dd8a75c5eb4` and
+`295e00a7b41421bc6f8a88b5ff663bcae5d37029a6a7618273249edc6665865d`.
+Candidate records/aggregate/report hashes are
+`e0a78468268bc021b89941a04b9d930f420138a6988887ef370bd3c8feb5b184`,
+`dae12fbf3868c6ccdd6d926e2c5c78df618d7dfc3d9db1f7abe6c7df37dc923b`, and
+`01bf941060bc7e6f3ee7ed75d3ba16caae4862bd35c2d01764003a0974e635d1`.
+V42 is rejected before confirmation. Dev-v38 is retired unopened/unconsumed;
+held-out-v6 remains sealed/unconsumed. No restricted access occurred.

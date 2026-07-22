@@ -3,8 +3,9 @@
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
 `coop-agent/v159.7`, after ADR-0056 precommits and implements V42's training-only
 partner-intent teacher-conflict relabel. The complete public/pretraining boundary
-is green and dev-v38 is frozen value-free and unopened. Exact V42 replicas are
-complete; reusable scorecards are next. No restricted membership access began.
+is green and dev-v38 is frozen value-free and unopened. Exact V42 replicas
+complete, but reusable scorecards reject V42 before confirmation. Dev-v38 is
+retired unopened/unconsumed and no restricted membership access began.
 
 Read first, in order:
 
@@ -367,9 +368,14 @@ exact. Checkpoint/model/replay/action-state/full-run hashes are
 `65f8e3dc3a41bf89...` / `4363617f8535bc8b...` /
 `d01d0dfe425d1b0d...` / `52751513f785c196...` /
 `cb719361da11ab6c...`; direct lineage digest/artifact hashes are
-`b1dbf1abc6a7dacd...` / `100945a4820b2039...`. Keep dev-v38 unopened while
-running fresh permanent baselines and both reusable scorecards. Held-out-v6
-remains sealed and unconsumed.
+`b1dbf1abc6a7dacd...` / `100945a4820b2039...`. Fresh permanent random/greedy
+are 4/10 and 8/10; candidate is 9/10 and matched random/greedy are 5/10 and
+6/10. Every win comparison passes, but permanent-greedy announcements and idle
+and matched-greedy recovery remain uncertain, so both scorecards fail. Report
+SHA is `01bf941060bc7e6f...`. V42 is rejected before confirmation; dev-v38 is
+retired unopened/unconsumed and held-out-v6 remains sealed/unconsumed. Diagnose
+any successor only from public/train/reusable evidence and precommit it before
+model or seed construction.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

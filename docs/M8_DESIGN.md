@@ -782,9 +782,15 @@ reusable wins, mean return `4.73976`, core health `568.8`, and idle
 action-state/full-run hashes are `65f8e3dc3a41bf89...` /
 `4363617f8535bc8b...` / `d01d0dfe425d1b0d...` /
 `52751513f785c196...` / `cb719361da11ab6c...`. Direct lineage digest/artifact
-hashes are `b1dbf1abc6a7dacd...` / `100945a4820b2039...`. Dev-v38 remains
-unopened; fresh permanent baselines and both reusable scorecards are next, and
-held-out-v6 remains sealed.
+hashes are `b1dbf1abc6a7dacd...` / `100945a4820b2039...`.
+
+Fresh permanent random/greedy are 4/10 and 8/10; candidate is 9/10 and matched
+random/greedy are 5/10 and 6/10, so all observed win comparisons pass. Both
+frozen scorecards fail. Permanent-greedy announcements and idle cross zero;
+matched-greedy recovery also crosses zero. Records/aggregate/report hashes are
+`e0a78468268bc021...` / `dae12fbf3868c6cc...` /
+`01bf941060bc7e6f...`. V42 is rejected before confirmation. Dev-v38 is retired
+unopened/unconsumed and held-out-v6 remains sealed/unconsumed.
 
 ## M8.1 acceptance review
 
