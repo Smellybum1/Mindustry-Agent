@@ -670,6 +670,15 @@ the receipt records zero membership reads and no emitted values. Dev-v36 and
 held-out-v6 remain unconsumed; 212 receipt-aware Python tests pass without
 opening membership.
 
+Replica A subsequently completed from committed repository `c288483436` and
+passed construction. The frozen rank selects update 28 at 10/10 reusable wins,
+return `7.77414`, core health `656.3`, and idle `0.008388499062201467`.
+Checkpoint SHA is `9ff618797d8ae593...`; fresh replay is bit-exact at
+`5af990a3ec8ff7fb...`, with action-state/full-run digests
+`4f0726c7dc8f127...` / `b6dd3c958762c082...`. Replica B is authorized from
+the identical committed identity. Dev-v36 consumption and held-out-v6 access
+remain prohibited pending exact-twin and reusable-scorecard gates.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -1822,6 +1822,15 @@ Dev-v36 is now frozen value-free and unconsumed; membership/receipt hashes are
 B, dev-v36 consumption, and held-out-v6 access remain prohibited. The
 receipt-aware suite passes 212 tests without opening membership.
 
+V40 replica A then completed the exact committed construction and passed the
+frozen floor. Update 28 is selected at 10/10 reusable wins, mean return
+`7.77414`, mean core health `656.3`, and mean idle `0.008388499062201467`;
+checkpoint SHA is `9ff618797d8ae593...`. Two fresh checkpoint replays are
+bit-exact at `5af990a3ec8ff7fb...`, with action-state/full-run digests
+`4f0726c7dc8f127...` / `b6dd3c958762c082...`. Replica B is authorized from
+the same committed repository/config/toolchain. Dev-v36 and held-out-v6 remain
+unopened and unconsumed; scorecards, confirmation, and final remain prohibited.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

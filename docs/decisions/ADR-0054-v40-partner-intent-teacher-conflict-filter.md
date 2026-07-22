@@ -148,3 +148,21 @@ receipt SHA-256 is
 Dev-v36 remains frozen and unconsumed; held-out-v6 remains sealed and
 unconsumed. The receipt-aware Python suite passes 212 tests without opening
 membership.
+
+Replica A then completed from repository `c288483436c1003d25dc64ce7aba968600d45f3a`
+with the exact config/toolchain: 256 warmup episodes, 2,048 PPO episodes, and
+32 updates. The frozen construction rule selects update 28 at 10/10 reusable
+wins, mean return `7.774140000000005`, mean core health `656.3`, and mean idle
+`0.008388499062201467`. Its checkpoint SHA-256 is
+`9ff618797d8ae593c3b04c4199355895105e68fff88137cc5fedbc8cd53a7f40`;
+the model-state, action-state trace, and full-run digests are respectively
+`a6c8af730cace2fa7cbd771dc72de6bf16559763549cace1d707c6c36d60cdeb`,
+`4f0726c7dc8f127ab4287c87d2b3c368399e1aeb12223da1648c24f2c0165843`,
+and `b6dd3c958762c0828324edcdb60803c57dea3a21c6d45dccc50891aee44e0bf8`.
+Two fresh checkpoint replays are bit-exact at digest
+`5af990a3ec8ff7fbe7c284fbf83ac1198a1ee28f88231be106281729b9a26306`.
+The reports record all 189 successful-corpus conflicts excluded and zero
+conflict presentations retained by the filtered imitation paths. Replica B is
+therefore authorized from the same committed identity. Dev-v36 and held-out-v6
+remain unconsumed; reusable scorecards, confirmation, and final access remain
+prohibited until the twin and subsequent gates pass.

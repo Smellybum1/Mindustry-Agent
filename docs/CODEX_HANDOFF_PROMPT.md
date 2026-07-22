@@ -289,6 +289,17 @@ frozen value-free and unconsumed; membership/receipt hashes are
 exact committed config/toolchain; 212 receipt-aware Python tests pass. Never
 render or delegate membership, and never inspect held-out-v6 membership.
 
+V40 replica A has now completed from committed repository `c288483436` and
+passes construction. The frozen rank selects update 28 at 10/10 reusable wins,
+return `7.77414`, core health `656.3`, and idle `0.008388499062201467`.
+Checkpoint SHA is `9ff618797d8ae593...`; two fresh checkpoint replays are
+bit-exact at `5af990a3ec8ff7fb...`, and action-state/full-run digests are
+`4f0726c7dc8f127...` / `b6dd3c958762c082...`. Run Replica B next from the
+identical committed config/toolchain and require exact governed hashes before
+refreshing permanent baselines or running reusable scorecards. Dev-v36 and
+held-out-v6 remain unopened/unconsumed; confirmation and final access are still
+prohibited.
+
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.

@@ -1756,6 +1756,14 @@ repository-evidence mapping used for the M6 audit is:
   emitted values. Held-out-v6 remains sealed; baselines and model work remain
   absent. The receipt-aware Python suite passes 212 tests without opening
   membership.
+- V40 replica A completed the exact 256-warmup/2,048-PPO/32-update construction
+  from committed repository `c288483436`. The frozen rule selects update 28 at
+  10/10 reusable wins, mean return `7.77414`, core health `656.3`, and idle
+  `0.008388499062201467`; checkpoint SHA is `9ff618797d8ae593...`. Fresh
+  checkpoint replays are bit-exact at `5af990a3ec8ff7fb...`; the action-state
+  and full-run digests are `4f0726c7dc8f127...` and `b6dd3c958762c082...`.
+  Replica B is authorized. Dev-v36 and held-out-v6 remain unopened/unconsumed;
+  no reusable scorecard, confirmation, or final episode has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

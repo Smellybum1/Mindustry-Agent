@@ -818,10 +818,17 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   emits no values. Membership/receipt hashes are `d4bfbcf88d99f4f...` /
   `fce63a49f80d165...`; dev-v36 and held-out-v6 remain unconsumed. The
   receipt-aware Python suite passes 212 tests without membership access.
+- **V40 replica A passes construction**: from committed repository
+  `c288483436`, the exact 256-warmup/2,048-PPO/32-update run selects update 28
+  at 10/10 reusable wins, return `7.77414`, core `656.3`, and idle
+  `0.008388499062201467`. Checkpoint SHA is `9ff618797d8ae593...`; fresh replay
+  is bit-exact at `5af990a3ec8ff7fb...`, with action-state/full-run digests
+  `4f0726c7dc8f127...` / `b6dd3c958762c082...`. Replica B is authorized;
+  dev-v36 and held-out-v6 remain unopened/unconsumed.
 - **Current branch**: `coop-agent/v159.7`
-- **Current V39 implementation/governance repository checkpoint**:
-  `e31e4daf7151661f285511ce29db6232a48a2242` (the documentation-only V39
-  rejection commit follows this checkpoint).
+- **Current V40 implementation/governance repository checkpoint**:
+  `c288483436c1003d25dc64ce7aba968600d45f3a` (the Replica A documentation
+  commit follows this checkpoint).
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
 - **Uncommitted changes intentionally preserved**: the user's modified
@@ -981,9 +988,10 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run V40 replica A from the exact committed config/toolchain.** Dev-v36 and
-   held-out-v6 remain unconsumed; neither membership may be opened.
-2. **Replica B requires at least 9/10 reusable wins and idle `<0.25` from A.**
+1. **Run V40 replica B from the exact committed config/toolchain.** Replica A
+   selected update 28 at 10/10 and idle `0.008388499062201467`.
+2. **Require exact governed twin hashes before any downstream evaluation.**
+   Dev-v36 and held-out-v6 remain unconsumed; neither membership may be opened.
 3. **Only exact twins may refresh baselines and run reusable scorecards.**
    ADR-0051's selected-only provenance remains authoritative.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
@@ -1011,7 +1019,9 @@ reusable-only V39 diagnostics and the resulting prohibition on V39
 ADR/config/model/freeze work pending primary-level design synthesis. ADR-0051
 is unchanged. ADR-0052 records the completed synthesis and precommits V39's
 structured fixed-partner intent as evidence in the existing duplication-risk
-feature, without changing action authority.
+feature, without changing action authority. ADR-0054 records V40's narrow
+teacher-conflict filter, green pretraining boundary, value-free dev-v36 freeze,
+and Replica A construction pass; Replica B is the next authorized model work.
 
 ## Deviations from the brief in this scaffold
 
