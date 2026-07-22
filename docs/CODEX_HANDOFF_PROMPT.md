@@ -3,8 +3,8 @@
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
 `coop-agent/v159.7`, after ADR-0056 precommits and implements V42's training-only
 partner-intent teacher-conflict relabel. The complete public/pretraining boundary
-is green and dev-v38 is frozen value-free and unopened. No V42 model work or
-restricted membership access has begun.
+is green and dev-v38 is frozen value-free and unopened. Exact V42 replicas are
+complete; reusable scorecards are next. No restricted membership access began.
 
 Read first, in order:
 
@@ -360,8 +360,16 @@ determinism, the 664-checkpoint/16,200-tick golden and negative replay, and all
 freezer/freeze commits are `3e328ce91e` / `949b73f987`; dev-v38 membership/
 receipt hashes are `3f4b0d012cf87303...` / `fea431ae993d1072...`. The receipt
 records zero membership reads and no values emitted; the full suite passes 248
-tests. Keep dev-v38 unopened until exact V42 replicas and every reusable gate
-pass. Held-out-v6 remains sealed and unconsumed.
+tests. Exact pinned-toolchain replicas from training commit `12980ee2b9` both
+select update 2 at 9/10 wins, return `4.73976`, core `568.8`, and idle
+`0.03455784384563236`; all 32 checkpoint files and the canonical comparator are
+exact. Checkpoint/model/replay/action-state/full-run hashes are
+`65f8e3dc3a41bf89...` / `4363617f8535bc8b...` /
+`d01d0dfe425d1b0d...` / `52751513f785c196...` /
+`cb719361da11ab6c...`; direct lineage digest/artifact hashes are
+`b1dbf1abc6a7dacd...` / `100945a4820b2039...`. Keep dev-v38 unopened while
+running fresh permanent baselines and both reusable scorecards. Held-out-v6
+remains sealed and unconsumed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

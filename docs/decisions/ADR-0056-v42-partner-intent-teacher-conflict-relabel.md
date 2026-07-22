@@ -152,5 +152,20 @@ After that committed boundary, the primary-only freezer was committed at
 `fea431ae993d10723432c661a2cc76073696bd8d420015af064256e40d3152cb`.
 The receipt records zero membership-document reads, no values emitted, and no
 held-out access. The full Python suite passes 248 tests. Dev-v38 remains
-unopened/unconsumed. No optimizer run, confirmation access, or held-out-v6
-access occurred.
+unopened/unconsumed.
+
+Independent construction under pinned WSL Torch 2.12.1 and training commit
+`12980ee2b9e427d65be1883d014da6fc67a29c5a` is exact across all 32 checkpoint
+files. Both replicas select update 2 at 9/10 reusable wins, mean return
+`4.73976`, core health `568.8`, and idle `0.03455784384563236`. Checkpoint,
+model-state, replay, action-state, and full-run hashes are
+`65f8e3dc3a41bf893a085018d3775d70dd3ac9a31fb949be5b18dd4ae8ba2287`,
+`4363617f8535bc8b78783f52df69ca1cc016b9af3bff7abc8631a888089db5c9`,
+`d01d0dfe425d1b0debd359b5061c8c36fbf18a260375d3c716c5009476f14087`,
+`52751513f785c19644d870b5553bfa76a67352b9e23ffaf69f17305b94c6f026`, and
+`cb719361da11ab6c5368c39d07695471962ed0461fbe080c3286c2bf861c3a10`.
+Direct lineage digest/artifact hashes are
+`b1dbf1abc6a7dacdb300aa84a9fa6b8ea0db8fd4d5f489d31a6f5b67ce55df0a` and
+`100945a4820b203910dc5b8278765e63948e0f13e69cfa7979d5b40737bef3d0`.
+Dev-v38 remains unopened; reusable scorecards are next. No confirmation or
+held-out-v6 access occurred.

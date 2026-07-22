@@ -875,14 +875,21 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   and all 44 exact-config reward adversaries (`272ac291ef143fa6...`). Freezer /
   freeze commits are `3e328ce91e` / `949b73f987`; membership/receipt hashes are
   `3f4b0d012cf87303...` / `fea431ae993d1072...`. The receipt records zero reads
-  and no emitted values, and the full suite now passes 248 tests. Held-out-v6
-  remains sealed/unconsumed; no V42 model work or restricted access has begun.
+  and no emitted values, and the full suite now passes 248 tests. Independent
+  replicas from training commit `12980ee2b9` both select update 2 at 9/10 wins,
+  return `4.73976`, core `568.8`, and idle `0.03455784384563236`; all 32
+  checkpoint files match. Checkpoint/model/replay/action-state/full-run hashes
+  are `65f8e3dc3a41bf89...` / `4363617f8535bc8b...` /
+  `d01d0dfe425d1b0d...` / `52751513f785c196...` /
+  `cb719361da11ab6c...`. Direct lineage digest/artifact hashes are
+  `b1dbf1abc6a7dacd...` / `100945a4820b2039...`. Held-out-v6 remains sealed;
+  dev-v38 is unopened and reusable scorecards are next.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
   `AGENTS.md` source of truth.
-- **Current V42 governance checkpoint**:
-  `949b73f987ea4758fc941e55923861e8949680a2` (V40 training parents remain
+- **Current V42 training identity**:
+  `12980ee2b9e427d65be1883d014da6fc67a29c5a` (V40 training parents remain
   bound to `c288483436c1003d25dc64ce7aba968600d45f3a`).
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
@@ -1047,9 +1054,9 @@ queue.
    runtime behavior, reward, model, roots, budgets, RNGs, or engine pins.
 2. **Preserve frozen dev-v38 unopened and unconsumed.** No membership may be
    read, rendered, or delegated before exact replicas and reusable gates pass.
-3. **Construct V42 replicas A/B under the pinned training toolchain.**
-4. **Require exact checkpoint/model/lineage identity before reusable scorecards
-   or any confirmation access.**
+3. **Preserve the exact V42 A/B checkpoint/model/lineage identity.**
+4. **Run fresh permanent baselines and both frozen reusable scorecards.** Any
+   uncertainty is failure; no dev-v38 access is authorized before they pass.
 5. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 

@@ -1830,8 +1830,16 @@ repository-evidence mapping used for the M6 audit is:
   committed at `949b73f987`. Membership/receipt hashes are
   `3f4b0d012cf87303...` / `fea431ae993d1072...`; zero membership documents were
   read and no values were emitted. The freezer packet lifts the full suite to
-  248 Python tests. No model work, dev-v38 access, confirmation episode, or
-  held-out-v6 access has begun.
+  248 Python tests. Independent pinned-toolchain replicas from training commit
+  `12980ee2b9` are exact across all 32 checkpoint files. Both select update 2 at
+  9/10 reusable wins, mean return `4.73976`, core health `568.8`, and idle
+  `0.03455784384563236`. Checkpoint/model/replay/action-state/full-run hashes are
+  `65f8e3dc3a41bf89...` / `4363617f8535bc8b...` /
+  `d01d0dfe425d1b0d...` / `52751513f785c196...` /
+  `cb719361da11ab6c...`. Direct lineage digest/artifact hashes are
+  `b1dbf1abc6a7dacd...` / `100945a4820b2039...`. Dev-v38 remains unopened;
+  reusable scorecards are next. No confirmation episode or held-out-v6 access
+  has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

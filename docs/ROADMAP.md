@@ -1900,8 +1900,16 @@ all 44 exact-config reward adversaries pass with report SHA
 its value-free receipt were then committed at `949b73f987`. Membership/receipt
 hashes are `3f4b0d012cf87303...` / `fea431ae993d1072...`; the receipt records
 zero membership reads and no values emitted. The full suite passes 248 tests.
-Dev-v38 remains unopened/unconsumed, no model work or restricted access has
-begun, and M8.5 remains unmet.
+Independent pinned-toolchain replicas from training commit `12980ee2b9` both
+select update 2 at 9/10 reusable wins, mean return `4.73976`, core health
+`568.8`, and idle `0.03455784384563236`. All 32 checkpoint files match and the
+canonical comparator passes. Checkpoint/model/replay/action-state/full-run
+hashes are `65f8e3dc3a41bf89...` / `4363617f8535bc8b...` /
+`d01d0dfe425d1b0d...` / `52751513f785c196...` /
+`cb719361da11ab6c...`; direct lineage digest/artifact hashes are
+`b1dbf1abc6a7dacd...` / `100945a4820b2039...`. Dev-v38 remains unopened and
+unconsumed. Fresh permanent baselines and both reusable scorecards are next; no
+restricted access has begun, and M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

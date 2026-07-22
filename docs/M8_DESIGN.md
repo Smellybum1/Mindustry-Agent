@@ -773,8 +773,18 @@ exact-config reward adversaries. The reward report SHA is
 and then created dev-v38 value-free. The freeze commit is `949b73f987`;
 membership/receipt hashes are `3f4b0d012cf87303...` /
 `fea431ae993d1072...`. The receipt records zero membership-document reads and
-no values emitted. The full suite passes 248 tests. Dev-v38 remains unopened;
-no model work began, and held-out-v6 remains sealed.
+no values emitted. The full suite passes 248 tests.
+
+Independent construction under the pinned WSL Torch 2.12.1 toolchain and
+training commit `12980ee2b9` is exact. Replicas A/B both select update 2 at 9/10
+reusable wins, mean return `4.73976`, core health `568.8`, and idle
+`0.03455784384563236`; all 32 checkpoint files match. Checkpoint/model/replay/
+action-state/full-run hashes are `65f8e3dc3a41bf89...` /
+`4363617f8535bc8b...` / `d01d0dfe425d1b0d...` /
+`52751513f785c196...` / `cb719361da11ab6c...`. Direct lineage digest/artifact
+hashes are `b1dbf1abc6a7dacd...` / `100945a4820b2039...`. Dev-v38 remains
+unopened; fresh permanent baselines and both reusable scorecards are next, and
+held-out-v6 remains sealed.
 
 ## M8.1 acceptance review
 
