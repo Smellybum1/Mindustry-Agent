@@ -1722,6 +1722,13 @@ repository-evidence mapping used for the M6 audit is:
   exact-config reward adversaries for the revised hash. The ignored revised
   reward report hashes to
   `f3365c5abdd30fb8f1f7731c245c4b00b15870f5f22839f65aab4a9ebdc5173e`.
+- V39 replica A completed all 32 updates but failed the frozen construction
+  floor. No checkpoint reached 9/10; rank-best update 25 is 8/10 with return
+  `3.3231000000000073`, core health `448.0`, and idle
+  `0.01845563475648595`. Checkpoint/frontier hashes are
+  `1af02875472f54a6...` / `181ed3e7069b429b...`. No selected manifest or
+  replica B exists. V39 is rejected; dev-v35 is retired unopened/unconsumed,
+  held-out-v6 remains sealed/unconsumed, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

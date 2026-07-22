@@ -1772,9 +1772,9 @@ actions are computed before learned selection; an exact fixed-partner
 selection remains authoritative, unlike the rejected 48-choice mask and
 37-choice redirect. Runtime, action vocabulary, feature dimensions, model,
 reward, optimizer, roots, teacher, budget, RNGs, and checkpoint ranking remain
-V38-exact. The immutable config hashes to
-ADR-0053 supersedes only the final-set metadata after a legacy full-suite test
-read retired held-out-v5. The behavior-identical live config hashes to
+V38-exact. ADR-0053 supersedes only the final-set metadata after a legacy
+full-suite test read retired held-out-v5. The behavior-identical live config
+hashes to
 `54d76bb209ec31f24bc2711b208cb2995e6d538534ba0b99a150091596ccf924`.
 
 Implementation and pretraining gates are authorized; replica A is not. The
@@ -1785,8 +1785,17 @@ Focused feature/parity checks, public 5/5 survival/staging, suites, smoke,
 determinism, replay controls, and the initial exact-config reward gate pass.
 The revised-hash 44/44 reward gate passes. Held-out-v6 is frozen value-free with
 zero membership reads and remains unconsumed; its receipt/membership hashes are
-`4f31a7078e5cd456...` / `2bf4aa04ef54d873...`. Replica A is authorized; M8.5
-remains unmet.
+`4f31a7078e5cd456...` / `2bf4aa04ef54d873...`. Replica A was authorized only
+after those gates passed; M8.5 remained unmet.
+
+V39 replica A completed 256 warmup episodes, 2,048 PPO episodes, and all 32
+updates from committed repository `e31e4daf71`. No checkpoint met the frozen
+9/10 construction floor. Rank-best update 25 reached 8/10 with return
+`3.3231000000000073`, core `448.0`, and idle `0.01845563475648595`;
+checkpoint/frontier hashes are `1af02875472f54a6...` / `181ed3e7069b429b...`.
+Replica B is prohibited and V39 is rejected before reusable scorecards.
+Dev-v35 is retired unopened/unconsumed; held-out-v6 remains sealed/unconsumed.
+M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

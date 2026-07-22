@@ -794,9 +794,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   pinned Java, public/runtime/replay gates, and the revised 44/44 reward gate;
   the ignored report hashes to
   `f3365c5abdd30fb8f1f7731c245c4b00b15870f5f22839f65aab4a9ebdc5173e`.
+- **V39 rejected at construction**: replica A completed all 32 updates but no
+  checkpoint reached 9/10. Rank-best update 25 is 8/10, return
+  `3.3231000000000073`, core `448.0`, idle `0.01845563475648595`; checkpoint /
+  frontier hashes are `1af02875472f54a6...` / `181ed3e7069b429b...`.
+  Replica B and scorecards are prohibited. Dev-v35 is retired unopened and
+  unconsumed; held-out-v6 remains sealed and unconsumed.
 - **Current branch**: `coop-agent/v159.7`
-- **Current V38 rejection/guard repository checkpoint**:
-  `9bc96f91c7219ad9e9656f99b29f15331b78b399`.
+- **Current V39 implementation/governance repository checkpoint**:
+  `e31e4daf7151661f285511ce29db6232a48a2242` (the documentation-only V39
+  rejection commit follows this checkpoint).
 - **Engine tag/commit**: `v159.7` / `c9686eb5d0ae5dd47ee02c40f99f7d5018ccbc8c`;
   Arc `208a754044`.
 - **Uncommitted changes intentionally preserved**: the user's modified
@@ -956,12 +963,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Begin V39 replica A from the exact committed config/toolchain.** The revised
-   reward gate passes; dev-v35 and held-out-v6 are frozen unconsumed. Replica B
-   remains prohibited until A reaches the frozen construction/idle gate.
-2. **If replica A passes, run exact replica B and compare every governed digest.**
-3. **Only exact twins may refresh permanent baselines and run reusable dual
-   scorecards.** Preserve ADR-0051's direct-loading/provenance contract.
+1. **Perform primary-level reusable-only diagnosis of V39's construction miss.**
+   Do not inspect dev-v35 or held-out-v6 membership.
+2. **Choose and precommit at most one narrow V40 coordinate before any model
+   work.** Preserve ADR-0051's direct-loading/provenance contract.
+3. **Reserve a new confirmation identity before V40 model work.** Dev-v35 is
+   retired unopened; held-out-v6 remains sealed.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.

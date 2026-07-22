@@ -1,16 +1,15 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, after V38's reusable preflight rejection, four rejected
-reusable-only diagnostics, and ADR-0052's V39 partner-intent-risk precommit.
+`coop-agent/v159.7`, after V39's construction rejection at 8/10 reusable wins.
 
 Read first, in order:
 
 1. `AGENTS.md` in full; obey its delegation and sealed-data rules.
-2. `docs/HANDOFF.md`, focusing on the V38/V39 diagnostic rejections, ADR-0052,
+2. `docs/HANDOFF.md`, focusing on V39's construction rejection, ADR-0052/0053,
    and the next-five queue.
 3. M8.5 and the M8 exit criteria in `docs/ROADMAP.md`.
-4. ADR-0050, ADR-0051, and ADR-0052.
+4. ADR-0050, ADR-0051, ADR-0052, and ADR-0053.
 
 Run `bash scripts/codex-status.sh`. Preserve and never stage the user-modified
 `AGENTS.md`, generated
@@ -262,15 +261,18 @@ The immutable config SHA-256 is
 `54d76bb209ec31f24bc2711b208cb2995e6d538534ba0b99a150091596ccf924`
 after ADR-0053's final-identity-only repair.
 
-Implement that exact feature and run focused fail-closed/disabled-feature
-parity, public survival/staging, suites, smoke, determinism, golden/negative
-replay, and exact-config reward gates. The committed value-free umbrella
-reserves dev-v35 for primary-only construction after the precommit; never
-delegate or render its membership. Replica A remains prohibited until all
-implementation gates pass, and dev-v35 remains prohibited until exact replicas
-and strict reusable scorecards pass. Dev-v34 and held-out-v5 are retired;
-held-out-v6 is frozen value-free and unconsumed. Do not inspect any membership or
-run confirmation/final episodes. Keep ADR-0051 unchanged.
+The exact feature and its fail-closed/disabled-feature parity, public
+survival/staging, suites, smoke, determinism, golden/negative replay, and
+exact-config reward gates all pass. Dev-v34 and held-out-v5 are retired;
+held-out-v6 is frozen value-free and unconsumed. Do not inspect any membership
+or run confirmation/final episodes. Keep ADR-0051 unchanged.
+
+V39 replica A has now failed construction after all 32 updates: rank-best
+update 25 is 8/10 with idle `0.01845563475648595`, checkpoint
+`1af02875472f54a6...`, and frontier `181ed3e7069b429b...`. Replica B is
+prohibited. Dev-v35 is retired unopened/unconsumed; held-out-v6 stays sealed.
+Next perform primary-level reusable-only diagnosis and precommit at most one
+narrow V40 coordinate before model work.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

@@ -625,6 +625,11 @@ test read retired held-out-v5 without outcomes; ADR-0053 freezes held-out-v6
 value-free in a separate no-read namespace. Neither dev-v35 nor held-out-v6
 may be consumed before its frozen one-way gate.
 
+V39 replica A later completed the exact construction but peaked at 8/10, below
+the frozen 9/10 floor, despite rank-best idle `0.01845563475648595`. V39 is
+rejected before replica B or scorecards. Dev-v35 is retired unopened and
+unconsumed; held-out-v6 remains sealed and unconsumed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

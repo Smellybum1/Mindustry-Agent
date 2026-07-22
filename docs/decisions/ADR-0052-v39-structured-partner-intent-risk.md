@@ -110,3 +110,18 @@ the ignored report SHA-256 is
 `7bd71c1c9b5de869bab1d852fb26244c1c313f56797ce9dff0287147b531ef76`.
 No V39 feature implementation, dev-v35 membership construction, baseline
 episode, or model work preceded this decision.
+
+V39 implementation subsequently passed all frozen public, suite, reward,
+runtime, determinism, and replay gates. Replica A then completed from repository
+`e31e4daf71` with revised config
+`54d76bb209ec31f24bc2711b208cb2995e6d538534ba0b99a150091596ccf924`:
+256 teacher-warmup episodes, 2,048 PPO episodes, and all 32 updates. No
+checkpoint reached the required 9/10 reusable construction wins. Rank-best
+update 25 reached 8/10, mean return `3.3231000000000073`, mean core health
+`448.0`, and mean idle `0.01845563475648595`. Its checkpoint SHA-256 is
+`1af02875472f54a6ccc6a1a6406837ef7d28d657613e86e79cc83f884bb073d7`;
+the complete frontier SHA-256 is
+`181ed3e7069b429b7f24816b3f73a7976816a1519f7354cca1fdafee95c1e8c3`.
+Selection failed before a model/replay/full-run manifest was produced. Replica
+B is prohibited and V39 is rejected at construction. Dev-v35 is retired
+unopened and unconsumed; held-out-v6 remains sealed and unconsumed.
