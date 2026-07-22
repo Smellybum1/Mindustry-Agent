@@ -1353,6 +1353,19 @@ repository-evidence mapping used for the M6 audit is:
   frontier hash is `e841b620424e0299...`. Replica B did not start, dev-v26 is
   retired unopened, held-out-v4 stays sealed, and reusable preflight did not
   begin.
+- ADR-0042 precommits V31 from the stable V24/V30 failure pair. V30 update 11
+  loses seeds 2004/2005; seed 2004 has only six policy decisions and two teacher
+  disagreements. Every reusable seed begins `BUILD_LINE` while the 10/10
+  teacher begins `BUILD_SCHEMATIC`, with learned margins
+  `0.83764815..0.85484707`. V31 holds V30 exact and adds `+1.0` only to a valid
+  tick-0 `BUILD_SCHEMATIC` logit. The prior is included consistently in rollout,
+  PPO, teacher CE, preflight, and final evaluation; all later logits remain
+  unchanged and historical configs remain exact. Dev-v26 is retired unopened;
+  dev-v27 freezes roots `271001..271160` and remains unopened; held-out-v4 stays
+  sealed. No V31 model work preceded the packet. All 44 exact-config
+  adversaries, 156 Python tests, pinned build, 5/5 candidate gate, smoke,
+  determinism, and negative replay pass. Config/adversary hashes are
+  `861f34bd07db43a5...` and `e7eb2f8826db4617...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

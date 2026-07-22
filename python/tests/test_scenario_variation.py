@@ -1169,3 +1169,57 @@ def test_v30_budgeted_diverse_teacher_corpus_and_dev_v26_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v26"] == path.name
+
+
+def test_v31_initial_schematic_prior_and_dev_v27_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v27.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v27"
+    assert confirmation["seed_set_version"] == 27
+    assert confirmation["seeds"] == list(range(271001, 271161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v30 = json.loads(
+        (
+            training_dir
+            / "m8-selector-v30-budgeted-diverse-teacher-corpus.json"
+        ).read_text(encoding="utf-8")
+    )
+    v31 = json.loads(
+        (
+            training_dir
+            / "m8-selector-v31-initial-schematic-prior.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert v31.pop("candidate_version") == "v31"
+    assert v31.pop("quality_intervention") == (
+        "unsaturated_idle_plus_budgeted_diverse_teacher_and_"
+        "initial_schematic_prior_v5"
+    )
+    assert v31.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v27.json"
+    )
+    assert v31.pop("policy_logit_adjustment") == {
+        "schema": "initial_task_type_logit_bias_v1",
+        "tick": 0,
+        "task_type": "BUILD_SCHEMATIC",
+        "bias": 1.0,
+    }
+    assert v30.pop("candidate_version") == "v30"
+    assert v30.pop("quality_intervention") == (
+        "unsaturated_idle_plus_budgeted_diverse_successful_"
+        "teacher_trajectory_rehearsal_v4"
+    )
+    assert v30.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v26.json"
+    )
+    assert v31 == v30
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v27"] == path.name

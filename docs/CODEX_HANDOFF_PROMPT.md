@@ -1,14 +1,15 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, after the V30 construction rejection.
+`coop-agent/v159.7`, after the V30 rejection and committed V31 initial-prior
+precommit.
 
 Read first, in order:
 
 1. `AGENTS.md` in full; obey its project-wide no-subagent rule.
-2. `docs/HANDOFF.md`, focusing on the V24–V30 entries and next-five queue.
+2. `docs/HANDOFF.md`, focusing on the V24–V31 entries and next-five queue.
 3. M8.5 and the M8 exit criteria in `docs/ROADMAP.md`.
-4. ADR-0035 through ADR-0041.
+4. ADR-0035 through ADR-0042.
 
 Run `bash scripts/codex-status.sh`. Preserve and never stage the user-modified
 `AGENTS.md`, generated
@@ -58,8 +59,30 @@ rehearsal, and frontier SHA-256 values are
 `a2559f5651cc0d54a0c8cee8d179a9155a66fd9604a281d2f99d2f90e3c203c3`,
 and `e841b620424e0299b8fb099128b53a827c6f77973551e5386601d00bc2bd2ebe`.
 Replica B did not start, dev-v26 is retired unopened, and held-out-v4 remains
-sealed. Precommit the next hypothesis from reusable train/dev evidence before
-any new model work; never open held-out-v4 without every governed prerequisite.
+sealed.
+
+ADR-0042 precommits V31 from reusable diagnosis. V30 update 11 loses the same
+seeds 2004/2005 as V24. Every reusable seed chooses `BUILD_LINE` over the
+teacher's `BUILD_SCHEMATIC` at tick 0 by `0.83764815..0.85484707`; seed 2004 has
+only six policy decisions and two disagreements. V31 keeps V30 exact and adds a
+`+1.0` prior only to a valid tick-0 `BUILD_SCHEMATIC` logit. Masked selection
+still chooses the action. The same tensor is used by rollout, PPO, teacher CE,
+preflight, and final evaluation; historical configs remain exact.
+
+The immutable config is
+`configs/training/m8-selector-v31-initial-schematic-prior.json`, SHA-256
+`861f34bd07db43a54aafb2b88ef725a0185c1aca685b533b32e99995ada1594b`.
+Pretraining gates are green: 44 exact-config adversaries (report SHA-256
+`e7eb2f8826db46171fd5f4c8a08666b8138f4c04b66511f260a95546321412d9`),
+156 Python tests, pinned build, 5/5 candidate gate, smoke, determinism, and
+negative replay. Dev-v27 is frozen at `271001..271160` and remains unopened.
+No V31 model work preceded the committed packet.
+
+Run V31 replica A only under the pinned WSL2 CPU lock. Replica B is forbidden
+unless A reaches at least 9/10 reusable wins with idle below 0.25. If A fails,
+record the rejection without opening dev-v27. If A passes, require exact B
+reproduction and reusable dual-scorecard preflight before any confirmation.
+Never open held-out-v4 without every governed prerequisite.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

@@ -1385,6 +1385,21 @@ frontier hash is `e841b620424e0299...`. Replica B did not start, dev-v26 remaine
 unopened and is retired, held-out-v4 stays sealed, and V30 is rejected before
 reusable preflight. M8.5 remains unmet.
 
+ADR-0042 precommits V31 from reusable evidence only. V30 update 11 recreates
+V24's losses on seeds 2004/2005; seed 2004 has just six unforced decisions and
+two teacher disagreements. At tick 0 every reusable seed chooses `BUILD_LINE`
+over the teacher's `BUILD_SCHEMATIC` by margin `0.83764815..0.85484707`. V31
+holds V30 exact and adds a precommitted `+1.0` logit prior only to a valid
+`BUILD_SCHEMATIC` candidate at tick 0. It remains a masked model selection, not
+a forced action; the same tensor enters rollout, PPO, warmup/rehearsal CE, and
+all evaluation paths, while bias-free configs retain their exact path. Dev-v26
+is retired unopened. Dev-v27 freezes disjoint roots `271001..271160` and remains
+unopened; held-out-v4 stays sealed. No V31 model work preceded the committed
+packet. All 44 exact-config adversaries, 156 Python tests, pinned build, 5/5
+candidate gate, smoke, determinism, and negative replay pass. Config/adversary
+hashes are `861f34bd07db43a5...` and `e7eb2f8826db4617...`. Replica A is next;
+M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
