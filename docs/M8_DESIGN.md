@@ -679,6 +679,13 @@ Checkpoint SHA is `9ff618797d8ae593...`; fresh replay is bit-exact at
 the identical committed identity. Dev-v36 consumption and held-out-v6 access
 remain prohibited pending exact-twin and reusable-scorecard gates.
 
+Replica B reproduces Replica A exactly, including all 32 checkpoint bytes,
+warmup, selected update 28 metrics, checkpoint/model, replay, action-state, and
+canonical full-run evidence. The official manifest comparator passes. Direct
+lineage validates at digest `cfb0ec1b21fd49fb...`, artifact SHA
+`5fdc3bdabf24ee5e...`. Fresh selected-only permanent baselines and both
+reusable scorecards are therefore authorized; confirmation/final access is not.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -300,6 +300,14 @@ refreshing permanent baselines or running reusable scorecards. Dev-v36 and
 held-out-v6 remain unopened/unconsumed; confirmation and final access are still
 prohibited.
 
+Replica B now reproduces Replica A exactly, including all 32 checkpoint files,
+warmup, update-28 metrics, checkpoint/model, replay, action-state, and canonical
+full-run evidence. The official comparator passes. Direct lineage validates at
+digest `cfb0ec1b21fd49fb...`, artifact SHA `5fdc3bdabf24ee5e...`. Run fresh
+selected-only permanent baselines on reusable dev-v1 next, followed by the
+candidate/matched reusable preflight and both scorecards. Only a complete pass
+may authorize the primary to open dev-v36. Held-out-v6 remains sealed.
+
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.

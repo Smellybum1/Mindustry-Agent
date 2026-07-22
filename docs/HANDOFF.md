@@ -825,6 +825,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   is bit-exact at `5af990a3ec8ff7fb...`, with action-state/full-run digests
   `4f0726c7dc8f127...` / `b6dd3c958762c082...`. Replica B is authorized;
   dev-v36 and held-out-v6 remain unopened/unconsumed.
+- **V40 replicas and direct lineage are exact**: Replica B independently
+  reproduces update 28, 10/10 wins, every mean, all 32 checkpoint files,
+  warmup, checkpoint/model, replay, action-state, and full-run evidence. The
+  canonical comparator passes. Direct lineage digest/artifact SHA are
+  `cfb0ec1b21fd49fb...` / `5fdc3bdabf24ee5e...`. Fresh selected-only permanent
+  baselines and reusable dual scorecards are next; dev-v36 and held-out-v6
+  remain unopened/unconsumed.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V40 implementation/governance repository checkpoint**:
   `c288483436c1003d25dc64ce7aba968600d45f3a` (the Replica A documentation
@@ -988,12 +995,11 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run V40 replica B from the exact committed config/toolchain.** Replica A
-   selected update 28 at 10/10 and idle `0.008388499062201467`.
-2. **Require exact governed twin hashes before any downstream evaluation.**
-   Dev-v36 and held-out-v6 remain unconsumed; neither membership may be opened.
-3. **Only exact twins may refresh baselines and run reusable scorecards.**
-   ADR-0051's selected-only provenance remains authoritative.
+1. **Refresh V40 permanent baselines on reusable dev-v1.** ADR-0051's
+   selected-only provenance is authoritative.
+2. **Run candidate and matched reusable controls, then both frozen scorecards.**
+3. **Open dev-v36 only if the complete reusable gate passes.** Dev-v36 and
+   held-out-v6 remain unconsumed; held-out access is still prohibited.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
@@ -1021,7 +1027,8 @@ is unchanged. ADR-0052 records the completed synthesis and precommits V39's
 structured fixed-partner intent as evidence in the existing duplication-risk
 feature, without changing action authority. ADR-0054 records V40's narrow
 teacher-conflict filter, green pretraining boundary, value-free dev-v36 freeze,
-and Replica A construction pass; Replica B is the next authorized model work.
+exact replicas, and direct lineage. Fresh reusable baselines/scorecards are the
+next authorized work.
 
 ## Deviations from the brief in this scaffold
 

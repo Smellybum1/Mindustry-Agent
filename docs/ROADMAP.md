@@ -1831,6 +1831,15 @@ bit-exact at `5af990a3ec8ff7fb...`, with action-state/full-run digests
 the same committed repository/config/toolchain. Dev-v36 and held-out-v6 remain
 unopened and unconsumed; scorecards, confirmation, and final remain prohibited.
 
+V40 replica B completed independently and exactly reproduces Replica A:
+selected update 28, 10/10 wins, every scorecard mean, all 32 checkpoint files,
+warmup, checkpoint/model, replay, action-state, and full-run evidence match.
+The canonical manifest comparator passes. Direct lineage validates at digest
+`cfb0ec1b21fd49fb...`, artifact SHA `5fdc3bdabf24ee5e...`. Exact replicas are
+complete, authorizing fresh selected-only permanent baselines and both reusable
+scorecards. Dev-v36 and held-out-v6 remain unopened/unconsumed; confirmation
+and final access remain prohibited.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -1764,6 +1764,13 @@ repository-evidence mapping used for the M6 audit is:
   and full-run digests are `4f0726c7dc8f127...` and `b6dd3c958762c082...`.
   Replica B is authorized. Dev-v36 and held-out-v6 remain unopened/unconsumed;
   no reusable scorecard, confirmation, or final episode has run.
+- V40 replica B reproduces Replica A exactly: update 28, 10/10 wins, every
+  scorecard mean, all 32 checkpoint files, warmup, checkpoint/model, replay,
+  action-state, and full-run evidence match. Canonical manifest comparison
+  passes. Direct lineage validates with digest `cfb0ec1b21fd49fb...` and
+  artifact SHA `5fdc3bdabf24ee5e...`. Fresh selected-only permanent baselines
+  and reusable dual scorecards are authorized next. Dev-v36 and held-out-v6
+  remain unopened/unconsumed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

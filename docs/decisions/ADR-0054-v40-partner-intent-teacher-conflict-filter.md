@@ -166,3 +166,19 @@ conflict presentations retained by the filtered imitation paths. Replica B is
 therefore authorized from the same committed identity. Dev-v36 and held-out-v6
 remain unconsumed; reusable scorecards, confirmation, and final access remain
 prohibited until the twin and subsequent gates pass.
+
+Replica B completed independently from the same source commit, config, lock,
+runtime, and schedule. It reproduces update 28, 10/10 wins, all scorecard
+means, all 32 checkpoint files, warmup report, selected checkpoint/model state,
+two replay files, action-state trace, and full-run digest exactly. Path-bearing
+frontier, rehearsal, and manifest bytes differ only in the expected replica
+paths and allowed repository-status evidence; the official canonical manifest
+comparison passes. Direct lineage then validates schema
+`selector_checkpoint_direct_lineage_v1`, training commit `c288483436`, selected
+update 28, checkpoint/model identity, and both full-run digests. Its lineage
+digest is `cfb0ec1b21fd49fb0281631de4acad769c76928a3a6aaf54e702c699ed6d0982`;
+artifact SHA-256 is
+`5fdc3bdabf24ee5e16cacb48eb358f4cb28d6a9b2b61caf791edb72e0768470f`.
+Exact replicas are complete. Fresh selected-only permanent baselines and both
+reusable scorecards are now authorized; dev-v36 and held-out-v6 remain
+unopened and unconsumed.
