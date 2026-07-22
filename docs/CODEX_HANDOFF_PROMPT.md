@@ -375,7 +375,11 @@ and matched-greedy recovery remain uncertain, so both scorecards fail. Report
 SHA is `01bf941060bc7e6f...`. V42 is rejected before confirmation; dev-v38 is
 retired unopened/unconsumed and held-out-v6 remains sealed/unconsumed. Diagnose
 any successor only from public/train/reusable evidence and precommit it before
-model or seed construction.
+model or seed construction. The off-contract build-line-prior diagnostic is
+also rejected: it remains 9/10 and fails permanent announcements plus matched
+recovery (`41e3b71b133f4c63...`). It has no promotion authority. No V43 is
+currently authorized; require a new architecture hypothesis rather than
+repeating accepted-ADR alternatives.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

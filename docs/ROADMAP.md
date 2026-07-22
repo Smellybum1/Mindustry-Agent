@@ -1915,9 +1915,16 @@ permanent-greedy announcements (mean `-0.00417813`, 95% CI
 `[-0.00111686,+0.04325210]`) are uncertain, and matched-greedy recovery is
 uncertain (mean `-38.3`, 95% CI `[-117.30125,+32.30125]`). Records/aggregate/
 report hashes are `e0a78468268bc021...` / `dae12fbf3868c6cc...` /
-`01bf941060bc7e6f...`. V42 is rejected before confirmation. Dev-v38 is retired
-unopened/unconsumed, held-out-v6 remains sealed/unconsumed, and M8.5 remains
-unmet.
+`01bf941060bc7e6f...`. V42 is rejected before confirmation. A no-authority
+public diagnostic retargets the existing tick-zero prior from conflicting
+schematic to nonconflicting build line. It keeps 9/10, reduces mean idle to
+`0.00083124`, and passes idle, but permanent announcements remain uncertain
+(mean `-0.00230904`, 95% CI `[-0.00738835,+0.00265009]`) and matched recovery
+remains uncertain (mean `-4.8`, CI `[-76.20125,+64.2]`). Records/report hashes
+are `6ccd6ac543d43891...` / `41e3b71b133f4c63...`. The diagnostic has no
+promotion authority and closes the runtime-prior reopening. No V43 is
+authorized. Dev-v38 is retired unopened/unconsumed, held-out-v6 remains
+sealed/unconsumed, and M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

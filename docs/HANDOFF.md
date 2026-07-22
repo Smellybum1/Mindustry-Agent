@@ -888,8 +888,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   permanent-greedy announcements and idle and matched-greedy recovery remain
   uncertain. Records/aggregate/report hashes are `e0a78468268bc021...` /
   `dae12fbf3868c6cc...` / `01bf941060bc7e6f...`. V42 is rejected before
-  confirmation; dev-v38 is retired unopened/unconsumed and held-out-v6 remains
-  sealed/unconsumed.
+  confirmation. A no-authority public build-line-prior diagnostic makes all ten
+  openings nonconflicting and fixes idle, but remains 9/10 and still fails
+  permanent announcements and matched recovery. Records/report hashes are
+  `6ccd6ac543d43891...` / `41e3b71b133f4c63...`. No V43 is authorized; dev-v38
+  is retired unopened/unconsumed and held-out-v6 remains sealed/unconsumed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1060,9 +1063,11 @@ queue.
    runtime behavior, reward, model, roots, budgets, RNGs, or engine pins.
 2. **Preserve retired dev-v38 unopened and unconsumed.** Never read, render, or
    delegate its membership; held-out-v6 remains sealed.
-3. **Diagnose any V43 successor only from public/train/reusable V42 evidence.**
-4. **Precommit any successor before model or seed construction.** Do not reuse
-   dev-v38 or bypass the frozen scorecards.
+3. **Do not authorize V43 from the rejected build-line-prior diagnostic.** It is
+   explicitly off-contract and fails both scorecards.
+4. **Require a new public/train/reusable architecture hypothesis before any
+   successor precommit.** Do not reuse dev-v38, execute an alternate teacher
+   trajectory, or bypass accepted ADRs and frozen scorecards.
 5. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 

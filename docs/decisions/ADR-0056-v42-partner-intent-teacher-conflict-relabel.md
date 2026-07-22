@@ -184,3 +184,18 @@ Candidate records/aggregate/report hashes are
 `01bf941060bc7e6f3ee7ed75d3ba16caae4862bd35c2d01764003a0974e635d1`.
 V42 is rejected before confirmation. Dev-v38 is retired unopened/unconsumed;
 held-out-v6 remains sealed/unconsumed. No restricted access occurred.
+
+One explicitly off-contract, non-promotable public diagnostic tests whether the
+new V42 checkpoint reopens the old build-line-prior alternative. Retargeting the
+existing tick-zero `+1.0` prior to `BUILD_LINE` makes all ten openings
+nonconflicting, retains 9/10 wins, and reduces mean idle to
+`0.0008312394616301509`. It passes idle but still fails permanent-greedy
+announcements (mean `-0.0023090444091824923`, 95% CI
+`[-0.0073883518025829415,+0.002650093131842212]`) and matched-greedy recovery
+(mean `-4.8`, CI `[-76.20125,+64.2]`). The diagnostic records/report/script
+SHA-256 values are
+`6ccd6ac543d438912583ab61499ced152fafc974f92a3f06079ed7d67f2f92ea`,
+`41e3b71b133f4c63dfce2b548f2700f183f290a41112fed332ba0c16140d5c74`, and
+`2282d193b559e48f055cfd27446087504305fedeccbb6dd6bcc8e42b8a1c6364`.
+It has no promotion or restricted-access authority and closes the runtime-prior
+reopening. No V43 successor is authorized by this evidence.

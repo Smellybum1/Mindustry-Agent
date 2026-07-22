@@ -1843,8 +1843,14 @@ repository-evidence mapping used for the M6 audit is:
   scorecards: permanent-greedy announcements and idle are uncertain, and
   matched-greedy recovery is uncertain. Records/aggregate/report hashes are
   `e0a78468268bc021...` / `dae12fbf3868c6cc...` /
-  `01bf941060bc7e6f...`. V42 is rejected before confirmation. Dev-v38 is retired
-  unopened/unconsumed and held-out-v6 remains sealed/unconsumed.
+  `01bf941060bc7e6f...`. V42 is rejected before confirmation. A non-promotable
+  public diagnostic retargets only the existing tick-zero prior to `BUILD_LINE`:
+  all ten openings become nonconflicting and idle passes decisively, but the
+  result remains 9/10 and still fails permanent announcements and matched
+  recovery. Records/report hashes are `6ccd6ac543d43891...` /
+  `41e3b71b133f4c63...`. This closes the runtime-prior reopening; no V43 is
+  authorized. Dev-v38 is retired unopened/unconsumed and held-out-v6 remains
+  sealed/unconsumed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -789,8 +789,16 @@ random/greedy are 5/10 and 6/10, so all observed win comparisons pass. Both
 frozen scorecards fail. Permanent-greedy announcements and idle cross zero;
 matched-greedy recovery also crosses zero. Records/aggregate/report hashes are
 `e0a78468268bc021...` / `dae12fbf3868c6cc...` /
-`01bf941060bc7e6f...`. V42 is rejected before confirmation. Dev-v38 is retired
-unopened/unconsumed and held-out-v6 remains sealed/unconsumed.
+`01bf941060bc7e6f...`. V42 is rejected before confirmation.
+
+An explicitly off-contract public diagnostic retargets only the existing
+tick-zero prior from `BUILD_SCHEMATIC` to `BUILD_LINE`. All ten openings become
+nonconflicting and permanent/matched idle passes, but the variant remains 9/10
+and still fails permanent announcements and matched recovery. Records/report
+hashes are `6ccd6ac543d43891...` / `41e3b71b133f4c63...`. The diagnostic has no
+promotion authority and closes the runtime-prior reopening. No V43 is
+authorized; dev-v38 is retired unopened/unconsumed and held-out-v6 remains
+sealed/unconsumed.
 
 ## M8.1 acceptance review
 
