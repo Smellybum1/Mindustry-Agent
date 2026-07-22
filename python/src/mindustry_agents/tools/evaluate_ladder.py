@@ -62,6 +62,7 @@ SEED_SET_FILES = {
     "dev-v28": "bootstrap-defense-v1-dev-v28.json",
     "dev-v29": "bootstrap-defense-v1-dev-v29.json",
     "dev-v30": "bootstrap-defense-v1-dev-v30.json",
+    "dev-v31": "bootstrap-defense-v1-dev-v31.json",
     "held-out": "bootstrap-defense-v1-held-out-v1.json",
 }
 POLICY_VERSIONS = {

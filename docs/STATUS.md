@@ -1437,6 +1437,15 @@ repository-evidence mapping used for the M6 audit is:
   is on scripted seat 1. The experiment was removed and V32 rebuilt; its gate
   again passes 5/5 with five staging starts. Replica A never began, dev-v30 is
   retired unopened, held-out-v4 stays sealed, and M8.5 is unmet.
+- ADR-0046 precommits V35 from those disjoint public/reusable traces. Only final
+  atomic loss from fixed scripted seat 1 wakes structured `claim_lost`; losses
+  from learned seat 0 and scripted seat 2 preserve V32 scheduling. The loser
+  still receives no assignment, fake board event, or invalid penalty. All other
+  V32 policy/reward/teacher/training fields remain exact. Dev-v30 is retired
+  unopened; dev-v31 freezes disjoint roots `284001..284160` and remains unopened;
+  held-out-v4 stays sealed. Config/seed governance, 160 Python tests, and all 44
+  exact-config reward adversaries pass. Implementation and pretraining gates are
+  next; no V35 model work has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

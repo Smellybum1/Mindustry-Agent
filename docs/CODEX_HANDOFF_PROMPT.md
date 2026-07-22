@@ -111,9 +111,14 @@ the unassigned seat remains idle until tick 660. Its all-seat wake was rejected:
 survival stayed 5/5 but proactive-staging starts fell from five to zero. Every
 public claim loss was learned-seat 0 (`[9,14,10,10,9]` by seed), whereas the
 reusable defect is scripted seat 1. The experiment was removed and V32 rebuilt;
-its complete gate again passes. Precommit any seat-1-only successor before
-implementation, preserving V32 everywhere else. Dev-v30 is retired unopened;
-held-out-v4 remains sealed.
+its complete gate again passes.
+
+ADR-0046 precommits V35's fixed-seat correction. Wake only scripted seat 1 on
+final atomic `claim_lost`; seat 0 and seat 2 must preserve V32 scheduling. Add a
+focused live check for both positive seat-1 and negative seat-0 behavior, then
+run pinned Java, the complete public gate including staging, smoke, determinism,
+and negative replay before model work. Dev-v31 is frozen at disjoint roots
+`284001..284160` but unopened; held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

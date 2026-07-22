@@ -1482,6 +1482,16 @@ belonged to learned seat 0, while the reusable defect belongs to scripted seat
 five staging starts. Dev-v30 remains unopened and is retired, held-out-v4 stays
 sealed, and M8.5 remains unmet.
 
+ADR-0046 precommits V35 from the disjoint V34 public and V32 reusable traces.
+Only final atomic loss from fixed scripted seat 1 wakes `claim_lost`; identical
+losses from learned seat 0 and scripted seat 2 preserve V32 scheduling. The
+loser still receives no assignment, synthetic board event, or invalid penalty.
+V35 otherwise holds the complete V32 construction exact. Dev-v30 is retired
+unopened. Dev-v31 freezes globally disjoint roots `284001..284160` and remains
+unopened; held-out-v4 stays sealed. Config/seed governance, 160 Python tests,
+and all 44 exact-config reward adversaries pass. No V35 runtime implementation,
+live outcome, or model work preceded the precommit. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

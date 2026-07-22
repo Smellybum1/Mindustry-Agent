@@ -800,12 +800,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Precommit a seat-1-only claim-loss successor.** ADR-0045 proves all public
-   claim losses are learned-seat 0 while the reusable defect is scripted seat 1.
-   Preserve V32 exactly and scope any wake to fixed seat 1 before implementation.
-2. **Pass every pretraining boundary before model work.** Require focused scope/
-   live checks, pinned Java, the complete 5/5 public candidate command including
-   staging, smoke, determinism, and negative replay from the committed packet.
+1. **Implement ADR-0046 exactly.** Wake only fixed scripted seat 1 after final
+   atomic claim loss. Preserve seat 0/2 scheduling, winner state, board history,
+   telemetry, and invalid-action treatment.
+2. **Pass every pretraining boundary before model work.** Require a focused live
+   check proving seat 1 wakes after one tick and seat 0 does not, then pinned
+   Java, complete 5/5 candidate including staging, smoke, determinism, and
+   negative replay from the committed packet.
 3. **Keep held-out-v4 sealed.** Dev-v29 and dev-v30 are retired unopened; freeze
    a new disjoint confirmation set but do not open it before exact replicas and
    both reusable scorecards pass. No successor may
@@ -817,12 +818,13 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0045` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0046` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
 ADR-0045 precommits and records V34's all-seat claim-loss boundary rejection at
-the complete public candidate gate.
+the complete public candidate gate; ADR-0046 precommits V35's fixed-secondary-
+seat correction.
 
 ## Deviations from the brief in this scaffold
 
