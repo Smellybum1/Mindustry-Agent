@@ -1403,6 +1403,16 @@ repository-evidence mapping used for the M6 audit is:
   `+0.02116306` (95% CI `[+0.00659211,+0.03839977]`), while permanent
   announcements/recovery and matched recovery are uncertain. Dev-v28 is
   retired unopened, held-out-v4 remains sealed, and M8.5 is unmet.
+- ADR-0044 precommits V33 from reusable V32 evidence only. Mean idle ticks by
+  seat are `[4.2,408.8,487.4]` for V32 versus `[274.8,51.5,298.8]` for
+  permanent greedy; scripted seat 1 is the dominant `+357.3`-tick gap while
+  learned seat 0 is already `-270.6` better. V33 therefore extends the exact
+  V32 proactive-staging rule to fixed seat 1 while preserving seat 2. Every
+  model/reward/training field remains exact. Dev-v28 is retired unopened;
+  dev-v29 freezes disjoint roots `282001..282160` and remains unopened;
+  held-out-v4 stays sealed. Config/seed governance, 158 Python tests, and all 44
+  exact-config reward adversaries pass. Runtime implementation and the remaining
+  pretraining gates are next; no V33 model work has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1277,3 +1277,56 @@ def test_v32_resource_actionability_staging_and_dev_v28_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v28"] == path.name
+
+
+def test_v33_secondary_seat_staging_and_dev_v29_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v29.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v29"
+    assert confirmation["seed_set_version"] == 29
+    assert confirmation["seeds"] == list(range(282001, 282161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v32 = json.loads(
+        (
+            training_dir
+            / "m8-selector-v32-resource-actionability-staging.json"
+        ).read_text(encoding="utf-8")
+    )
+    v33 = json.loads(
+        (
+            training_dir / "m8-selector-v33-secondary-seat-staging.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert v33.pop("candidate_version") == "v33"
+    assert v33.pop("runtime_contract") == (
+        "abandon_wait_resource_scoped_retry_agent_death_available_idle_"
+        "resource_actionability_primary_secondary_staging_v7"
+    )
+    assert v33.pop("quality_intervention") == (
+        "resource_actionability_and_primary_secondary_staging_v7"
+    )
+    assert v33.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v29.json"
+    )
+    assert v32.pop("candidate_version") == "v32"
+    assert v32.pop("runtime_contract") == (
+        "abandon_wait_resource_scoped_retry_agent_death_available_idle_"
+        "resource_actionability_staging_v6"
+    )
+    assert v32.pop("quality_intervention") == (
+        "resource_actionability_and_proactive_staging_v6"
+    )
+    assert v32.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v28.json"
+    )
+    assert v33 == v32
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v29"] == path.name

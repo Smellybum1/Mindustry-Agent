@@ -94,8 +94,14 @@ lineage `3744c81c88dd435f...`. Fresh V32-runtime reusable preflight eliminates
 non-forced abandonment but still rejects permanent-greedy idle by
 `+0.02116306` (95% CI `[+0.00659211,+0.03839977]`); permanent
 announcements/recovery and matched recovery are uncertain. V32 is rejected and
-dev-v28 is retired unopened. Diagnose only reusable traces and precommit any
-successor before model work. Held-out-v4 remains sealed.
+dev-v28 is retired unopened.
+
+ADR-0044 precommits V33 from reusable diagnostics only. V32 mean idle ticks by
+seat are `[4.2,408.8,487.4]` versus permanent greedy
+`[274.8,51.5,298.8]`; scripted seat 1 is the dominant gap. Implement the exact
+V32 staging rule for seats 0 and 1 only, preserving seat 2. Complete all frozen
+pretraining gates before replica A. Dev-v29 (`282001..282160`) and held-out-v4
+remain sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

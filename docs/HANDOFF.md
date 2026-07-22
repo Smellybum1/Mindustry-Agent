@@ -800,13 +800,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Diagnose V32's remaining reusable idle/recovery evidence.** V32 exact twins
-   pass construction at 10/10 and eliminate non-forced abandonment, but reusable
-   preflight still rejects permanent-greedy idle and leaves recovery uncertain.
-2. **Precommit any successor before model work.** Use only reusable evidence,
-   freeze a new globally disjoint confirmation set, and keep V32's unopened
-   dev-v28 retired.
-3. **Keep held-out-v4 sealed.** No successor may open it without exact replicas,
+1. **Implement ADR-0044's exact V33 seat scope.** Preserve V32's staging rule for
+   seat 0, extend it only to fixed scripted seat 1, and keep seat 2 exact.
+2. **Complete the frozen pretraining packet.** Engine-free/live scope tests,
+   exact-config adversaries, Python/Java suites, pinned build, 5/5 candidate
+   gate, smoke, determinism, and negative replay must pass before replica A.
+3. **Keep dev-v29 and held-out-v4 sealed.** No successor may open them without exact replicas,
    reusable dual-scorecard parity, and its own one-way confirmation pass.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
@@ -814,9 +813,10 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0043` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0044` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
-actionability/staging runtime and its reusable rejection.
+actionability/staging runtime and its reusable rejection; ADR-0044 precommits
+V33's targeted secondary-seat staging before implementation or model work.
 
 ## Deviations from the brief in this scaffold
 
