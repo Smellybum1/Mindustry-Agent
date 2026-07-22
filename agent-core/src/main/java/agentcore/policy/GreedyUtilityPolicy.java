@@ -75,14 +75,14 @@ public final class GreedyUtilityPolicy{
     private final Map<Integer, Long> lastTicks = new HashMap<>();
     private final Map<Integer, TaskType> preferredTypes = new HashMap<>();
     private final Map<Integer, TaskType> pendingPreferred = new HashMap<>();
-    private final Set<Integer> returnToDefense = new HashSet<>();
+    private final Set<Integer> logisticsSeats = new HashSet<>();
 
     public void reset(){
         replanTicks.clear();
         lastTicks.clear();
         preferredTypes.clear();
         pendingPreferred.clear();
-        returnToDefense.clear();
+        logisticsSeats.clear();
     }
 
     /** Advance preference state only after the authoritative adapter accepts a selection. */
@@ -90,8 +90,18 @@ public final class GreedyUtilityPolicy{
         for(ActionResult result : results == null ? List.<ActionResult>of() : results){
             TaskType preferred = pendingPreferred.remove(result.agentIndex());
             if(preferred == null || !result.accepted()) continue;
-            preferredTypes.remove(result.agentIndex());
-            if(preferred == TaskType.SUPPLY_TURRET) returnToDefense.add(result.agentIndex());
+            if(preferred == TaskType.SUPPLY_TURRET){
+                //Keep the logistics seat across successive magazines and transient
+                //full-coverage intervals; returning after each delivery creates an
+                //abandon/reclaim cycle whenever combat consumes more ammunition.
+                preferredTypes.put(result.agentIndex(), TaskType.SUPPLY_TURRET);
+                logisticsSeats.add(result.agentIndex());
+            }else{
+                preferredTypes.remove(result.agentIndex());
+                if(preferred == TaskType.DEFEND_REGION){
+                    logisticsSeats.remove(result.agentIndex());
+                }
+            }
         }
     }
 
@@ -126,12 +136,12 @@ public final class GreedyUtilityPolicy{
             replanTicks.remove(agent.agentIndex());
             preferredTypes.remove(agent.agentIndex());
             pendingPreferred.remove(agent.agentIndex());
-            returnToDefense.remove(agent.agentIndex());
+            logisticsSeats.remove(agent.agentIndex());
         }
         lastTicks.put(agent.agentIndex(), team.tick());
 
         TaskType preferred = preferredTypes.get(agent.agentIndex());
-        if(agent.activeSkill().equals("DEFEND")) returnToDefense.remove(agent.agentIndex());
+        if(agent.activeSkill().equals("DEFEND")) logisticsSeats.remove(agent.agentIndex());
 
         if(agent.mask().abandon() && team.enemyCount() > 0
             && !agent.activeSkill().isEmpty()
@@ -160,10 +170,25 @@ public final class GreedyUtilityPolicy{
             return Action.simple(agent.agentIndex(), ActionType.CONTINUE_CURRENT_TASK);
         }
 
-        if(returnToDefense.contains(agent.agentIndex())) preferred = TaskType.DEFEND_REGION;
+        if(preferred == null && logisticsSeats.contains(agent.agentIndex())){
+            preferred = TaskType.DEFEND_REGION;
+        }
         int selected = select(agent, preferred);
+        if(selected < 0 && preferred == TaskType.SUPPLY_TURRET
+            && logisticsSeats.contains(agent.agentIndex())){
+            if(team.enemyCount() > 0){
+                //Keep the dedicated logistics seat idle and immediately
+                //reconsider it when magazines become actionable again.
+                return Action.simple(agent.agentIndex(), ActionType.WAIT);
+            }
+            preferredTypes.remove(agent.agentIndex());
+            logisticsSeats.remove(agent.agentIndex());
+            preferred = null;
+            selected = select(agent, null);
+        }
         if(selected < 0 && preferred != null){
             preferredTypes.remove(agent.agentIndex());
+            logisticsSeats.remove(agent.agentIndex());
             selected = select(agent, null);
         }
         if(selected < 0) return Action.simple(agent.agentIndex(), ActionType.WAIT);

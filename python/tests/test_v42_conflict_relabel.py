@@ -273,11 +273,26 @@ class TestV42ConflictRelabel(unittest.TestCase):
             policy.alternate_nonconflicting_candidate(0, observation, mask, [1, 3]),
             2,
         )
-        policy._return_to_defense.add(0)
+        policy._logistics_seats.add(0)
         self.assertEqual(
-            policy.alternate_nonconflicting_candidate(0, observation, mask, []), 4
+            policy.alternate_nonconflicting_candidate(0, observation, mask, []), 1
         )
-        policy._return_to_defense.clear()
+        combat_observation = {
+            **observation,
+            "team": {"enemy_count": 1},
+        }
+        self.assertIsNone(
+            policy.alternate_nonconflicting_candidate(
+                0, combat_observation, mask, [1, 3]
+            )
+        )
+        self.assertEqual(
+            policy.alternate_nonconflicting_candidate(
+                0, observation, mask, [1, 3]
+            ),
+            2,
+        )
+        policy._logistics_seats.clear()
         policy._preferred_types.clear()
         candidates[2]["utility"] = 3.0
         self.assertEqual(

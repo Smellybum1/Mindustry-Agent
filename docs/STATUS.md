@@ -1884,12 +1884,15 @@ repository-evidence mapping used for the M6 audit is:
   1100; structured world-state telemetry records three wave clears, both
   expansion schematics at 8/10 turrets, both maintenance completions, and
   reserve mining. Exact public-path parity is also green: a probe-only JSON trace
-  replays 338 real candidate/mask boundaries and 1,014 Java actions through the
-  Python fallback without drift; two fresh JVMs reproduce 170 accepted
-  selections and digest `127bc6f8dc02b276531d17c94ce348d209a7de692bbbcff2ff18284cfc177907`.
+  replays 390 real candidate/mask boundaries and 1,170 Java actions through the
+  Python fallback without drift; two fresh JVMs reproduce 225 accepted
+  selections and digest `aaf2e734ea384fe4b537cbdf3bd5342fb5e954f3432a91470ebce311fa503714`.
+  A persistent combat logistics seat reduces seven repeated abandon/reclaim
+  cycles to two phase-entry rebalances plus seven unassigned waits.
   Probe engine delta, pathfinding, entity iteration, and physics/global RNG are
-  deterministic; stock survival remains real-time. The accepted default stays
-  on the shared driver until repeated combat logistics rebalance is closed.
+  deterministic; stock survival remains real-time. All public-path prerequisite
+  gates are green; the accepted default remains on the shared driver pending a
+  separate reviewed promotion change.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,

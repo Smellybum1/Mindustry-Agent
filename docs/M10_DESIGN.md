@@ -30,16 +30,20 @@ registry, and engine-neutral Java greedy fallback are complete. An explicit
 `DEMO_PUBLIC_POLICY=1` no-port path now runs that fallback through
 `EngineCandidates`, masks, typed actions, `CoordinationAdapter`, the board,
 reservations, and skills. Its probe has reached full readiness after ordinary
-wave-damage recovery and agent rebind. It remains opt-in while combat logistics
-churn is closed; human commands are not implemented. The stock-clock
+wave-damage recovery and agent rebind. All prerequisite gates are now green; it
+remains opt-in pending the separate reviewed default switch, and human commands
+are not implemented. The stock-clock
 public-path survival gate is green through tick 8100 with core health 1100: its
 authoritative world-state telemetry records all three wave clears, both post-
 wave expansion schematics, both maintenance completions, and productive reserve
 mining. The isolated fixed-step probe now records the real public candidate
 tables, masks, skill states, Java actions, and authoritative results. Python
-replay matches all 338 decision boundaries and 1,014 actions; two fresh JVMs
-reproduce 170 accepted selections with digest
-`127bc6f8dc02b276531d17c94ce348d209a7de692bbbcff2ff18284cfc177907`.
+replay matches all 390 decision boundaries and 1,170 actions; two fresh JVMs
+reproduce 225 accepted selections with digest
+`aaf2e734ea384fe4b537cbdf3bd5342fb5e954f3432a91470ebce311fa503714`.
+The logistics seat now remains dedicated during undersupplied combat, reducing
+seven repeated abandon/reclaim cycles to two phase-entry rebalances and seven
+unassigned waits.
 
 ## Command grammar
 

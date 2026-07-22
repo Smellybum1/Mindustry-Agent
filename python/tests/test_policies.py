@@ -88,7 +88,11 @@ class TestScriptedPolicies(unittest.TestCase):
             for _ in range(3)
         ]
         masks = [
-            {"continue_current_task": True, "abandon": True, "candidate_task": [False, False]}
+            {
+                "continue_current_task": True,
+                "abandon": True,
+                "candidate_task": [False, False],
+            }
             for _ in range(3)
         ]
         actions = policy.actions(observations, masks)
@@ -105,6 +109,30 @@ class TestScriptedPolicies(unittest.TestCase):
             {"candidate_task": [True, True]},
         )
         self.assertEqual(selected["task_action"]["candidate_index"], 0)
+        policy.observe_action_results([{"agent_id": 2, "accepted": True}])
+        next_supply = policy.action(
+            2,
+            observation(candidates=candidates, team=team),
+            {"candidate_task": [True, True]},
+        )
+        self.assertEqual(next_supply["task_action"]["candidate_index"], 0)
+
+        logistics_idle = policy.action(
+            2,
+            observation(
+                candidates=candidates,
+                team={**team, "defense_ammo_coverage": 1.0},
+            ),
+            {"candidate_task": [False, True]},
+        )
+        self.assertEqual(logistics_idle["task_action"], {"type": "WAIT"})
+
+        after_wave = policy.action(
+            2,
+            observation(candidates=candidates, team={**team, "enemy_count": 0}),
+            {"candidate_task": [False, True]},
+        )
+        self.assertEqual(after_wave["task_action"]["candidate_index"], 1)
 
     def test_active_supplier_is_not_preempted_by_wave(self):
         action = GreedyUtilityPolicy().action(

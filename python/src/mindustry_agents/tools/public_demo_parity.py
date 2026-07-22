@@ -93,7 +93,7 @@ def replay_trace(records: Iterable[dict[str, Any]]) -> tuple[str, int, int]:
     return hashlib.sha256(payload).hexdigest(), len(accepted_rows), actions_checked
 
 
-def check_log(path: Path) -> tuple[int, int, int, str]:
+def check_log(path: Path) -> tuple[int, int, int, int, int, str]:
     records, expected_digest, expected_selections = load_trace(
         path.read_text(encoding="utf-8").splitlines()
     )
@@ -103,7 +103,18 @@ def check_log(path: Path) -> tuple[int, int, int, str]:
             "public policy selection digest mismatch: "
             f"python={digest}/{selections} java={expected_digest}/{expected_selections}"
         )
-    return len(records), actions, selections, digest
+    rebalances = sum(
+        action.get("task_action", {}).get("reason") == "readiness_rebalance"
+        for record in records
+        for action in record["actions"]
+    )
+    combat_waits = sum(
+        int(record.get("team", {}).get("enemy_count", 0)) > 0
+        and action.get("task_action", {}).get("type") == "WAIT"
+        for record in records
+        for action in record["actions"]
+    )
+    return len(records), actions, selections, rebalances, combat_waits, digest
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -113,13 +124,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("log", type=Path)
     args = parser.parse_args(argv)
     try:
-        boundaries, actions, selections, digest = check_log(args.log)
+        boundaries, actions, selections, rebalances, combat_waits, digest = check_log(
+            args.log
+        )
     except Exception as exc:
         print(f"PUBLIC-DEMO-PARITY FAIL: {exc}", file=sys.stderr)
         return 1
     print(
         "PUBLIC-DEMO-PARITY OK "
         f"boundaries={boundaries} actions={actions} selections={selections} "
+        f"rebalances={rebalances} combat_waits={combat_waits} "
         f"digest={digest}"
     )
     return 0

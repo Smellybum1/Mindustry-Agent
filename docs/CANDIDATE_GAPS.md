@@ -69,12 +69,13 @@ resource recovery were not selectable through `SELECT_CANDIDATE_TASK`.
 `make candidate-policy-check` drives only public observations, masks,
 `SELECT_CANDIDATE_TASK`, board claims/reservations, and task actions. The pinned
 five seeds win at tick 8100. Under the corrected wait/loss lifecycle their
-current minimum/mean final core health is 236/761.6; this is survival evidence,
-not a claim that the old scorecard remains numerically unchanged. First-drill, opening-line,
-initial-turret, and initial-supply ticks remain identical because the scenario
-is deliberately seed-independent before wave 1. Native seeded spawn spread
-then produces genuine differences: wave-clear ticks, message counts, unit
-losses, and final core health vary; no cosmetic randomness was added.
+current minimum/mean final core health is 263/912.8; this is survival evidence,
+not a claim that the old scorecard remains numerically unchanged. First-drill,
+opening-line, initial-turret, and initial-supply ticks remain identical because
+the scenario is deliberately seed-independent before wave 1. Native seeded
+spawn spread then produces genuine differences: wave-clear ticks, message
+counts, unit losses, and final core health vary; no cosmetic randomness was
+added.
 
 `ExpertEpisode` remains behaviorally frozen as `run_frozen_episode` for the
 M7.6 ladder and golden replay.
@@ -114,8 +115,9 @@ or weaken the bounded variation.
 - The accepted real-time default still uses the shared Java utility driver, but
   the opt-in `PublicCandidateDemo` now selects through the same public candidate,
   mask, typed-action, board, reservation, and skill path as training. Its exact
-  Java/Python trace parity and stock-clock survival gates pass. Repeated combat
-  logistics rebalance remains before default promotion and M10.1 commands.
+  Java/Python trace parity and stock-clock survival gates pass. Its logistics
+  seat persists through undersupplied combat, removing repeated abandon/reclaim
+  churn. The separate default switch remains before M10.1 commands.
 - WAIT retains one shared task ID, so simultaneous idle seats can produce
   harmless rejected bids. This is visible in duplicate/rejection telemetry.
 - Candidate generation does not yet produce alternative fortification anchors

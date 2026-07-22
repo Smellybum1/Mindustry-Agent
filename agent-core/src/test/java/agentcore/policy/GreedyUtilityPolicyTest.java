@@ -52,7 +52,7 @@ class GreedyUtilityPolicyTest{
             policy.action(blocked, team(191, 0, 1.0)));
     }
 
-    @Test void undersuppliedCombatMovesHighestDefenderToSupplyPreference(){
+    @Test void undersuppliedCombatKeepsOneLogisticsSeatThroughTheWave(){
         List<AgentView> defenders = List.of(
             defending(0), defending(1), defending(2));
         List<Action> actions = policy.actions(defenders, team(100, 3, 0.5));
@@ -67,7 +67,13 @@ class GreedyUtilityPolicyTest{
         assertEquals(Action.select(2, 1), policy.action(idle, team(101, 3, 0.5)));
 
         policy.observeActionResults(List.of(new ActionResult(2, true)));
-        assertEquals(Action.select(2, 0), policy.action(idle, team(102, 3, 0.5)));
+        assertEquals(Action.select(2, 1), policy.action(idle, team(102, 3, 0.5)));
+
+        AgentView supplied = new AgentView(2, "", SkillStatus.READY, SkillReason.NONE,
+            idle.candidates(), mask(true, false));
+        assertEquals(Action.simple(2, ActionType.WAIT),
+            policy.action(supplied, team(103, 3, 1.0)));
+        assertEquals(Action.select(2, 0), policy.action(supplied, team(104, 0, 1.0)));
     }
 
     private static AgentView defending(int index){

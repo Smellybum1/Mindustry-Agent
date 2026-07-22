@@ -175,7 +175,7 @@ class GreedyUtilityPolicy:
         self._last_tick: dict[int, int] = {}
         self._preferred_types: dict[int, str] = {}
         self._pending_preferred: dict[int, str] = {}
-        self._return_to_defense: set[int] = set()
+        self._logistics_seats: set[int] = set()
 
     def observe_action_results(self, results: list[dict[str, Any]]) -> None:
         """Advance preference state only after the server accepts a selection."""
@@ -185,9 +185,15 @@ class GreedyUtilityPolicy:
             preferred = self._pending_preferred.pop(agent_id, None)
             if preferred is None or not result.get("accepted", False):
                 continue
-            self._preferred_types.pop(agent_id, None)
             if preferred == "SUPPLY_TURRET":
-                self._return_to_defense.add(agent_id)
+                # Retain the logistics seat across successive magazines and brief
+                # full-coverage intervals. Returning after each delivery churns it.
+                self._preferred_types[agent_id] = "SUPPLY_TURRET"
+                self._logistics_seats.add(agent_id)
+            else:
+                self._preferred_types.pop(agent_id, None)
+                if preferred == "DEFEND_REGION":
+                    self._logistics_seats.discard(agent_id)
 
     def alternate_nonconflicting_candidate(
         self,
@@ -222,11 +228,9 @@ class GreedyUtilityPolicy:
                 continue
             allowed.append((index, candidate))
 
-        preferred_type = (
-            "DEFEND_REGION"
-            if agent_id in self._return_to_defense
-            else self._preferred_types.get(agent_id)
-        )
+        preferred_type = self._preferred_types.get(agent_id)
+        if preferred_type is None and agent_id in self._logistics_seats:
+            preferred_type = "DEFEND_REGION"
         preferred = (
             [
                 entry
@@ -236,6 +240,15 @@ class GreedyUtilityPolicy:
             if preferred_type is not None
             else []
         )
+        if (
+            not preferred
+            and preferred_type == "SUPPLY_TURRET"
+            and agent_id in self._logistics_seats
+        ):
+            if int(observation.get("team", {}).get("enemy_count", 0)) > 0:
+                return None
+            self._preferred_types.pop(agent_id, None)
+            self._logistics_seats.discard(agent_id)
         return _highest_utility(preferred or allowed)
 
     def actions(
@@ -297,12 +310,12 @@ class GreedyUtilityPolicy:
             self._replan_ticks.pop(agent_id, None)
             self._preferred_types.pop(agent_id, None)
             self._pending_preferred.pop(agent_id, None)
-            self._return_to_defense.discard(agent_id)
+            self._logistics_seats.discard(agent_id)
         self._last_tick[agent_id] = tick
 
         preferred_type = self._preferred_types.get(agent_id)
         if skill.get("type") == "DEFEND":
-            self._return_to_defense.discard(agent_id)
+            self._logistics_seats.discard(agent_id)
 
         if (
             action_mask.get("abandon", False)
@@ -336,7 +349,7 @@ class GreedyUtilityPolicy:
                 }
         task_action = _continue_or_none(action_mask)
         if task_action is None:
-            if agent_id in self._return_to_defense:
+            if preferred_type is None and agent_id in self._logistics_seats:
                 preferred_type = "DEFEND_REGION"
             preferred = (
                 _valid_candidates(observation, action_mask, (preferred_type,))
@@ -344,9 +357,23 @@ class GreedyUtilityPolicy:
                 else []
             )
             selected = _highest_utility(preferred)
+            if (
+                selected is None
+                and preferred_type == "SUPPLY_TURRET"
+                and agent_id in self._logistics_seats
+            ):
+                if int(team.get("enemy_count", 0)) > 0:
+                    return {
+                        "agent_id": agent_id,
+                        "task_action": {"type": "WAIT"},
+                    }
+                preferred_type = None
+                self._preferred_types.pop(agent_id, None)
+                self._logistics_seats.discard(agent_id)
             if selected is None:
                 if preferred_type is not None:
                     self._preferred_types.pop(agent_id, None)
+                    self._logistics_seats.discard(agent_id)
                 selected = _highest_utility(_valid_candidates(observation, action_mask))
             task_action = (
                 {"type": "SELECT_CANDIDATE_TASK", "candidate_index": selected}
