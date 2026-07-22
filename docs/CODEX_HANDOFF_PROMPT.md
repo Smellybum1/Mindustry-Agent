@@ -1,16 +1,16 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, after V38's reusable preflight rejection and the rejection
-of four parity-controlled, reusable-only V39 diagnostics.
+`coop-agent/v159.7`, after V38's reusable preflight rejection, four rejected
+reusable-only diagnostics, and ADR-0052's V39 partner-intent-risk precommit.
 
 Read first, in order:
 
 1. `AGENTS.md` in full; obey its delegation and sealed-data rules.
-2. `docs/HANDOFF.md`, focusing on the V38/V39 diagnostic rejections and
-   next-five queue.
+2. `docs/HANDOFF.md`, focusing on the V38/V39 diagnostic rejections, ADR-0052,
+   and the next-five queue.
 3. M8.5 and the M8 exit criteria in `docs/ROADMAP.md`.
-4. ADR-0050 and ADR-0051.
+4. ADR-0050, ADR-0051, and ADR-0052.
 
 Run `bash scripts/codex-status.sh`. Preserve and never stage the user-modified
 `AGENTS.md`, generated
@@ -253,12 +253,23 @@ prior in only 6/18. This is the same 18/37 rejected redirect-rewrite and 18/48
 rejected-mask coordinate and changes duplicates only, not recovery or idle.
 Reject it.
 
-No V39 ADR, config, model, or confirmation-set freeze is authorized. Dev-v34 is
-retired unopened/unconsumed, held-out-v5 remains sealed/unconsumed, and M8.5
-remains unmet. Next perform primary-level reusable-only design synthesis. Once
-one narrow coordinate is chosen, precommit and gate it; do not freeze dev-v35
-until that precommit exists. Do not inspect dev-v34 or held-out-v5 membership
-and do not run confirmation or final episodes. Keep ADR-0051 unchanged.
+ADR-0052 now precommits V39's one selector-input coordinate. Exact
+same-boundary fixed-partner `task_id` intent raises only the matching learned
+candidate's existing `duplication_risk` input to `1.0`. It does not mask,
+redirect, force, reorder, suppress, or apply an action. The model shape, reward,
+runtime, roots, teacher, budget, RNGs, and checkpoint ranking remain V38-exact.
+The immutable config SHA-256 is
+`0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995`.
+
+Implement that exact feature and run focused fail-closed/disabled-feature
+parity, public survival/staging, suites, smoke, determinism, golden/negative
+replay, and exact-config reward gates. The committed value-free umbrella
+reserves dev-v35 for primary-only construction after the precommit; never
+delegate or render its membership. Replica A remains prohibited until all
+implementation gates pass, and dev-v35 remains prohibited until exact replicas
+and strict reusable scorecards pass. Dev-v34 is retired; held-out-v5 remains
+sealed/unconsumed. Do not inspect either membership or run confirmation/final
+episodes. Keep ADR-0051 unchanged.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

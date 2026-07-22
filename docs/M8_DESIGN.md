@@ -594,6 +594,34 @@ same safety/lifecycle exclusions as reward v2, while reporting forced and
 non-forced counts separately. Simulation telemetry also exposes per-agent idle
 ticks. Prior records and decisions remain v1 and are never recomputed.
 
+## V39 governed successor
+
+ADR-0052 precommits one selector-input coordinate from reusable V38 evidence.
+The fixed scripted actions are already computed before the learned seat at the
+same structured boundary. When seat 1 or 2 selects the exact same `task_id` as
+a learned-seat candidate, V39 raises that candidate's existing normalized
+`duplication_risk` input to `1.0`. This is structured evidence only: it does not
+mask, redirect, reorder, force, suppress, or apply an action, and it does not
+add a model dimension or reward component.
+
+The complete V38 runtime, action vocabulary, feature shape, model, reward,
+optimizer, roots, teacher, budget, RNGs, and checkpoint ranking remain exact.
+Configurations without the explicit
+`fixed_partner_selected_task_duplication_risk_v1` block remain historically
+exact. Focused fail-closed tests, a disabled-feature parity replay, the public
+survival/staging gate, full suites, smoke, determinism, golden/negative replay,
+and exact-config reward adversaries must pass before replica A. Any public
+regression rejects V39 before training.
+
+The immutable config is
+`configs/training/m8-selector-v39-partner-intent-duplication-risk.json`, SHA-256
+`0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995`.
+The value-free confirmation umbrella reserves dev-v35 and binds the existing
+sealed held-out-v5 final without reading either membership. Dev-v35 membership
+may be constructed only by the primary agent after this precommit is committed,
+and may not be consumed until exact replicas and strict reusable scorecards
+pass. Held-out-v5 remains sealed and unconsumed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

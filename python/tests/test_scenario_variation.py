@@ -1756,3 +1756,88 @@ def test_v38_owned_schematic_staging_and_sealed_sets_are_reserved():
     assert hashlib.sha256(freeze_path.read_bytes()).hexdigest() == (
         "7282a3cd405f2d6b00dd3942fb8da2b2f62eb3a8f567dc067edc07756787018e"
     )
+
+
+def test_v39_partner_intent_coordinate_and_confirmation_umbrella_are_frozen():
+    repository_root = DEFAULT_SEED_SET.parents[2]
+    training_dir = repository_root / "configs" / "training"
+    evaluation_dir = repository_root / "configs" / "evaluation"
+    v38_path = training_dir / "m8-selector-v38-owned-schematic-staging.json"
+    v39_path = training_dir / "m8-selector-v39-partner-intent-duplication-risk.json"
+    umbrella_path = evaluation_dir / "m8-selector-v39-confirmation-umbrella.json"
+
+    v38 = json.loads(v38_path.read_text(encoding="utf-8"))
+    v39 = json.loads(v39_path.read_text(encoding="utf-8"))
+    expected_changes = {
+        "candidate_version": "v39",
+        "runtime_contract": (
+            "abandon_wait_resource_scoped_retry_agent_death_available_idle_"
+            "resource_actionability_staging_secondary_claim_loss_wake_"
+            "owned_schematic_staging_partner_intent_risk_v11"
+        ),
+        "quality_intervention": (
+            "resource_actionability_staging_secondary_claim_wake_seat2_"
+            "harvest_owned_schematic_staging_and_partner_intent_risk_v12"
+        ),
+        "confirmation_seed_set": (
+            "configs/evaluation/bootstrap-defense-v1-dev-v35.json"
+        ),
+        "partner_intent_duplication_risk": {
+            "schema": "fixed_partner_selected_task_duplication_risk_v1",
+            "agent_ids": [1, 2],
+            "match": "task_id",
+            "feature": "utility_features.duplication_risk",
+            "value": 1.0,
+        },
+    }
+    assert {key: v39[key] for key in expected_changes} == expected_changes
+    for key in expected_changes:
+        v38.pop(key, None)
+        v39.pop(key)
+    assert v39 == v38
+
+    expected_config_sha256 = (
+        "0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995"
+    )
+    assert hashlib.sha256(v39_path.read_bytes()).hexdigest() == (
+        expected_config_sha256
+    )
+
+    umbrella = json.loads(umbrella_path.read_text(encoding="utf-8"))
+    assert umbrella["schema"] == "m8_confirmation_evaluation_umbrella_v1"
+    assert umbrella["candidate_version"] == "v39"
+    assert umbrella["status"] == "reserved_before_membership_creation"
+    assert umbrella["training_config"] == {
+        "path": (
+            "configs/training/"
+            "m8-selector-v39-partner-intent-duplication-risk.json"
+        ),
+        "sha256": expected_config_sha256,
+    }
+    assert umbrella["access_owner"] == "primary_agent_only"
+    assert umbrella["delegation_forbidden"] is True
+    assert umbrella["replacement_set"] == {
+        "role": "confirmation",
+        "seed_set_id": "bootstrap-defense-v1-dev-v35",
+        "seed_set_version": 35,
+        "split": "dev",
+        "count": 160,
+        "path": "configs/evaluation/bootstrap-defense-v1-dev-v35.json",
+        "membership_state_at_reservation": "not_created",
+        "exclusive_umbrella_attempt": (
+            "runs/m8-selector-v39-dev-v35-umbrella-attempt.json"
+        ),
+        "replaces": "bootstrap-defense-v1-dev-v34",
+    }
+    assert umbrella["sealed_final_binding"] == {
+        "seed_set_id": "bootstrap-defense-v1-held-out-v5",
+        "seed_set_version": 5,
+        "split": "held-out",
+        "count": 160,
+        "path": "configs/evaluation/bootstrap-defense-v1-held-out-v5.json",
+        "sha256": (
+            "1118ef59b0953aacd86176737777013bb2c6498e128f28bcbb7850e6ad586910"
+        ),
+        "consumption_state": "sealed_unconsumed",
+        "membership_read_for_v39_reservation": False,
+    }

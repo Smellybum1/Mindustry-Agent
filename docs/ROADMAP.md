@@ -1765,10 +1765,22 @@ alternate-supply priors within `+1`; these are the same 18/37 rejected redirect
 rewrites and 18/48 rejected masks, affecting duplicates but not recovery/idle.
 All four coordinates are rejected.
 
-No V39 ADR, config, model, or confirmation-set freeze is authorized. Dev-v34
-remains retired unopened/unconsumed, held-out-v5 remains sealed/unconsumed, and
-M8.5 remains unmet. Next perform primary-level reusable-only design synthesis;
-do not freeze dev-v35 until one coordinate is precommitted.
+ADR-0052 now precommits one materially new V39 coordinate. Fixed scripted-seat
+actions are computed before learned selection; an exact fixed-partner
+`task_id` match raises only the matching learned candidate's existing
+`duplication_risk` input to `1.0`. The action remains unmasked and learned-seat
+selection remains authoritative, unlike the rejected 48-choice mask and
+37-choice redirect. Runtime, action vocabulary, feature dimensions, model,
+reward, optimizer, roots, teacher, budget, RNGs, and checkpoint ranking remain
+V38-exact. The immutable config hashes to
+`0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995`.
+
+Implementation and pretraining gates are authorized; replica A is not. The
+committed value-free umbrella reserves dev-v35 for primary-only construction
+after the precommit, while held-out-v5 remains sealed and unconsumed. Dev-v34
+remains retired unopened/unconsumed. V39 must pass focused feature/parity
+checks, public survival/staging, suites, smoke, determinism, replay controls,
+and exact-config reward adversaries before model work. M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

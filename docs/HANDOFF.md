@@ -778,10 +778,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   redirect-rewrite and 18/48 rejected-mask coordinate; it affects duplicates,
   not recovery or idle.
 - **V39 authorization boundary**: no V39 ADR, config, model, or confirmation-set
-  freeze is authorized. Dev-v34 remains retired unopened/unconsumed;
-  held-out-v5 remains sealed/unconsumed; M8.5 remains unmet. The next task is
-  primary-level reusable-only design synthesis. Do not freeze dev-v35 until one
-  coordinate is precommitted.
+  freeze was authorized by the four rejected diagnostics. ADR-0052 now
+  precommits the successor: exact fixed-partner `task_id` intent raises the
+  matching learned candidate's existing `duplication_risk` input to `1.0`
+  without masking, redirecting, forcing, reordering, suppressing, or applying
+  an action. Config SHA-256 is
+  `0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995`.
+  The value-free umbrella reserves dev-v35 for primary-only construction after
+  the precommit and binds held-out-v5 without reading membership. Only
+  implementation/pretraining gates are authorized. Dev-v34 remains retired;
+  held-out-v5 remains sealed/unconsumed; M8.5 remains unmet. The precommit
+  packet passes 177 Python tests and 44/44 exact-config reward adversaries;
+  ignored report SHA-256 is `7bd71c1c9b5de869bab1d852fb26244c1c313f56797ce9dff0287147b531ef76`.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V38 rejection/guard repository checkpoint**:
   `9bc96f91c7219ad9e9656f99b29f15331b78b399`.
@@ -944,22 +952,20 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Perform primary-level reusable-only design synthesis.** The four immediate
-   V39 diagnostics are rejected; do not inspect confirmation or held-out
-   membership.
-2. **Choose and precommit exactly one narrow successor coordinate.** No V39 ADR,
-   config, or model work is currently authorized; preserve ADR-0051's
-   direct-loading/provenance contract.
-3. **Only after the coordinate precommit and public/reward/runtime gates, freeze
-   dev-v35 before successor model work.** Dev-v34 is retired
-   unopened/unconsumed; held-out-v5 remains sealed/unconsumed.
+1. **Implement ADR-0052's exact partner-intent duplication-risk feature.** Do
+   not add masking, redirects, action changes, a feature dimension, or reward.
+2. **Run focused disabled-feature parity plus the complete public/reward/runtime
+   gates.** Preserve ADR-0051's direct-loading/provenance contract.
+3. **After this committed precommit, freeze dev-v35 primary-only, but do not
+   consume it before exact replicas and strict reusable scorecards pass.**
+   Dev-v34 is retired; held-out-v5 remains sealed/unconsumed.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0051` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0052` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -976,7 +982,9 @@ retaining legacy registry mode only for diagnostic compatibility.
 ADR-0050 also records the post-rejection closure of four parity-controlled,
 reusable-only V39 diagnostics and the resulting prohibition on V39
 ADR/config/model/freeze work pending primary-level design synthesis. ADR-0051
-is unchanged.
+is unchanged. ADR-0052 records the completed synthesis and precommits V39's
+structured fixed-partner intent as evidence in the existing duplication-risk
+feature, without changing action authority.
 
 ## Deviations from the brief in this scaffold
 

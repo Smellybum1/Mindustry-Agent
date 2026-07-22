@@ -1,0 +1,42 @@
+{
+  "schema": "m8_confirmation_evaluation_umbrella_v1",
+  "candidate_version": "v39",
+  "status": "reserved_before_membership_creation",
+  "created_date": "2026-07-22",
+  "repository_parent_commit": "476d44084c9fe93891189139ac00170a5edeac9b",
+  "training_config": {
+    "path": "configs/training/m8-selector-v39-partner-intent-duplication-risk.json",
+    "sha256": "0b883c41ab297a132aa40c9c43bd5760c13a7afb5d6239fe9666d00b80f2f995"
+  },
+  "access_owner": "primary_agent_only",
+  "delegation_forbidden": true,
+  "replacement_set": {
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v35",
+    "seed_set_version": 35,
+    "split": "dev",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v35.json",
+    "membership_state_at_reservation": "not_created",
+    "exclusive_umbrella_attempt": "runs/m8-selector-v39-dev-v35-umbrella-attempt.json",
+    "replaces": "bootstrap-defense-v1-dev-v34"
+  },
+  "sealed_final_binding": {
+    "seed_set_id": "bootstrap-defense-v1-held-out-v5",
+    "seed_set_version": 5,
+    "split": "held-out",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-held-out-v5.json",
+    "sha256": "1118ef59b0953aacd86176737777013bb2c6498e128f28bcbb7850e6ad586910",
+    "consumption_state": "sealed_unconsumed",
+    "membership_read_for_v39_reservation": false
+  },
+  "rules": [
+    "This reservation and the exact V39 coordinate must be committed before dev-v35 membership is created or read.",
+    "Membership construction and disjointness verification are primary-agent-only and must not render seed values into agent output.",
+    "The committed one-way consumer must atomically create the dev-v35 umbrella attempt before its first manifest read or baseline episode.",
+    "A started, aborted, failed, exposed, or completed dev-v35 attempt consumes that set permanently.",
+    "No dev-v35 access is authorized until exact replicas and reusable permanent-greedy and matched-greedy scorecards pass.",
+    "Held-out-v5 remains governed by its existing V38 freeze and cannot be read until dev-v35 passes every frozen gate."
+  ]
+}
