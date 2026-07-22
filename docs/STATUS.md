@@ -1465,6 +1465,14 @@ repository-evidence mapping used for the M6 audit is:
   but the off-contract checkpoint wins only 6/10, so a successor must retrain.
   V35 is rejected, dev-v31 is retired unopened, held-out-v4 remains sealed, and
   M8.5 is unmet.
+- ADR-0047 precommits V36 from the exact learned-seat collision trace. It changes
+  only the tick-0 `+1.0` training prior from `BUILD_SCHEMATIC` to `BUILD_LINE`,
+  the rejected checkpoint's unadjusted first choice on all ten reusable seeds.
+  V35 runtime, rewards, teachers, budgets, model, RNGs, roots, and gates remain
+  exact. Dev-v31 is retired unopened; dev-v32 freezes disjoint roots
+  `285001..285160` and remains unopened; held-out-v4 stays sealed. Config/seed
+  governance, 161 Python tests, and all 44 exact-config reward adversaries pass.
+  No V36 model work has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

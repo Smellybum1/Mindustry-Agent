@@ -127,6 +127,13 @@ checkpoint wins only 6/10. Reject V35 and precommit a from-scratch collision-fre
 opening successor before model work. Dev-v31 is retired unopened; held-out-v4
 remains sealed.
 
+ADR-0047 precommits V36. It changes only the existing tick-0 `+1.0` prior from
+`BUILD_SCHEMATIC` to `BUILD_LINE`; runtime/reward/teacher/training fields remain
+V35-exact. Config/seed governance, 161 Python tests, and all reward adversaries
+pass. Reverify inherited focused/public/Java, smoke, determinism, and negative
+replay from the committed packet before replica A. Dev-v32 is frozen at disjoint
+roots `285001..285160` but unopened; held-out-v4 remains sealed.
+
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.

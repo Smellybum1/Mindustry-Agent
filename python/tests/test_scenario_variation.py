@@ -1436,3 +1436,62 @@ def test_v35_secondary_claim_loss_wake_and_dev_v31_are_precommitted():
     from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
 
     assert SEED_SET_FILES["dev-v31"] == path.name
+
+
+def test_v36_build_line_opening_and_dev_v32_are_precommitted():
+    path = DEFAULT_SEED_SET.with_name("bootstrap-defense-v1-dev-v32.json")
+    confirmation = _load_seed_set(path)
+    assert confirmation["seed_set_id"] == "bootstrap-defense-v1-dev-v32"
+    assert confirmation["seed_set_version"] == 32
+    assert confirmation["seeds"] == list(range(285001, 285161))
+    confirmation_seeds = set(confirmation["seeds"])
+    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        if other != path:
+            document = json.loads(other.read_text(encoding="utf-8"))
+            assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
+
+    training_dir = DEFAULT_SEED_SET.parents[1] / "training"
+    v35 = json.loads(
+        (
+            training_dir / "m8-selector-v35-secondary-claim-loss-wake.json"
+        ).read_text(encoding="utf-8")
+    )
+    v36 = json.loads(
+        (
+            training_dir / "m8-selector-v36-build-line-opening.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert v36.pop("candidate_version") == "v36"
+    assert v36.pop("quality_intervention") == (
+        "resource_actionability_staging_secondary_claim_wake_and_"
+        "build_line_opening_v10"
+    )
+    assert v36.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v32.json"
+    )
+    v36_adjustment = v36.pop("policy_logit_adjustment")
+    assert v36_adjustment == {
+        "schema": "initial_task_type_logit_bias_v1",
+        "tick": 0,
+        "task_type": "BUILD_LINE",
+        "bias": 1.0,
+    }
+    assert v35.pop("candidate_version") == "v35"
+    assert v35.pop("quality_intervention") == (
+        "resource_actionability_staging_and_secondary_claim_loss_wake_v9"
+    )
+    assert v35.pop("confirmation_seed_set").endswith(
+        "bootstrap-defense-v1-dev-v31.json"
+    )
+    v35_adjustment = v35.pop("policy_logit_adjustment")
+    assert v35_adjustment == {
+        "schema": "initial_task_type_logit_bias_v1",
+        "tick": 0,
+        "task_type": "BUILD_SCHEMATIC",
+        "bias": 1.0,
+    }
+    assert v36 == v35
+
+    from mindustry_agents.tools.evaluate_ladder import SEED_SET_FILES
+
+    assert SEED_SET_FILES["dev-v32"] == path.name

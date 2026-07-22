@@ -1515,6 +1515,16 @@ choice to `BUILD_LINE` but the already-trained off-contract checkpoint falls to
 6/10, so it cannot be reused. V35 is rejected, dev-v31 is retired unopened,
 held-out-v4 stays sealed, and M8.5 remains unmet.
 
+ADR-0047 precommits V36 from the exact V35 collision trace. V36 changes only the
+existing tick-0 `+1.0` prior from `BUILD_SCHEMATIC` to `BUILD_LINE`; the latter
+is the rejected checkpoint's unadjusted first choice on all ten seeds and avoids
+the universal collision while retaining a deliberate non-WAIT opening. Runtime,
+reward, teachers, training budget, model, RNGs, reusable roots, and gates remain
+V35-exact. Dev-v31 is retired unopened. Dev-v32 freezes globally disjoint roots
+`285001..285160` and remains unopened; held-out-v4 stays sealed. Config/seed
+governance, 161 Python tests, and all 44 exact-config reward adversaries pass.
+No V36 model work preceded the precommit. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

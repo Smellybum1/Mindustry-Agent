@@ -801,13 +801,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Precommit a collision-free opening successor.** V35 exact twins pass
-   construction but reusable preflight rejects permanent idle. The learned seat
-   loses the biased tick-0 schematic claim in all ten episodes; its unadjusted
-   first choice is `BUILD_LINE`. Do not reuse the off-contract V35 checkpoint.
-2. **Retrain from scratch only after governance passes.** Preserve V35 runtime,
-   rewards, teachers, budgets, and gates; freeze a new disjoint confirmation set
-   and keep it unopened through exact twins plus both reusable scorecards.
+1. **Run V36's inherited pretraining gates.** ADR-0047 changes only the
+   training-time tick-0 prior to `BUILD_LINE`; config/seed governance, 161 Python
+   tests, and reward adversaries already pass. Reverify focused/public/Java,
+   smoke, determinism, and negative replay from the committed packet.
+2. **Construct replica A only if every gate stays green.** Retrain from scratch
+   under the exact V36 config; require at least 9/10 reusable wins and idle below
+   0.25 before replica B. Keep dev-v32 and held-out-v4 sealed.
 3. **Keep held-out-v4 sealed.** Dev-v29 and dev-v30 are retired unopened; freeze
    a new disjoint confirmation set but do not open it before exact replicas and
    both reusable scorecards pass. No successor may
@@ -819,13 +819,14 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0046` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0047` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
 ADR-0045 precommits and records V34's all-seat claim-loss boundary rejection at
 the complete public candidate gate; ADR-0046 precommits and records V35's exact
-fixed-secondary-seat construction and reusable scorecard rejection.
+fixed-secondary-seat construction and reusable scorecard rejection; ADR-0047
+precommits V36's collision-free build-line opening prior.
 
 ## Deviations from the brief in this scaffold
 
