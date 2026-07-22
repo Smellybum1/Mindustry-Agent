@@ -1532,6 +1532,17 @@ cross-process/reset/seed determinism, the 16,200-tick golden replay, and the
 negative replay control also pass. Replica A is authorized. Dev-v32 and
 held-out-v4 remain unopened; M8.5 remains unmet.
 
+V36 replica A completes all 32 updates, but no checkpoint reaches the 9/10
+construction floor. Rank-best update 5 is 7/10 with return `-0.17522`, core
+health `488.3`, and idle `0.05917146`; replica B is prohibited. The build-line
+opening removes learned-seat idle but loses seeds 2001/2003/2004 near wave 3.
+Reusable-only harvest and one-tick-replan diagnostics each win 6/10, while
+forced WAIT reproduces V35's exact 9/10 outcomes and rejected idle profile. A
+public trace finds the same tick-0 schematic claim loss on all five accepted
+public seeds, so a server-side initial wake is not isolated from V34's staging
+failure. V36 is rejected, dev-v32 is retired unopened, held-out-v4 stays
+sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

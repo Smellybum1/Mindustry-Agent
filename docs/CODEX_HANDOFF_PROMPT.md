@@ -137,6 +137,16 @@ the exact V36 config; require at least 9/10 reusable wins and mean idle below
 0.25 before replica B. Dev-v32 is frozen at disjoint roots `285001..285160` but
 unopened; held-out-v4 remains sealed.
 
+V36 replica A completes all 32 updates, but no checkpoint reaches the 9/10
+construction floor. Rank-best update 5 is 7/10 with return `-0.17522`, core
+health `488.3`, and idle `0.05917146`; replica B is prohibited. Reusable-only
+harvest and one-tick-replan diagnostics each win 6/10, while forced WAIT
+reproduces V35's exact 9/10 outcomes and rejected idle profile. The accepted
+public policy also loses the schematic claim at tick 0, so a server-side wake
+is not isolated from V34's staging failure. Reject V36, retire dev-v32 unopened,
+and diagnose accepted-task timelines for losses 2001/2003/2004 versus V35 wins
+before precommitting any one-coordinate successor. Held-out-v4 remains sealed.
+
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or
 make machine-global changes.

@@ -1,6 +1,6 @@
 # ADR-0047: V36 collision-free build-line opening prior
 
-**Status:** Accepted; pretraining gates verified
+**Status:** Accepted; V36 rejected at replica A
 
 ## Context
 
@@ -88,3 +88,38 @@ gate survives 5/5 seeds with proactive staging beginning in all five. Smoke,
 cross-process/reset/seed determinism, the 16,200-tick golden scripted replay,
 and its deliberate-mismatch negative control also pass. V36 replica A is
 therefore authorized under decision 4; dev-v32 and held-out-v4 remain unopened.
+
+## Outcome
+
+Replica A completed all 32 governed updates but no checkpoint passed the
+precommitted 9/10 construction floor. Rank-best update 5 reached 7/10 reusable
+wins, mean return `-0.17522`, mean core health `488.3`, and mean idle fraction
+`0.05917146`; update 11 also reached 7/10 but ranked lower by return. The full
+ineligible frontier is
+`runs/m8-selector-v36-a/selector-v1-dev-frontier.json`, SHA-256
+`c8659c770e5ec251e443f0aecc2b744716694152b738d09c6f57f53a0f0f7e16`.
+Replica B was therefore prohibited and no permanent baseline, reusable
+scorecard, dev-v32, or held-out-v4 evaluation ran.
+
+The rank-best checkpoint's per-seat mean idle ticks are `[3.7,1.7,804.0]` and
+its opening is collision-free, so construction rather than the idle threshold
+is the failure. It loses seeds 2001, 2003, and 2004 near wave 3. The exact trace
+is `runs/m8-selector-v36-seat0-idle.json`, SHA-256
+`2a094fbd4999c04094dbca6528f0d2b811e46dcfee0492b78074684543d9e24c`.
+
+Reusable-only diagnostics reject the remaining simple openings and cadence
+escape. Applying a harvest prior to V36 update 5 wins 6/10 (SHA-256
+`0b4c091c90d6c9b8e3c1bba73fd066ac5e6800d94365cc9992dff2830ec04793`).
+Giving V35 update 8 a one-tick initial response also wins 6/10 (SHA-256
+`6af6f19190d42cf7231a28dd4b10161d392c298f0e051d085abd5296c00b1f17`).
+Forcing canonical WAIT preserves V35's 9/10 outcomes but reproduces its exact
+`[390.1,8.1,380.0]` idle profile (SHA-256
+`7903bd8eba902bb22f540ad56f98d9b3e5e2f67a1abf43b5f4bf58a74bc41d68`).
+The accepted public policy also loses the same schematic claim at tick 0 on all
+five seeds while retaining its required staging, so a server-side tick-0 wake
+is not isolated from V34's public failure (public trace SHA-256
+`8414b9be763add3228addd1ad42cb5f3680dcf8dbe91c87edcac3051fe4286b0`).
+
+V36 is rejected, dev-v32 is retired unopened, held-out-v4 remains sealed, and
+M8.5 remains unmet. A successor requires accepted-task timeline diagnosis; it
+must not combine another opening guess with unrelated training changes.

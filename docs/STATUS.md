@@ -1479,6 +1479,15 @@ repository-evidence mapping used for the M6 audit is:
   Smoke, cross-process/reset/seed determinism, the 16,200-tick golden replay,
   and negative replay pass. Replica A is authorized; dev-v32 and held-out-v4
   remain unopened.
+- V36 replica A completes all 32 updates but no checkpoint clears the 9/10
+  construction floor. Rank-best update 5 is 7/10 with return `-0.17522`, core
+  health `488.3`, and idle `0.05917146`; replica B is prohibited. Build-line
+  removes learned-seat idle but loses seeds 2001/2003/2004. Reusable-only
+  harvest and one-tick-replan diagnostics each win 6/10; forced WAIT preserves
+  V35's 9/10 but reproduces its exact rejected idle profile. The public policy
+  also loses the schematic claim at tick 0 on all five seeds, so a runtime
+  tick-0 wake is not isolated from V34's staging failure. V36 is rejected,
+  dev-v32 is retired unopened, held-out-v4 stays sealed, and M8.5 remains unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
