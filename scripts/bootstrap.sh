@@ -24,8 +24,10 @@ fi
 echo "-- Java --"
 if command -v java >/dev/null 2>&1; then
   java -version
-  jver="$(java -version 2>&1 | head -1 | sed -E 's/.*version "([0-9]+).*/\1/')"
-  if [[ "${jver:-0}" -lt 17 ]]; then
+  jver="$(java -version 2>&1 | sed -nE 's/.*version "([0-9]+).*/\1/p' | head -1)"
+  if [[ ! "$jver" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: unable to parse Java major version"; fail=1
+  elif (( jver < 17 )); then
     echo "ERROR: JDK 17+ required (found $jver)"; fail=1
   fi
 else
