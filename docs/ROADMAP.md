@@ -1740,6 +1740,36 @@ held-out-v5 remains sealed and unconsumed. Diagnose one successor coordinate
 from reusable evidence only, precommit it, and freeze a new dev confirmation
 identity before model work. M8.5 remains unmet.
 
+Four byte-exact-twin, parity-controlled V39 diagnostics have now exhausted the
+immediate reusable-only candidates without authorizing a successor. The WAIT
+communication probe (`014085de7007e4d6227e6c5ae89ee1cd636b60f036c6b1db23a8acdd41908ad6`)
+counts structured/suppressed WAIT communication at candidate `17641/74`,
+matched `16161/69`, and permanent `17252/74`; candidate-minus-permanent remains
+uncertain both before filtering (`-0.00307796`, CI
+`[-0.01502905,0.00748813]`) and after filtering (`+0.00176772`, CI
+`[-0.00574127,0.00877167]`), while matched remains a pass. The claim-loss probe
+(`e3c726380516e9762566ab5b98dc3312758f52d2c943b979e49263cefbb9f794`)
+has 10/10 canonical parity and finds 19 learned-seat-0 losses (18 supply, one
+harvest), zero with a staged/live partner schematic, 19/19 with an ordinary
+non-WAIT option, and zero extra boundary reconvergences. Moving seed 2005's
+tick-2053 harvest gap from 695 to expose `BUILD_LINE` at 694 changes the
+trajectory and risks V34's staging-disappearance defect. The recovery catalog
+(`727e62145895a5a9435a6c62372156a7887c5dd12d2d5d204d8d7b89bc5d298e`)
+finds zero same-type valid choices at 30 exact death boundaries; next-tick
+`HARVEST` on seeds 2004/2006 requires bias-to-tie above `3.822402`/`3.973103`
+against defense. The supply-collision probe
+(`9b9905b208dceb95b9ddbf240a4050d63a85779b321eec7b6fc35bdfb1e26870`)
+finds 18 collisions in seven bursts, 11/18 alternate supply choices, and 18
+mask-induced changes (11 supply, six schematic, one harvest), with only 6/18
+alternate-supply priors within `+1`; these are the same 18/37 rejected redirect
+rewrites and 18/48 rejected masks, affecting duplicates but not recovery/idle.
+All four coordinates are rejected.
+
+No V39 ADR, config, model, or confirmation-set freeze is authorized. Dev-v34
+remains retired unopened/unconsumed, held-out-v5 remains sealed/unconsumed, and
+M8.5 remains unmet. Next perform primary-level reusable-only design synthesis;
+do not freeze dev-v35 until one coordinate is precommitted.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -752,6 +752,36 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `e6c9cf27...` report), so ADR-0050 rejects V38. Dev-v34 is retired unopened
   and unconsumed without a membership read; held-out-v5 remains sealed and
   unconsumed. M8.5 remains unmet.
+- **Four V39 reusable-only diagnostics rejected**: all four artifacts have
+  byte-exact twins and candidate/matched/permanent parity. The WAIT
+  communication probe (`014085de7007e4d6227e6c5ae89ee1cd636b60f036c6b1db23a8acdd41908ad6`)
+  records structured/suppressed counts candidate `17641/74`, matched
+  `16161/69`, and permanent `17252/74`. Candidate-minus-permanent announcements
+  remain uncertain before filtering (`-0.00307796`, CI
+  `[-0.01502905,0.00748813]`) and after filtering (`+0.00176772`, CI
+  `[-0.00574127,0.00877167]`); matched stays pass. The claim-loss probe
+  (`e3c726380516e9762566ab5b98dc3312758f52d2c943b979e49263cefbb9f794`)
+  has 10/10 canonical parity and finds 19 learned-seat-0 losses (18 supply, one
+  harvest), zero staged/live partner schematics, 19/19 ordinary non-WAIT
+  alternatives, and zero extra boundary reconvergences. Seed 2005's harvest at
+  tick 2053/gap 695 could expose `BUILD_LINE` at 694 only by changing the
+  trajectory and recreating V34 staging-disappearance risk. Reject both.
+- **Recovery/collision coordinates also rejected**: recovery artifact
+  `727e62145895a5a9435a6c62372156a7887c5dd12d2d5d204d8d7b89bc5d298e`
+  finds 30 deaths and zero same-type valid choices at the exact death boundary.
+  Seeds 2004/2006 first permit `HARVEST` next tick, but require bias-to-tie
+  above `3.822402`/`3.973103` against defense. Supply-collision artifact
+  `9b9905b208dceb95b9ddbf240a4050d63a85779b321eec7b6fc35bdfb1e26870`
+  records 18 collisions in seven bursts, alternate supply for 11/18, and 18
+  mask changes (11 supply, six schematic, one harvest), with a `+1`
+  alternate-supply prior for only 6/18. This is the same 18/37 rejected
+  redirect-rewrite and 18/48 rejected-mask coordinate; it affects duplicates,
+  not recovery or idle.
+- **V39 authorization boundary**: no V39 ADR, config, model, or confirmation-set
+  freeze is authorized. Dev-v34 remains retired unopened/unconsumed;
+  held-out-v5 remains sealed/unconsumed; M8.5 remains unmet. The next task is
+  primary-level reusable-only design synthesis. Do not freeze dev-v35 until one
+  coordinate is precommitted.
 - **Current branch**: `coop-agent/v159.7`
 - **Current V38 rejection/guard repository checkpoint**:
   `9bc96f91c7219ad9e9656f99b29f15331b78b399`.
@@ -914,13 +944,15 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Diagnose exactly one next coordinate from reusable V38 evidence only.**
-   Do not inspect confirmation or held-out membership.
-2. **Precommit the successor coordinate and complete its public/reward/runtime
-   gates before model work.** Preserve the ADR-0051 direct-loading/provenance
-   contract.
-3. **Freeze a new dev confirmation identity before successor model work.**
-   Dev-v34 is retired unopened/unconsumed; held-out-v5 remains sealed/unconsumed.
+1. **Perform primary-level reusable-only design synthesis.** The four immediate
+   V39 diagnostics are rejected; do not inspect confirmation or held-out
+   membership.
+2. **Choose and precommit exactly one narrow successor coordinate.** No V39 ADR,
+   config, or model work is currently authorized; preserve ADR-0051's
+   direct-loading/provenance contract.
+3. **Only after the coordinate precommit and public/reward/runtime gates, freeze
+   dev-v35 before successor model work.** Dev-v34 is retired
+   unopened/unconsumed; held-out-v5 remains sealed/unconsumed.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
@@ -941,6 +973,10 @@ membership-exposed but unexecuted dev-v33 and held-out-v4 sets; ADR-0050 records
 V38's learned-seat-only proactive staging exposure, exact twins, and reusable
 rejection; ADR-0051 accepts selected-only loading and runtime provenance while
 retaining legacy registry mode only for diagnostic compatibility.
+ADR-0050 also records the post-rejection closure of four parity-controlled,
+reusable-only V39 diagnostics and the resulting prohibition on V39
+ADR/config/model/freeze work pending primary-level design synthesis. ADR-0051
+is unchanged.
 
 ## Deviations from the brief in this scaffold
 

@@ -285,3 +285,50 @@ not read. Held-out-v5 remains sealed and unconsumed. M8.5 remains unmet. The
 next work is to diagnose exactly one successor coordinate from reusable
 evidence only, then precommit it and freeze a new dev confirmation identity
 before any model work.
+
+## Post-rejection V39 reusable-only diagnostics
+
+Four reusable-only diagnostics were completed after V38's rejection. Each
+artifact has a byte-exact twin and preserves candidate, matched, and permanent
+parity. None supports a narrow V39 precommit.
+
+1. The WAIT communication probe artifact SHA-256 is
+   `014085de7007e4d6227e6c5ae89ee1cd636b60f036c6b1db23a8acdd41908ad6`.
+   Structured/suppressed WAIT counts are `17641/74` for candidate,
+   `16161/69` for matched, and `17252/74` for permanent. Candidate minus
+   permanent announcements is `-0.00307796`, 95% CI
+   `[-0.01502905,0.00748813]`, before filtering and `+0.00176772`, 95% CI
+   `[-0.00574127,0.00877167]`, after filtering. Both are uncertain, while the
+   matched comparison remains a pass. Filtering WAIT communication therefore
+   does not rescue the permanent scorecard and is rejected before any ADR or
+   config.
+2. The claim-loss probe artifact SHA-256 is
+   `e3c726380516e9762566ab5b98dc3312758f52d2c943b979e49263cefbb9f794`.
+   Its canonical replay has full parity on all 10/10 episodes. There are 19
+   learned-seat-0 claim losses: 18 supply and one harvest, zero with a partner
+   schematic staged or live, 19/19 with a valid ordinary non-WAIT choice, and
+   zero extra boundary reconvergences. Seed 2005's harvest loss occurs at tick
+   2053 with a gap of 695; exposing `BUILD_LINE` at gap 694 would be earlier,
+   but would change the trajectory and recreate V34's staging-disappearance
+   risk. The coordinate is rejected.
+3. The recovery catalog artifact SHA-256 is
+   `727e62145895a5a9435a6c62372156a7887c5dd12d2d5d204d8d7b89bc5d298e`.
+   Across 30 deaths, zero have a valid same-type choice at the exact death
+   boundary. Seeds 2004 and 2006 first make `HARVEST` eligible on the next tick,
+   but their bias-to-tie requirements exceed `3.822402` and `3.973103`
+   respectively against defense. This is not a narrow recovery coordinate and
+   is rejected.
+4. The supply-collision artifact SHA-256 is
+   `9b9905b208dceb95b9ddbf240a4050d63a85779b321eec7b6fc35bdfb1e26870`.
+   It records exactly 18 collisions in seven bursts, with an alternate supply
+   choice in 11/18. Masking changes all 18 choices: 11 to supply, six to
+   schematic, and one to harvest. Only 6/18 have an alternate-supply prior
+   within `+1`. The collision coordinate is the same 18/37 rejected redirect
+   rewrites and 18/48 rejected masks; it affects duplicates only, not recovery
+   or idle. It is rejected.
+
+These results authorize no V39 ADR, config, model, or confirmation-set freeze.
+Dev-v34 remains retired unopened and unconsumed, and held-out-v5 remains sealed
+and unconsumed. M8.5 remains unmet. The next work is primary-level reusable-only
+design synthesis; dev-v35 must not be frozen until one successor coordinate is
+precommitted.

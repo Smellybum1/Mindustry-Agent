@@ -1,13 +1,14 @@
 # Codex Handoff Prompt
 
 Take over **mindustry-coop-agents** in `C:\Codex\Mindustry Agent`, branch
-`coop-agent/v159.7`, after V38's reusable preflight rejection at the
-selected-only provenance guard.
+`coop-agent/v159.7`, after V38's reusable preflight rejection and the rejection
+of four parity-controlled, reusable-only V39 diagnostics.
 
 Read first, in order:
 
 1. `AGENTS.md` in full; obey its delegation and sealed-data rules.
-2. `docs/HANDOFF.md`, focusing on the V38 rejection and next-five queue.
+2. `docs/HANDOFF.md`, focusing on the V38/V39 diagnostic rejections and
+   next-five queue.
 3. M8.5 and the M8 exit criteria in `docs/ROADMAP.md`.
 4. ADR-0050 and ADR-0051.
 
@@ -221,10 +222,43 @@ ADR-0050 defines uncertainty as failure, so no confirmation set was opened.
 Dev-v34 is retired unopened and unconsumed without any membership read.
 Held-out-v5 remains sealed and unconsumed. M8.5 remains unmet.
 
-Next, diagnose exactly one successor coordinate from reusable evidence only.
-Precommit and gate it, then freeze a new dev confirmation identity before any
-model work. Do not inspect dev-v34 or held-out-v5 membership and do not run
-confirmation or final episodes.
+Four subsequent reusable-only V39 diagnostics have byte-exact twins and full
+candidate/matched/permanent parity, but none yields a narrow precommittable
+coordinate. The WAIT communication artifact
+`014085de7007e4d6227e6c5ae89ee1cd636b60f036c6b1db23a8acdd41908ad6`
+records structured/suppressed counts candidate `17641/74`, matched `16161/69`,
+and permanent `17252/74`. Candidate-minus-permanent announcements remain
+uncertain before filtering (`-0.00307796`, CI
+`[-0.01502905,0.00748813]`) and after filtering (`+0.00176772`, CI
+`[-0.00574127,0.00877167]`), while matched stays pass.
+
+The claim-loss artifact
+`e3c726380516e9762566ab5b98dc3312758f52d2c943b979e49263cefbb9f794`
+has 10/10 canonical parity and finds 19 learned-seat-0 losses: 18 supply, one
+harvest, zero with partner schematic staged/live, 19/19 ordinary non-WAIT
+alternatives, and zero extra boundary reconvergences. Seed 2005's harvest at
+tick 2053/gap 695 could expose `BUILD_LINE` at 694 only through a trajectory
+change that recreates V34 staging-disappearance risk. Reject it.
+
+The recovery catalog
+`727e62145895a5a9435a6c62372156a7887c5dd12d2d5d204d8d7b89bc5d298e`
+finds 30 deaths and zero same-type valid choices at the exact boundary. Seeds
+2004/2006 first permit `HARVEST` next tick, but require bias-to-tie above
+`3.822402`/`3.973103` against defense, so this is not narrow. The
+supply-collision artifact
+`9b9905b208dceb95b9ddbf240a4050d63a85779b321eec7b6fc35bdfb1e26870`
+records 18 collisions/seven bursts, alternate supply in 11/18, and 18 masking
+changes (11 supply, six schematic, one harvest), with a `+1` alternate-supply
+prior in only 6/18. This is the same 18/37 rejected redirect-rewrite and 18/48
+rejected-mask coordinate and changes duplicates only, not recovery or idle.
+Reject it.
+
+No V39 ADR, config, model, or confirmation-set freeze is authorized. Dev-v34 is
+retired unopened/unconsumed, held-out-v5 remains sealed/unconsumed, and M8.5
+remains unmet. Next perform primary-level reusable-only design synthesis. Once
+one narrow coordinate is chosen, precommit and gate it; do not freeze dev-v35
+until that precommit exists. Do not inspect dev-v34 or held-out-v5 membership
+and do not run confirmation or final episodes. Keep ADR-0051 unchanged.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

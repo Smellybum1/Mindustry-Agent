@@ -1674,6 +1674,37 @@ repository-evidence mapping used for the M6 audit is:
   held-out-v5 remains sealed and unconsumed. M8.5 remains unmet. Next diagnose
   one coordinate using reusable evidence only, precommit it, and freeze a new
   dev confirmation identity before model work.
+- Four reusable-only V39 diagnostics completed with byte-exact twins and full
+  candidate/matched/permanent parity, and all are rejected. The WAIT
+  communication artifact
+  `014085de7007e4d6227e6c5ae89ee1cd636b60f036c6b1db23a8acdd41908ad6`
+  records structured/suppressed counts of candidate `17641/74`, matched
+  `16161/69`, and permanent `17252/74`; candidate-minus-permanent is uncertain
+  before filtering (`-0.00307796`, CI `[-0.01502905,0.00748813]`) and after
+  (`+0.00176772`, CI `[-0.00574127,0.00877167]`), while matched stays pass.
+  The claim-loss artifact
+  `e3c726380516e9762566ab5b98dc3312758f52d2c943b979e49263cefbb9f794`
+  has 10/10 canonical parity and finds 19 learned-seat-0 losses: 18 supply, one
+  harvest, zero staged/live partner schematics, 19/19 valid ordinary non-WAIT
+  choices, and zero extra boundary reconvergences. Seed 2005's tick-2053,
+  gap-695 harvest could expose `BUILD_LINE` one tick earlier at 694 only by
+  changing the trajectory and recreating V34 staging-disappearance risk.
+- The recovery catalog
+  `727e62145895a5a9435a6c62372156a7887c5dd12d2d5d204d8d7b89bc5d298e`
+  finds 30 deaths and zero same-type valid choices at the exact death boundary.
+  Seeds 2004/2006 first permit `HARVEST` on the next tick but require
+  bias-to-tie above `3.822402`/`3.973103` against defense, so this is not a
+  narrow coordinate. The supply-collision artifact
+  `9b9905b208dceb95b9ddbf240a4050d63a85779b321eec7b6fc35bdfb1e26870`
+  records 18 collisions/seven bursts, alternate supply in 11/18, and 18 mask
+  changes (11 supply, six schematic, one harvest), but only 6/18 have an
+  alternate-supply prior within `+1`. This repeats the 18/37 rejected redirect
+  rewrites and 18/48 rejected masks and changes duplicates only, not recovery
+  or idle.
+- No V39 ADR, config, model, or confirmation-set freeze is authorized. Dev-v34
+  remains retired unopened/unconsumed; held-out-v5 remains sealed/unconsumed;
+  M8.5 remains unmet. Next is primary-level reusable-only design synthesis. Do
+  not freeze dev-v35 until one coordinate is precommitted.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
