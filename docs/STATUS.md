@@ -1931,8 +1931,11 @@ repository-evidence mapping used for the M6 audit is:
   whole-server-JAR hashes changed across committed builds (`7cee94a1...` /
   `489bbb68...`); per-entry diagnosis found only volatile generated
   `version.properties`. V3 normalizes only its comment/`buildDate` while hashing
-  stable version fields and every other entry byte. Its working-tree gate
-  passes; a committed reference refresh is next. Five executable scripted
+  stable version fields and every other entry byte. Two fresh JVMs at committed
+  implementation `c19e652324` reproduce
+  session content `7a2c68e638e9fff3...`, plugin content `faca436f81b865bd...`,
+  server content `e02c4208749ee2ed...`, and the unchanged control schedule
+  exactly. Five executable scripted
   partner profiles are versioned in
   `configs/partners/human-scripted-v1.json`; they remain staged, not active in
   training, because M8 has not authorized M9.

@@ -2053,7 +2053,8 @@ are complete; opt-in session capture is next.
   canonical plugin/server runtime-content hashes. Legacy v1/v2 remains readable
   but cannot count toward the provenance-complete floor; v2 whole-JAR hashes
   were superseded after deterministic builds exposed volatile upstream archive
-  metadata. Per ADR-0058, three serious compatible v3 sessions meet only the
+  metadata. Two fresh committed v3 JVMs reproduce content/provenance exactly.
+  Per ADR-0058, three serious compatible v3 sessions meet only the
   collection floor: learned/scripted targets and a
   paired agents-present/absent protocol must be precommitted before acceptance
   collection. Real serious sessions and human-entered ratings are still

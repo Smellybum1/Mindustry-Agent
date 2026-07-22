@@ -242,10 +242,14 @@ The historical v1 probe digest is
 Committed v2 diagnostic captures differed (`7cee94a1...` / `489bbb68...`)
 because whole-server-JAR bytes changed on each upstream build. Per-entry
 diagnosis isolated only volatile `version.properties`; all other entry contents
-matched. V3 supersedes v2 for acceptance provenance. Its working-tree gate
-passes with unchanged control schedule digest
+matched. V3 supersedes v2 for acceptance provenance. Its gate passes with
+unchanged control schedule digest
 `d30d529355b07ce18c45d074f58a11d4c444b3dff0a2ec70b89bfeb8cbbef6ce`;
-a committed v3 reference is next.
+two fresh JVMs from committed provenance implementation `c19e652324` now
+reproduce content digest
+`7a2c68e638e9fff3bbce4de60fe7ad14ceb5b1d37a0b8403a0605788289c7d99`,
+plugin content `faca436f81b865bd...`, and server content
+`e02c4208749ee2ed...` exactly.
 
 M10.4 scorecard v1 is derived only from capture structure. Intervention rate
 uses unique accepted-control ticks intersecting trajectory boundaries; plan

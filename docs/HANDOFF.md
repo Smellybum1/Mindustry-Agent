@@ -943,8 +943,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   server runtime-content hashes; legacy v1/v2 remains loader-readable but
   evidence-ineligible. V2 whole-JAR hashes exposed volatile upstream
   `version.properties`; v3 normalizes only its comment/`buildDate` and hashes
-  all stable fields/content. Its working-tree gate passes and a committed
-  reference refresh is next. The
+  all stable fields/content. Two fresh JVMs from committed implementation
+  `c19e652324` reproduce session/control digests `7a2c68e638e9fff3...` /
+  `d30d529355b07ce1...` plus plugin/server content hashes
+  `faca436f81b865bd...` / `e02c4208749ee2ed...`. The
   five deterministic partner profiles are staged in
   `configs/partners/human-scripted-v1.json`, but must not be activated in
   training until M8 promotion authorizes M9. See `docs/HUMAN_SESSIONS.md`.

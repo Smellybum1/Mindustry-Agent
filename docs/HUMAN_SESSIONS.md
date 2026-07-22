@@ -88,6 +88,18 @@ only `version.properties` comments and `buildDate`; stable build/version fields,
 all classes, and every other resource remain authoritative. Only v3 sessions
 can contribute to a provenance-complete serious-session floor.
 
+The committed schema-v3 reference at project commit
+`c19e652324d356112fcbc84bbb2b89d7e88eda8c` reproduces across two fresh JVMs:
+
+- session content SHA-256:
+  `7a2c68e638e9fff3bbce4de60fe7ad14ceb5b1d37a0b8403a0605788289c7d99`;
+- control schedule SHA-256:
+  `d30d529355b07ce18c45d074f58a11d4c444b3dff0a2ec70b89bfeb8cbbef6ce`;
+- agent-plugin runtime-content SHA-256:
+  `faca436f81b865bd2ed7ab58528bc04bda6c69467af064bdcb22ac7232da41d0`;
+- server runtime-content SHA-256:
+  `e02c4208749ee2ed944c013743def761b0d0f75a06c864fd834ce3cd9a130902`.
+
 ## Statistics, replay, and staged partner models
 
 `mindustry_agents.telemetry.human_session` validates complete captures and
