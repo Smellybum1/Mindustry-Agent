@@ -105,3 +105,28 @@ all 44 exact-config reward adversaries. The adversary report is
 `runs/m8-selector-v32-precommit/reward-adversaries.json`, SHA-256
 `49d18508bbd825bdf605dc47d6a494b6231bc5bc251e07665681544892e8d9c4`.
 No V32 model work or unopened evaluation evidence preceded these gates.
+
+## Outcome
+
+Two independent pinned replicas reproduce selected update 28 exactly at 10/10
+reusable construction wins, mean return `5.58316`, mean core health `639.2`,
+and mean idle `0.06066571`. Checkpoint, model-state, replay, canonical full-run,
+and direct-lineage hashes are respectively
+`72e10ec9dcf9b30c8069d1e4ec03b65e5758acd965c6ba2429879a00b9d75a1e`,
+`dae302b62259866f1a727a28f14a0441fd578d88d9f2b35667ddc986b2df2db8`,
+`837102913ff2596d25ae97702d68c090bb0bf04d6785a9b443b21bcb7d9f6622`,
+`f4495f671fd72430427478157288b3cb6dd7d044e224ea54a3813a09a2e7bbcb`,
+and `3744c81c88dd435f0fe43480f4c3c5d487dbf1afd972cbfed4255af21bd7c8a7`.
+
+Fresh V32-runtime permanent baselines and matched controls show learned 10/10,
+permanent random 5/10, permanent greedy 8/10, matched random 4/10, and matched
+greedy 0/10. All win-rate comparisons pass, and the resource-actionability
+change reduces non-forced abandonment to exact zero against both greedy
+scorecards. The candidate nevertheless fails corrected scorecard parity:
+permanent-greedy idle is definitively worse by `+0.02116306` with paired 95%
+interval `[+0.00659211,+0.03839977]`; permanent announcements and recovery are
+uncertain, and matched-greedy recovery is uncertain. The preflight report
+hashes to `7a1e6192f3b7052d4ff89f75bb6ef56450b3a984949925b5a44cf45548b239e1`.
+
+V32 is rejected. Dev-v28 remains unopened and is retired, held-out-v4 remains
+sealed, and M8.5 is unmet.

@@ -87,16 +87,15 @@ precommit any successor only from reusable evidence, freeze a new disjoint
 confirmation set before model work, and never open held-out-v4 without every
 governed prerequisite.
 
-ADR-0043's V32 runtime is implemented from reusable evidence only: mask
-`SUPPLY_TURRET` without current core/unit copper and add nonexclusive defense
-staging for learned seat 0 only when ordinary work is empty, with duration
-ending at the existing defend-lead boundary. The initial all-seat rule failed
-public seed 23456 (4/5); the learned-seat correction restored 5/5 before model
-work. Engine-free/live checks, the pinned 112-test Java build, smoke, determinism,
-negative replay, 157 Python tests, and all 44 exact-config reward adversaries
-pass. Commit this packet, refresh permanent reusable baselines under the V32
-runtime, and only then construct replicas. Dev-v28 (`281001..281160`) and
-held-out-v4 remain sealed.
+ADR-0043 records V32's completed result. Exact replicas select update 28 at
+10/10 with checkpoint `72e10ec9dcf9b30c...`, replay
+`837102913ff2596d...`, canonical full-run `f4495f671fd72430...`, and direct
+lineage `3744c81c88dd435f...`. Fresh V32-runtime reusable preflight eliminates
+non-forced abandonment but still rejects permanent-greedy idle by
+`+0.02116306` (95% CI `[+0.00659211,+0.03839977]`); permanent
+announcements/recovery and matched recovery are uncertain. V32 is rejected and
+dev-v28 is retired unopened. Diagnose only reusable traces and precommit any
+successor before model work. Held-out-v4 remains sealed.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
 structured-authoritative communication, and the four-JVM cap. Do not push or

@@ -1424,8 +1424,21 @@ preserving the scripted partners exactly. Engine-free/live checks, the pinned
 112-test Java build, candidate gate, smoke, determinism, negative replay, 157 Python
 tests, and all 44 exact-config reward adversaries pass. Dev-v27 is retired
 unopened. Dev-v28 freezes globally disjoint roots `281001..281160` and remains
-unopened; held-out-v4 stays sealed. No V32 model work has begun. M8.5 remains
-unmet.
+unopened; held-out-v4 stays sealed. This packet was committed before V32 model
+work. M8.5 remains unmet.
+
+V32's two pinned replicas reproduce selected update 28 exactly at 10/10,
+return `5.58316`, core health `639.2`, and idle `0.06066571`. Checkpoint,
+model-state, replay, canonical full-run, and direct-lineage hashes are
+`72e10ec9dcf9b30c...`, `dae302b62259866f...`, `837102913ff2596d...`,
+`f4495f671fd72430...`, and `3744c81c88dd435f...`. Fresh V32-runtime permanent
+baselines and matched controls give learned 10/10, permanent random 5/10,
+permanent greedy 8/10, matched random 4/10, and matched greedy 0/10. The targeted
+abandonment defect is eliminated, but corrected reusable preflight rejects V32:
+permanent-greedy idle is definitively `+0.02116306` worse (95% CI
+`[+0.00659211,+0.03839977]`); permanent announcements/recovery and matched
+recovery are uncertain. Dev-v28 remains unopened and is retired, held-out-v4
+stays sealed, and M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

@@ -800,16 +800,14 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit and preserve the verified V32 pretraining packet.** Supply is masked
-   with no current core/unit copper; learned seat 0 alone receives staging when
-   ordinary work is empty. The initial all-seat rule failed one public seed and
-   was corrected before model work. Engine-free/live checks, the pinned
-   112-test Java build, 5/5 candidate gate, smoke, determinism, negative replay, 157 Python
-   tests, and all 44 exact-config reward adversaries pass.
-2. **Refresh permanent reusable baselines under the V32 runtime.** Carry their
-   source hashes forward before any V32 reusable preflight.
-3. **Then construct V32 replicas from the committed packet.** Keep dev-v28
-   (`281001..281160`) and held-out-v4 sealed until every governed prerequisite.
+1. **Diagnose V32's remaining reusable idle/recovery evidence.** V32 exact twins
+   pass construction at 10/10 and eliminate non-forced abandonment, but reusable
+   preflight still rejects permanent-greedy idle and leaves recovery uncertain.
+2. **Precommit any successor before model work.** Use only reusable evidence,
+   freeze a new globally disjoint confirmation set, and keep V32's unopened
+   dev-v28 retired.
+3. **Keep held-out-v4 sealed.** No successor may open it without exact replicas,
+   reusable dual-scorecard parity, and its own one-way confirmation pass.
 4. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 5. **M9.2/M9.3 remain gated** behind M9.1 and promotion.
@@ -818,7 +816,7 @@ queue.
 
 See `docs/decisions/ADR-0001..0043` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
-actionability/staging runtime before model work.
+actionability/staging runtime and its reusable rejection.
 
 ## Deviations from the brief in this scaffold
 
