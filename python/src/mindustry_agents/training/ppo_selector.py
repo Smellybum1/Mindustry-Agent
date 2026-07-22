@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import math
@@ -1549,8 +1550,8 @@ def _manifest(
     return manifest
 
 
-def _reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
-    """Return the path-independent fields that define one complete training run."""
+def _legacy_reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Return the original v1 evidence, including its rehearsal artifact path."""
 
     selection_policy = manifest.get("dev_checkpoint_selection_policy")
     selection_keys = ("update", "wins", "mean_return", "mean_core_health")
@@ -1591,18 +1592,38 @@ def _reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
     return evidence
 
 
+def _reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Return the path-independent fields that define one complete training run."""
+
+    evidence = copy.deepcopy(_legacy_reproducibility_evidence(manifest))
+    rehearsal = evidence.get("teacher_rehearsal")
+    if isinstance(rehearsal, dict):
+        source_report = rehearsal.get("source_warmup_report")
+        if isinstance(source_report, dict):
+            source_report.pop("path", None)
+    return evidence
+
+
+def _validated_reproducibility_digest(manifest: dict[str, Any]) -> str:
+    """Validate current or legacy v1 evidence and return its canonical digest."""
+
+    canonical = _json_digest(_reproducibility_evidence(manifest))
+    legacy = _json_digest(_legacy_reproducibility_evidence(manifest))
+    recorded = manifest.get("full_run_reproducibility", {}).get("digest")
+    if recorded not in {canonical, legacy}:
+        raise ValueError("manifest reproducibility digest is missing or invalid")
+    return canonical
+
+
 def compare_run_manifests(first: Path, second: Path) -> str:
     """Require two independent full runs to have identical behavioral evidence."""
 
     manifests = [_load_json(path) for path in (first, second)]
     evidence = [_reproducibility_evidence(manifest) for manifest in manifests]
-    digests = [_json_digest(item) for item in evidence]
-    recorded = [
-        manifest.get("full_run_reproducibility", {}).get("digest")
-        for manifest in manifests
-    ]
-    if any(value != digest for value, digest in zip(recorded, digests)):
-        raise RuntimeError("manifest reproducibility digest is missing or invalid")
+    try:
+        digests = [_validated_reproducibility_digest(manifest) for manifest in manifests]
+    except ValueError as error:
+        raise RuntimeError(str(error)) from error
     if evidence[0] != evidence[1]:
         raise RuntimeError(
             "independent full training runs diverged: "

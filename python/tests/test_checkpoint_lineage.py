@@ -27,6 +27,7 @@ class TestDirectCheckpointLineage(unittest.TestCase):
             FEATURE_SCHEMA,
             REWARD_SCHEMA,
             _json_digest,
+            _legacy_reproducibility_evidence,
             _model_state_digest,
             _reproducibility_evidence,
             _sha256,
@@ -56,7 +57,7 @@ class TestDirectCheckpointLineage(unittest.TestCase):
             )
             shutil.copyfile(checkpoint_a, checkpoint_b)
 
-            def run_manifest(checkpoint_path):
+            def run_manifest(checkpoint_path, replica):
                 manifest = {
                     "schema": "selector_training_run_v1",
                     "source_config": {"path": "config.json", "sha256": config_sha},
@@ -97,19 +98,26 @@ class TestDirectCheckpointLineage(unittest.TestCase):
                         "reward": REWARD_SCHEMA,
                         "model": MODEL_SCHEMA,
                     },
+                    "teacher_rehearsal": {
+                        "source_warmup_report": {
+                            "path": f"runs/{replica}/teacher-warmup.json",
+                            "sha256": "warmup-report",
+                        },
+                        "post_rehearsal_model_state_sha256": model_state_sha,
+                    },
                 }
                 manifest["full_run_reproducibility"] = {
-                    "digest": _json_digest(_reproducibility_evidence(manifest))
+                    "digest": _json_digest(_legacy_reproducibility_evidence(manifest))
                 }
                 return manifest
 
             manifest_a = root / "manifest-a.json"
             manifest_b = root / "manifest-b.json"
             manifest_a.write_text(
-                json.dumps(run_manifest(checkpoint_a)), encoding="utf-8"
+                json.dumps(run_manifest(checkpoint_a, "replica-a")), encoding="utf-8"
             )
             manifest_b.write_text(
-                json.dumps(run_manifest(checkpoint_b)), encoding="utf-8"
+                json.dumps(run_manifest(checkpoint_b, "replica-b")), encoding="utf-8"
             )
             lineage = build_direct_lineage(
                 config_path=config_path,

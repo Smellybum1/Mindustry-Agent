@@ -1166,7 +1166,12 @@ class TestPpoSelector(unittest.TestCase):
         )
 
     def test_full_run_manifest_comparison_detects_divergence(self):
-        from mindustry_agents.training.ppo_selector import compare_run_manifests
+        from mindustry_agents.training.ppo_selector import (
+            _json_digest,
+            _legacy_reproducibility_evidence,
+            _reproducibility_evidence,
+            compare_run_manifests,
+        )
 
         with tempfile.TemporaryDirectory() as directory:
             first = Path(directory) / "first.json"
@@ -1180,6 +1185,26 @@ class TestPpoSelector(unittest.TestCase):
             )
             with self.assertRaisesRegex(RuntimeError, "diverged"):
                 compare_run_manifests(first, second)
+
+            replicas = [self._repro_manifest(), self._repro_manifest()]
+            for index, manifest in enumerate(replicas):
+                manifest["teacher_rehearsal"] = {
+                    "source_warmup_report": {
+                        "path": f"runs/replica-{index}/teacher-warmup.json",
+                        "sha256": "warmup-report",
+                    },
+                    "post_rehearsal_model_state_sha256": "rehearsed-model",
+                }
+                manifest["full_run_reproducibility"]["digest"] = _json_digest(
+                    _legacy_reproducibility_evidence(manifest)
+                )
+            first.write_text(json.dumps(replicas[0]), encoding="utf-8")
+            second.write_text(json.dumps(replicas[1]), encoding="utf-8")
+            self.assertEqual(
+                _reproducibility_evidence(replicas[0]),
+                _reproducibility_evidence(replicas[1]),
+            )
+            compare_run_manifests(first, second)
 
     def test_quality_selection_frontier_is_reproducibility_evidence(self):
         from mindustry_agents.training.ppo_selector import _reproducibility_evidence

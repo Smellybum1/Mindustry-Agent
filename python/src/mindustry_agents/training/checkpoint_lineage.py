@@ -21,6 +21,7 @@ from mindustry_agents.training.ppo_selector import (
     _model_state_digest,
     _reproducibility_evidence,
     _sha256,
+    _validated_reproducibility_digest,
     load_checkpoint,
 )
 
@@ -49,10 +50,10 @@ def _unexpected_dirty(status: list[str]) -> list[str]:
 def _run_reproducibility_digest(manifest: dict[str, Any]) -> str:
     if manifest.get("schema") != "selector_training_run_v1":
         raise ValueError("training manifest schema mismatch")
-    digest = _json_digest(_reproducibility_evidence(manifest))
-    if manifest.get("full_run_reproducibility", {}).get("digest") != digest:
-        raise ValueError("training manifest reproducibility digest mismatch")
-    return digest
+    try:
+        return _validated_reproducibility_digest(manifest)
+    except ValueError as error:
+        raise ValueError("training manifest reproducibility digest mismatch") from error
 
 
 def _direct_lineage_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
