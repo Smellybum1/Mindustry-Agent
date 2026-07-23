@@ -71,6 +71,9 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0064](ADR-0064-m8-reusable-scorecard-power.md) | M8 reusable-scorecard power correction |
 | [0065](ADR-0065-v47-single-brain-death-failover.md) | V47 single-brain death failover |
 | [0066](ADR-0066-v48-per-seat-history-cache.md) | V48 per-seat scripted history cache |
+| [0067](ADR-0067-retire-held-out-v6-after-manifest-read.md) | Retire held-out-v6 after manifest read |
+| [0068](ADR-0068-v49-prospective-scorecard-noninferiority.md) | V49 prospective scorecard non-inferiority |
+| [0069](ADR-0069-m9-entry-gate-supersession.md) | Supersede the M9 entry gate after the M8 one-brain ceiling |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

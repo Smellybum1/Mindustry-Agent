@@ -2168,6 +2168,23 @@ repository-evidence mapping used for the M6 audit is:
   The final 371-test Python suite, smoke, determinism, and
   664-checkpoint/16,200-tick golden replay pass.
 
+## Milestone 9.0 — entry decision and architecture precommit (IN PROGRESS)
+
+- ADR-0069 records the project owner's 2026-07-23 direction change and
+  explicitly supersedes only the M9 entry dependency from
+  ADR-0013/0017/0019. M8.5 remains unmet and V49 remains not promoted.
+- `docs/M9_DESIGN.md` fixes the first boundary as all three seats using one
+  parameter-shared ordinary-action actor/critic, an explicit seat-role
+  embedding, and private reset-local recurrent state. Actions are computed
+  from one authoritative pre-step boundary and submitted atomically in
+  deterministic agent-id order.
+- Fresh public M9 train/dev documents reserve 64 roots in `[18B,19B)` and 40
+  roots in `[19B,20B)`. They are not confirmation or held-out evidence.
+  Held-out-v7 remains sealed and M8-only.
+- No M9 model implementation or training episode precedes this precommit.
+  The full architecture/parity gate in ADR-0069 item 9 must be committed
+  before an immutable IPPO training recipe or replica A.
+
 ## What is stubbed (compiles/imports, no real behaviour)
 
 - **`agent-core`**: real, compilable, unit-tested types — `TaskType` (16),

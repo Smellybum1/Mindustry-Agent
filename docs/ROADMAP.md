@@ -2284,6 +2284,14 @@ never constructed, and held-out-v7 remains sealed. Public attribution locates
 the residual on no-transfer/seat-1 contexts while final seat 2 is favorable;
 another transfer-local M8 wrapper is not supported. M8.5 remains unmet.
 
+**OWNER-AUTHORIZED M9 DIRECTION (2026-07-23):** ADR-0069 explicitly
+supersedes the M9 entry dependency in ADR-0013/0017/0019 after the governed
+one-brain line reached its architectural ceiling. This does not promote V49 or
+complete M8.5. Held-out-v7 remains sealed and M8-only. M9.1 begins on fresh
+public train/dev namespaces with an all-seat parameter-shared recurrent IPPO
+boundary; the implementation and complete public parity gate must be committed
+before any M9 training episode.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
@@ -2295,6 +2303,12 @@ Exit criteria:
 Objective: all seats learned (parameter-shared IPPO → MAPPO), trained and
 evaluated against a PARTNER POPULATION so coordination does not overfit to
 clones. This is where "teammate" starts being trained for directly.
+
+**ENTRY AUTHORIZED (2026-07-23):** ADR-0069 supersedes the former M8-promotion
+prerequisite without relabeling M8 as successful. `docs/M9_DESIGN.md` defines
+the staged implementation. Fresh public M9 train/dev sets are frozen; the
+all-seat shared-parameter/recurrent-state boundary is next. No M9 training,
+confirmation, held-out access, or MAPPO work is authorized yet.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
