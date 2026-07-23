@@ -1,0 +1,39 @@
+{
+  "schema": "m8_v49_replacement_final_umbrella_v1",
+  "candidate_version": "v49",
+  "status": "reserved_before_membership_creation",
+  "access_owner": "primary_agent_only",
+  "delegation_forbidden": true,
+  "protocol": {
+    "path": "configs/evaluation/m8-selector-v49-noninferiority-protocol.json",
+    "sha256": "6711d6e43fab8f65b21d97f091767c963f85458147fc43e47b8fd96b67c3b965",
+    "commit": "d5b9dc4bd2b0ac9a540c3d55c257c1302735c916"
+  },
+  "scorecard_implementation_commit": "38cccc05da5b65aaec0749a59b1346101903fe9e",
+  "replacement_final": {
+    "role": "final",
+    "seed_set_id": "bootstrap-defense-v1-held-out-v7",
+    "seed_set_version": 7,
+    "split": "held-out",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-held-out-v7.json",
+    "exclusive_namespace": {
+      "minimum_inclusive": 17000000000,
+      "maximum_exclusive": 18000000000
+    },
+    "membership_state_at_reservation": "not_created",
+    "exclusive_attempt": "runs/m8-selector-v49-held-out-v7-final.attempt.json",
+    "execution_gate": "reusable_v3_and_dev_v46_confirmation_pass",
+    "replaces": "bootstrap-defense-v1-held-out-v6"
+  },
+  "retired_final": {
+    "seed_set_id": "bootstrap-defense-v1-held-out-v6",
+    "status": "retired_membership_exposed_unexecuted",
+    "membership_read_authorized": false
+  },
+  "construction": {
+    "method": "cryptographic_random_primary_only",
+    "values_emitted": false,
+    "disjointness_method": "partitioned_numeric_namespace_without_membership_reads"
+  }
+}
