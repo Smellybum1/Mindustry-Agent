@@ -2191,6 +2191,12 @@ namespace, retired dev-v42 state, and sealed held-out-v6 contract, and can emit
 only a value-free receipt. It has not executed; commit the tool before
 membership construction. M8.5 remains unmet.
 
+The committed freezer `56dab3eb9e` constructed dev-v44 value-free. The receipt
+binds membership `82ea1b7d59f23a0d...` and implementation
+`64463e76e5606fb...`, emits no values, and records zero generated, cancelled,
+retired, or sealed membership reads. Dev-v44 is frozen and unconsumed. Commit
+the membership/receipt packet before replica A. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

@@ -125,3 +125,11 @@ public reusable-v2 hash, cancelled dev-v43 namespace, retired dev-v42 state,
 and sealed held-out-v6 contract. Its receipt contains no membership values.
 The complete embargo-safe suite passes 352 tests. The freezer has not executed;
 commit it before membership construction.
+
+The committed freezer then constructed dev-v44 without emitting or reading
+membership values. Its receipt binds membership
+`82ea1b7d59f23a0deaf2b58cd52041d665f1c5d5f55b94eb67ce03cf4cf68ac6`,
+generator `56dab3eb9eeabc47...`, and implementation `64463e76e5606fb...`,
+and records zero membership-document, cancelled-dev-v43, retired-confirmation,
+or sealed-final reads. Dev-v44 is frozen and unconsumed. Commit the
+membership/receipt packet before replica A.

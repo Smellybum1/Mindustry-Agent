@@ -1067,6 +1067,11 @@ atomically without reading cancelled, retired, generated, or sealed membership.
 The full embargo-safe suite now passes 352 tests. Commit the freezer before
 construction.
 
+The committed freezer constructed dev-v44 value-free. Membership SHA is
+`82ea1b7d59f23a0d...`; the receipt binds generator `56dab3eb9e...` and
+implementation `64463e76e5...` and attests zero membership reads. Dev-v44 is
+frozen and unconsumed. Commit this membership/receipt packet before replica A.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

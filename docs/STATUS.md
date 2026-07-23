@@ -2080,6 +2080,11 @@ repository-evidence mapping used for the M6 audit is:
   and sealed held-out-v6 binding. Generation is atomic and its receipt is
   value-free with zero membership reads. The complete embargo-safe suite
   passes 352 tests. Commit this tool before constructing dev-v44.
+- The committed freezer constructed dev-v44 value-free. Membership SHA is
+  `82ea1b7d59f23a0d...`; generator/implementation are `56dab3eb9eeabc47...` /
+  `64463e76e5606fb...`. The receipt records zero membership-document,
+  cancelled-dev-v43, retired-confirmation, or sealed-final reads. Dev-v44 is
+  frozen and unconsumed. Commit the membership/receipt packet before replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
