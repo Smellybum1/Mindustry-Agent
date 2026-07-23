@@ -125,3 +125,10 @@ adversaries pass; the ignored report hashes to
 `740aba578809911829448076e76a430bbb9ed819f7d99037e44c95726934bf9c`.
 Dev-v40 remains unconstructed, dev-v39 remains retired without a membership
 read, held-out-v6 remains sealed, and no V44 training episode has run.
+
+The primary-only dev-v40 freezer is implemented and fails closed against the
+exact committed config/umbrella hashes, repository paths, candidate identity,
+count, `[8B,9B)` namespace, and sealed-final binding. It atomically creates the
+membership and a value-free receipt without reading any membership document.
+All 310 Python tests pass. The freezer has not executed and dev-v40 remains
+unconstructed until this tool commit becomes an ancestor of `HEAD`.

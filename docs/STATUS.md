@@ -1906,6 +1906,11 @@ repository-evidence mapping used for the M6 audit is:
   adversaries (report SHA `740aba578809911...`). Dev-v40 remains unconstructed,
   dev-v39 remains retired without a membership read, held-out-v6 remains
   sealed, and no V44 training episode has run.
+- The primary-only dev-v40 freezer is implemented and tests exact config/
+  umbrella hashes, paths, identity, count, `[8B,9B)` namespace, and the sealed-
+  final binding. It atomically creates membership plus a value-free zero-read
+  receipt. All 310 Python tests pass. The freezer has not executed and dev-v40
+  remains unconstructed; it must first be committed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

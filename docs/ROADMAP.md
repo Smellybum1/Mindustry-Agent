@@ -2006,6 +2006,12 @@ adversaries (report SHA `740aba578809911...`). Dev-v40 remains unconstructed and
 no V44 training episode has run. Commit this boundary before implementing and
 committing the primary-only value-free freezer.
 
+The primary-only dev-v40 freezer and its no-read namespace tests are now
+implemented; all 310 Python tests pass. The tool validates the exact committed
+config/umbrella and atomically creates membership plus a value-free receipt. It
+has not executed. Commit the freezer before construction; dev-v40 remains
+unconstructed and replica A remains prohibited.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

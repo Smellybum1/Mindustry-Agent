@@ -876,6 +876,10 @@ checks, smoke, deterministic golden/negative replay, and all 44 exact-config
 reward adversaries (`740aba578809911...`). Dev-v40 remains unconstructed and no
 V44 training episode has run.
 
+The primary-only dev-v40 freezer is now implemented with exact hash/path/
+namespace/sealed-binding validation and a value-free zero-read receipt. All 310
+Python tests pass. It has not executed; commit the freezer before construction.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

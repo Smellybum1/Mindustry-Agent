@@ -986,6 +986,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   replay, and 44/44 exact-config reward adversaries (SHA
   `740aba578809911...`). Dev-v40 remains unconstructed; no V44 training episode
   or restricted membership read has occurred.
+- **V44 freezer implemented, not executed**: the primary-only dev-v40 freezer
+  validates exact config/umbrella hashes, paths, identity, count, `[8B,9B)`
+  namespace, and sealed-final binding, then atomically writes membership and a
+  value-free zero-read receipt. All 310 Python tests pass. The tool must be
+  committed before it can execute; dev-v40 remains unconstructed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1200,9 +1205,8 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit the completed V44 implementation boundary, then implement the
-   primary-only value-free dev-v40 freezer.** Do not construct membership until
-   the freezer itself is committed.
+1. **Commit the completed primary-only dev-v40 freezer, then construct the
+   value-free membership and receipt.** Do not read or render membership.
 2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
    dev-v39 membership; dev-v38 also remains retired unopened.
 3. **Keep held-out-v6 sealed and unconsumed.** V44 has not authorized access.
