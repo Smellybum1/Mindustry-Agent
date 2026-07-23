@@ -1124,8 +1124,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   repeatable public JVM gate transfers `0->1->2` at ticks 2738/4462, keeps one
   learned seat, and wins at tick 9000. The full 348-test Python suite, pinned
   Java, public/focused/smoke/determinism gates, and 44/44 reward adversaries
-  pass (report `5e6aec4530d27823...`). Commit this implementation boundary
-  before implementing the dev-v44 freezer; no V47 training has run.
+  pass (report `5e6aec4530d27823...`). The implementation boundary is committed
+  at `64463e76e5`; no V47 training has run.
+- **Dev-v44 freezer implemented, unexecuted**: the primary-only atomic/no-read
+  tool binds implementation `64463e76e5606fb...`, the V47 config/umbrella,
+  public reusable-v2, cancelled dev-v43 namespace, retired dev-v42, and sealed
+  held-out-v6. Its receipt cannot contain seed values. The full 352-test suite
+  passes. Commit the freezer before construction.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1340,22 +1345,20 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit V47's green implementation boundary.** Exclude the four protected
-   user files. Dev-v44 must remain unconstructed until after this commit.
-2. **Implement and commit the value-free dev-v44 freezer.** Bind the exact V47
-   config/umbrella/implementation and `[13B,14B)` namespace; do not execute it
-   until its no-read tests pass and the tool itself is committed.
-3. **Construct dev-v44 value-free, then train exact V47 replicas.** Never read
-   or render membership; commit the receipt packet before replica A.
-4. **Run reusable-v2 before restricted confirmation.** Require replica
-   reproducibility, direct lineage, >=9/10 construction wins, idle <0.25,
-   DEFER <=0.25, and both unchanged 160-root scorecards.
+1. **Commit the value-free dev-v44 freezer.** Exclude the four protected user
+   files; do not execute the tool until this commit exists.
+2. **Construct dev-v44 value-free.** Never read or render membership; commit
+   the membership/receipt packet before replica A.
+3. **Train exact V47 replicas.** Require matching full-run/checkpoint evidence,
+   >=9/10 construction wins, idle <0.25, and DEFER <=0.25.
+4. **Run reusable-v2 before restricted confirmation.** Require direct lineage
+   and both unchanged 160-root scorecards.
 5. **Keep held-out-v6 sealed and M9.1 gated.** Confirmation and final access
    remain conditional; M9 begins only after M8 promotion.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0061` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0065` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

@@ -1061,6 +1061,12 @@ golden/negative replay, and 44/44 exact-config reward adversaries pass
 (`5e6aec4530d27823...`). Dev-v44 remains unconstructed and no V47 model work
 has begun.
 
+The primary-only dev-v44 freezer is implemented and unexecuted. It binds the
+committed V47 boundary and creates membership plus a value-free receipt
+atomically without reading cancelled, retired, generated, or sealed membership.
+The full embargo-safe suite now passes 352 tests. Commit the freezer before
+construction.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -2184,6 +2184,13 @@ replay, and 44/44 exact-config reward adversaries pass (report
 episode has run. Commit this boundary before implementing its value-free
 freezer. M8.5 remains unmet.
 
+The primary-only dev-v44 freezer is implemented on the committed atomic/no-read
+primitives and the complete embargo-safe suite passes 352 tests. It binds the
+exact V47 implementation/config/umbrella, reusable-v2 hash, cancelled dev-v43
+namespace, retired dev-v42 state, and sealed held-out-v6 contract, and can emit
+only a value-free receipt. It has not executed; commit the tool before
+membership construction. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

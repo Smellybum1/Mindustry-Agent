@@ -118,3 +118,10 @@ exact-config reward adversaries also pass. The adversary report SHA-256 is
 Dev-v44 remains unconstructed and no V47 training episode has run. Membership
 construction still requires this implementation/evidence boundary to be
 committed first.
+
+The primary-only dev-v44 freezer is now implemented on the committed atomic
+no-read primitives. It pins the exact V47 implementation/config/umbrella,
+public reusable-v2 hash, cancelled dev-v43 namespace, retired dev-v42 state,
+and sealed held-out-v6 contract. Its receipt contains no membership values.
+The complete embargo-safe suite passes 352 tests. The freezer has not executed;
+commit it before membership construction.

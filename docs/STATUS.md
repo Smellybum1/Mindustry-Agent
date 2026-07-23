@@ -2074,6 +2074,12 @@ repository-evidence mapping used for the M6 audit is:
   deterministic golden/negative replay, and 44/44 exact-config reward
   adversaries pass. The adversary report SHA is `5e6aec4530d27823...`.
   Dev-v44 remains unconstructed and no V47 training episode has run.
+- The primary-only dev-v44 freezer is implemented but has not executed. It
+  pins implementation `64463e76e5606fb...`, the exact V47 config/umbrella,
+  public reusable-v2 hash, cancelled dev-v43 namespace, retired dev-v42 state,
+  and sealed held-out-v6 binding. Generation is atomic and its receipt is
+  value-free with zero membership reads. The complete embargo-safe suite
+  passes 352 tests. Commit this tool before constructing dev-v44.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
