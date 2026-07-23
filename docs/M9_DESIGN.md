@@ -11,10 +11,10 @@ the fixed expert's 36/40. No checkpoint was selected, MAPPO is unauthorized,
 and no confirmation or held-out data was accessed. ADR-0073 prospectively
 freezes `m9-ippo-v2-sequence16`: the sole learning change is deterministic
 16-boundary truncated recurrent backpropagation within one seat and reset
-segment. Implementation and its exact-commit pretraining gate are next; no v2
-trajectory or model update existed at precommit time. This document describes
-the target architecture and the staged evidence required before broader M9
-claims.
+segment. Its implementation and complete public-only pretraining gate now pass;
+no v2 training trajectory or governed optimizer update has begun. This document
+describes the target architecture and the staged evidence required before
+broader M9 claims.
 
 ## Scope
 
@@ -145,9 +145,13 @@ pins, and dependency lock.
    exact implementation commit `9428d90055` and reproduce model state
    `b5495c745f29c311...`, optimizer state `95fdc80083899212...`, and canonical
    checkpoint `bb134fd817965992...`; report SHA is `580493699e7c342b...`.
-   The v2 preflight/training commands are implemented locally, but their packet
-   and the complete exact-commit gate remain pending, so no v2 training is
-   authorized yet.
+   The v2 preflight/training packet is committed. The complete public-only gate
+   passed at implementation commit `bd28be1b8f`: 397 Python tests, pinned Java
+   checks, every focused M9 check, live smoke, cross-process/reset determinism,
+   and the M6 golden replay are green. The versioned result SHA is
+   `70cbefcc779bea60...`; it records no confirmation or held-out access. Because
+   the evidence commit changes HEAD, the same complete gate must pass once more
+   at that exact commit before replica A starts.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

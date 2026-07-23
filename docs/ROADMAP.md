@@ -2376,8 +2376,12 @@ synthetic workers were rerun from exact implementation commit `9428d90055` and
 match model state `b5495c745f29c311...`, optimizer state
 `95fdc80083899212...`, and canonical checkpoint `bb134fd817965992...`.
 Versioned report SHA is `580493699e7c342b...`. V2 fail-closed preflight and
-training commands are implemented locally; commit and the complete
-exact-commit gate are next.
+training commands are committed. The complete public-only gate passed at
+`bd28be1b8f`: 397 Python tests, pinned Java checks, all focused M9 checks, live
+smoke, cross-process/reset determinism, and the M6 golden replay are green. The
+versioned pretraining result SHA is `70cbefcc779bea60...` and records no
+confirmation or held-out access. Because committing that result changes HEAD,
+one final exact-commit gate rerun is required before replica A.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

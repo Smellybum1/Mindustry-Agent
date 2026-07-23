@@ -1500,8 +1500,11 @@ queue.
    order, episode/seat/reset isolation, padding invariance, length-one v1
    equivalence, and cross-boundary recurrent gradient flow. The implementation,
    397-test Python suite, and exact commit-bound CPU worker evidence are green.
-3. **Commit the v2 preflight/training packet, then pass the complete
-   exact-commit gate before replica A.**
+3. **Rerun the complete v2 gate at the evidence commit, then run replica A.**
+   The packet is committed and all nine public-only gates passed at
+   `bd28be1b8f`; versioned pretraining result SHA is `70cbefcc779bea60...`.
+   The result commit changes HEAD, so training remains fail-closed until its
+   exact-commit rerun passes.
    Replica B runs only if A reaches 30/40 with idle `<0.25`; MAPPO remains
    blocked until exact twins and paired public gates pass.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final

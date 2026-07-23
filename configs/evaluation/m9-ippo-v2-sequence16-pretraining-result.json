@@ -1,0 +1,30 @@
+{
+  "artifacts": {
+    "configs/evaluation/m9-ippo-v1-artifact-check.json": "2a5b536ce71d07eea54d122c3be0714140e3eeb1a22dbc5cef4dcb4929622e3f",
+    "configs/evaluation/m9-ippo-v1-reward-adversaries.json": "f6b87fb96ccf206c6e946d6e0cb2504c7f6338905c79b76caa094016bf5f20dd",
+    "configs/evaluation/m9-ippo-v1-rollout-check.json": "70284030cb0cc2b47bc1a30df37ef7c3650b9da0ef6098450b81d1b0b5187d4e",
+    "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json": "ba4c9182f346a6eefc8c904d3e7825ee23933aede535b7c516ec63800f6a2d70",
+    "configs/evaluation/m9-ippo-v2-sequence16-optimizer-check.json": "580493699e7c342b1932afd272c43353fed20180b1fa6511fb2ad76809f6ea63"
+  },
+  "config_sha256": "266e50429902de0d97049eaeb80558b22bb20fffedda926e92091102489a76da",
+  "confirmation_or_held_out_access": false,
+  "gates": [
+    "test-python",
+    "test-java",
+    "m9-reward-check",
+    "m9-shared-policy-check",
+    "m9-rollout-check",
+    "m9-sequence-check",
+    "m9-artifact-check",
+    "smoke",
+    "determinism"
+  ],
+  "implementation_commit": "bd28be1b8ffc788be77e6ad6baf7ff5782b6a5b3",
+  "passed": true,
+  "protocol_sha256": "ec9a69612b709290a339b1e44f202b65d6dabc5d47b513021ab474dee54934b0",
+  "public_baseline_wins": 36,
+  "schema": "m9_ippo_v2_preflight_v1",
+  "sequence_checkpoint_content_sha256": "bb134fd817965992f72b3f020907160689aa6f002cff6f82f4492f1c99a38ec0",
+  "sequence_final_model_state_sha256": "b5495c745f29c311a1b9d4a619295ad110d01e06fdf380ee97479938aaaf9402",
+  "sequence_implementation_commit": "9428d90055f28c402b5bb1456cf1b42b08c81a9e"
+}

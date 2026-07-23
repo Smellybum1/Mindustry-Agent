@@ -2313,8 +2313,12 @@ repository-evidence mapping used for the M6 audit is:
   `b5495c745f29c311...`, optimizer state `95fdc80083899212...`, and canonical
   checkpoint `bb134fd817965992...`; versioned report SHA is
   `580493699e7c342b...`. V2 fail-closed preflight and training entry points are
-  implemented locally. Their packet must be committed and the complete
-  exact-commit gate must pass before any v2 training episode.
+  committed. The complete public-only gate passed at `bd28be1b8f`, covering 397
+  Python tests, pinned Java checks, all focused M9 checks, live smoke,
+  cross-process/reset determinism, and the M6 golden replay. The versioned
+  result SHA is `70cbefcc779bea60...` and records no confirmation or held-out
+  access. The evidence commit changes HEAD, so one final exact-commit rerun is
+  required before any v2 training episode.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
