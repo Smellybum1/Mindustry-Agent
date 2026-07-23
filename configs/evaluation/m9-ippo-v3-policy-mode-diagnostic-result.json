@@ -1,0 +1,92 @@
+{
+  "schema": "m9_ippo_v3_policy_mode_diagnostic_result_v1",
+  "implementation_commit": "8f574ef2b68ce81c126ab66fc8fea840fbb4c1d7",
+  "data_classification": "public_dev_only",
+  "protocol_sha256": "89fecf69b76cd0fb79ed2fbafb97dc5b16446ee21648ceeabd4ddc892322b0c7",
+  "full_report": {
+    "path": "runs/m9-ippo-v3-policy-mode-diagnostic.json",
+    "sha256": "dd846d01882cd8adec761a85c1d6a6b79d4fee28f88fed151afcaa0f371f270d",
+    "fresh_jvm_runs": 2,
+    "fresh_jvm_runs_equal": true,
+    "run_sha256": "8b0b5fdd9083953d7ff461c0cc2daec83c472619cada13b45e5483f97b6d0bba"
+  },
+  "source_checkpoint": {
+    "candidate_version": "m9-ippo-v3-diverse2048",
+    "candidate_status": "rejected",
+    "update": 29,
+    "file_sha256": "22cf7cb1ed08f9a1c5544ce5169f200d3f7ea9ddc71b7f487e80f7285eea791b",
+    "checkpoint_content_sha256": "849d9f97f9ed0b9c23a3b20d23471fbdb423062f81b342d580a522398de4b7e2",
+    "model_state_sha256": "87d85c4c78ae4c2d40e6c7f4bc67154bdd7ad94aa582baf4450048bd7826186e",
+    "model_unchanged": true
+  },
+  "deterministic_argmax": {
+    "episodes": 40,
+    "wins": 0,
+    "mean_team_return": -14.022124999999999,
+    "mean_core_health": 0.0,
+    "mean_team_idle_fraction": 0.12201736248016386
+  },
+  "stochastic_categorical": {
+    "episodes": 160,
+    "wins": 56,
+    "mean_team_return": -7.891954999999996,
+    "mean_core_health": 284.48125,
+    "mean_team_idle_fraction": 0.09732698740015988,
+    "streams": [
+      {
+        "action_sampling_seed": 9602,
+        "episodes": 40,
+        "wins": 13,
+        "mean_team_return": -8.302194999999996,
+        "mean_core_health": 241.4,
+        "mean_team_idle_fraction": 0.09437269340909134
+      },
+      {
+        "action_sampling_seed": 19602,
+        "episodes": 40,
+        "wins": 11,
+        "mean_team_return": -9.496544999999998,
+        "mean_core_health": 220.375,
+        "mean_team_idle_fraction": 0.10160055960818892
+      },
+      {
+        "action_sampling_seed": 29602,
+        "episodes": 40,
+        "wins": 17,
+        "mean_team_return": -6.796574999999995,
+        "mean_core_health": 384.925,
+        "mean_team_idle_fraction": 0.10711767516773645
+      },
+      {
+        "action_sampling_seed": 39602,
+        "episodes": 40,
+        "wins": 15,
+        "mean_team_return": -6.972504999999996,
+        "mean_core_health": 291.225,
+        "mean_team_idle_fraction": 0.08621702141562279
+      }
+    ]
+  },
+  "classification": {
+    "minimum_stochastic_wins_total": 32,
+    "stochastic_wins_total": 56,
+    "stochastic_episode_total": 160,
+    "sampling_signal": true,
+    "interpretation": "fixed categorical sampling transfers a public-dev survival signal"
+  },
+  "decision": {
+    "v3_status": "rejected",
+    "checkpoint_selection_authorized": false,
+    "replica_b_authorized": false,
+    "mappo_authorized": false,
+    "training_authorized": false,
+    "promotion_authorized": false,
+    "next_direction": "precommit one deterministic-policy consolidation mechanism"
+  },
+  "restricted_state": {
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0,
+    "confirmation_or_held_out_access": false,
+    "m8_held_out_v7": "sealed_unconsumed"
+  }
+}

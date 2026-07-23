@@ -191,7 +191,13 @@ pins, and dependency lock.
    sampling signal but cannot repair or promote v3. No diagnostic episode has
    run yet. Fail-closed source/checkpoint/root validation, immutable-model
    execution, exact twin-JVM comparison, and focused tests are implemented
-   locally and must be committed before execution.
+   at `8f574ef2b6`. Both fresh-JVM runs reproduce at digest `8b0b5fdd9083953d...`.
+   Argmax remains 0/40, while fixed categorical sampling wins 56/160 with
+   all four streams contributing 11--17 wins. ADR-0078 accepts the predeclared
+   sampling signal but keeps v3 rejected. Compact result SHA is
+   `50c823d2d3d6123d...`; no restricted data was accessed. The recommended v4
+   isolates entropy annealing toward zero over the unchanged v3 recipe and
+   requires a separate precommit before model work.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

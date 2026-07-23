@@ -2358,8 +2358,13 @@ repository-evidence mapping used for the M6 audit is:
   rejected and cannot be selected or promoted. Protocol SHA is
   `89fecf69b76cd0fb...`. The fail-closed source/checkpoint/root validator,
   immutable-model runner, exact fresh-JVM comparison, result classification,
-  command surface, and focused tests are implemented locally. No diagnostic
-  episode has run; commit the implementation before execution.
+  command surface, focused tests, and all 407 Python tests pass at
+  implementation commit `8f574ef2b6`. The two fresh JVM runs reproduce exactly
+  at digest `8b0b5fdd9083953d...`. Argmax is 0/40; categorical sampling wins
+  56/160, with fixed streams at 13/40, 11/40, 17/40, and 15/40. ADR-0078
+  accepts the frozen sampling signal but keeps v3 rejected. Compact result SHA
+  is `50c823d2d3d6123d...`; no restricted data was accessed. The recommended v4
+  isolates entropy annealing toward zero and requires a separate precommit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

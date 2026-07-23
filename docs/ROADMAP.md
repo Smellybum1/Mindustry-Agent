@@ -2417,8 +2417,13 @@ update 29, the same 40 public dev roots, one argmax stream, four categorical
 streams at seeds 9602/19602/29602/39602, and two fresh-JVM exact repetitions.
 At least 32/160 categorical wins denotes a diagnostic sampling signal only.
 Protocol SHA is `89fecf69b76cd0fb...`. The fail-closed implementation and
-focused tests are local; no diagnostic episode has run, and implementation
-must be committed before execution.
+focused tests pass at commit `8f574ef2b6`. Two fresh JVMs reproduce exactly at
+digest `8b0b5fdd9083953d...`: argmax remains 0/40, while the four fixed
+categorical streams win 56/160 in total (13/40, 11/40, 17/40, 15/40).
+ADR-0078 accepts the predeclared sampling signal but keeps v3 rejected and
+records compact result SHA `50c823d2d3d6123d...`. No restricted data was
+accessed. The recommended v4 isolates entropy annealing toward zero over the
+otherwise exact v3 recipe and requires a separate precommit before model work.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
