@@ -2413,8 +2413,17 @@ repository-evidence mapping used for the M6 audit is:
   v4 compatibility, and candidate-aware artifacts/authority. Two fresh CPU
   probes reproduce byte-identically at report SHA `c8676245cee741f0...` and
   optimizer digest `27bd5804b512ccf1...`. The exact-current-commit full public
-  gate remains before Replica A. No v5 environment trajectory or restricted
-  data access exists.
+  gate passed at `84af0016f6`: all 430 Python tests, pinned Java checks, focused
+  M9 checks, smoke, determinism, and golden replay are green.
+- V5 Replica A completed all 2,048 episodes and 32 updates but failed
+  construction. Training won 559/2,048; all 559 wins qualified 27,614
+  actor-valid transitions across 6,188 active imitation minibatches.
+  Deterministic public dev peaked at update 7 with 1/40 wins and ended at
+  update 32 with 0/40, return `-18.8629`, and idle `0.32837357`. Manifest SHA
+  is `cdf0c86e3b5f5fa...`; full-run digest is `ef37b266b9f061ea...`. ADR-0084
+  rejects v5 and prohibits Replica B. Compact result SHA is
+  `f969cb595526763c...`. No confirmation or held-out data was accessed. A
+  separately precommitted immutable-v5 public diagnostic is next.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

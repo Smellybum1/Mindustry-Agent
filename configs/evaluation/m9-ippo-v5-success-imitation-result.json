@@ -1,0 +1,61 @@
+{
+  "schema": "m9_ippo_construction_result_v1",
+  "candidate_version": "m9-ippo-v5-success-imitation",
+  "data_classification": "public_train_and_dev_only",
+  "implementation_commit": "84af0016f69f31a5d3b416ee95ad14c6fd9c9b42",
+  "pretraining_gate": {
+    "passed": true,
+    "implementation_commit": "84af0016f69f31a5d3b416ee95ad14c6fd9c9b42",
+    "sha256": "82daba5625a180175277b508e4028970d0395fbe2479fe4a13a34b26aa96b7db"
+  },
+  "config_sha256": "056a6ee24363b55aac62762c3854ff0aa5bb190df8c05fad7ab5fcf5be332002",
+  "protocol_sha256": "205508d8cfaba9109825d1b31fb13dc295e0d988296aef89379980f5b559b460",
+  "replica_a": {
+    "manifest_sha256": "cdf0c86e3b5f5fa89952683acc904683c7b48c92d762f59c9132bc86aa2f83b6",
+    "full_run_reproducibility_digest": "ef37b266b9f061eac8699799eaa664575b0fe4244a6f977e53123e40d828306d",
+    "training": {
+      "episodes": 2048,
+      "updates": 32,
+      "wins": 559,
+      "losses": 1489,
+      "transitions": 194445,
+      "mean_team_return": -10.488070703125,
+      "mean_team_idle_fraction": 0.136710475444979
+    },
+    "success_imitation": {
+      "coefficient": 0.02,
+      "qualifying_episodes": 559,
+      "qualifying_transitions": 27614,
+      "active_minibatches": 6188,
+      "mean_update_active_minibatch_loss": 1.2202223790719
+    },
+    "best_public_dev": {
+      "update": 7,
+      "wins": 1,
+      "episodes": 40,
+      "mean_team_return": -18.24675,
+      "mean_core_health": 23.0,
+      "mean_team_idle_fraction": 0.3876057735814631,
+      "model_state_sha256": "b1a492286a8bedfbcbe53afe8ddceb1b0534689e50071e7380e43703a60d2a47",
+      "checkpoint_content_sha256": "1161f5dd99ca6b6df046636ce4aa92414722b9304df6313ab8aed363752e2c84",
+      "checkpoint_file_sha256": "98115a853138a400b8c134a2664d4bcd993a61844c85102c64a2737dac1a36b4"
+    },
+    "final_public_dev": {
+      "update": 32,
+      "wins": 0,
+      "episodes": 40,
+      "mean_team_return": -18.8629,
+      "mean_core_health": 0.0,
+      "mean_team_idle_fraction": 0.32837356546128665,
+      "model_state_sha256": "7f4d29fa05c408f7bbacd5eff057c7e6defcfa0c0c549a26c4862bab44d0dd6f",
+      "checkpoint_content_sha256": "8afa87d33bfae9e17d309d23e50fdfe7c443bad47a0900f89d807d60addf6b8a",
+      "checkpoint_file_sha256": "1e2bc516f522ea047b090f0f419f9fbb016c54d2abf6c2886f7237a4ff651f61"
+    },
+    "construction_passed": false,
+    "selected_checkpoint": null
+  },
+  "replica_b_authorized": false,
+  "replica_b_ran": false,
+  "decision": "reject_before_replica_b",
+  "confirmation_or_held_out_access": false
+}

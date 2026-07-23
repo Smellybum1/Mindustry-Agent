@@ -1356,8 +1356,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make train-m9-ippo-v4` | Reconstructs the pinned CPU runtime, requires exact-current-commit v4 authority, runs A first, and prohibits B unless A passes construction. A completed and failed at a best 18/40; B is prohibited by ADR-0080. |
 | `make m9-late-checkpoint-diagnostic` | Runs ADR-0081's immutable v4 update-31/32 argmax/categorical matrix twice in fresh JVMs and applies only the frozen public-only classification. Exact result: 64/160 to 60/160 categorical retention despite 18/40 to 0/40 argmax; deterministic mode instability. |
 | `make m9-success-imitation-check` | Verifies ADR-0083's exact v4 inheritance, winning actor-transition filter, sampled-action NLL, telemetry, and deterministic twin optimizer result. Committed report SHA is `c8676245cee741f0...`. |
-| `make m9-v5-pretraining-check` | Runs every public-only gate required before v5 Replica A and writes exact-current-commit authority. Not yet run at the evidence commit. |
-| `make train-m9-ippo-v5` | Reconstructs the pinned CPU runtime, requires exact-current-commit v5 authority, runs A first, and prohibits B unless A passes construction. Not yet run. |
+| `make m9-v5-pretraining-check` | Runs every public-only gate required before v5 Replica A and writes exact-current-commit authority. Passed at `84af0016f6`. |
+| `make train-m9-ippo-v5` | Reconstructs the pinned CPU runtime, requires exact-current-commit v5 authority, runs A first, and prohibits B unless A passes construction. A completed and failed at a best 1/40; B is prohibited by ADR-0084. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
 | `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
@@ -1525,12 +1525,13 @@ queue.
    rejected. Precommit the recommended v4 entropy-annealing successor before
    any new model work. ADR-0079 now freezes v4's sole change as the inclusive
    linear entropy schedule `0.02 * (32 - update) / 31`; implementation is next.
-5. **Run ADR-0083's complete v5 public gate before Replica A.** Implementation
-   commit `d6969679ad` and byte-identical CPU evidence are bound by report SHA
-   `c8676245cee741f0...`. V4 remains rejected; do not rerun, retune, select
-   update 31, or execute its Replica B. Run the exact-current-commit v5 gate,
-   then only the full immutable v5 Replica A. Replica B remains fail-closed
-   unless A passes 30/40 and idle `<0.25`.
+5. **Precommit an immutable-v5 public diagnostic before any v6 recipe.** V5
+   completed all 2,048 episodes but peaked at only 1/40 deterministic dev wins;
+   ADR-0084 rejects it and prohibits Replica B. Freeze checkpoint identities,
+   roots, argmax/categorical seeds, action-mode margins, successful-action
+   probability measurements, classification thresholds, and no-selection
+   authority before opening either checkpoint for the diagnostic. Do not
+   retune, resume, repair, or promote v4/v5.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

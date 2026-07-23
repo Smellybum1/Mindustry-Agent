@@ -235,9 +235,12 @@ pins, and dependency lock.
    `056a6ee24363b55a...` and `205508d8cfaba910...`. Implementation commit
    `d6969679ad` adds only that optimizer term and its authoritative telemetry.
    Ten focused tests pass; fresh twin CPU probes are byte-identical at report
-   SHA `c8676245cee741f0...` and optimizer digest `27bd5804b512ccf1...`. The
-   complete public gate remains before Replica A. No v5 environment trajectory
-   or restricted access exists.
+   SHA `c8676245cee741f0...` and optimizer digest `27bd5804b512ccf1...`.
+   The full public gate passed at `84af0016f6`. Replica A completed the exact
+   budget, but its deterministic public-dev best was only 1/40 at update 7 and
+   its final was 0/40. ADR-0084 rejects v5 and prohibits Replica B. Compact
+   result SHA is `f969cb595526763c...`; no restricted access occurred. An
+   immutable-v5 public diagnostic must be separately precommitted before v6.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

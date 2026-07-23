@@ -2460,8 +2460,15 @@ episode, root, reward, or restricted data. Config/protocol SHA prefixes are
 candidate-aware artifact and authority paths, and a fail-closed CPU runner.
 Ten focused tests pass. Two fresh synthetic runs reproduce byte-identically;
 committed report SHA is `c8676245cee741f0...` and optimizer digest is
-`27bd5804b512ccf1...`. The complete exact-current-commit public gate is next.
-No v5 environment trajectory or restricted access exists.
+`27bd5804b512ccf1...`. The complete exact-current-commit public gate passed at
+`84af0016f6` with all 430 Python tests, pinned Java checks, focused M9 checks,
+smoke, determinism, and golden replay. Replica A completed 2,048 episodes and
+32 updates, with 559 training wins feeding 27,614 qualifying transitions, but
+deterministic public dev peaked at only 1/40 wins at update 7 and ended 0/40.
+ADR-0084 rejects v5 and prohibits Replica B. Manifest/full-run digests are
+`cdf0c86e3b5f5fa...` / `ef37b266b9f061ea...`; compact result SHA is
+`f969cb595526763c...`. No restricted access occurred. Precommit one
+immutable-v5 public-only diagnostic before any v6 recipe.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
