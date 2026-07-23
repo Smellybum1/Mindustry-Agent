@@ -100,3 +100,10 @@ no-read primitives plus an exact V45 reservation and namespace proof. Both the
 wrapper and helper commits are bound into the receipt. The embargo-safe suite
 now passes 277 tests. The freezer has not executed and dev-v41 remains
 unconstructed until this tool commit is an ancestor of `HEAD`.
+
+The committed freezer then constructed dev-v41 without emitting or reading
+membership. Membership/receipt hashes are
+`591513526bdd0bceb38d9ca63b525be8d4db665567d166b7f1a4e8a247347192` and
+`d2d14a281d37a046dfacbeeea5961d0ae154f156d16220b293f8f93d9a180905`.
+The receipt attests zero membership-document reads; dev-v41 is frozen and
+unconsumed.

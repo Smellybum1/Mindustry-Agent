@@ -924,6 +924,11 @@ atomic primitives, exact V45 validation, and a value-free receipt; the embargo-
 safe suite now passes 277 tests. It has not executed. Commit it before
 membership construction.
 
+The committed freezer constructed dev-v41 without emitting or reading seed
+values. Membership/receipt hashes are `591513526bdd0bce...` /
+`d2d14a281d37a046...`; the receipt records zero membership-document reads.
+Dev-v41 is frozen and unconsumed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

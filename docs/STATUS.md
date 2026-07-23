@@ -1945,6 +1945,10 @@ repository-evidence mapping used for the M6 audit is:
   atomic/no-read primitives plus exact V45 validation and namespace proof. The
   embargo-safe suite passes 277 tests. It has not executed and dev-v41 remains
   unconstructed; the freezer must first be committed.
+- The committed freezer constructed dev-v41 without emitting or reading seed
+  values. Membership/receipt hashes are `591513526bdd0bce...` /
+  `d2d14a281d37a046...`; the receipt records zero membership-document reads.
+  Dev-v41 is frozen and unconsumed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

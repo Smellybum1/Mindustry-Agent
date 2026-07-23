@@ -1958,6 +1958,11 @@ validation. Its receipt binds both the wrapper and helper commits and contains
 no seed values. The embargo-safe suite passes 277 tests. The freezer has not
 executed; dev-v41 remains unconstructed until the tool is committed.
 
+The committed freezer then constructed dev-v41 without emitting or reading
+membership. Membership/receipt hashes are `591513526bdd0bce...` /
+`d2d14a281d37a046...`; the receipt records zero membership-document reads.
+Dev-v41 is frozen and unconsumed pending both reusable scorecards.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:

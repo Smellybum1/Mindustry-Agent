@@ -1,0 +1,54 @@
+{
+  "candidate_version": "v45",
+  "disjointness_method": "partitioned_numeric_namespace_without_reads",
+  "generated_membership_read_after_write": false,
+  "generator_commit": "e1600a63f18147ccac2e1b0454b51fe2f2cc4635",
+  "global_disjointness_verified": true,
+  "helper_commit": "6b7a6c5dcab41ae5d2a18e36730dc1620ba5f9cc",
+  "membership_documents_read": 0,
+  "namespace_proof": {
+    "held_out_v6_max_exclusive": 4000000000,
+    "held_out_v6_min_inclusive": 3000000000,
+    "legacy_max_exclusive": 1000000000,
+    "v38_sealed_max_exclusive": 2000000000,
+    "v39_confirmation_max_exclusive": 2147483648,
+    "v40_confirmation_max_exclusive": 5000000000,
+    "v40_confirmation_min_inclusive": 4000000000,
+    "v41_confirmation_max_exclusive": 6000000000,
+    "v41_confirmation_min_inclusive": 5000000000,
+    "v42_confirmation_max_exclusive": 7000000000,
+    "v42_confirmation_min_inclusive": 6000000000,
+    "v43_confirmation_max_exclusive": 8000000000,
+    "v43_confirmation_min_inclusive": 7000000000,
+    "v44_confirmation_max_exclusive": 9000000000,
+    "v44_confirmation_min_inclusive": 8000000000,
+    "v45_confirmation_max_exclusive": 10000000000,
+    "v45_confirmation_min_inclusive": 9000000000
+  },
+  "repository_head_before_generation": "e1600a63f18147ccac2e1b0454b51fe2f2cc4635",
+  "retired_confirmation_membership_read": false,
+  "schema": "m8_confirmation_seed_freeze_v1",
+  "sealed_final_membership_read": false,
+  "set": {
+    "count": 160,
+    "exclusive_namespace": {
+      "maximum_exclusive": 10000000000,
+      "minimum_inclusive": 9000000000
+    },
+    "exclusive_umbrella_attempt": "runs/m8-selector-v45-dev-v41-umbrella-attempt.json",
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v41.json",
+    "replaces": "bootstrap-defense-v1-dev-v40",
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v41",
+    "seed_set_version": 41,
+    "sha256": "591513526bdd0bceb38d9ca63b525be8d4db665567d166b7f1a4e8a247347192",
+    "split": "dev"
+  },
+  "status": "membership_frozen_unconsumed",
+  "umbrella": {
+    "commit": "0badfb86777d1f9691aaf23b2645c88dff276020",
+    "path": "configs/evaluation/m8-selector-v45-confirmation-umbrella.json",
+    "sha256": "e4fe0b56a95fa64cb59e5ea853c878b4d678f86c629bba72b393a68b5eb7b8f2"
+  },
+  "values_emitted": false
+}

@@ -1025,6 +1025,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `[9B,10B)` namespace/sealed binding, and writes membership plus a value-free
   receipt. The embargo-safe suite passes 277 tests. Commit the freezer before
   execution; dev-v41 remains unconstructed.
+- **V45 confirmation packet frozen, unconsumed**: the committed freezer wrote
+  dev-v41 without emitting or reading membership. Membership/receipt hashes are
+  `591513526bdd0bce...` / `d2d14a281d37a046...`; the receipt records zero
+  membership-document reads. Do not consume it before both reusable scorecards
+  pass.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1244,8 +1249,8 @@ queue.
 2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
    dev-v39 membership; dev-v38 also remains retired unopened.
 3. **Keep held-out-v6 sealed and unconsumed.** V44 did not authorize access.
-4. **Commit the primary-only dev-v41 freezer, then construct and commit its
-   value-free membership/receipt without reading or rendering membership.**
+4. **Commit the frozen dev-v41 membership/receipt mechanically without reading
+   or rendering membership, then train the two exact V45 reusable replicas.**
 5. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
    authorize V43 or any runtime prior and still fails two scorecard rows.
 6. **M9.1 remains gated.** The roadmap says to begin only after the single
