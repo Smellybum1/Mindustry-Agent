@@ -1,0 +1,28 @@
+{
+  "schema": "m9_ippo_aborted_training_attempt_v1",
+  "candidate_version": "m9-ippo-v1",
+  "attempt": "replica-a0-preupdate-validation",
+  "implementation_commit": "add8c278a2e5e5699b68c5ccac13cfaa32e7d10d",
+  "pretraining_gate_sha256": "495df3efb76f3cbba33aab1805df732d9787d7f6a7bf5112d1ef79aeaf62f470",
+  "rl_server_jar_sha256": "fdbd1d5482b556137b5cde80ed24e00479a7b7607485701e65a7c512f1de1aeb",
+  "local_log_sha256": "97d58acfc0c8126b493ba2b9e238031d140af3009d46cd5316f4724abc83e395",
+  "authorized_split": "train",
+  "episodes_collected": 64,
+  "optimizer_updates": 0,
+  "checkpoints_written": 0,
+  "manifest_written": false,
+  "model_state_changed": false,
+  "initial_model_state_sha256": "e82745a19729aa3183df197cb91c5e2fa9ba17ee334748b979d6d623e402de21",
+  "failure": {
+    "message": "IPPO transition action is outside its mask",
+    "stage": "pre-optimizer transition validation",
+    "cause": "A forced ABANDON boundary is intentionally excluded from actor loss but uses ordinary action index 9 as its critic-only placeholder while WAIT is not legal in the learnable action mask."
+  },
+  "observed_result_policy": {
+    "episode_outcomes_inspected": false,
+    "performance_inference_made": false,
+    "attempt_retired": true,
+    "restart_requires_new_commit_and_complete_exact_commit_gate": true
+  },
+  "confirmation_or_held_out_access": false
+}

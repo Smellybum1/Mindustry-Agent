@@ -3,8 +3,12 @@
 Status: initial architecture boundary implemented and verified under ADR-0069;
 the immutable IPPO optimization/reward/public-comparison recipe is frozen by
 ADR-0070. The complete pretraining gate has passed and the governed exact-
-replica runner is implemented. No M9 training episode has run; the runner must
-be committed and the complete gate rerun from that exact commit first. This
+replica runner is implemented. The first authorized A0 attempt collected 64
+public train episodes, then aborted before any optimizer update because its
+validator rejected an intentional forced critic-only ABANDON boundary.
+ADR-0071 records the correction and retires A0. The correction must be
+committed and the complete gate rerun from that exact commit before a clean
+replica restart. The incident evidence SHA is `c533018ee7f61885...`. This
 document describes the target architecture and the staged evidence required
 before broader M9 claims.
 
@@ -106,6 +110,10 @@ pins, and dependency lock.
    The fixed server-expert baseline is frozen from implementation commit
    `dea79c487a`: 36/40 public wins, mean core `967.95`, mean team return
    `-1.641725`, exact terminal-reset replay, report `ba4c9182f346a6ee...`.
+   The first authorized A0 attempt stopped after 64 collected train episodes
+   and before GAE/optimizer execution. ADR-0071 preserves forced ABANDON as a
+   policy-loss-masked critic boundary, retains strict mask validation for actor
+   samples, retires A0, and requires a new exact-commit gate before restart.
 4. Public development evaluation: the learned all-seat team must beat the
    fixed-role scripted baseline on at least one randomized scenario family
    before MAPPO work is authorized.

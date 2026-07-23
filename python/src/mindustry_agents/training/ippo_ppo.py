@@ -102,8 +102,12 @@ def _validate_transition(item: IPPOTransition) -> None:
         raise ValueError("IPPO transition action mask must have shape [10]")
     if item.hidden_input.shape != (HIDDEN_WIDTH,):
         raise ValueError("IPPO transition hidden input must have shape [64]")
-    if item.action < 0 or item.action >= 10 or not bool(item.action_mask[item.action]):
-        raise ValueError("IPPO transition action is outside its mask")
+    if item.action < 0 or item.action >= 10:
+        raise ValueError("IPPO transition action index is invalid")
+    if not bool(item.action_mask.any()):
+        raise ValueError("IPPO transition action mask has no legal action")
+    if item.policy_loss_mask and not bool(item.action_mask[item.action]):
+        raise ValueError("IPPO actor transition action is outside its mask")
     if item.advanced_ticks < 0:
         raise ValueError("IPPO transition advanced ticks cannot be negative")
 

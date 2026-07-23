@@ -3,6 +3,7 @@ import json
 import tempfile
 import unittest
 from copy import deepcopy
+from dataclasses import replace
 from pathlib import Path
 
 
@@ -303,6 +304,101 @@ class TestSharedRecurrentIPPO(unittest.TestCase):
         )
         self.assertEqual(advantages.tolist(), [11, 22, 33, 10, 20, 30])
         self.assertEqual(returns.tolist(), advantages.tolist())
+
+    def test_forced_abandon_is_a_critic_only_transition(self):
+        import torch
+
+        from mindustry_agents.training.ippo import (
+            SharedRecurrentSelector,
+            SharedSeatState,
+            decide_all_seats,
+        )
+        from mindustry_agents.training.ippo_ppo import (
+            IPPOEpisodeRollout,
+            IPPOTransition,
+            ippo_advantages,
+            ippo_update,
+            load_ippo_v1_config,
+        )
+
+        observations, masks, metadata = _boundary()
+        for observation, mask in zip(observations, masks, strict=True):
+            observation["skill"] = {
+                "status": "BLOCKED",
+                "reason": "RESOURCES_SHORT",
+                "progress": 0,
+            }
+            mask["abandon"] = True
+            mask["wait"] = False
+        model = SharedRecurrentSelector(9601)
+        decision = decide_all_seats(
+            model,
+            SharedSeatState.fresh(),
+            observations,
+            masks,
+            metadata,
+            evaluation=False,
+            action_generator=torch.Generator().manual_seed(9602),
+        )
+        self.assertEqual(
+            decision.agent_actions[0]["task_action"]["type"], "ABANDON"
+        )
+        self.assertEqual(decision.action_indices[0], 9)
+        self.assertFalse(decision.features[0].action_mask[9])
+        self.assertFalse(decision.policy_loss_masks[0])
+        features = decision.features[0]
+        transition = IPPOTransition(
+            agent_id=0,
+            candidates=torch.tensor(features.candidates),
+            scalars=torch.tensor(features.scalars),
+            candidate_present=torch.tensor(features.candidate_present),
+            action_mask=torch.tensor(features.action_mask),
+            hidden_input=decision.hidden_inputs[0],
+            action=decision.action_indices[0],
+            old_log_prob=decision.old_log_probabilities[0],
+            old_value=decision.old_values[0],
+            team_reward=0.0,
+            individual_reward=0.0,
+            advanced_ticks=1,
+            done=True,
+            policy_loss_mask=False,
+        )
+        episode = IPPOEpisodeRollout(1, "loss", (transition,))
+        ippo_advantages(
+            [episode],
+            gamma_per_second=0.99,
+            gae_lambda=0.95,
+        )
+        config = load_ippo_v1_config(
+            Path(__file__).resolve().parents[2]
+            / "configs/training/m9-ippo-v1.json"
+        )
+        metrics = ippo_update(
+            model,
+            torch.optim.Adam(
+                model.parameters(),
+                lr=float(config["learning_rate"]),
+                eps=float(config["adam_epsilon"]),
+            ),
+            [episode],
+            config,
+            torch.Generator().manual_seed(9604),
+        )
+        self.assertGreater(metrics["batches"], 0)
+        with self.assertRaisesRegex(ValueError, "actor transition"):
+            ippo_advantages(
+                [
+                    IPPOEpisodeRollout(
+                        1,
+                        "loss",
+                        (
+                            replace(transition, policy_loss_mask=True),
+                        ),
+                    )
+                ],
+                gamma_per_second=0.99,
+                gae_lambda=0.95,
+            )
 
     def test_ippo_update_is_cpu_deterministic(self):
         import torch

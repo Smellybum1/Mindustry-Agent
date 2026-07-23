@@ -2310,12 +2310,12 @@ the staged implementation. Fresh public M9 train/dev sets are frozen. The
 all-seat shared-parameter/recurrent-state boundary now passes unit, full-suite,
 five-seed direct/traversed JVM parity, terminal-reset replay, smoke,
 determinism/golden, and reward-adversary gates. The live report/model hashes are
-`4773bf9b36b9972c...` / `e82745a19729aa31...`. No M9 training, confirmation,
-held-out access, or MAPPO work is authorized yet. ADR-0070 now freezes the
-first immutable IPPO recipe: one shared recurrent actor/local critic, 2,048
-episodes, exact optimizer/RNG streams, no teacher, the existing shared team
-reward, one audited capped per-seat available-idle cost, and a 40-root public
-comparison with the fixed-role server expert. The recipe/protocol hashes are
+`4773bf9b36b9972c...` / `e82745a19729aa31...`. At that entry boundary no M9
+training, confirmation, held-out access, or MAPPO work was authorized. ADR-0070
+then froze the first immutable IPPO recipe: one shared recurrent actor/local
+critic, 2,048 episodes, exact optimizer/RNG streams, no teacher, the existing
+shared team reward, one audited capped per-seat available-idle cost, and a
+40-root public comparison with the fixed-role server expert. The recipe/protocol hashes are
 `5d349b4a93f13342...` / `1f53ad0dde01a543...`. Reward/trainer implementation,
 six new adversaries, frozen baseline evidence, and the complete pretraining
 gate must be committed before replica A or any training episode. The
@@ -2340,9 +2340,15 @@ records no confirmation or held-out access. The governed full-run runner is
 implemented with exact-commit authority, 32 deterministic all-root cycles,
 per-update 40-root dev selection, progress telemetry, fresh-JVM replay, paired
 comparison, per-file serializer integrity, and canonical direct replica
-identity. Its six focused governance tests and the 388-test Python suite pass.
-It must be committed and the complete gate rerun from that exact commit before
-replica A; no training episode has run yet.
+identity. The first authorized A0 attempt collected 64 public train episodes
+and then aborted before GAE, an optimizer update, checkpoint, or manifest: a
+forced actor-excluded ABANDON uses placeholder index 9 while WAIT is masked.
+ADR-0071 retires A0 and corrects validation without changing actions, rewards,
+roots, budget, optimizer, RNG, architecture, or selection. The new focused
+regression, 12-test IPPO module, and full 389-test suite pass. Commit the
+correction and incident record, then rerun the complete gate from that exact
+commit before restarting replica A in a clean output directory. Incident
+evidence SHA is `c533018ee7f61885...`.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

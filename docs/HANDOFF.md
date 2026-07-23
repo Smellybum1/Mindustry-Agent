@@ -1219,7 +1219,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   found and fixed deferred generated-pool resets consuming IDs after the next
   reset: `Groups.updatePooling()` now runs before `EntityGroup.lastId` is
   reseeded. Smoke, determinism, the 664-checkpoint golden, and all 40 reward
-  adversaries pass. No M9 training episode exists.
+  adversaries pass. No M9 training episode preceded this boundary.
 - **M9 IPPO v1 optimization is prospectively frozen**: ADR-0070 binds the
   exact 2,048-episode optimizer/RNG/model recipe, no-teacher decision, shared
   team reward, one audited capped per-seat available-idle component, and
@@ -1228,7 +1228,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `1f53ad0dde01a543...`. The later implementation boundary below satisfies the
   reward/adversary requirement; committed fixed-baseline evidence and the
   final pretraining gate remain before replica A. No M9 training episode
-  exists.
+  preceded the recipe freeze.
 - **M9 IPPO reward/rollout/optimizer boundary is green**: the hash-bound
   recipe loader, cumulative per-seat available-idle accumulator, private-seat
   GAE, and stored-hidden one-boundary PPO implementation pass the full Python
@@ -1240,8 +1240,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   regenerated golden changes 128 state hashes from checkpoint 535 and zero
   actions/events/ticks/outcomes; fixture SHA is `c753376fbe6db2ec...`.
   The 382-test Python suite, pinned Java checks, smoke, five-seed parity,
-  determinism, and 664-checkpoint golden pass. Exact training replicas have
-  not started.
+  determinism, and 664-checkpoint golden pass. No exact training replica had
+  started at that boundary.
 - **M9 fixed baseline frozen before training**: from exact implementation
   commit `dea79c487a` and JAR `fdbd1d5482b556137...`, the server shared expert
   wins 36/40 public dev-v1 roots, with mean core `967.95`, mean shared return
@@ -1260,15 +1260,22 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   without editing upstream `gradlew`. The full gate passed from commit
   `2b62f7e5d7`; the versioned public-only result SHA is `e0281b195eb87be...`,
   records no sealed-data access, and authorized the pre-run boundary then
-  present. No training episode has run yet.
-- **M9 exact replica runner implemented, not yet authorized to execute**:
+  present.
+- **M9 exact replica runner implemented; A0 retired pre-update**:
   `train-m9-ippo` enforces the 32-cycle/64-root recipe, exact-current-commit
   gate authority, every-update 40-root dev frontier, eligible-only selection,
   atomic progress/manifests, paired bootstrap comparison, two fresh-JVM
   selected-checkpoint replays, per-file serializer integrity, and canonical
-  semantic replica identity. Six focused governance tests and all 388 Python
-  tests pass. Commit it and rerun the complete gate from that exact commit
-  before the first training episode.
+  semantic replica identity. The exact `add8c278a2` gate passed and A0
+  collected 64 public train episodes, then failed before GAE/optimizer
+  execution because forced actor-excluded ABANDON uses placeholder index 9
+  while WAIT may be masked. It produced no optimizer update, checkpoint,
+  manifest, model change, inspected outcome, or sealed-data access. ADR-0071
+  retires A0 and corrects validation without changing the frozen recipe.
+  The focused GAE/optimizer regression, all 12 IPPO tests, and the full
+  389-test suite pass. Commit the correction/incident record and rerun the
+  complete exact-commit gate before a clean replica-A restart. Incident
+  evidence SHA is `c533018ee7f61885...`.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1336,8 +1343,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; resolves `python` on Windows or `python3` on stock Ubuntu; ends `bootstrap: OK`, exit 0. Clean Ubuntu verification passed at `43d3b17db6`. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the complete Python suite (388 with the locked runtime, or the governed stdlib core boundary without it), then the `agent-core` / `rl-server` JUnit suites and `agent-plugin` compile check. |
-| `make test-python` | With the locked dev/RL runtime, `pytest python/tests -q` runs all 388 tests. Without pytest, the script runs the governed stdlib-only core boundary under `python -S`; both paths pass. |
+| `make test` | Runs the complete Python suite (389 after ADR-0071, or the governed stdlib core boundary without it), then the `agent-core` / `rl-server` JUnit suites and `agent-plugin` compile check. |
+| `make test-python` | With the locked dev/RL runtime, `pytest python/tests -q` runs all 389 tests after ADR-0071. Without pytest, the script runs the governed stdlib-only core boundary under `python -S`. |
 | `make m9-pretraining-check` | Runs all Python/Java tests, M9 reward/parity/rollout/artifact checks, smoke, determinism, and golden replay, then writes an exact-commit public-only result. Last passing implementation commit before the runner was `2b62f7e5d7`. |
 | `make train-m9-ippo` | On WSL2 with pinned `UV`/`JAVA`, requires an exact-current-commit complete-gate result, reconstructs the locked CPU runtime, runs independent 2,048-episode replicas A/B, then verifies canonical checkpoint and full-run identity. Not yet executed. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
@@ -1486,11 +1493,11 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Review, commit, and push the governed exact M9 replica runner.** Exclude
-   the four protected user files.
-2. **Rerun the complete gate from the exact runner commit.**
-3. **Run exact replica A/B.** Use frozen M9 train/dev roots and preserve direct
-   replay/manifest lineage.
+1. **Review, commit, and push ADR-0071 plus the A0 incident/validator fix.**
+   Exclude the four protected user files.
+2. **Rerun the complete gate from the exact correction commit.**
+3. **Restart exact replica A in a clean output directory, then B.** Use frozen
+   M9 train/dev roots and preserve direct replay/manifest lineage.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 5. **Do not start MAPPO or the learned human-session block.** IPPO must first
@@ -1498,7 +1505,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0070` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0071` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1535,6 +1542,9 @@ unpromoted result, and precommits the all-seat parameter-shared recurrent IPPO
 architecture boundary on fresh public train/dev governance.
 ADR-0070 freezes the first exact no-teacher IPPO optimizer/reward/budget and
 public fixed-role comparison before reward/trainer implementation or training.
+ADR-0071 records the public-only A0 pre-update validator abort, preserves
+forced control boundaries as actor-excluded critic samples, retires A0, and
+requires a new exact-commit full gate before the clean replica restart.
 
 ## Deviations from the brief in this scaffold
 

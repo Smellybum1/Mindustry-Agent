@@ -2208,7 +2208,8 @@ repository-evidence mapping used for the M6 audit is:
   episode's constructed-building IDs.
 - Pinned Java/custom-module checks, all 40 existing reward adversaries, smoke,
   determinism, and the 664-checkpoint/16,200-tick golden replay pass. No M9
-  training episode, confirmation, final, or MAPPO work exists yet.
+  training episode, confirmation, final, or MAPPO work preceded that
+  architecture boundary.
 - ADR-0070 prospectively freezes `m9-ippo-v1`: one shared recurrent
   actor/local critic, 2,048 episodes, exact optimizer and four RNG streams, no
   teacher, public M9 train/dev v1 only, and a paired public comparison with the
@@ -2249,7 +2250,7 @@ repository-evidence mapping used for the M6 audit is:
   wrapper view when a shared Windows checkout exposes `gradlew` with CRLF; it
   does not modify the upstream wrapper or machine Git settings. The whole
   command must pass before replica A.
-- Current Python regression passes 388 tests. Prior pinned Java/custom-module
+- Current Python regression passes 389 tests. Prior pinned Java/custom-module
   tests, smoke, five-seed direct/traversed M9 parity, stochastic terminal-reset
   replay, cross-process/reset determinism, and the 664-checkpoint golden pass.
   The complete gate passed from exact commit `2b62f7e5d7`; its versioned
@@ -2264,6 +2265,18 @@ repository-evidence mapping used for the M6 audit is:
   replicas by canonical checkpoint content. Its six focused tests pass; the
   full Python count is now 388. The runner still requires commit plus a new
   exact-commit complete gate before replica A.
+- Replica A0 passed the exact `add8c278a2` gate and collected 64 public train
+  episodes, then failed before GAE/optimizer execution with
+  `IPPO transition action is outside its mask`. It produced zero optimizer
+  updates, checkpoints, manifests, model changes, or inspected performance
+  outcomes; no sealed data was accessed. ADR-0071 identifies the boundary as
+  forced ABANDON: it is intentionally actor-excluded, uses placeholder index 9
+  while WAIT can be masked, and remains a valid critic sample. Validation now
+  retains strict mask membership for actor samples and allows only
+  policy-loss-masked forced samples outside the actor mask. The focused live-
+  shape GAE/optimizer regression, all 12 IPPO tests, and the full 389-test
+  suite pass. A0 is retired; commit and exact-commit full gate are required
+  before a clean restart. Incident evidence SHA is `c533018ee7f61885...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
