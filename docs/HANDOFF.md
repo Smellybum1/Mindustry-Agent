@@ -1530,7 +1530,9 @@ queue.
    ADR-0084 rejects it and prohibits Replica B. Freeze checkpoint identities,
    roots, argmax/categorical seeds, action-mode margins, successful-action
    probability measurements, classification thresholds, and no-selection
-   authority before opening either checkpoint for the diagnostic. Do not
+   authority before opening either checkpoint for the diagnostic. ADR-0085 and
+   protocol SHA `9a9b44e36a22d68d...` now bind that exact packet. Implement
+   its fail-closed runner and tests, then commit before execution. Do not
    retune, resume, repair, or promote v4/v5.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.

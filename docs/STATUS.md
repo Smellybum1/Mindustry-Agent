@@ -2424,6 +2424,13 @@ repository-evidence mapping used for the M6 audit is:
   rejects v5 and prohibits Replica B. Compact result SHA is
   `f969cb595526763c...`. No confirmation or held-out data was accessed. A
   separately precommitted immutable-v5 public diagnostic is next.
+- ADR-0085 now prospectively freezes that diagnostic before checkpoint
+  execution. It binds rejected v5 updates 7 and 32, the same 40 public roots,
+  one argmax and four fixed categorical streams, two fresh JVMs, descriptive
+  chosen-action probability/top-two legal-logit margins, and exact
+  retained-versus-eroded classification. Protocol SHA is
+  `9a9b44e36a22d68d...`. It has no training, selection, promotion, confirmation,
+  or held-out authority. No diagnostic episode has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

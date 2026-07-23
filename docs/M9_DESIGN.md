@@ -241,6 +241,11 @@ pins, and dependency lock.
    its final was 0/40. ADR-0084 rejects v5 and prohibits Replica B. Compact
    result SHA is `f969cb595526763c...`; no restricted access occurred. An
    immutable-v5 public diagnostic must be separately precommitted before v6.
+   ADR-0085 freezes that diagnostic before execution: updates 7 and 32, the
+   same public roots, one argmax plus four fixed categorical streams, two
+   fresh JVMs, descriptive chosen-action probability/top-two logit margins,
+   and exact retained-versus-eroded classification. Protocol SHA is
+   `9a9b44e36a22d68d...`; no diagnostic episode has run.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

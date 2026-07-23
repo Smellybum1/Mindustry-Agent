@@ -1,0 +1,101 @@
+{
+  "schema": "m9_ippo_v5_mode_margin_diagnostic_protocol_v1",
+  "status": "precommitted",
+  "data_classification": "public_dev_only",
+  "source_candidate": {
+    "candidate_version": "m9-ippo-v5-success-imitation",
+    "status": "rejected",
+    "result_path": "configs/evaluation/m9-ippo-v5-success-imitation-result.json",
+    "result_sha256": "f969cb595526763cdf6e9f2938910c3319108680751a24cf2ade6cf869012b55",
+    "training_commit": "84af0016f69f31a5d3b416ee95ad14c6fd9c9b42",
+    "manifest_path": "runs/m9-ippo-v5-success-imitation-a/ippo-v5-success-imitation-run.manifest.json",
+    "manifest_sha256": "cdf0c86e3b5f5fa89952683acc904683c7b48c92d762f59c9132bc86aa2f83b6"
+  },
+  "source_checkpoints": [
+    {
+      "update": 7,
+      "path": "runs/m9-ippo-v5-success-imitation-a/ippo-v5-success-imitation-update-7.pt",
+      "file_sha256": "98115a853138a400b8c134a2664d4bcd993a61844c85102c64a2737dac1a36b4",
+      "checkpoint_content_sha256": "1161f5dd99ca6b6df046636ce4aa92414722b9304df6313ab8aed363752e2c84",
+      "model_state_sha256": "b1a492286a8bedfbcbe53afe8ddceb1b0534689e50071e7380e43703a60d2a47",
+      "expected_immutable_manifest_wins": 1,
+      "role": "strongest_rejected_v5_public_frontier"
+    },
+    {
+      "update": 32,
+      "path": "runs/m9-ippo-v5-success-imitation-a/ippo-v5-success-imitation-update-32.pt",
+      "file_sha256": "1e2bc516f522ea047b090f0f419f9fbb016c54d2abf6c2886f7237a4ff651f61",
+      "checkpoint_content_sha256": "8afa87d33bfae9e17d309d23e50fdfe7c443bad47a0900f89d807d60addf6b8a",
+      "model_state_sha256": "7f4d29fa05c408f7bbacd5eff057c7e6defcfa0c0c549a26c4862bab44d0dd6f",
+      "expected_immutable_manifest_wins": 0,
+      "role": "final_v5_update"
+    }
+  ],
+  "public_roots": {
+    "path": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+    "sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+    "count": 40,
+    "reuse": "diagnostic_only_not_training_selection_or_promotion"
+  },
+  "modes": {
+    "deterministic_argmax": {
+      "streams_per_checkpoint": 1,
+      "episodes_per_stream": 40,
+      "require_exact_immutable_manifest_replay": true
+    },
+    "stochastic_categorical": {
+      "streams_per_checkpoint": 4,
+      "episodes_per_stream": 40,
+      "action_sampling_seeds": [9602, 19602, 29602, 39602],
+      "temperature": 1.0,
+      "sampling": "torch_multinomial_over_authoritatively_masked_softmax"
+    }
+  },
+  "action_mode_measurements": {
+    "transition_filter": "policy_loss_mask_true",
+    "logits": "recomputed_from_stored_transition_inputs_and_private_hidden_input",
+    "authoritative_mask": "stored_action_mask_before_softmax",
+    "chosen_action_probability": "masked_softmax_probability_of_executed_action",
+    "top_two_logit_margin": "largest_legal_logit_minus_second_largest_legal_logit",
+    "groups": [
+      "mode",
+      "checkpoint_update",
+      "authoritative_terminal_outcome"
+    ],
+    "aggregates": [
+      "transition_count",
+      "mean_chosen_action_probability",
+      "mean_top_two_logit_margin"
+    ],
+    "no_model_or_environment_mutation": true
+  },
+  "execution": {
+    "fresh_jvms": 2,
+    "expected_total_episodes_per_jvm": 400,
+    "require_exact_report_identity": true,
+    "torch_threads": 1,
+    "no_optimizer_or_model_mutation": true,
+    "checkpoint_execution_order": [7, 32]
+  },
+  "classification": {
+    "maximum_argmax_wins_for_unconsolidated": 1,
+    "minimum_update_32_stochastic_wins_for_retention": 16,
+    "retention_ratio_numerator": 4,
+    "retention_ratio_denominator": 5,
+    "minimum_update_7_stochastic_wins_for_erosion_reference": 16,
+    "erosion_ratio_numerator": 1,
+    "erosion_ratio_denominator": 2,
+    "retained_without_consolidation_signal": "both_argmax_at_most_1_and_update_32_stochastic_wins_at_least_16_and_at_least_80_percent_of_update_7",
+    "success_distribution_eroded_signal": "update_7_stochastic_wins_at_least_16_and_update_32_stochastic_wins_at_most_50_percent_of_update_7",
+    "otherwise": "inconclusive",
+    "action_mode_measurements_are_descriptive_not_selection_or_classification_inputs": true,
+    "deterministic_policy_remains_authoritative_for_construction": true
+  },
+  "authority": {
+    "checkpoint_selection_authorized": false,
+    "candidate_repair_authorized": false,
+    "promotion_authorized": false,
+    "training_authorized": false,
+    "confirmation_or_held_out_access": false
+  }
+}

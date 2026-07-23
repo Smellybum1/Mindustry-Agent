@@ -2469,6 +2469,12 @@ ADR-0084 rejects v5 and prohibits Replica B. Manifest/full-run digests are
 `cdf0c86e3b5f5fa...` / `ef37b266b9f061ea...`; compact result SHA is
 `f969cb595526763c...`. No restricted access occurred. Precommit one
 immutable-v5 public-only diagnostic before any v6 recipe.
+ADR-0085 now freezes that diagnostic before checkpoint execution: v5 updates
+7 and 32, the same 40 public roots, one argmax and four fixed categorical
+streams, two exact fresh JVMs, descriptive chosen-action probability/top-two
+legal-logit margins, and integer-only retained-versus-eroded classification.
+Protocol SHA is `9a9b44e36a22d68d...`. It cannot select, repair, train,
+promote, or access restricted data. No diagnostic episode has run.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
