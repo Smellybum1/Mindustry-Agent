@@ -13,6 +13,18 @@ UMBRELLA = (
     / "evaluation"
     / "m8-selector-v49-held-out-v7-umbrella.json"
 )
+MEMBERSHIP = (
+    ROOT
+    / "configs"
+    / "evaluation"
+    / "bootstrap-defense-v1-held-out-v7.json"
+)
+RECEIPT = (
+    ROOT
+    / "configs"
+    / "evaluation"
+    / "m8-selector-v49-held-out-v7-freeze.json"
+)
 
 
 def test_held_out_v7_is_reserved_without_membership_access() -> None:
@@ -34,3 +46,19 @@ def test_held_out_v7_is_reserved_without_membership_access() -> None:
         "status": "retired_membership_exposed_unexecuted",
         "membership_read_authorized": False,
     }
+
+
+def test_held_out_v7_receipt_is_value_free_without_opening_membership() -> None:
+    receipt = json.loads(RECEIPT.read_text(encoding="utf-8"))
+
+    assert MEMBERSHIP.exists()
+    assert receipt["status"] == "membership_frozen_unconsumed"
+    assert receipt["values_emitted"] is False
+    assert receipt["membership_documents_read"] == 0
+    assert receipt["confirmation_membership_read"] is False
+    assert receipt["retired_final_membership_read"] is False
+    assert receipt["set"]["seed_set_id"] == (
+        "bootstrap-defense-v1-held-out-v7"
+    )
+    assert receipt["set"]["count"] == 160
+    assert len(receipt["set"]["sha256"]) == 64
