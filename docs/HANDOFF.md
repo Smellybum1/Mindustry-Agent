@@ -942,6 +942,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   without a read and held-out-v6 remains sealed. Implementation and the full
   pretraining boundary are next; no model or restricted membership work is yet
   authorized.
+- **V43 implementation boundary green**: the config-selected v2 actor, masked
+  set pooling, dynamic checkpoint schema, and training/replay/lineage/preflight/
+  final plumbing are implemented with v1 compatibility. The boundary passes
+  293 Python tests, pinned Java, public 5/5 survival with 10 staging starts,
+  secondary-claim and owned-schematic checks, smoke, deterministic golden and
+  negative replay, and all 44 exact-config reward adversaries (report SHA
+  `3e3210447ff4f428...`). Dev-v39 remains unconstructed; no V43 training episode
+  or restricted membership read has occurred.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1156,13 +1164,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement only ADR-0060's precommitted V43 architecture coordinate.** Keep
-   runtime behavior, reward, features, roots, budgets, optimizer, RNG values,
-   scripted seats, teacher trajectory/relabeling, and engine pins V42-exact.
+1. **Commit the green ADR-0060 implementation boundary, then implement and
+   commit the primary-only value-free dev-v39 freezer before construction.**
 2. **Preserve retired dev-v38 unopened and unconsumed.** Never read, render, or
    delegate its membership; held-out-v6 remains sealed.
-3. **Run the complete public/pretraining boundary before seed construction or
-   model work.** Commit that evidence before the primary-only dev-v39 freezer.
+3. **After the freezer is committed, construct dev-v39 value-free and commit
+   its membership plus zero-read/no-values-emitted receipt before replica A.**
 4. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
    authorize V43 or any runtime prior and still fails two scorecard rows.
 5. **M9.1 remains gated.** The roadmap says to begin only after the single

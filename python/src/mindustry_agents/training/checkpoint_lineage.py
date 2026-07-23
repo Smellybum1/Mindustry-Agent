@@ -13,7 +13,7 @@ from mindustry_agents.training.checkpoint_interpolation import (
     INTERPOLATION_SCHEMA,
     validate_lineage_manifest as validate_interpolation_lineage,
 )
-from mindustry_agents.training.model import SelectorActorCritic
+from mindustry_agents.training.model import build_selector_model
 from mindustry_agents.training.ppo_selector import (
     REWARD_SCHEMA,
     _git_evidence,
@@ -158,7 +158,7 @@ def build_direct_lineage(
 
     model_state_hashes: list[str] = []
     for checkpoint_path in checkpoint_paths:
-        model = SelectorActorCritic(int(config["model_init_seed"]))
+        model = build_selector_model(config)
         checkpoint = load_checkpoint(
             checkpoint_path,
             model,
@@ -282,7 +282,7 @@ def validate_lineage_manifest(
         if manifest.get("checkpoint", {}).get("sha256") != checkpoint_sha256:
             raise ValueError("checkpoint adjustment artifact hash mismatch")
         config = _load_json(config_path)
-        model = SelectorActorCritic(int(config["model_init_seed"]))
+        model = build_selector_model(config)
         checkpoint = load_checkpoint(
             checkpoint_path,
             model,
@@ -318,7 +318,7 @@ def validate_lineage_manifest(
     if manifest.get("checkpoint", {}).get("sha256") != checkpoint_sha256:
         raise ValueError("checkpoint lineage artifact hash mismatch")
     config = _load_json(config_path)
-    model = SelectorActorCritic(int(config["model_init_seed"]))
+    model = build_selector_model(config)
     checkpoint = load_checkpoint(
         checkpoint_path,
         model,

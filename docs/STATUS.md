@@ -1864,6 +1864,14 @@ repository-evidence mapping used for the M6 audit is:
   constructed; dev-v38 remains retired without a read and held-out-v6 remains
   sealed. Implementation and the full pretraining boundary are pending; no V43
   model work or restricted membership access has occurred.
+- The V43 implementation boundary is green. Config-selected v1/v2 construction,
+  masked set pooling, dynamic checkpoint schema, and training/replay/lineage/
+  preflight/final compatibility are implemented. The boundary passes 293 Python
+  tests, pinned Java, public 5/5 survival with 10 staging starts, both focused
+  coordination checks, smoke, deterministic golden and negative replay, and all
+  44 exact-config reward adversaries (report SHA `3e3210447ff4f428...`). Dev-v39
+  remains unconstructed, dev-v38 remains retired without a membership read,
+  held-out-v6 remains sealed, and no V43 training episode has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

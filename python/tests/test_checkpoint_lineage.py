@@ -20,6 +20,7 @@ class TestDirectCheckpointLineage(unittest.TestCase):
             validate_lineage_manifest,
         )
         from mindustry_agents.training.model import (
+            MODEL_ARCHITECTURE_V1,
             MODEL_SCHEMA,
             SelectorActorCritic,
         )
@@ -37,7 +38,13 @@ class TestDirectCheckpointLineage(unittest.TestCase):
             root = Path(directory)
             config_path = root / "config.json"
             config_path.write_text(
-                json.dumps({"model_init_seed": 7}), encoding="utf-8"
+                json.dumps(
+                    {
+                        "model_init_seed": 7,
+                        "model_architecture": MODEL_ARCHITECTURE_V1,
+                    }
+                ),
+                encoding="utf-8",
             )
             config_sha = _sha256(config_path)
             model = SelectorActorCritic(7)

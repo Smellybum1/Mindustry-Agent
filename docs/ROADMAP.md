@@ -1946,6 +1946,16 @@ membership read and held-out-v6 remains sealed/unconsumed. The committed
 implementation and full public/pretraining boundary are required before
 value-free dev-v39 construction or model work. M8.5 remains unmet.
 
+The V43 implementation and complete pretraining boundary are now green. Model
+selection is config-driven; v1 compatibility and v1/v2 checkpoint separation
+are enforced through training, replay, lineage, preflight, and final evaluation.
+The boundary passes 293 Python tests, pinned Java, public policy 5/5 with 10
+staging starts, both focused coordination checks, smoke, deterministic golden
+and negative replay, and all 44 exact-config reward adversaries (report SHA
+`3e3210447ff4f428...`). Dev-v39 remains unconstructed and no V43 training
+episode has run. Commit this boundary before implementing and committing the
+primary-only value-free freezer.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

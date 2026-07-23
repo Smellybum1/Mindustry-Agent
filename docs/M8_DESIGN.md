@@ -823,6 +823,15 @@ boundary pass. Dev-v38 remains retired without a membership read. Held-out-v6
 remains sealed and unconsumed. No V43 implementation, model construction, or
 restricted membership access preceded this precommit.
 
+The implementation now selects v1/v2 models from the immutable config, uses
+masked candidate presence for set pooling, propagates the dynamic schema through
+checkpoints, replicas, lineage, preflight, and final evaluation, and rejects
+cross-schema substitution. The complete boundary passes 293 Python tests,
+pinned Java, public 5/5 survival with 10 staging starts, both focused checks,
+smoke, deterministic golden/negative replay, and all 44 exact-config reward
+adversaries (`3e3210447ff4f428...`). Dev-v39 remains unconstructed and no V43
+training episode has run.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

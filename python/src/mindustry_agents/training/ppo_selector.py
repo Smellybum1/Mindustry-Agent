@@ -29,8 +29,11 @@ from mindustry_agents.process.launcher import (
 )
 from mindustry_agents.training.model import (
     MODEL_SCHEMA,
-    SelectorActorCritic,
+    SelectorModel,
+    build_selector_model,
+    expected_model_schema,
     feature_tensors,
+    model_schema,
 )
 from mindustry_agents.training.reward import (
     REWARD_SCHEMA,
@@ -683,7 +686,7 @@ def _configure_torch(config: dict[str, Any]) -> None:
 
 
 def _model_outputs(
-    model: SelectorActorCritic, features: SelectorFeatures
+    model: SelectorModel, features: SelectorFeatures
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, tuple[torch.Tensor, ...]]:
     tensors = feature_tensors(features)
     raw, masked, value = model(*tensors)
@@ -773,7 +776,7 @@ def _selected_candidate_diagnostics(
 
 def rollout_episode(
     env: RlServerProcess,
-    model: SelectorActorCritic,
+    model: SelectorModel,
     *,
     seed: int,
     scenario_id: str,
@@ -1203,7 +1206,7 @@ def _advantages(
 
 
 def ppo_update(
-    model: SelectorActorCritic,
+    model: SelectorModel,
     optimizer: torch.optim.Optimizer,
     episodes: list[EpisodeRollout],
     config: dict[str, Any],
@@ -1488,7 +1491,7 @@ def ppo_update(
 
 
 def _teacher_trajectory_imitation_update(
-    model: SelectorActorCritic,
+    model: SelectorModel,
     optimizer: torch.optim.Optimizer,
     episodes: list[EpisodeRollout],
     shuffle_generator: torch.Generator,
@@ -1681,7 +1684,7 @@ def _teacher_trajectory_imitation_update(
 
 
 def teacher_trajectory_warmup_update(
-    model: SelectorActorCritic,
+    model: SelectorModel,
     optimizer: torch.optim.Optimizer,
     episodes: list[EpisodeRollout],
     config: dict[str, Any],
@@ -1711,7 +1714,7 @@ def teacher_trajectory_warmup_update(
 
 
 def teacher_trajectory_rehearsal_update(
-    model: SelectorActorCritic,
+    model: SelectorModel,
     optimizer: torch.optim.Optimizer,
     episodes: list[EpisodeRollout],
     config: dict[str, Any],
@@ -1783,7 +1786,7 @@ def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
 
 
 def _evaluate(
-    model: SelectorActorCritic,
+    model: SelectorModel,
     seeds: list[int],
     config: dict[str, Any],
     *,
@@ -1822,7 +1825,7 @@ def _evaluate(
 
 def save_checkpoint(
     path: Path,
-    model: SelectorActorCritic,
+    model: SelectorModel,
     optimizer: torch.optim.Optimizer,
     *,
     config_sha256: str,
@@ -1833,7 +1836,7 @@ def save_checkpoint(
     payload = {
         "feature_schema": FEATURE_SCHEMA,
         "reward_schema": reward_schema,
-        "model_schema": MODEL_SCHEMA,
+        "model_schema": model_schema(model),
         "config_sha256": config_sha256,
         "parent_checkpoint": parent_checkpoint,
         "update": update,
@@ -1848,12 +1851,12 @@ def save_checkpoint(
 
 def load_checkpoint(
     path: Path,
-    model: SelectorActorCritic,
+    model: SelectorModel,
     *,
     reward_schema: str = REWARD_SCHEMA,
 ) -> dict[str, Any]:
     payload = torch.load(path, map_location="cpu", weights_only=False)
-    expected = (FEATURE_SCHEMA, reward_schema, MODEL_SCHEMA)
+    expected = (FEATURE_SCHEMA, reward_schema, model_schema(model))
     actual = (
         payload.get("feature_schema"),
         payload.get("reward_schema"),
@@ -2055,7 +2058,7 @@ def _manifest(
         "schemas": {
             "feature": FEATURE_SCHEMA,
             "reward": str(config.get("reward_schema", REWARD_SCHEMA)),
-            "model": MODEL_SCHEMA,
+            "model": expected_model_schema(config),
         },
         "repository": _git_evidence(root),
         "runtime": {
@@ -2294,7 +2297,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     train_set = _seed_set(root, str(config["train_seed_set"]), "train")
     teacher_warmup_set = _teacher_warmup_train_set(root, train_set, config)
     dev_set = _seed_set(root, str(config["dev_seed_set"]), "dev")
-    model = SelectorActorCritic(int(config["model_init_seed"]))
+    model = build_selector_model(config)
     initial_model_state_sha256 = _model_state_digest(model.state_dict())
     optimizer = torch.optim.Adam(
         model.parameters(),
@@ -2512,7 +2515,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     verify_seed = int(dev_set["seeds"][0])
     traces = []
     for offset in (2, 3):
-        replay_model = SelectorActorCritic(int(config["model_init_seed"]))
+        replay_model = build_selector_model(config)
         load_checkpoint(
             checkpoint_path,
             replay_model,

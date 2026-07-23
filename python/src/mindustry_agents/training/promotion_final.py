@@ -30,7 +30,7 @@ from mindustry_agents.training.checkpoint_interpolation import (
     ALLOWED_DIRTY_PATHS,
 )
 from mindustry_agents.training.checkpoint_lineage import validate_lineage_manifest
-from mindustry_agents.training.model import SelectorActorCritic
+from mindustry_agents.training.model import build_selector_model
 from mindustry_agents.training.ppo_selector import (
     _configure_torch,
     _git_evidence,
@@ -287,7 +287,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     config = _load_json(config_path)
     _configure_torch(config)
-    model = SelectorActorCritic(int(config["model_init_seed"]))
+    model = build_selector_model(config)
     reward_schema = str(config.get("reward_schema", REWARD_SCHEMA))
     checkpoint = load_checkpoint(
         checkpoint_path, model, reward_schema=reward_schema

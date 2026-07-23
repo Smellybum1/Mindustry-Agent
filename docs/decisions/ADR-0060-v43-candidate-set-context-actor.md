@@ -106,3 +106,22 @@ the matched promotion gate.
   this packet is committed. It does not authorize dev-v39 membership creation,
   replica A, confirmation consumption, or held-out-v6 access before their
   preceding committed gates pass.
+
+## Implementation status
+
+The config-selected v1/v2 model factory, masked set-context actor, dynamic
+checkpoint schema, training/replay/lineage/preflight/final plumbing, and focused
+compatibility tests are implemented. Historical v1 training configs remain
+exact, legacy logit-adjustment configs retain their pinned v1 interpretation,
+and cross-schema checkpoint loading fails closed.
+
+The complete 2026-07-23 pretraining boundary passes 293 Python tests and pinned
+Java tests/classes. Public policy passes 5/5 with 10 proactive staging starts;
+secondary-claim and owned-schematic checks pass; smoke passes; cross-process,
+reset, and alternate-seed determinism remain `20a97f36407167597981e77c`,
+`a2cf4a73ee901c844f30f486`, and `495ba05fa71697bdc8ff2951`. Golden replay
+passes 664 checkpoints / 16,200 ticks / two wins, and its negative mutation is
+detected. All 44 exact-config reward adversaries pass; the ignored report hashes
+to `3e3210447ff4f428a6e3fcc7a77b86e2bf82c9e42df89b9df8a2ef37ce467060`.
+Dev-v39 remains unconstructed, dev-v38 remains retired without a membership
+read, held-out-v6 remains sealed, and no V43 training episode has run.

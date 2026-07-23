@@ -28,7 +28,7 @@ from mindustry_agents.process.launcher import (
     repo_root,
 )
 from mindustry_agents.tools.expert_common import EpisodeResult
-from mindustry_agents.training.model import SelectorActorCritic
+from mindustry_agents.training.model import build_selector_model
 from mindustry_agents.training.checkpoint_lineage import validate_lineage_manifest
 from mindustry_agents.training.ppo_selector import (
     LEARNED_SEAT,
@@ -425,7 +425,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("M8.5 promotion preflight requires the governed dev split")
     config = json.loads(args.config.read_text(encoding="utf-8"))
     _configure_torch(config)
-    model = SelectorActorCritic(int(config["model_init_seed"]))
+    model = build_selector_model(config)
     reward_schema = str(config.get("reward_schema", REWARD_SCHEMA))
     checkpoint_payload = load_checkpoint(
         args.checkpoint.resolve(), model, reward_schema=reward_schema
