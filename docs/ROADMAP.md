@@ -2311,8 +2311,14 @@ all-seat shared-parameter/recurrent-state boundary now passes unit, full-suite,
 five-seed direct/traversed JVM parity, terminal-reset replay, smoke,
 determinism/golden, and reward-adversary gates. The live report/model hashes are
 `4773bf9b36b9972c...` / `e82745a19729aa31...`. No M9 training, confirmation,
-held-out access, or MAPPO work is authorized yet; the immutable IPPO
-optimization/reward precommit is next.
+held-out access, or MAPPO work is authorized yet. ADR-0070 now freezes the
+first immutable IPPO recipe: one shared recurrent actor/local critic, 2,048
+episodes, exact optimizer/RNG streams, no teacher, the existing shared team
+reward, one audited capped per-seat available-idle cost, and a 40-root public
+comparison with the fixed-role server expert. The recipe/protocol hashes are
+`5d349b4a93f13342...` / `1f53ad0dde01a543...`. Reward/trainer implementation,
+six new adversaries, frozen baseline evidence, and the complete pretraining
+gate must be committed before replica A or any training episode.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

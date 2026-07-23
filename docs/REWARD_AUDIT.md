@@ -41,6 +41,7 @@ reward.team.milestone_highwater
 reward.team.terminal_outcome
 reward.team.unresolved_tick_cost
 reward.penalty.abandonment_liability
+reward.agent.own_available_idle_ticks
 ```
 
 ## Known Mindustry reward-hacking risks (brief §17.5)
@@ -305,6 +306,31 @@ the configured cost and cap. Config SHA-256 is
 report `23262f5332cc9f52b9c1a58e835f6059075da5f1f7686771216f51e4df2e33f9`
 passes 44 exact cases. The full 140-test Python suite, smoke, and determinism
 also pass. Status: implemented-approved-v19 pre-training, 2026-07-22.
+
+## M9 IPPO v1 individual shaping precommit
+
+The all-seat IPPO recipe shares the existing `selector_reward_v2` team reward
+unchanged among all three seats. It adds only the negative, separately metered
+component below. ADR-0070 and `configs/training/m9-ippo-v1.json` freeze its
+coefficient and cap before implementation or training. It is not approved to
+influence a rollout until every named adversary and the full pretraining gate
+pass.
+
+### `reward.agent.own_available_idle_ticks`
+
+| Field | Value |
+|---|---|
+| Definition | For each seat independently, emit `-0.00025` for each monotonic increase in that seat's authoritative cumulative `idle_agent_ticks_by_agent` counter, capped at `-1.0` per seat per episode. Only alive/available unassigned ticks enter that server counter; `unavailable_agent_ticks_by_agent` is excluded. |
+| Scale / range | `[-1,0]` per seat and `[-3,0]` across the team. This shaping is added only to the owning seat's copy of the shared team reward. |
+| State variables read | Structured cumulative `coordination_metrics.idle_agent_ticks_by_agent[agent_id]`, the prior charged counter and accumulated component value for that seat, agent id, episode/reset boundary, and the authoritative unavailable counters for reconciliation only. |
+| Intended behaviour | Provide bounded local credit for each seat's avoidable inactivity while the shared team outcome and quality reward remain dominant. |
+| Exploit hypothesis 1 | A seat dies or becomes unavailable to stop its charge. Mitigation: impossible work is not mislabeled as idle, death removes team capacity, creates authoritative lifecycle/recovery effects, and cannot create positive reward; terminal and team-quality gates remain dominant. |
+| Exploit hypothesis 2 | The shared policy performs duplicate, low-value, or abandon-prone busywork merely to avoid idle ticks. Mitigation: duplicate-work and team-abandonment penalties remain in the shared reward, milestone/terminal outcomes still dominate, and a full-horizon busywork ordering adversary must reject the exploit. |
+| Exploit hypothesis 3 | The shared parameters shift useful work onto another clone or collapse into seat-specific inactivity. Mitigation: each seat is charged from its own server counter, per-seat telemetry is retained, and evaluation compares all-seat/seat matrices rather than accepting only a team sum. |
+| Exploit hypothesis 4 | Step chunking, counter replay, or rollback changes the charge. Mitigation: charge only cumulative deltas, require exact chunk invariance, and fail the run on any in-episode per-seat counter rollback. |
+| Adversarial tests | `m9-own-idle-cap`; `m9-own-idle-unavailable-zero`; `m9-own-idle-seat-isolation`; `m9-own-idle-chunk-invariance`; `m9-own-idle-counter-rollback`; `m9-own-idle-busywork-ordering`. All are required before status may change. |
+| Telemetry key | `reward.agent.own_available_idle_ticks` as a three-value array; `reward.agent.total_by_agent`; authoritative `coordination_metrics.idle_agent_ticks_by_agent` and `unavailable_agent_ticks_by_agent`; per-seat charged-counter and cap state in rollout evidence. |
+| Status | precommitted-not-implemented; prohibited from training pending adversaries and full gate |
 
 ## Cross-component adversarial matrix
 

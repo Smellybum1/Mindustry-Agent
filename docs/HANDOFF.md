@@ -1220,6 +1220,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   reset: `Groups.updatePooling()` now runs before `EntityGroup.lastId` is
   reseeded. Smoke, determinism, the 664-checkpoint golden, and all 40 reward
   adversaries pass. No M9 training episode exists.
+- **M9 IPPO v1 optimization is prospectively frozen**: ADR-0070 binds the
+  exact 2,048-episode optimizer/RNG/model recipe, no-teacher decision, shared
+  team reward, one audited capped per-seat available-idle component, and
+  public fixed-role comparison before implementation or training. The
+  recipe/protocol hashes are `5d349b4a93f13342...` /
+  `1f53ad0dde01a543...`. The new reward remains
+  precommitted-not-implemented; six adversaries, trainer/reward implementation,
+  fixed baseline evidence, and the full gate are next. No M9 training episode
+  exists.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1435,12 +1444,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Review and commit the green M9 all-seat architecture boundary.** Exclude
-   the four protected user files.
-2. **Precommit the first immutable IPPO optimization recipe.** Audit the small
-   individual shaping component before it can influence training.
-3. **Run exact replica A/B only after that precommit.** Use the frozen public
-   M9 train/dev roots and preserve direct replay/manifest lineage.
+1. **Implement ADR-0070's exact IPPO reward/rollout/optimizer boundary.** Add
+   all six named individual-reward adversaries and manifest/failure coverage.
+2. **Freeze the fixed-role server-expert result on the exact public M9 dev
+   document.** Do this before replica A and bind its hashes into evidence.
+3. **Run the full pretraining gate before any training episode, then exact
+   replica A/B.** Use the frozen public M9 train/dev roots and preserve direct
+   replay/manifest lineage.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 5. **Do not start MAPPO or the learned human-session block.** IPPO must first
@@ -1448,7 +1458,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0069` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0070` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1483,6 +1493,8 @@ reusable-v3 rejection before confirmation.
 ADR-0069 records the owner-authorized M9 gate supersession, preserves M8's
 unpromoted result, and precommits the all-seat parameter-shared recurrent IPPO
 architecture boundary on fresh public train/dev governance.
+ADR-0070 freezes the first exact no-teacher IPPO optimizer/reward/budget and
+public fixed-role comparison before reward/trainer implementation or training.
 
 ## Deviations from the brief in this scaffold
 

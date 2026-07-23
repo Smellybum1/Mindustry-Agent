@@ -2208,8 +2208,19 @@ repository-evidence mapping used for the M6 audit is:
   episode's constructed-building IDs.
 - Pinned Java/custom-module checks, all 40 existing reward adversaries, smoke,
   determinism, and the 664-checkpoint/16,200-tick golden replay pass. No M9
-  optimization config, training episode, confirmation, final, or MAPPO work
-  exists yet; the exact IPPO reward/optimizer/budget precommit is next.
+  training episode, confirmation, final, or MAPPO work exists yet.
+- ADR-0070 prospectively freezes `m9-ippo-v1`: one shared recurrent
+  actor/local critic, 2,048 episodes, exact optimizer and four RNG streams, no
+  teacher, public M9 train/dev v1 only, and a paired public comparison with the
+  fixed-role server expert. The recipe/protocol SHA-256 values are
+  `5d349b4a93f13342...` / `1f53ad0dde01a543...`.
+- The shared `selector_reward_v2` team reward remains exact. The only new
+  component, `reward.agent.own_available_idle_ticks`, is audited at
+  `-0.00025` per authoritative per-seat available-idle tick with a `-1.0`
+  per-seat cap. Its status is precommitted-not-implemented. Six named
+  adversaries, reward/trainer implementation, frozen baseline evidence, and
+  the full pretraining gate are required before replica A or any training
+  episode.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -74,6 +74,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0067](ADR-0067-retire-held-out-v6-after-manifest-read.md) | Retire held-out-v6 after manifest read |
 | [0068](ADR-0068-v49-prospective-scorecard-noninferiority.md) | V49 prospective scorecard non-inferiority |
 | [0069](ADR-0069-m9-entry-gate-supersession.md) | Supersede the M9 entry gate after the M8 one-brain ceiling |
+| [0070](ADR-0070-m9-ippo-v1-optimization-precommit.md) | Freeze the first M9 IPPO optimization and public comparison |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

@@ -1,9 +1,9 @@
 # M9 design: multi-agent learning and partner robustness
 
 Status: initial architecture boundary implemented and verified under ADR-0069;
-the immutable IPPO optimization recipe is not yet frozen. This document
-describes the target architecture and the staged evidence required before
-broader M9 claims.
+the immutable IPPO optimization/reward/public-comparison recipe is frozen by
+ADR-0070. No M9 training episode has run. This document describes the target
+architecture and the staged evidence required before broader M9 claims.
 
 ## Scope
 
@@ -82,8 +82,11 @@ pins, and dependency lock.
    evaluations, repeated terminal-reset replay, smoke, deterministic replay,
    and 40 reward adversaries pass. The shared model digest is
    `e82745a19729aa3183df197cb91c5e2fa9ba17ee334748b979d6d623e402de21`.
-2. Training precommit: exact reward, optimizer, budget, checkpoint selection,
-   partner mix, and public comparison protocol are frozen.
+2. Training precommit: **complete 2026-07-23.** ADR-0070 freezes the exact
+   reward, optimizer, 2,048-episode budget, checkpoint selection, no-teacher
+   decision, and public fixed-role comparison protocol. Implementation,
+   adversaries, baseline evidence, and the full gate must be committed before
+   training.
 3. IPPO construction: two independent runs reproduce checkpoint and replay
    evidence.
 4. Public development evaluation: the learned all-seat team must beat the
