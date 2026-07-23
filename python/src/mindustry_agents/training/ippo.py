@@ -211,6 +211,10 @@ class AllSeatDecision:
     agent_actions: list[dict[str, Any]]
     features: dict[int, SelectorFeatures]
     action_indices: dict[int, int]
+    hidden_inputs: dict[int, torch.Tensor]
+    old_log_probabilities: dict[int, float]
+    old_values: dict[int, float]
+    policy_loss_masks: dict[int, bool]
     evaluation_order: tuple[int, ...]
     model_state_sha256: str
 
@@ -312,6 +316,10 @@ def decide_all_seats(
     agent_actions: list[dict[str, Any]] = []
     features_by_agent: dict[int, SelectorFeatures] = {}
     action_indices: dict[int, int] = {}
+    hidden_inputs: dict[int, torch.Tensor] = {}
+    old_log_probabilities: dict[int, float] = {}
+    old_values: dict[int, float] = {}
+    policy_loss_masks: dict[int, bool] = {}
     evaluation_order: list[int] = []
 
     for agent_id in range(AGENT_COUNT):
@@ -339,11 +347,12 @@ def decide_all_seats(
             control_schema=CONTROL_SCHEMA_V1,
         )
         tensors = _feature_tensors(features)
+        hidden_input = state.hidden[agent_id : agent_id + 1].detach().clone()
         with torch.no_grad():
-            _, masked_logits, _, next_hidden = model(
+            _, masked_logits, value, next_hidden = model(
                 *tensors,
                 torch.tensor([agent_id], dtype=torch.long),
-                state.hidden[agent_id : agent_id + 1],
+                hidden_input,
             )
         state.hidden[agent_id] = next_hidden[0].detach()
         evaluation_order.append(agent_id)
@@ -382,6 +391,16 @@ def decide_all_seats(
             features.action_mask[index]
         ):
             raise RuntimeError("IPPO selected an action outside the authoritative mask")
+        hidden_inputs[agent_id] = hidden_input[0]
+        old_log_probabilities[agent_id] = float(
+            torch.log_softmax(masked_logits[0], dim=-1)[index].item()
+        )
+        old_values[agent_id] = float(value[0].item())
+        policy_loss_masks[agent_id] = bool(
+            teacher_actions is None
+            and features.forced_task_action is None
+            and features.policy_loss_mask
+        )
         agent_actions.append(action)
         action_indices[agent_id] = index
 
@@ -392,6 +411,10 @@ def decide_all_seats(
         agent_actions=agent_actions,
         features=features_by_agent,
         action_indices=action_indices,
+        hidden_inputs=hidden_inputs,
+        old_log_probabilities=old_log_probabilities,
+        old_values=old_values,
+        policy_loss_masks=policy_loss_masks,
         evaluation_order=tuple(evaluation_order),
         model_state_sha256=model_state_digest(model),
     )

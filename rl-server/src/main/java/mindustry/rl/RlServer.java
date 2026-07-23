@@ -85,6 +85,7 @@ public final class RlServer{
     private Field physicsWorld;
     private Field physicsRand;
     private Field entityLastId;
+    private Field typePools;
     private Field timeGlobalRaw;
     private Field timeGlobal;
 
@@ -190,6 +191,8 @@ public final class RlServer{
             physicsRand.setAccessible(true);
             entityLastId = mindustry.entities.EntityGroup.class.getDeclaredField("lastId");
             entityLastId.setAccessible(true);
+            typePools = arc.util.pooling.Pools.class.getDeclaredField("typePools");
+            typePools.setAccessible(true);
             //globalTimeRaw has no public setter (docs/ENGINE_NOTES.md §12.3)
             timeGlobalRaw = Time.class.getDeclaredField("globalTimeRaw");
             timeGlobalRaw.setAccessible(true);
@@ -539,6 +542,7 @@ public final class RlServer{
         //queue before reseeding EntityGroup.lastId; otherwise terminal-episode
         //entities consume IDs on the next episode's first external update.
         Groups.updatePooling();
+        clearFreePools();
 
         //Callbacks posted by the previous episode can allocate entities on the
         // next external tick. Drop them before resetting EntityGroup.lastId or
@@ -602,6 +606,25 @@ public final class RlServer{
                 throw new RuntimeException("failed to seed wave entity IDs", e);
             }
             return;
+        }
+    }
+
+    /**
+     * Discard only free pooled objects after the old world is gone. Otherwise a
+     * same-seed replay after an episode with combat can reuse objects that the
+     * first run had to construct, making later entity allocation history-dependent.
+     */
+    private void clearFreePools(){
+        try{
+            Object value = typePools.get(null);
+            if(!(value instanceof arc.struct.ObjectMap<?, ?> pools)){
+                throw new IllegalStateException("Arc pool registry layout changed");
+            }
+            for(Object pool : pools.values()){
+                ((arc.util.pooling.Pool<?>)pool).clear();
+            }
+        }catch(Exception e){
+            throw new RuntimeException("failed to clear free object pools", e);
         }
     }
 

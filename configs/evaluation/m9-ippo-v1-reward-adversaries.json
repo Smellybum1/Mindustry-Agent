@@ -1,0 +1,99 @@
+{
+  "all_passed": true,
+  "cases": [
+    {
+      "case": "m9-own-idle-cap",
+      "components": [
+        [
+          -1.0,
+          -0.0,
+          -0.0
+        ],
+        [
+          -0.0,
+          -0.0,
+          -0.0
+        ]
+      ],
+      "individual_component": "reward.agent.own_available_idle_ticks",
+      "pass": true,
+      "reward_schema": "ippo_reward_v1",
+      "schema": "m9_ippo_reward_adversary_case_v1"
+    },
+    {
+      "case": "m9-own-idle-unavailable-zero",
+      "components": [
+        -0.0,
+        -0.0,
+        -0.0
+      ],
+      "individual_component": "reward.agent.own_available_idle_ticks",
+      "pass": true,
+      "reward_schema": "ippo_reward_v1",
+      "schema": "m9_ippo_reward_adversary_case_v1"
+    },
+    {
+      "case": "m9-own-idle-seat-isolation",
+      "components": [
+        -0.0025,
+        -0.005,
+        -0.0075
+      ],
+      "individual_component": "reward.agent.own_available_idle_ticks",
+      "pass": true,
+      "reward_schema": "ippo_reward_v1",
+      "schema": "m9_ippo_reward_adversary_case_v1"
+    },
+    {
+      "case": "m9-own-idle-chunk-invariance",
+      "chunked_totals": [
+        0.075,
+        0.045,
+        0.015
+      ],
+      "individual_component": "reward.agent.own_available_idle_ticks",
+      "pass": true,
+      "reward_schema": "ippo_reward_v1",
+      "schema": "m9_ippo_reward_adversary_case_v1",
+      "single_totals": [
+        0.075,
+        0.045,
+        0.015
+      ]
+    },
+    {
+      "case": "m9-own-idle-counter-rollback",
+      "error": "M9 per-seat idle counter rolled back",
+      "individual_component": "reward.agent.own_available_idle_ticks",
+      "pass": true,
+      "reward_schema": "ippo_reward_v1",
+      "schema": "m9_ippo_reward_adversary_case_v1"
+    },
+    {
+      "busy_quality_counters": {
+        "agent_ticks": 27000,
+        "announced_messages": 0,
+        "duplicate_work_incidents": 140,
+        "idle_agent_ticks": 0,
+        "recovery_delay_ticks": 0
+      },
+      "busy_reward_by_agent": [
+        -10.8,
+        -10.8,
+        -10.8
+      ],
+      "case": "m9-own-idle-busywork-ordering",
+      "honest_reward_by_agent": [
+        -10.8,
+        -10.8,
+        -10.8
+      ],
+      "individual_component": "reward.agent.own_available_idle_ticks",
+      "pass": true,
+      "reward_schema": "ippo_reward_v1",
+      "schema": "m9_ippo_reward_adversary_case_v1"
+    }
+  ],
+  "config_sha256": "5d349b4a93f1334292d09a4f4af6acd4764328836e6d6dbab309443e318c9861",
+  "schema": "m9_ippo_reward_adversary_report_v1"
+}

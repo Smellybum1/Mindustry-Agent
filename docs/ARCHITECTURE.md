@@ -136,14 +136,17 @@ their command callbacks through Mindustry's existing command path.
   policy-visible state; re-seed and load on the simulation thread; return
   initial observations + `state_hash`. JVM restart is a crash-recovery
   mechanism, not the normal reset path.
-- Reset drops callbacks posted by the outgoing episode and flushes
-  `Groups.updatePooling()` before resetting the engine entity counter. The pool
-  flush is required because `Groups.clear()` defers pooled entity resets until
-  the next frame; allowing that frame to occur after the counter reset made
-  first-construction IDs depend on whether the prior episode ended with dead
-  units. Scenario v2 additionally reserves a disjoint deterministic entity-ID
-  range immediately before each native wave, preventing lazy transient
-  allocations from making wave identity depend on episode history.
+- Reset drops callbacks posted by the outgoing episode, flushes
+  `Groups.updatePooling()`, and clears Arc's free-object pools before resetting
+  the engine entity counter. The queue flush is required because
+  `Groups.clear()` defers pooled entity resets until the next frame. Clearing
+  free entries is also required because a same-seed episode after combat could
+  otherwise reuse objects that the first episode had to construct, shifting
+  later entity allocation at a death boundary. Both operations occur after the
+  outgoing world is cleared and affect only free objects, never live state.
+  Scenario v2 additionally reserves a disjoint deterministic entity-ID range
+  immediately before each native wave, preventing lazy transient allocations
+  from making wave identity depend on episode history.
 - Adaptive rolling inflow evidence, scenario-event cursor, and recent
   coordination switching history are canonical hash inputs. Scenario version 2
   also hashes its fully resolved variation contract. These inputs are updated

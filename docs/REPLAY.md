@@ -42,3 +42,11 @@ replay mismatch. M8.4 regenerated the trace for the accepted deterministic
 external runtime (synchronous async phases/pathfinding, authoritative
 tile-backed buildings, and canonical sleeping-building order); both episodes
 still win.
+
+M9.1 regenerated the hash fields after reset began clearing Arc free-object
+pools. The accepted actions, task events, ticks, outcomes, episode count, and
+16,200-tick budget are byte-identical after removing `state_hash`; 128 hashes
+change beginning at checkpoint 535, where combat-created pool history formerly
+affected later entity identity. The replacement fixture SHA-256 is
+`c753376fbe6db2ecd44bdcaf87d2e224eb05d0e1c4569ddd22e653fcb4fbf6fa`,
+and its negative mutation gate passes.

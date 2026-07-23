@@ -330,7 +330,7 @@ pass.
 | Exploit hypothesis 4 | Step chunking, counter replay, or rollback changes the charge. Mitigation: charge only cumulative deltas, require exact chunk invariance, and fail the run on any in-episode per-seat counter rollback. |
 | Adversarial tests | `m9-own-idle-cap`; `m9-own-idle-unavailable-zero`; `m9-own-idle-seat-isolation`; `m9-own-idle-chunk-invariance`; `m9-own-idle-counter-rollback`; `m9-own-idle-busywork-ordering`. All are required before status may change. |
 | Telemetry key | `reward.agent.own_available_idle_ticks` as a three-value array; `reward.agent.total_by_agent`; authoritative `coordination_metrics.idle_agent_ticks_by_agent` and `unavailable_agent_ticks_by_agent`; per-seat charged-counter and cap state in rollout evidence. |
-| Status | precommitted-not-implemented; prohibited from training pending adversaries and full gate |
+| Status | implemented-approved-m9.1 pretraining; six adversaries and live stochastic reset/reconciliation pass 2026-07-23 |
 
 ## Cross-component adversarial matrix
 

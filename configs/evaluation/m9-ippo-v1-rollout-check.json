@@ -1,0 +1,31 @@
+{
+  "config": "configs/training/m9-ippo-v1.json",
+  "episode": {
+    "core_health": 0.0,
+    "individual_reward_totals": [
+      0.2145,
+      0.0,
+      0.3315
+    ],
+    "model_state_sha256": "e82745a19729aa3183df197cb91c5e2fa9ba17ee334748b979d6d623e402de21",
+    "outcome": "loss",
+    "seed": 18000000001,
+    "shared_reward_components": {
+      "reward.penalty.abandonment_liability": 0.0,
+      "reward.penalty.communication": -0.17,
+      "reward.penalty.duplicate_work": -0.05,
+      "reward.penalty.invalid_action": 0.0,
+      "reward.penalty.recovery_delay_ticks": -3.0,
+      "reward.penalty.team_abandonment": 0.0,
+      "reward.penalty.team_idle_ticks": -4.367999999999999,
+      "reward.team.milestone_highwater": 2.0,
+      "reward.team.terminal_outcome": -10.0,
+      "reward.team.unresolved_tick_cost": -1.7999999999999952
+    },
+    "tick": 7019,
+    "trace_sha256": "7a084693a1f6512ffe5d04ba3b430345848966f77b571301b6a2ffc4e195c2a1",
+    "transitions": 70
+  },
+  "repeated_rollouts_equal": true,
+  "schema": "m9_ippo_rollout_check_v1"
+}

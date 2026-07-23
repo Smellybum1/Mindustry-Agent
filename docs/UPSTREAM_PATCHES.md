@@ -190,6 +190,9 @@ Other engine gaps handled without upstream edits, via reflection into public
 engine classes on the classpath (no `--add-opens` needed):
 
 - `EntityGroup.lastId` (private static) reset to 0 per episode.
+- `Pools.typePools` (private static) enumerated on reset so only free pooled
+  objects are discarded after the outgoing world is cleared. This prevents
+  prior-combat pool occupancy from changing later entity allocation.
 - `Time.globalTimeRaw` / `Time.globalTime` zeroed per episode (`setInternalTime`
   covers `timeRaw`/`time`; `globalTimeRaw` has no public setter).
 

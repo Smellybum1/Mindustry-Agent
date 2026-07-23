@@ -1,6 +1,9 @@
 import importlib.util
+import json
+import tempfile
 import unittest
 from copy import deepcopy
+from pathlib import Path
 
 
 def _candidate(index=0, task_type="BUILD_LINE"):
@@ -203,6 +206,187 @@ class TestSharedRecurrentIPPO(unittest.TestCase):
                 evaluation=True,
                 teacher_actions=teacher,
             )
+
+    def test_ippo_reward_is_separate_per_seat_and_all_adversaries_pass(self):
+        from mindustry_agents.process.launcher import repo_root
+        from mindustry_agents.training.ippo_reward import IPPOReward
+        from mindustry_agents.training.ippo_reward_adversary import (
+            CASES,
+            run_case,
+        )
+        from mindustry_agents.training.ippo_ppo import load_ippo_v1_config
+
+        config = load_ippo_v1_config(
+            repo_root() / "configs/training/m9-ippo-v1.json"
+        )
+        reward = IPPOReward(
+            config["team_quality_reward"], config["individual_shaping"]
+        )
+        result = reward.observe(
+            {"tick": 0, "enemy_count": 0},
+            {"tick": 60, "enemy_count": 0},
+            advanced_ticks=60,
+            tick_cap=9000,
+            coordination_metrics={
+                "agent_ticks": 180,
+                "idle_agent_ticks": 60,
+                "idle_agent_ticks_by_agent": [10, 20, 30],
+                "unavailable_agent_ticks": 0,
+                "unavailable_agent_ticks_by_agent": [0, 0, 0],
+                "duplicate_work_incidents": 0,
+                "announced_messages": 0,
+            },
+        )
+        self.assertEqual(
+            result.individual_components, (-0.0025, -0.005, -0.0075)
+        )
+        self.assertEqual(len(set(result.reward_by_agent)), 3)
+        reports = [run_case(case, config) for case in CASES]
+        self.assertTrue(all(report["pass"] for report in reports))
+
+    def test_ippo_config_is_hash_bound_and_sealed_paths_are_absent(self):
+        from mindustry_agents.process.launcher import repo_root
+        from mindustry_agents.training.ippo_ppo import load_ippo_v1_config
+
+        path = repo_root() / "configs/training/m9-ippo-v1.json"
+        config = load_ippo_v1_config(path)
+        self.assertIsNone(config["confirmation_seed_set"])
+        self.assertIsNone(config["held_out_seed_set"])
+        with tempfile.TemporaryDirectory() as directory:
+            drifted = json.loads(path.read_text(encoding="utf-8"))
+            drifted["training_cycles"] += 1
+            target = Path(directory) / "drifted.json"
+            target.write_text(json.dumps(drifted), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "hash"):
+                load_ippo_v1_config(target)
+
+    def test_ippo_gae_never_crosses_private_seat_sequences(self):
+        import torch
+
+        from mindustry_agents.training.ippo_ppo import (
+            IPPOEpisodeRollout,
+            IPPOTransition,
+            ippo_advantages,
+        )
+
+        def transition(agent_id, reward, done):
+            return IPPOTransition(
+                agent_id=agent_id,
+                candidates=torch.zeros((8, 37)),
+                scalars=torch.zeros(160),
+                candidate_present=torch.ones(8, dtype=torch.bool),
+                action_mask=torch.ones(10, dtype=torch.bool),
+                hidden_input=torch.zeros(64),
+                action=0,
+                old_log_prob=0.0,
+                old_value=0.0,
+                team_reward=float(reward),
+                individual_reward=0.0,
+                advanced_ticks=60,
+                done=done,
+                policy_loss_mask=False,
+            )
+
+        episode = IPPOEpisodeRollout(
+            seed=1,
+            outcome="win",
+            transitions=tuple(
+                [transition(agent_id, agent_id + 1, False) for agent_id in range(3)]
+                + [
+                    transition(agent_id, (agent_id + 1) * 10, True)
+                    for agent_id in range(3)
+                ]
+            ),
+        )
+        _, advantages, returns = ippo_advantages(
+            [episode], gamma_per_second=1.0, gae_lambda=1.0
+        )
+        self.assertEqual(advantages.tolist(), [11, 22, 33, 10, 20, 30])
+        self.assertEqual(returns.tolist(), advantages.tolist())
+
+    def test_ippo_update_is_cpu_deterministic(self):
+        import torch
+
+        from mindustry_agents.training.ippo import (
+            SharedRecurrentSelector,
+            model_state_digest,
+        )
+        from mindustry_agents.training.ippo_ppo import (
+            IPPOEpisodeRollout,
+            IPPOTransition,
+            ippo_update,
+        )
+
+        torch.set_num_threads(1)
+        source = SharedRecurrentSelector(9601)
+        transitions = []
+        for boundary in range(2):
+            for agent_id in range(3):
+                candidates = torch.zeros((8, 37))
+                candidates[:, 0] = boundary + agent_id / 10
+                scalars = torch.zeros(160)
+                present = torch.ones(8, dtype=torch.bool)
+                mask = torch.ones(10, dtype=torch.bool)
+                hidden = torch.full((64,), agent_id / 10)
+                with torch.no_grad():
+                    _, logits, value, _ = source(
+                        candidates[None],
+                        scalars[None],
+                        present[None],
+                        mask[None],
+                        torch.tensor([agent_id]),
+                        hidden[None],
+                    )
+                    action = agent_id
+                    log_prob = torch.log_softmax(logits[0], dim=-1)[action]
+                transitions.append(
+                    IPPOTransition(
+                        agent_id=agent_id,
+                        candidates=candidates,
+                        scalars=scalars,
+                        candidate_present=present,
+                        action_mask=mask,
+                        hidden_input=hidden,
+                        action=action,
+                        old_log_prob=float(log_prob),
+                        old_value=float(value[0]),
+                        team_reward=1.0,
+                        individual_reward=-0.01 * agent_id,
+                        advanced_ticks=60,
+                        done=boundary == 1,
+                    )
+                )
+        episode = IPPOEpisodeRollout(1, "win", tuple(transitions))
+        config = {
+            "gamma_per_second": 0.99,
+            "gae_lambda": 0.95,
+            "minibatch_size": 3,
+            "ppo_epochs": 2,
+            "clip_ratio": 0.2,
+            "value_coefficient": 0.5,
+            "entropy_coefficient": 0.02,
+            "max_grad_norm": 0.5,
+        }
+        first = SharedRecurrentSelector(9601)
+        second = SharedRecurrentSelector(9601)
+        first_optimizer = torch.optim.Adam(first.parameters(), lr=0.0001, eps=1e-8)
+        second_optimizer = torch.optim.Adam(second.parameters(), lr=0.0001, eps=1e-8)
+        first_metrics = ippo_update(
+            first,
+            first_optimizer,
+            [episode],
+            config,
+            torch.Generator().manual_seed(9603),
+        )
+        second_metrics = ippo_update(
+            second,
+            second_optimizer,
+            [episode],
+            config,
+            torch.Generator().manual_seed(9603),
+        )
+        self.assertEqual(first_metrics, second_metrics)
+        self.assertEqual(model_state_digest(first), model_state_digest(second))
 
 
 if __name__ == "__main__":

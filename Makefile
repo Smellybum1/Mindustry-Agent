@@ -15,7 +15,7 @@ SCRIPTS := scripts
         determinism stress-reset benchmark scripted-demo evaluate-scripted \
         candidate-policy-check single-brain-failover-check \
         per-seat-history-check \
-        m9-shared-policy-check \
+        m9-shared-policy-check m9-reward-check m9-rollout-check m9-baseline \
         secondary-claim-wake-check \
         owned-schematic-staging-check coordination-parity \
         public-demo-parity \
@@ -41,6 +41,9 @@ help: ## List available targets
 	@echo "  single-brain-failover-check V47 live death-only control transfer"
 	@echo "  per-seat-history-check V48 live target-seat history-cache transfer"
 	@echo "  m9-shared-policy-check M9 all-seat shared-model teacher parity"
+	@echo "  m9-reward-check M9 per-seat reward adversary gate"
+	@echo "  m9-rollout-check M9 stochastic all-seat rollout/reset gate"
+	@echo "  m9-baseline M9 public fixed-role shared-expert baseline"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -102,6 +105,15 @@ per-seat-history-check: ## Verify V48's live per-seat history-cache transfer
 
 m9-shared-policy-check: ## Verify M9 all-seat shared-model teacher parity
 	@bash $(SCRIPTS)/m9-shared-policy-check.sh
+
+m9-reward-check: ## Verify M9 audited per-seat shaping adversaries
+	@bash $(SCRIPTS)/m9-reward-check.sh
+
+m9-rollout-check: ## Verify M9 stochastic all-seat rollout/reset
+	@bash $(SCRIPTS)/m9-rollout-check.sh
+
+m9-baseline: ## Freeze M9 public fixed-role shared-expert evidence
+	@bash $(SCRIPTS)/m9-baseline.sh
 
 secondary-claim-wake-check: ## Verify V35's fixed-seat claim-loss boundary
 	@bash $(SCRIPTS)/secondary-claim-wake-check.sh

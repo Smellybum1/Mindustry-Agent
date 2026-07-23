@@ -1225,10 +1225,23 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   team reward, one audited capped per-seat available-idle component, and
   public fixed-role comparison before implementation or training. The
   recipe/protocol hashes are `5d349b4a93f13342...` /
-  `1f53ad0dde01a543...`. The new reward remains
-  precommitted-not-implemented; six adversaries, trainer/reward implementation,
-  fixed baseline evidence, and the full gate are next. No M9 training episode
+  `1f53ad0dde01a543...`. The later implementation boundary below satisfies the
+  reward/adversary requirement; committed fixed-baseline evidence and the
+  final pretraining gate remain before replica A. No M9 training episode
   exists.
+- **M9 IPPO reward/rollout/optimizer boundary is green**: the hash-bound
+  recipe loader, cumulative per-seat available-idle accumulator, private-seat
+  GAE, and stored-hidden one-boundary PPO implementation pass the full Python
+  suite and six new adversaries (`f6b87fb96ccf206c...`). A stochastic
+  real-JVM episode produces 70 transitions and repeats exactly after terminal
+  combat reset (trace/report `7a084693a1f6512f...` /
+  `70284030cb0cc2b4...`). The probe found prior-combat Arc free-pool history;
+  reset now clears only free entries before reseeding entity IDs. The
+  regenerated golden changes 128 state hashes from checkpoint 535 and zero
+  actions/events/ticks/outcomes; fixture SHA is `c753376fbe6db2ec...`.
+  The 379-test Python suite, pinned Java checks, smoke, five-seed parity,
+  determinism, and 664-checkpoint golden pass. Exact training replicas have
+  not started.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1444,13 +1457,13 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement ADR-0070's exact IPPO reward/rollout/optimizer boundary.** Add
-   all six named individual-reward adversaries and manifest/failure coverage.
-2. **Freeze the fixed-role server-expert result on the exact public M9 dev
-   document.** Do this before replica A and bind its hashes into evidence.
-3. **Run the full pretraining gate before any training episode, then exact
-   replica A/B.** Use the frozen public M9 train/dev roots and preserve direct
-   replay/manifest lineage.
+1. **Review, commit, and push the green M9 reward/rollout/optimizer boundary.**
+   Exclude the four protected user files.
+2. **Re-run and freeze the fixed-role server-expert result from that exact
+   commit on the public M9 dev document.** Bind its hashes before replica A.
+3. **Implement and commit run/checkpoint manifests plus exact checkpoint
+   replay, then run the final pretraining gate.** Only after that run exact
+   replica A/B on the frozen M9 train/dev roots.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 5. **Do not start MAPPO or the learned human-session block.** IPPO must first

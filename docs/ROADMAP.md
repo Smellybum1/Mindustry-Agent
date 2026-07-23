@@ -2318,7 +2318,14 @@ reward, one audited capped per-seat available-idle cost, and a 40-root public
 comparison with the fixed-role server expert. The recipe/protocol hashes are
 `5d349b4a93f13342...` / `1f53ad0dde01a543...`. Reward/trainer implementation,
 six new adversaries, frozen baseline evidence, and the complete pretraining
-gate must be committed before replica A or any training episode.
+gate must be committed before replica A or any training episode. The
+reward/rollout/optimizer implementation is now green: per-seat cumulative
+charging, private-seat GAE, stored-hidden one-boundary PPO, all six adversaries,
+and stochastic terminal-reset replay pass. The reward/rollout report hashes are
+`f6b87fb96ccf206c...` / `70284030cb0cc2b4...`. A prior-combat Arc free-pool
+reset leak was fixed; the regenerated 664-checkpoint golden changes only 128
+state hashes, with zero action/event/tick/outcome changes. Exact replicas have
+not started.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

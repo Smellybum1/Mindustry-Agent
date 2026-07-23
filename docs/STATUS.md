@@ -2217,10 +2217,26 @@ repository-evidence mapping used for the M6 audit is:
 - The shared `selector_reward_v2` team reward remains exact. The only new
   component, `reward.agent.own_available_idle_ticks`, is audited at
   `-0.00025` per authoritative per-seat available-idle tick with a `-1.0`
-  per-seat cap. Its status is precommitted-not-implemented. Six named
-  adversaries, reward/trainer implementation, frozen baseline evidence, and
-  the full pretraining gate are required before replica A or any training
-  episode.
+  per-seat cap. Its cumulative-counter implementation now passes cap,
+  unavailable-zero, seat-isolation, exact chunking, rollback, and busywork
+  adversaries. Report SHA-256 is `f6b87fb96ccf206c...`.
+- Private-seat GAE and deterministic clipped PPO use each stored 64-value
+  hidden input for exactly one boundary. A stochastic real-JVM episode emits
+  70 transitions and repeats exactly after terminal combat reset; trace/report
+  hashes are `7a084693a1f6512f...` / `70284030cb0cc2b4...`.
+- That probe exposed free Arc objects carrying prior-combat allocation history
+  across reset. `RlServer` now clears only free pool entries after the outgoing
+  world is gone and before entity IDs are reseeded. The 664-checkpoint golden
+  was regenerated: 128 state hashes change from checkpoint 535, while actions,
+  task events, ticks, outcomes, and the 16,200-tick budget have zero changes.
+  The new fixture hash is `c753376fbe6db2ec...`.
+- Exact training replicas have not started. The fixed public baseline has been
+  diagnostically run but must be rebound to the committed implementation
+  before replica A. Run/checkpoint manifest orchestration and exact checkpoint
+  replay still need implementation before training.
+- Final implementation gates pass: 379 Python tests, pinned Java/custom-module
+  tests, smoke, five-seed direct/traversed M9 parity, stochastic terminal-reset
+  replay, cross-process/reset determinism, and the 664-checkpoint golden.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

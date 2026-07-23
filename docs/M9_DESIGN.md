@@ -87,8 +87,12 @@ pins, and dependency lock.
    decision, and public fixed-role comparison protocol. Implementation,
    adversaries, baseline evidence, and the full gate must be committed before
    training.
-3. IPPO construction: two independent runs reproduce checkpoint and replay
-   evidence.
+3. IPPO construction: reward/rollout/optimizer boundary complete 2026-07-23.
+   The hash-bound loader, per-seat cumulative reward, private-seat GAE,
+   stored-hidden one-boundary optimizer, stochastic real-JVM rollout, and six
+   individual-reward adversaries pass. The rollout repeats exactly after
+   terminal combat reset. Run/checkpoint manifest orchestration, two
+   independent training runs, and checkpoint replay evidence remain pending.
 4. Public development evaluation: the learned all-seat team must beat the
    fixed-role scripted baseline on at least one randomized scenario family
    before MAPPO work is authorized.
