@@ -1496,11 +1496,12 @@ queue.
 1. **Preserve ADR-0072's exact public rejection of `m9-ippo-v1`.** A1/B1
    completed and reproduce at full-run digest `186b7745c079f85a...`; neither
    selected a checkpoint.
-2. **Synthesize and prospectively precommit a separately named IPPO
-   successor.** The public evidence is train improvement with dev peaking at
-   16/40 on update 11 and then collapsing to zero.
-3. **Keep MAPPO blocked.** A qualifying public IPPO result is still required by
-   ADR-0008/0069/0070.
+2. **Implement ADR-0073's `m9-ippo-v2-sequence16` boundary.** Prove sequence
+   order, episode/seat/reset isolation, padding invariance, length-one v1
+   equivalence, and cross-boundary recurrent gradient flow.
+3. **Commit and pass the complete exact-commit v2 gate before replica A.**
+   Replica B runs only if A reaches 30/40 with idle `<0.25`; MAPPO remains
+   blocked until exact twins and paired public gates pass.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 5. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1508,7 +1509,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0072` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0073` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

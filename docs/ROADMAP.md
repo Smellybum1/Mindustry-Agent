@@ -2357,7 +2357,15 @@ return `-7.878245`, mean core `390.05`, and idle `0.14656396`; the fixed expert
 is 36/40. ADR-0072 therefore rejects `m9-ippo-v1` as an exact, public
 generalization failure. No checkpoint is selected, MAPPO remains unauthorized,
 and no confirmation or held-out data was accessed. A separately named
-prospective IPPO successor is required.
+prospective IPPO successor is required. ADR-0073 now precommits
+`m9-ippo-v2-sequence16` from that public evidence. The only learning change is
+16-boundary truncated recurrent backpropagation within deterministic
+episode/seat/reset windows; v1's model, runtime actions, reward, roots, budget,
+optimizer, RNGs, selection, and public comparator remain fixed. Config/protocol
+hashes are `266e50429902de0d...` / `ec9a69612b709290...`. No v2 trajectory,
+optimizer update, checkpoint, or changed model state exists. Implementation,
+focused sequence/reset/gradient/padding evidence, and the complete exact-commit
+gate are next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

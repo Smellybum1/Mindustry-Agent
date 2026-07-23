@@ -8,8 +8,12 @@ episode replicas A1/B1 completed with byte-identical manifests and canonical
 full-run digest `186b7745c079f85a...`. ADR-0072 rejects `m9-ippo-v1`: its best
 public checkpoint reached only 16/40 dev wins versus the required 30/40 and
 the fixed expert's 36/40. No checkpoint was selected, MAPPO is unauthorized,
-and no confirmation or held-out data was accessed. This document describes the
-target architecture and the staged evidence required before broader M9 claims.
+and no confirmation or held-out data was accessed. ADR-0073 prospectively
+freezes `m9-ippo-v2-sequence16`: the sole learning change is deterministic
+16-boundary truncated recurrent backpropagation within one seat and reset
+segment. Implementation and its exact-commit pretraining gate are next; no v2
+trajectory or model update exists. This document describes the target
+architecture and the staged evidence required before broader M9 claims.
 
 ## Scope
 
@@ -124,6 +128,12 @@ pins, and dependency lock.
    collapsed to zero while repeated-root training survival continued. ADR-0072
    records the reproducible public generalization failure. A separately
    governed IPPO successor is required; MAPPO remains blocked.
+   **V2 precommitted 2026-07-24:** ADR-0073 holds the v1 model, reward,
+   roots, budget, optimizer, RNGs, selection, and public comparison fixed while
+   replacing detached one-boundary optimization with deterministic sequence-16
+   windows. Windows cannot cross seats, episodes, or authoritative seat resets;
+   padding is loss-masked. Implementation, focused gradient/isolation tests,
+   and the complete exact-commit gate must pass before replica A.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

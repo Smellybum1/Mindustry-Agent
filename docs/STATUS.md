@@ -2291,6 +2291,15 @@ repository-evidence mapping used for the M6 audit is:
   and no held-out data was accessed. Compact result evidence is
   `configs/evaluation/m9-ippo-v1-replica-result.json`, SHA
   `7ea61a5bc3a62440...`.
+- ADR-0073 prospectively freezes `m9-ippo-v2-sequence16` as a one-mechanism
+  successor. V1 executed private recurrent state but detached every stored
+  hidden input during optimization; v2 alone propagates gradients through
+  deterministic windows of at most 16 same-seat boundaries, split at episodes
+  and authoritative seat resets, with padding loss-masked. Model, runtime
+  action boundary, rewards, roots, 2,048-episode budget, optimizer, RNGs,
+  construction bar, and public expert comparator remain exact. Config/protocol
+  hashes are `266e50429902de0d...` / `ec9a69612b709290...`. No v2 trajectory,
+  model update, checkpoint, confirmation, or held-out access exists.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
