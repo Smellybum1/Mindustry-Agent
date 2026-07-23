@@ -29,6 +29,7 @@ from mindustry_agents.training.ippo_ppo import (
     ippo_sequence_windows,
     ippo_update,
     load_ippo_v2_config,
+    sha256_path,
 )
 
 
@@ -188,7 +189,6 @@ def _worker(config_path: Path, output_dir: Path) -> dict[str, Any]:
         "checkpoint": {
             key: checkpoint[key]
             for key in (
-                "file_sha256",
                 "checkpoint_content_sha256",
                 "model_state_sha256",
                 "optimizer_state_sha256",
@@ -196,6 +196,10 @@ def _worker(config_path: Path, output_dir: Path) -> dict[str, Any]:
                 "parent_checkpoint_content_sha256",
             )
         },
+        "checkpoint_file_integrity_verified": (
+            checkpoint["file_sha256"]
+            == sha256_path(Path(checkpoint["path"]))
+        ),
         "loaded_checkpoint_content_sha256": payload[
             "checkpoint_content_sha256"
         ],
@@ -244,9 +248,6 @@ def _parent(config_path: Path, output: Path) -> dict[str, Any]:
             json.loads(path.read_text(encoding="utf-8"))
             for path in worker_paths
         ]
-    checkpoint_file_hashes = [
-        worker["checkpoint"].pop("file_sha256") for worker in workers
-    ]
     if workers[0] != workers[1]:
         raise RuntimeError("M9 v2 independent sequence workers diverged")
     worker = workers[0]
@@ -276,8 +277,10 @@ def _parent(config_path: Path, output: Path) -> dict[str, Any]:
         "optimizer_metrics": worker["metrics"],
         "checkpoint": {
             **worker["checkpoint"],
-            "file_sha256_by_process": checkpoint_file_hashes,
-            "file_integrity_verified": True,
+            "file_integrity_verified_in_both_processes": worker[
+                "checkpoint_file_integrity_verified"
+            ],
+            "raw_serializer_hash_excluded_from_replica_identity": True,
         },
         "confirmation_or_held_out_access": False,
     }
