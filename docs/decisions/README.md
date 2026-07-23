@@ -68,6 +68,9 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0061](ADR-0061-v44-lagged-boundary-context.md) | V44 lagged-boundary context |
 | [0062](ADR-0062-v45-residual-lagged-context.md) | V45 residual lagged context |
 | [0063](ADR-0063-v46-expert-defer-control.md) | V46 bounded expert-defer control |
+| [0064](ADR-0064-m8-reusable-scorecard-power.md) | M8 reusable-scorecard power correction |
+| [0065](ADR-0065-v47-single-brain-death-failover.md) | V47 single-brain death failover |
+| [0066](ADR-0066-v48-per-seat-history-cache.md) | V48 per-seat scripted history cache |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

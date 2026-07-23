@@ -1,0 +1,53 @@
+{
+  "schema": "m8_confirmation_evaluation_umbrella_v1",
+  "candidate_version": "v48",
+  "status": "reserved_before_membership_creation",
+  "access_owner": "primary_agent_only",
+  "delegation_forbidden": true,
+  "training_config": {
+    "path": "configs/training/m8-selector-v48-per-seat-history-cache.json",
+    "sha256": "714bd13db0ffee6f70c2d777f5bfa9c45221f77fe173cef35c15d3ead5441d2c"
+  },
+  "public_evidence": {
+    "path": "configs/evaluation/m8-selector-v47-reusable-v2-result.json",
+    "sha256": "d30226fb7ecd0a2d4320ad856ec104311a61ce65bb5d46981e36206eac9a7cb9"
+  },
+  "reusable_screen": {
+    "seed_set_id": "bootstrap-defense-v1-reusable-scorecard-v2",
+    "seed_set_version": 2,
+    "split": "dev",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-reusable-scorecard-v2.json",
+    "sha256": "c529951782ec0426f94671ece39824d0057e303c2aa7edc11b3610a63c7f86f3",
+    "role": "public_reusable_only"
+  },
+  "replacement_set": {
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v45",
+    "seed_set_version": 45,
+    "split": "dev",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v45.json",
+    "exclusive_namespace": {
+      "minimum_inclusive": 14000000000,
+      "maximum_exclusive": 15000000000
+    },
+    "membership_state_at_reservation": "not_created",
+    "exclusive_umbrella_attempt": "runs/m8-selector-v48-dev-v45-umbrella-attempt.json",
+    "replaces": "bootstrap-defense-v1-dev-v44"
+  },
+  "retired_sets": {
+    "dev_v42": "retired_unopened_unconsumed",
+    "dev_v44": "retired_unopened_unconsumed"
+  },
+  "sealed_final_binding": {
+    "seed_set_id": "bootstrap-defense-v1-held-out-v6",
+    "seed_set_version": 6,
+    "split": "held-out",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-held-out-v6.json",
+    "sha256": "2bf4aa04ef54d873e961ff367db849c14c72b83bb4d280c4e31ba75bdeefa51c",
+    "consumption_state": "sealed_unconsumed",
+    "membership_read_for_v48_reservation": false
+  }
+}

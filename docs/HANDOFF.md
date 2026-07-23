@@ -1143,6 +1143,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `8eb91b92dc36a22...`. Highest-living and frontier update 27/32 diagnostics
   also fail. Dev-v44 is retired unopened/unconsumed; held-out-v6 remains
   sealed.
+- **V48 per-seat history cache precommitted**: post-failover idle concentrates
+  when authority ends on seat 1, while V47 discards that scripted seat's prior
+  lagged context. ADR-0066 retains one brain and lowest-living death failover
+  but caches each seat's own authoritative boundary/action and adopts the
+  target cache on transfer. Feature/model/reward/control, roots, budget,
+  optimizer, RNGs, and gates remain exact. Config/umbrella hashes are
+  `714bd13db0ffee6f...` / `656602be6dd5c3cf...`. Dev-v45 is reserved in
+  `[14B,15B)` but unconstructed. Commit the design packet before implementation.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1357,11 +1365,10 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit V47's public rejection packet.** Never read or render retired
-   dev-v44 membership; exclude the four protected user files.
-2. **Precommit one V48 causal adapter coordinate.** Preserve one brain and
-   lowest-living failover, but cache each scripted seat's authoritative prior
-   boundary instead of resetting temporal history on transfer.
+1. **Commit the V48 design packet.** Never read or render retired dev-v44
+   membership; exclude the four protected user files.
+2. **Implement the exact per-seat history cache.** Preserve one model
+   evaluation/action and every V47 invariant.
 3. **Complete V48 implementation/public gates before any new membership.**
    No freezer or training may precede the committed boundary.
 4. **Keep held-out-v6 sealed.** No V47 result authorizes final access.

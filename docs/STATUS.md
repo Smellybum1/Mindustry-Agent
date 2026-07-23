@@ -2097,6 +2097,15 @@ repository-evidence mapping used for the M6 audit is:
   `8eb91b92dc36a22...`. Highest-living failover and frontier updates 27/32 also
   fail the unchanged scorecard. Dev-v44 is retired unopened/unconsumed,
   held-out-v6 remains sealed, and no restricted membership was read.
+- ADR-0066 precommits V48's per-seat scripted history cache. V47's one brain,
+  sticky lowest-living death failover, feature/model/reward/control schemas,
+  roots, 2,048-episode budget, optimizer, RNGs, and gates remain exact. Each
+  seat instead records its own prior authoritative structured boundary and
+  submitted scripted/effective action; failover adopts the target seat cache
+  rather than resetting to zeros. One model evaluation and one learned action
+  remain the maximum per boundary. Config/umbrella hashes are
+  `714bd13db0ffee6f...` / `656602be6dd5c3cf...`. Dev-v45 is reserved in
+  `[14B,15B)` but unconstructed. No V48 code or training has begun.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

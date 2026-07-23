@@ -1088,6 +1088,17 @@ paired interval still crosses zero. The remaining variance concentrates after
 failover, especially when authority ends on seat 1. V47's mandatory history
 reset discards that surviving seat's immediately prior scripted boundary.
 
+ADR-0066 precommits V48's single causal coordinate. The one learned brain and
+lowest-living failover remain exact, but every seat maintains a reset-local
+structured `SelectorHistory` cache from its own submitted scripted or learned
+action. On death transfer, the brain adopts the target living seat's real prior
+boundary instead of all zeros. There is still one model evaluation and one
+learned action per boundary; feature/model/reward/control schemas, roots,
+budget, optimizer, and RNGs remain V47-exact. Config/umbrella hashes are
+`714bd13db0ffee6f...` / `656602be6dd5c3cf...`. Dev-v45 is reserved in
+`[14B,15B)` but unconstructed. No V48 implementation or model work preceded
+this precommit.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

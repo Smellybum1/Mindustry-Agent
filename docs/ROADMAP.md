@@ -2214,6 +2214,17 @@ failover, especially when authority ends on seat 1; V47 resets and discards the
 surviving scripted seat's prior temporal context. A successor requires a new
 precommit before implementation or training. M8.5 remains unmet.
 
+ADR-0066 now precommits V48 from that public mechanism. V47's exactly one
+learned brain and sticky lowest-living death failover remain, but all seats
+maintain reset-local structured history from their own authoritative prior
+boundary and submitted action. On transfer the brain adopts the target living
+seat's cache instead of all zeros. Feature/model/reward/control schemas,
+training roots, 2,048-episode budget, optimizer, RNGs, and every gate remain
+exact. Config/umbrella hashes are `714bd13db0ffee6f...` /
+`656602be6dd5c3cf...`. Dev-v45 is reserved in `[14B,15B)` but unconstructed;
+dev-v44 remains retired unopened and held-out-v6 remains sealed. Commit the
+design packet before implementation. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
