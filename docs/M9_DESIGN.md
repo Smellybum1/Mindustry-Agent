@@ -246,8 +246,13 @@ pins, and dependency lock.
    fresh JVMs, descriptive chosen-action probability/top-two logit margins,
    and exact retained-versus-eroded classification. Protocol SHA is
    `9a9b44e36a22d68d...`. Its fail-closed runner, measurement path,
-   classification, command, and four focused tests are implemented in the
-   current boundary; no diagnostic episode has run.
+   classification, command, and four focused tests are implemented at
+   `e0efa3ac70`; all 434 Python tests pass. Two fresh JVMs reproduce exactly:
+   update 7 is 1/40 argmax and 51/160 categorical, while update 32 is 0/40
+   argmax but 62/160 categorical. ADR-0086 accepts retained stochastic success
+   without deterministic consolidation. Compact result SHA is
+   `0c0cbe21a53bf7d6...`; no restricted access occurred. A separately
+   precommitted strongest-alternative margin mechanism is next.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

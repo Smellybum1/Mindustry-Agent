@@ -1,0 +1,131 @@
+{
+  "schema": "m9_ippo_v5_mode_margin_diagnostic_result_v1",
+  "implementation_commit": "e0efa3ac70f8f66d12c4e7dd72d21229a509683d",
+  "data_classification": "public_dev_only",
+  "protocol_sha256": "9a9b44e36a22d68dcc37216db377ff29fcecf9ad6525e2d89bd6092a694dad0b",
+  "full_report": {
+    "path": "runs/m9-ippo-v5-mode-margin-diagnostic.json",
+    "sha256": "bf85941900cf609a7876b9b322ee02f252968c8c02c3a6f50a6c64ecfc4f1150",
+    "fresh_jvm_runs": 2,
+    "fresh_jvm_runs_equal": true,
+    "run_sha256": "1cfd3679cbebaaae8e11d99c1b202c3f47614805f2ad4a48d62cb4b3d40f137c"
+  },
+  "source": {
+    "candidate_version": "m9-ippo-v5-success-imitation",
+    "candidate_status": "rejected",
+    "training_commit": "84af0016f69f31a5d3b416ee95ad14c6fd9c9b42",
+    "result_sha256": "f969cb595526763cdf6e9f2938910c3319108680751a24cf2ade6cf869012b55",
+    "manifest_sha256": "cdf0c86e3b5f5fa89952683acc904683c7b48c92d762f59c9132bc86aa2f83b6"
+  },
+  "update_7": {
+    "checkpoint_content_sha256": "1161f5dd99ca6b6df046636ce4aa92414722b9304df6313ab8aed363752e2c84",
+    "model_state_sha256": "b1a492286a8bedfbcbe53afe8ddceb1b0534689e50071e7380e43703a60d2a47",
+    "model_unchanged": true,
+    "deterministic_argmax": {
+      "episodes": 40,
+      "wins": 1,
+      "mean_team_return": -18.24675,
+      "mean_core_health": 23.0,
+      "mean_team_idle_fraction": 0.3876057735814631,
+      "action_mode_measurements": {
+        "loss": {
+          "transition_count": 505,
+          "mean_chosen_action_probability": 0.3124735426194597,
+          "mean_top_two_logit_margin": 0.15682000972256802
+        },
+        "win": {
+          "transition_count": 46,
+          "mean_chosen_action_probability": 0.32694090967592987,
+          "mean_top_two_logit_margin": 0.1938659833825153
+        }
+      }
+    },
+    "stochastic_categorical": {
+      "episodes": 160,
+      "wins": 51,
+      "mean_team_return": -10.251538749999996,
+      "mean_core_health": 260.2875,
+      "mean_team_idle_fraction": 0.16154170421802977,
+      "stream_wins": [11, 10, 17, 13],
+      "action_mode_measurements": {
+        "loss": {
+          "transition_count": 3215,
+          "mean_chosen_action_probability": 0.3641878616754226,
+          "mean_top_two_logit_margin": 0.4538535543029453
+        },
+        "win": {
+          "transition_count": 2464,
+          "mean_chosen_action_probability": 0.33826546506448224,
+          "mean_top_two_logit_margin": 0.3886892816850117
+        }
+      }
+    }
+  },
+  "update_32": {
+    "checkpoint_content_sha256": "8afa87d33bfae9e17d309d23e50fdfe7c443bad47a0900f89d807d60addf6b8a",
+    "model_state_sha256": "7f4d29fa05c408f7bbacd5eff057c7e6defcfa0c0c549a26c4862bab44d0dd6f",
+    "model_unchanged": true,
+    "deterministic_argmax": {
+      "episodes": 40,
+      "wins": 0,
+      "mean_team_return": -18.8629,
+      "mean_core_health": 0.0,
+      "mean_team_idle_fraction": 0.32837356546128665,
+      "action_mode_measurements": {
+        "loss": {
+          "transition_count": 834,
+          "mean_chosen_action_probability": 0.46765335286549814,
+          "mean_top_two_logit_margin": 0.3979535846115588
+        },
+        "win": {
+          "transition_count": 0,
+          "mean_chosen_action_probability": null,
+          "mean_top_two_logit_margin": null
+        }
+      }
+    },
+    "stochastic_categorical": {
+      "episodes": 160,
+      "wins": 62,
+      "mean_team_return": -7.409766249999997,
+      "mean_core_health": 352.225,
+      "mean_team_idle_fraction": 0.10307003972372272,
+      "stream_wins": [17, 10, 16, 19],
+      "action_mode_measurements": {
+        "loss": {
+          "transition_count": 2743,
+          "mean_chosen_action_probability": 0.44031893064017025,
+          "mean_top_two_logit_margin": 1.5798957646001746
+        },
+        "win": {
+          "transition_count": 3050,
+          "mean_chosen_action_probability": 0.42454807985024373,
+          "mean_top_two_logit_margin": 1.5374214747694672
+        }
+      }
+    }
+  },
+  "classification": {
+    "categorical_win_retention_numerator": 62,
+    "categorical_win_retention_denominator": 51,
+    "categorical_win_retention_fraction": 1.2156862745098038,
+    "retained_without_consolidation_signal": true,
+    "success_distribution_eroded_signal": false,
+    "outcome": "stochastic_success_retained_without_deterministic_consolidation"
+  },
+  "decision": {
+    "v5_status": "rejected",
+    "checkpoint_selection_authorized": false,
+    "replica_b_authorized": false,
+    "mappo_authorized": false,
+    "training_authorized": false,
+    "promotion_authorized": false,
+    "next_direction": "precommit_one_deterministic_margin_alignment_mechanism"
+  },
+  "restricted_state": {
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0,
+    "confirmation_or_held_out_access": false,
+    "m8_held_out_v7": "sealed_unconsumed"
+  }
+}

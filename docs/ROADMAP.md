@@ -2476,8 +2476,13 @@ legal-logit margins, and integer-only retained-versus-eroded classification.
 Protocol SHA is `9a9b44e36a22d68d...`. It cannot select, repair, train,
 promote, or access restricted data. The fail-closed two-JVM runner,
 action-mode measurement, exact classification, command surface, and four
-focused tests are implemented in the current boundary. No diagnostic episode
-has run.
+focused tests are implemented at `e0efa3ac70`; all 434 Python tests pass. Two
+fresh JVMs reproduce exactly at digest `1cfd3679cbebaaae...`: update 7 is 1/40
+argmax and 51/160 categorical, while update 32 is 0/40 argmax but 62/160
+categorical. ADR-0086 accepts retained stochastic success without deterministic
+consolidation, keeps v5 rejected, and authorizes only a separately precommitted
+strongest-alternative margin mechanism. Compact result SHA is
+`0c0cbe21a53bf7d6...`; no restricted access occurred.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

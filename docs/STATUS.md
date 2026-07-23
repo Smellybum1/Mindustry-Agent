@@ -2432,7 +2432,13 @@ repository-evidence mapping used for the M6 audit is:
   `9a9b44e36a22d68d...`. It has no training, selection, promotion, confirmation,
   or held-out authority. The fail-closed two-JVM runner, action-mode
   measurement, exact classification, command surface, and four focused tests
-  are implemented in the current boundary. No diagnostic episode has run.
+  are implemented at `e0efa3ac70`; all 434 Python tests pass. The exact two-JVM
+  matrix then reproduced at digest `1cfd3679cbebaaae...`: update 7 scored 1/40
+  argmax and 51/160 categorical; update 32 scored 0/40 argmax but improved to
+  62/160 categorical. ADR-0086 accepts retained stochastic success without
+  deterministic consolidation and keeps v5 rejected. Compact result SHA is
+  `0c0cbe21a53bf7d6...`. No restricted data was accessed. A separately
+  precommitted strongest-alternative margin mechanism is the next direction.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
