@@ -2251,9 +2251,10 @@ repository-evidence mapping used for the M6 audit is:
   command must pass before replica A.
 - Current Python regression passes 382 tests. Prior pinned Java/custom-module
   tests, smoke, five-seed direct/traversed M9 parity, stochastic terminal-reset
-  replay, cross-process/reset determinism, and the 664-checkpoint golden pass;
-  the complete combined command awaits execution from its exact implementation
-  commit.
+  replay, cross-process/reset determinism, and the 664-checkpoint golden pass.
+  The complete gate passed from exact commit `2b62f7e5d7`; its versioned
+  public-only result has SHA `e0281b195eb87be...`, records no sealed-data
+  access, and authorizes replica A. No M9 training episode has run yet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

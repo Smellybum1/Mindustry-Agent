@@ -2332,8 +2332,12 @@ return `-1.641725`, idle `1.0`, and exact terminal-reset replay. Evidence SHA is
 implemented. Cross-process checkpoint content, fresh-JVM trace, and manifest
 digests are `0d391dea0287ea28...`, `f85b6d34835594b0...`, and
 `64ca9645816d99f8...`; public-only artifact report SHA is
-`2a5b536ce71d07ee...`. The complete `m9-pretraining-check` command is the final
-gate before replica A and has not yet authorized a training episode.
+`2a5b536ce71d07ee...`. The complete `m9-pretraining-check` passed from exact
+implementation commit `2b62f7e5d7`: Python/Java, focused M9 checks, smoke,
+cross-process/reset determinism, and the 664-checkpoint golden replay are green.
+The versioned public-only preflight result has SHA `e0281b195eb87be...` and
+records no confirmation or held-out access. Replica A is now authorized, but no
+training episode has run yet.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

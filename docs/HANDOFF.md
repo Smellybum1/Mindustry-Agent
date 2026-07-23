@@ -1257,7 +1257,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `2a5b536ce71d07ee...`. The combined `m9-pretraining-check` atomically writes
   `runs/m9-ippo-preflight.json`, including the exact implementation commit and
   gate inventory. Its Java phase is CRLF-safe in a shared Windows/WSL checkout
-  without editing upstream `gradlew`. It must run in full before replica A.
+  without editing upstream `gradlew`. The full gate passed from commit
+  `2b62f7e5d7`; the versioned public-only result SHA is `e0281b195eb87be...`,
+  records no sealed-data access, and authorizes replica A. No training episode
+  has run yet.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1473,11 +1476,11 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Run the complete `m9-pretraining-check` from the exact gate commit.**
-   Preserve the generated implementation-bound preflight result.
-2. **Version the passing preflight evidence and keep status/handoff truthful.**
-3. **Run exact replica A/B only after the complete gate passes.** Use frozen M9 train/dev
-   roots and preserve direct replay/manifest lineage.
+1. **Implement and review the governed exact M9 replica runner.** Preserve the
+   accepted 32-cycle/64-episode recipe and checkpoint lineage.
+2. **Gate and commit the runner before its first training episode.**
+3. **Run exact replica A/B.** Use frozen M9 train/dev roots and preserve direct
+   replay/manifest lineage.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 5. **Do not start MAPPO or the learned human-session block.** IPPO must first
