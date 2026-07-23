@@ -17,6 +17,9 @@ from mindustry_agents.training.ippo_entropy_check import (
 from mindustry_agents.training.ippo_success_imitation_check import (
     build_report as build_success_imitation_report,
 )
+from mindustry_agents.training.ippo_success_margin_check import (
+    build_report as build_success_margin_report,
+)
 from mindustry_agents.training.ippo_ppo import (
     IPPO_V1_CONFIG_SHA256,
     IPPO_V1_PROTOCOL_SHA256,
@@ -28,11 +31,14 @@ from mindustry_agents.training.ippo_ppo import (
     IPPO_V4_PROTOCOL_SHA256,
     IPPO_V5_CONFIG_SHA256,
     IPPO_V5_PROTOCOL_SHA256,
+    IPPO_V6_CONFIG_SHA256,
+    IPPO_V6_PROTOCOL_SHA256,
     load_ippo_v1_config,
     load_ippo_v2_config,
     load_ippo_v3_config,
     load_ippo_v4_config,
     load_ippo_v5_config,
+    load_ippo_v6_config,
     sha256_path,
 )
 
@@ -72,6 +78,12 @@ EXPECTED_V5 = {
     **EXPECTED_V4,
     "configs/evaluation/m9-ippo-v5-success-imitation-optimizer-check.json": (
         "c8676245cee741f0d2971543f3f4789522f8d8f25de8e34d54b6114ad150dd00"
+    ),
+}
+EXPECTED_V6 = {
+    **EXPECTED_V4,
+    "configs/evaluation/m9-ippo-v6-success-margin-optimizer-check.json": (
+        "4dc0463838756789c8e5a3b7e15a5b038a1095132379c4fe82059210ba26798a"
     ),
 }
 
@@ -247,6 +259,12 @@ def _entropy_identity(report: dict[str, Any]) -> dict[str, Any]:
 def _success_imitation_identity(
     report: dict[str, Any],
 ) -> dict[str, Any]:
+    result = copy.deepcopy(report)
+    result.pop("implementation_commit", None)
+    return result
+
+
+def _success_margin_identity(report: dict[str, Any]) -> dict[str, Any]:
     result = copy.deepcopy(report)
     result.pop("implementation_commit", None)
     return result
@@ -548,6 +566,82 @@ def validate_v5_preflight(root: Path | None = None) -> dict[str, Any]:
     }
 
 
+def validate_v6_preflight(root: Path | None = None) -> dict[str, Any]:
+    """Validate ADR-0087's public success-margin boundary."""
+
+    root = root or repo_root()
+    config_path = root / "configs/training/m9-ippo-v6-success-margin.json"
+    config = load_ippo_v6_config(config_path)
+    protocol_path = root / config["public_evaluation_protocol"]
+    if sha256_path(protocol_path) != IPPO_V6_PROTOCOL_SHA256:
+        raise ValueError("M9 v6 public protocol hash drifted")
+    if sha256_path(config_path) != IPPO_V6_CONFIG_SHA256:
+        raise ValueError("M9 v6 config hash drifted")
+    if (
+        config["confirmation_seed_set"] is not None
+        or config["held_out_seed_set"] is not None
+    ):
+        raise ValueError("M9 v6 pretraining config gained sealed-data authority")
+
+    inherited = validate_v4_preflight(root)
+    baseline = _load(
+        root, "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json"
+    )
+    relative = (
+        "configs/evaluation/m9-ippo-v6-success-margin-optimizer-check.json"
+    )
+    committed_path = root / relative
+    if sha256_path(committed_path) != EXPECTED_V6[relative]:
+        raise ValueError("M9 v6 committed success-margin evidence hash drifted")
+    committed = json.loads(committed_path.read_text(encoding="utf-8"))
+    current_path = root / "runs/m9-ippo-v6-success-margin-check.json"
+    current = json.loads(current_path.read_text(encoding="utf-8"))
+    expected = build_success_margin_report(root)
+    commit = _project_commit(root)
+    metrics = committed.get("optimizer", {}).get("metrics", {})
+    if (
+        inherited.get("passed") is not True
+        or inherited.get("confirmation_or_held_out_access") is not False
+        or current != expected
+        or committed.get("schema") != "m9_ippo_v6_success_margin_check_v1"
+        or committed.get("implementation_commit")
+        != "05e6b487727cbefae8f104838dd2a428ee9511c4"
+        or committed.get("config_sha256") != IPPO_V6_CONFIG_SHA256
+        or committed.get("protocol_sha256") != IPPO_V6_PROTOCOL_SHA256
+        or committed.get("semantic_inheritance_exact") is not True
+        or committed.get("optimizer", {}).get("independent_runs_exact")
+        is not True
+        or metrics.get("success_margin_coefficient") != 0.02
+        or metrics.get("success_margin_target") != 0.1
+        or metrics.get("success_margin_qualifying_episodes") != 1.0
+        or metrics.get("success_margin_qualifying_transitions") != 1.0
+        or metrics.get("success_margin_active_minibatches") != 8.0
+        or committed.get("all_passed") is not True
+        or committed.get("confirmation_or_held_out_access") is not False
+        or current.get("implementation_commit") != commit
+        or _success_margin_identity(current)
+        != _success_margin_identity(committed)
+    ):
+        raise ValueError(
+            "M9 v6 success-margin evidence is incomplete or divergent"
+        )
+    return {
+        "schema": "m9_ippo_v6_preflight_v1",
+        "implementation_commit": commit,
+        "success_margin_implementation_commit": committed[
+            "implementation_commit"
+        ],
+        "config_sha256": IPPO_V6_CONFIG_SHA256,
+        "protocol_sha256": IPPO_V6_PROTOCOL_SHA256,
+        "artifacts": EXPECTED_V6,
+        "gates": list(V6_GATES),
+        "public_baseline_wins": baseline["aggregate"]["wins"],
+        "success_margin_probe_sha256": current["optimizer"]["probe_sha256"],
+        "confirmation_or_held_out_access": False,
+        "passed": True,
+    }
+
+
 def write_preflight(
     path: Path,
     root: Path | None = None,
@@ -562,6 +656,8 @@ def write_preflight(
         result = validate_v4_preflight(root)
     elif candidate == "v5":
         result = validate_v5_preflight(root)
+    elif candidate == "v6":
+        result = validate_v6_preflight(root)
     else:
         result = validate_preflight(root)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -585,7 +681,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--candidate",
-        choices=("v1", "v2", "v3", "v4", "v5"),
+        choices=("v1", "v2", "v3", "v4", "v5", "v6"),
         default="v1",
     )
     args = parser.parse_args()
@@ -593,18 +689,22 @@ def main() -> int:
         write_preflight(args.output, candidate=args.candidate)
         if args.output is not None
         else (
-            validate_v5_preflight()
-            if args.candidate == "v5"
+            validate_v6_preflight()
+            if args.candidate == "v6"
             else (
-                validate_v4_preflight()
-                if args.candidate == "v4"
+                validate_v5_preflight()
+                if args.candidate == "v5"
                 else (
-                    validate_v2_preflight()
-                    if args.candidate == "v2"
+                    validate_v4_preflight()
+                    if args.candidate == "v4"
                     else (
-                        validate_v3_preflight()
-                        if args.candidate == "v3"
-                        else validate_preflight()
+                        validate_v2_preflight()
+                        if args.candidate == "v2"
+                        else (
+                            validate_v3_preflight()
+                            if args.candidate == "v3"
+                            else validate_preflight()
+                        )
                     )
                 )
             )

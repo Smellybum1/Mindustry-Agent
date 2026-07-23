@@ -257,7 +257,11 @@ pins, and dependency lock.
    `0.02`, target `0.1` hinge loss that pushes each current-update winning
    actor action above the strongest other legal action. V5's NLL is absent.
    Config/protocol SHA prefixes are `bd8e84acd0e340b6...` /
-   `f0adddd4c8b2127a...`. No v6 implementation or trajectory exists.
+   `f0adddd4c8b2127a...`. Implementation commit `05e6b48772` adds the exact
+   margin/filter/telemetry and preserves v1--v5. Nine focused tests and fresh
+   byte-identical CPU probes pass; report SHA is `4dc0463838756789...` and
+   optimizer digest is `c11f5ecf0de81d2f...`. The full public gate remains
+   before Replica A; no v6 environment trajectory exists.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

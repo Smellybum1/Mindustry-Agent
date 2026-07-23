@@ -1,0 +1,30 @@
+{
+  "all_passed": true,
+  "candidate_version": "m9-ippo-v6-success-margin",
+  "config_sha256": "bd8e84acd0e340b61933677608395da3b8d214469e89841ecfa1fd47fde8114b",
+  "confirmation_or_held_out_access": false,
+  "implementation_commit": "05e6b487727cbefae8f104838dd2a428ee9511c4",
+  "optimizer": {
+    "independent_runs_exact": true,
+    "metrics": {
+      "batches": 8.0,
+      "entropy": 2.3021954894065857,
+      "entropy_coefficient": 0.01032258064516129,
+      "policy_loss": -0.030405651777982712,
+      "success_margin_active_minibatches": 8.0,
+      "success_margin_coefficient": 0.02,
+      "success_margin_mean_active_minibatch_loss": 0.20170831121504307,
+      "success_margin_qualifying_episodes": 1.0,
+      "success_margin_qualifying_transitions": 1.0,
+      "success_margin_target": 0.1,
+      "value_loss": 0.8899920657277107
+    },
+    "model_state_sha256": "3ef15f1ee5ae76d75246a9f95949606bed016c22baed0bf1254b1f22612e454d",
+    "probe_sha256": "c11f5ecf0de81d2f305643fdb62ab9284fb728c191475392fb739c375d1d8d17"
+  },
+  "parent_config_sha256": "9b9495e03b11e0fdae744fefd64f65de513b85093cf96e2a088ac4235766d215",
+  "parent_protocol_sha256": "db9b5647f249d30889b911a075905a78f4ba9ccef5613bc25d09126e1d1e7ace",
+  "protocol_sha256": "f0adddd4c8b2127af68a55dff80610363a8b7c5e629049b5caba5a3a311b55ac",
+  "schema": "m9_ippo_v6_success_margin_check_v1",
+  "semantic_inheritance_exact": true
+}

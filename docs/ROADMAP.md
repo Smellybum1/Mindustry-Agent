@@ -2488,8 +2488,12 @@ training. V6 inherits v4 and adds only coefficient `0.02`, target `0.1`
 `relu(target - (sampled_logit - strongest_other_legal_logit))` over
 current-update winning actor transitions in every existing PPO minibatch.
 V5's NLL is absent. Config/protocol SHA prefixes are `bd8e84acd0e340b6...` /
-`f0adddd4c8b2127a...`. No v6 implementation, trajectory, or restricted access
-exists.
+`f0adddd4c8b2127a...`. Implementation commit `05e6b48772` preserves v1--v5
+and adds exact strongest-other loss/filter/telemetry, candidate-aware
+artifact/authority paths, and a fail-closed CPU runner. Nine focused tests
+pass; twin synthetic reports are byte-identical at SHA `4dc0463838756789...`
+and optimizer digest `c11f5ecf0de81d2f...`. The complete public gate is next;
+no v6 environment trajectory or restricted access exists.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

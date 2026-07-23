@@ -2444,8 +2444,13 @@ repository-evidence mapping used for the M6 audit is:
   `0.1` hinge that pushes each current-update winning actor action above the
   strongest other legal action. V5's NLL is absent; no replay, pass, teacher,
   RNG, root, reward, or restricted data is added. Config/protocol SHA prefixes
-  are `bd8e84acd0e340b6...` / `f0adddd4c8b2127a...`. No v6 trajectory or model
-  update exists.
+  are `bd8e84acd0e340b6...` / `f0adddd4c8b2127a...`. Implementation commit
+  `05e6b48772` preserves v1--v5 and adds exact margin/filter/telemetry,
+  candidate-aware artifact and authority paths, and a fail-closed CPU runner.
+  Nine focused tests pass. Two fresh synthetic runs reproduce byte-identically;
+  report SHA is `4dc0463838756789...` and optimizer digest is
+  `c11f5ecf0de81d2f...`. The complete public gate remains before Replica A. No
+  v6 environment trajectory or restricted access exists.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

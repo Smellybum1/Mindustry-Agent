@@ -28,11 +28,13 @@ class TestIPPOSuccessMargin(unittest.TestCase):
         cls.config = load_ippo_v6_config(cls.config_path)
 
     def test_config_protocol_and_v4_inheritance_are_exact(self):
+        from mindustry_agents.training.ippo_preflight import EXPECTED_V6
         from mindustry_agents.training.ippo_ppo import (
             IPPO_V6_CONFIG_SHA256,
             IPPO_V6_PROTOCOL_SHA256,
             config_sha256,
             protocol_sha256,
+            sha256_path,
         )
         from mindustry_agents.training.ippo_success_margin_check import (
             build_report,
@@ -53,6 +55,23 @@ class TestIPPOSuccessMargin(unittest.TestCase):
         self.assertTrue(report["semantic_inheritance_exact"])
         self.assertTrue(report["optimizer"]["independent_runs_exact"])
         self.assertFalse(report["confirmation_or_held_out_access"])
+        evidence = (
+            self.root
+            / "configs/evaluation/"
+            "m9-ippo-v6-success-margin-optimizer-check.json"
+        )
+        self.assertEqual(
+            sha256_path(evidence),
+            EXPECTED_V6[
+                "configs/evaluation/"
+                "m9-ippo-v6-success-margin-optimizer-check.json"
+            ],
+        )
+        committed = json.loads(evidence.read_text(encoding="utf-8"))
+        self.assertEqual(
+            committed["implementation_commit"],
+            "05e6b487727cbefae8f104838dd2a428ee9511c4",
+        )
 
     def test_strongest_other_hinge_excludes_sampled_and_illegal(self):
         import torch

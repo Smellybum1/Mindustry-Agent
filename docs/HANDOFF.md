@@ -1359,6 +1359,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make m9-v5-pretraining-check` | Runs every public-only gate required before v5 Replica A and writes exact-current-commit authority. Passed at `84af0016f6`. |
 | `make train-m9-ippo-v5` | Reconstructs the pinned CPU runtime, requires exact-current-commit v5 authority, runs A first, and prohibits B unless A passes construction. A completed and failed at a best 1/40; B is prohibited by ADR-0084. |
 | `make m9-v5-mode-margin-diagnostic` | Runs ADR-0085's rejected-v5 update-7/32 argmax/categorical matrix twice in fresh JVMs and records actor-valid chosen-action probability/top-two logit margins. Exact result: 51/160 to 62/160 categorical despite 1/40 to 0/40 argmax; retained without deterministic consolidation. |
+| `make m9-success-margin-check` | Verifies ADR-0087's exact v4 inheritance, strongest-other hinge, winning actor filter, telemetry, and deterministic twin optimizer result. Committed report SHA is `4dc0463838756789...`. |
+| `make m9-v6-pretraining-check` | Runs every public-only gate required before v6 Replica A and writes exact-current-commit authority. Not yet run at the evidence commit. |
+| `make train-m9-ippo-v6` | Reconstructs the pinned CPU runtime, requires exact-current-commit v6 authority, runs A first, and prohibits B unless A passes construction. Not yet run. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
 | `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
@@ -1534,8 +1537,11 @@ queue.
    deterministic evaluation exact; do not add NLL, replay, teacher data, or
    restricted authority. ADR-0087 and config/protocol SHA prefixes
    `bd8e84acd0e340b6...` / `f0adddd4c8b2127a...` now bind coefficient `0.02`
-   and target margin `0.1`. Implement its exact optimizer, telemetry,
-   artifacts, authority, runner, and tests before any v6 training.
+   and target margin `0.1`. Implementation commit `05e6b48772` and
+   byte-identical CPU evidence are bound by report SHA
+   `4dc0463838756789...`. Run the complete exact-current-commit public gate,
+   then only the full immutable v6 Replica A. Replica B remains fail-closed
+   unless A passes 30/40 and idle `<0.25`.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
