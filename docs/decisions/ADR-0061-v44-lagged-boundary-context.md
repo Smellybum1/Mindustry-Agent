@@ -141,3 +141,36 @@ the receipt reports `values_emitted=false`, zero membership-document reads, and
 no generated, retired-confirmation, or sealed-final read. Dev-v40 is frozen
 unconsumed. Replica A remains prohibited until this membership/receipt packet
 is committed.
+
+## Outcome
+
+The membership/receipt packet was committed at `b510cc48a1` before model work.
+Two independent pinned WSL Torch 2.12.1 constructions from that exact commit
+select update 1 at 9/10 reusable wins, mean return `3.68136`, mean core health
+`450.9`, and mean idle `0.07252723633246042`. All 32 checkpoint files and the
+canonical manifests reproduce exactly. Checkpoint, model-state, replay, and
+full-run hashes are
+`4e51d31bd4f33a675d11d89f57c4e958b7d24ce989c1986d50aa32479fcd60ff`,
+`c484b19a9dcd7411ab4841c21bb40f82c6080ce0bc2757c76c2382c166a7a45a`,
+`a5ac208b8ea91f19...`, and
+`029e77830406127a87cd20016c92cfe96339c03892547d8f9e617dc3377e195e`.
+Direct-lineage digest/artifact hashes are `aa799280368304ae...` /
+`d0870fd199d0233e...`.
+
+Fresh permanent random/greedy baselines remain 4/10 and 8/10. V44 is 9/10
+versus matched random/greedy 5/10 and 6/10, so every observed win comparison
+passes. The temporal coordinate makes matched announcements decisively
+favorable and retains decisive permanent recovery, but the frozen dual
+scorecards reject V44: permanent idle decisively regresses (mean
+`+0.05680669`, CI `[+0.04001655,+0.07345166]`); permanent announcements and
+duplicates are uncertain; and matched duplicates, idle, and recovery are
+uncertain. Records/aggregate/report hashes are `3ec9dfa9504f93e2...` /
+`b364484245ec0213...` / `260625f302f3e268...`.
+
+The frontier explains the architecture failure rather than a checkpoint-ranking
+failure: update 1 is the only 9-win checkpoint; later updates fall to 4-8 wins.
+The 160->64 scalar encoder displaced V43's dedicated current-state path and the
+construction collapses after its early checkpoint. V44 is rejected before
+confirmation. Dev-v40 is retired unopened and unconsumed without a membership
+read. Held-out-v6 remains sealed and unconsumed. A successor must preserve the
+V43 current-state path and add temporal information as a bounded residual.

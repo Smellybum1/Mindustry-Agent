@@ -996,6 +996,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   hashes are `05ca1f48227581fc...` / `acffc919ab1c40e2...`; the value-free
   receipt records zero document reads and no emitted values. Dev-v40 remains
   unconsumed. Commit this packet before replica A.
+- **V44 exact replicas complete; reusable gate rejects**: both pinned runs
+  select update 1 at 9/10 wins and mean idle `0.07252724`; all 32 checkpoints
+  and canonical evidence match. Checkpoint/replay/full-run hashes are
+  `4e51d31bd4f33a67...` / `a5ac208b8ea91f19...` /
+  `029e77830406127a...`; lineage is `aa799280368304ae...`. All observed win
+  comparisons, matched announcements, and permanent recovery pass, but
+  permanent idle decisively regresses and permanent announcements/duplicates
+  plus matched duplicates/idle/recovery remain uncertain. Report SHA is
+  `260625f302f3e268...`. V44 is rejected; dev-v40 is retired unopened/unconsumed
+  and held-out-v6 stays sealed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1210,14 +1220,17 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit the dev-v40 membership/receipt packet without reading or rendering
-   membership.** Replica A is prohibited until that commit exists.
+1. **Preserve rejected V44 and retired dev-v40 evidence.** Never read or render
+   dev-v40 membership; dev-v39 also remains retired unopened.
 2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
    dev-v39 membership; dev-v38 also remains retired unopened.
-3. **Keep held-out-v6 sealed and unconsumed.** V44 has not authorized access.
-4. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
+3. **Keep held-out-v6 sealed and unconsumed.** V44 did not authorize access.
+4. **Precommit V45 as a residual temporal actor before model work.** Preserve
+   V43's dedicated current-state path and add lagged context only as a zero-
+   initialized residual; do not repeat V44's 160->64 replacement.
+5. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
    authorize V43 or any runtime prior and still fails two scorecard rows.
-5. **M9.1 remains gated.** The roadmap says to begin only after the single
+6. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 
 ## Decisions

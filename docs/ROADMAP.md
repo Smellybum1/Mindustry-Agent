@@ -1968,6 +1968,20 @@ The committed freezer at `6b7a6c5dca` has now created dev-v40 value-free in
 reads, and no generated, retired-confirmation, or sealed-final read. Dev-v40
 remains unconsumed. Commit the membership and receipt packet before replica A.
 
+The membership/receipt packet was committed at `b510cc48a1` before replica A.
+V44's two pinned replicas reproduce exactly and select update 1 at 9/10 reusable
+wins, mean idle `0.07252724`, checkpoint `4e51d31bd4f33a67...`, and full-run
+digest `029e77830406127a...`; direct lineage is `aa799280368304ae...`. Fresh
+permanent random/greedy remain 4/10 and 8/10; matched random/greedy are 5/10 and
+6/10, so every observed win comparison passes. The scorecards nevertheless
+reject V44: permanent idle decisively regresses, permanent announcements/
+duplicates are uncertain, and matched duplicates/idle/recovery are uncertain.
+Records/aggregate/report hashes are `3ec9dfa9504f93e2...` /
+`b364484245ec0213...` / `260625f302f3e268...`. Update 1 is the only 9-win
+frontier checkpoint; later updates collapse to 4-8 wins. V44 is rejected before
+confirmation; dev-v40 is retired unopened/unconsumed, held-out-v6 remains
+sealed/unconsumed, and M8.5 remains unmet.
+
 The committed freezer at `5007a7b9f3` has now created dev-v39 value-free.
 Membership SHA is `0b88fda1b37647aa...`; the receipt attests no emitted values,
 zero membership-document reads, and no generated, retired-confirmation, or

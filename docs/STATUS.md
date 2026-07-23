@@ -1916,6 +1916,16 @@ repository-evidence mapping used for the M6 audit is:
   `acffc919ab1c40e2...`; the receipt records no emitted values, zero membership
   reads, and no retired or sealed-set access. Dev-v40 remains unconsumed. The
   membership/receipt packet must be committed before replica A.
+- The V44 membership packet was committed at `b510cc48a1`; two pinned replicas
+  then reproduce exactly at update 1 with 9/10 wins, mean idle `0.07252724`,
+  checkpoint `4e51d31bd4f33a67...`, and full-run digest
+  `029e77830406127a...`. All observed win comparisons, matched announcements,
+  and permanent recovery pass. The frozen scorecards reject V44 because
+  permanent idle decisively regresses and five other quality rows remain
+  uncertain. Report SHA is `260625f302f3e268...`. Update 1 is the only 9-win
+  frontier checkpoint and later updates collapse. V44 is rejected before
+  confirmation; dev-v40 is retired unopened/unconsumed and held-out-v6 remains
+  sealed. M8.5 is unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

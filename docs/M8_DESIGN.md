@@ -886,6 +886,17 @@ Membership/receipt hashes are `05ca1f48227581fc...` /
 reads, and no retired or sealed-set access. Dev-v40 remains unconsumed. Commit
 the membership/receipt packet before replica A.
 
+Both V44 replicas reproduce exactly and select update 1 at 9/10 wins, mean idle
+`0.07252724`, checkpoint `4e51d31bd4f33a67...`, replay
+`a5ac208b8ea91f19...`, and full-run digest `029e77830406127a...`. Every observed
+win comparison passes. Matched announcements and permanent recovery pass, but
+the scorecards reject V44: permanent idle decisively regresses and permanent
+announcements/duplicates plus matched duplicates/idle/recovery remain
+uncertain. Report SHA is `260625f302f3e268...`. Update 1 is the frontier's only
+9-win checkpoint and later updates collapse to 4-8 wins, implicating the
+160->64 replacement of V43's current-state scalar path. Dev-v40 is retired
+unopened/unconsumed and held-out-v6 remains sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one
