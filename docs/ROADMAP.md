@@ -1933,6 +1933,19 @@ promotion authority and closes the runtime-prior reopening. No V43 is
 authorized. Dev-v38 is retired unopened/unconsumed, held-out-v6 remains
 sealed/unconsumed, and M8.5 remains unmet.
 
+ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
+The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
+head cannot see the candidate catalog. V43 changes only the model architecture:
+masked other-candidate context feeds each SELECT logit and masked all-candidate
+context feeds CONTINUE/WAIT. Features, runtime authority, reward, teacher
+trajectory/relabeling, roots, budgets, optimizer, RNG values, scripted seats,
+and engine pins remain V42-exact. Config/umbrella hashes are
+`29b4430839451f13...` / `99851aa2cdbfb469...`. Dev-v39 is reserved primary-only
+in `[7B,8B)` and remains unconstructed; dev-v38 remains retired without a
+membership read and held-out-v6 remains sealed/unconsumed. The committed
+implementation and full public/pretraining boundary are required before
+value-free dev-v39 construction or model work. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

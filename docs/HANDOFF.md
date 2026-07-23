@@ -930,6 +930,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   permanent announcements and matched recovery. Records/report hashes are
   `6ccd6ac543d43891...` / `41e3b71b133f4c63...`. No V43 is authorized; dev-v38
   is retired unopened/unconsumed and held-out-v6 remains sealed/unconsumed.
+- **V43 architecture successor precommitted**: ADR-0060 identifies the v1
+  actor's missing candidate-set context: SELECT logits cannot compare against
+  other candidates and CONTINUE/WAIT cannot see the catalog. V43 changes only
+  model architecture, adding masked other-candidate context to SELECT and
+  masked all-candidate context to CONTINUE/WAIT. Runtime authority, features,
+  reward, teacher path/relabeling, roots, budgets, optimizer, RNG values,
+  scripted seats, and engine pins remain V42-exact. Config/umbrella hashes are
+  `29b4430839451f13...` / `99851aa2cdbfb469...`. Dev-v39 is reserved
+  primary-only in `[7B,8B)` and remains unconstructed; dev-v38 remains retired
+  without a read and held-out-v6 remains sealed. Implementation and the full
+  pretraining boundary are next; no model or restricted membership work is yet
+  authorized.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1144,15 +1156,15 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Preserve the committed green ADR-0056 pretraining boundary.** Do not alter
-   runtime behavior, reward, model, roots, budgets, RNGs, or engine pins.
+1. **Implement only ADR-0060's precommitted V43 architecture coordinate.** Keep
+   runtime behavior, reward, features, roots, budgets, optimizer, RNG values,
+   scripted seats, teacher trajectory/relabeling, and engine pins V42-exact.
 2. **Preserve retired dev-v38 unopened and unconsumed.** Never read, render, or
    delegate its membership; held-out-v6 remains sealed.
-3. **Do not authorize V43 from the rejected build-line-prior diagnostic.** It is
-   explicitly off-contract and fails both scorecards.
-4. **Require a new public/train/reusable architecture hypothesis before any
-   successor precommit.** Do not reuse dev-v38, execute an alternate teacher
-   trajectory, or bypass accepted ADRs and frozen scorecards.
+3. **Run the complete public/pretraining boundary before seed construction or
+   model work.** Commit that evidence before the primary-only dev-v39 freezer.
+4. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
+   authorize V43 or any runtime prior and still fails two scorecard rows.
 5. **M9.1 remains gated.** The roadmap says to begin only after the single
    learned seat promotes; do not silently bypass that prerequisite.
 

@@ -1854,6 +1854,16 @@ repository-evidence mapping used for the M6 audit is:
   `41e3b71b133f4c63...`. This closes the runtime-prior reopening; no V43 is
   authorized. Dev-v38 is retired unopened/unconsumed and held-out-v6 remains
   sealed/unconsumed.
+- ADR-0060 precommits V43 as a model-only architecture successor. The v1 actor
+  cannot compare SELECT candidates and its CONTINUE/WAIT logits cannot see the
+  candidate catalog. V43 adds deterministic masked candidate-set context while
+  preserving V42 runtime authority, features, reward, teacher trajectory and
+  relabeling, roots, budgets, optimizer, RNG values, scripted seats, and engine
+  pins. Config/umbrella hashes are `29b4430839451f13...` /
+  `99851aa2cdbfb469...`. Dev-v39 is reserved primary-only in `[7B,8B)` and is not
+  constructed; dev-v38 remains retired without a read and held-out-v6 remains
+  sealed. Implementation and the full pretraining boundary are pending; no V43
+  model work or restricted membership access has occurred.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

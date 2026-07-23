@@ -800,6 +800,29 @@ promotion authority and closes the runtime-prior reopening. No V43 is
 authorized; dev-v38 is retired unopened/unconsumed and held-out-v6 remains
 sealed/unconsumed.
 
+## V43 governed architecture successor
+
+ADR-0060 precommits the first model-architecture successor after the independent
+v1 scorer failed the frozen promotion scorecards. The v1 SELECT head sees one
+candidate plus scalar context but cannot see competing candidates, while its
+CONTINUE/WAIT head cannot see the candidate catalog at all. Reusable/train-only
+evidence repeatedly exposes catalog-dependent alternative choice, including 682
+teacher-conflict alternates and a catalog-dependent idle correction.
+
+V43 keeps the exact V42 observation, runtime, action authority, reward, teacher
+trajectory/relabeling, roots, budgets, optimizer, RNG values, scripted seats,
+and engine pins. Its masked set-context actor gives each SELECT logit the mean
+embedding of the other present candidates and gives CONTINUE/WAIT the mean of
+all present candidates. Padding is excluded; masks remain authoritative. The
+critic retains its existing scalar-plus-pooled-candidate input.
+
+The immutable config/umbrella hashes are `29b4430839451f13...` /
+`99851aa2cdbfb469...`. Dev-v39 is reserved primary-only in `[7B,8B)` but may not
+be constructed until the committed implementation and complete pretraining
+boundary pass. Dev-v38 remains retired without a membership read. Held-out-v6
+remains sealed and unconsumed. No V43 implementation, model construction, or
+restricted membership access preceded this precommit.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one
