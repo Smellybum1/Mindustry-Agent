@@ -1180,6 +1180,25 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `+0.011532`, CI `[+0.005381,+0.017928]`. The no-transfer subset is worse
   (`0.367418` DEFER; `+0.019146` idle), proving a global policy shift. Result
   SHA is `ae0818783ef7ed41...`. Dev-v45 remains unread/unconsumed.
+- **Held-out-v6 retired; held-out-v7 sealed**: a broad metadata search opened
+  the held-out-v6 manifest before authorization and displayed only its set id.
+  ADR-0067 retires it membership-exposed/unexecuted. The primary-only
+  replacement freezer was committed before construction and emitted no values
+  or membership reads. Held-out-v7 receipt/membership hashes are
+  `8b78b27153d597fb...` / `f6d84b50d10ec6fc...`; v7 is sealed/unconsumed.
+- **V49 prospective non-inferiority rejected**: ADR-0068 fixes the unchanged
+  V47 update-25 checkpoint and explicit scenario-unit margins before fresh
+  reusable-v3 membership. The protocol hashes to `6711d6e43fab8f65...`.
+  Fresh wins are learned 123/160, permanent random/greedy 61/82, and matched
+  random/greedy 58/24. Every win/control gate, matched scorecard, DEFER,
+  one-brain authority, reward, lineage, and reproducibility check passes, but
+  permanent-greedy idle has mean `+0.00567867` and CI
+  `[-0.00022269,+0.01242934]`, above the `1/150` margin. Result/preflight
+  hashes are `9e2f31ee8053b296...` / `4834b8c2832a0b6a...`. Dev-v45 is retired
+  unopened/unconsumed, dev-v46 is unconstructed, held-out-v7 remains sealed,
+  and M8.5 is still unmet. Public attribution points to seat-context scope,
+  not a transfer-local wrapper. The final 371-test Python suite, smoke,
+  determinism, and 664-checkpoint/16,200-tick golden replay pass.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1395,18 +1414,23 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit the V48 public rejection.** Never read or render dev-v44/dev-v45;
-   exclude the four protected user files.
-2. **Diagnose only public V48 frontier/checkpoint evidence.** DEFER and idle
-   failures must both be explained before another precommit.
-3. **Precommit at most one causal V49 coordinate before implementation.**
-   Confirmation remains forbidden unless reusable-v2 passes unchanged.
-4. **Keep held-out-v6 sealed.** No reusable result authorizes final access.
-5. **Keep M9.1 gated on M8 promotion.** Do not bypass the accepted roadmap.
+1. **Commit the V49 public rejection and current verification evidence.**
+   Exclude the four protected user files.
+2. **Do not construct dev-v46 or open held-out-v7.** V49 failed reusable-v3;
+   neither restricted gate is authorized.
+3. **Require an owner-level roadmap choice before another candidate.** Public
+   evidence points to learned seat-context/model scope, not another failover
+   wrapper. Either keep M9 gated and precommit a materially new M8 hypothesis
+   on fresh governance, or explicitly supersede the M9 entry gate.
+4. **Keep held-out-v6 retired and held-out-v7 sealed.** Never read either
+   manifest outside an authorized one-way workflow.
+5. **Do not start the learned human-session block.** The user's offered co-op
+   session becomes actionable only after the M8/M9 gate decision and a
+   promotable learned runtime are available.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0066` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0068` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1434,7 +1458,10 @@ training-only teacher-conflict relabel with V40 filter fallback. ADR-0060
 records V43's candidate-set-context actor, exact replicas, and reusable
 rejection before confirmation. ADR-0061 precommits V44's bounded lagged-
 boundary feature/model coordinate; implementation and the public/pretraining
-boundary are next.
+boundary are next. ADR-0067 retires membership-exposed/unexecuted held-out-v6
+and records the value-free held-out-v7 replacement. ADR-0068 records the
+prospective V49 operational non-inferiority protocol and its fresh
+reusable-v3 rejection before confirmation.
 
 ## Deviations from the brief in this scaffold
 

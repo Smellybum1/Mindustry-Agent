@@ -382,5 +382,41 @@ currently authorized; require a new architecture hypothesis rather than
 repeating accepted-ADR alternatives.
 
 Preserve engine pins, fixed-step determinism, simulation-thread ownership,
-structured-authoritative communication, and the four-JVM cap. Do not push or
-make machine-global changes.
+structured-authoritative communication, and the four-JVM cap. Do not make
+machine-global changes. The current-state section below governs remote
+authorization.
+
+## 2026-07-23 current M8 state (supersedes the stale queue above)
+
+V43 through V46 were implemented and rejected before confirmation under their
+frozen public gates. V47 then introduced exactly one sticky learned brain with
+death-only lowest-living failover. Its exact replicas select update 25 at 10/10
+public-dev wins and reusable-v2 reaches 125/160, but zero-margin idle and one
+automatic abandonment remain uncertain. V48's per-seat history-cache retrain
+reaches 127/160 but fails DEFER and idle; dev-v45 is retired
+unopened/unconsumed.
+
+ADR-0067 records an unauthorized held-out-v6 manifest read caused by a broad
+metadata search. Only the set id was displayed and no episode ran, but v6 is
+retired membership-exposed/unexecuted. The committed primary-only replacement
+freezer created held-out-v7 value-free in `[17B,18B)`; receipt/membership hashes
+are `8b78b27153d597fb...` / `f6d84b50d10ec6fc...`. Never open that manifest
+unless a future committed one-way final gate is eligible.
+
+ADR-0068 precommits the owner-authorized V49 prospective operational
+non-inferiority protocol on fresh reusable-v3 while fixing V47's selected
+checkpoint unchanged. Protocol SHA is `6711d6e43fab8f65...`. V49 wins 123/160
+versus permanent random/greedy 61/82 and matched random/greedy 58/24. Every
+win/control gate, matched scorecard, DEFER, one-brain, reward, lineage, and
+reproducibility check passes, but permanent-greedy idle has mean
+`+0.00567867`, CI `[-0.00022269,+0.01242934]`, exceeding the frozen `1/150`
+margin. Result/preflight hashes are `9e2f31ee8053b296...` /
+`4834b8c2832a0b6a...`. V49 is rejected; dev-v46 is unconstructed and
+held-out-v7 remains sealed.
+
+Do not continue with another transfer-local wrapper: public attribution shows
+the residual without failover and on final seats 0/1, while seat 2 is
+favorable. The next step requires an owner-level roadmap choice between a
+materially new seat-context M8 hypothesis on fresh governance and explicitly
+superseding the M9 entry gate. The user has authorized repository pushes to
+`Smellybum1/Mindustry-Agent`; machine-global changes remain prohibited.

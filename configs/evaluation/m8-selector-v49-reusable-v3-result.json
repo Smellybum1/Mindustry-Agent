@@ -1,0 +1,114 @@
+{
+  "schema": "m8_public_reusable_result_v2",
+  "candidate_version": "v49",
+  "data_classification": "public_reusable_only",
+  "repository_commit": "755567eaeef626b4ab55d66ecec114f05765bbb6",
+  "protocol": {
+    "path": "configs/evaluation/m8-selector-v49-noninferiority-protocol.json",
+    "sha256": "6711d6e43fab8f65b21d97f091767c963f85458147fc43e47b8fd96b67c3b965",
+    "scorecard_schema": "paired_operational_noninferiority_v1"
+  },
+  "checkpoint": {
+    "source_candidate": "v47",
+    "selected_update": 25,
+    "sha256": "ea821b97dd1e6f4ccdf69b89ee0bf0b0b83f934f1dfccb68e72a823f58e90030",
+    "model_state_sha256": "ae3affeea7c1d22f19489cadd3cff060cd15269ce0d0ca5aa7836c0ae8ece12c",
+    "behavior_changed_for_v49": false
+  },
+  "reusable_v3": {
+    "seed_set_id": "bootstrap-defense-v1-reusable-scorecard-v3",
+    "seed_set_version": 3,
+    "membership_sha256": "8655fe3c785ba99e40fe8186643ddff731e1cfa36aa157594bb30f0ced9affe5",
+    "episodes_per_policy": 160,
+    "wins": {
+      "learned-selector-v2": 123,
+      "random-valid": 61,
+      "greedy-utility": 82,
+      "random-mixed-seat0": 58,
+      "greedy-mixed-seat0": 24
+    },
+    "all_four_win_comparisons_passed": true,
+    "expert_defer": {
+      "mean": 0.16386203988102246,
+      "maximum_inclusive": 0.25,
+      "passed": true
+    },
+    "single_brain": {
+      "candidate_transfers": 172,
+      "matched_transfers": 326,
+      "maximum_simultaneous_learned_seats": 1,
+      "passed": true
+    },
+    "permanent_greedy_failure": {
+      "metric": "idle_fraction",
+      "mean_difference": 0.005678665443995104,
+      "ci95": [
+        -0.00022268739233812515,
+        0.012429335165674304
+      ],
+      "noninferiority_margin": 0.006666666666666667,
+      "passed": false
+    },
+    "matched_greedy_scorecard_passed": true,
+    "all_other_permanent_scorecard_rows_passed": true,
+    "eligible_for_confirmation": false
+  },
+  "public_attribution": {
+    "no_transfer": {
+      "episodes": 28,
+      "wins": 18,
+      "mean_idle_difference": 0.012373354504808943,
+      "mean_expert_defer_fraction": 0.17286303780290407
+    },
+    "one_or_more_transfers": {
+      "episodes": 132,
+      "wins": 105,
+      "mean_idle_difference": 0.004258579885640652,
+      "mean_expert_defer_fraction": 0.16195273729153251
+    },
+    "by_final_active_seat": {
+      "seat_0": {
+        "episodes": 28,
+        "wins": 18,
+        "mean_idle_difference": 0.012373354504808943
+      },
+      "seat_1": {
+        "episodes": 53,
+        "wins": 42,
+        "mean_idle_difference": 0.013001897828560278
+      },
+      "seat_2": {
+        "episodes": 79,
+        "wins": 63,
+        "mean_idle_difference": -0.0016071903798623862
+      }
+    },
+    "interpretation": "Residual idle is seat-context dependent and exists without failover; another transfer-local wrapper is not supported."
+  },
+  "artifacts": {
+    "baseline_records_sha256": "58b296cb5e3423509d01c3fa7a751e576df54f0a83f8c5cef24f50ad680bccaf",
+    "baseline_aggregate_sha256": "1953392f159a4d694b456076e53d1f1d9b34fffdd373f3c8db4874291c9ff003",
+    "candidate_and_matched_records_sha256": "fb503c3bdf1d9bb2c4f36620b477b4bae94b3288d035a69d917419f4e00b431b",
+    "aggregate_sha256": "6b95cd1e4c24716a88ebb75e23485642fd9a521a779aa410b20cf2a447d73df9",
+    "preflight_sha256": "4834b8c2832a0b6a2185307eedcddd6a57c5e7b049e07de491dbfcd83cc41158"
+  },
+  "verification": {
+    "python_tests": 371,
+    "smoke": "passed",
+    "determinism": "passed",
+    "golden_replay_checkpoints": 664,
+    "golden_replay_ticks": 16200,
+    "golden_replay_episodes": 2
+  },
+  "restricted_state": {
+    "dev_v45": "retired_unopened_unconsumed",
+    "dev_v46": "unconstructed",
+    "dev_v46_membership_read": false,
+    "held_out_v6": "retired_membership_exposed_unexecuted",
+    "held_out_v7": "sealed_unconsumed",
+    "held_out_v7_membership_read_after_freeze": false,
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0
+  },
+  "decision": "rejected_before_confirmation"
+}

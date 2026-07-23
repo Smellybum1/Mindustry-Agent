@@ -1137,6 +1137,20 @@ episodes have mean DEFER `0.367418` and idle difference `+0.019146`. Result
 SHA is `ae0818783ef7ed41...`; dev-v45 remains unread/unconsumed and held-out-v6
 remains sealed.
 
+ADR-0067 subsequently retires held-out-v6 after an unauthorized manifest read
+that exposed only its set id and no values/outcomes. Held-out-v7 is frozen
+value-free in `[17B,18B)` and remains sealed/unconsumed.
+
+ADR-0068 freezes V49's owner-authorized prospective operational
+non-inferiority protocol before fresh reusable-v3 exists. V49 keeps V47 update
+25 behavior exact and defines six scenario-unit margins while retaining strict
+held-out win CI separation. Fresh reusable-v3 records learned/permanent
+random/permanent greedy/matched random/matched greedy wins of
+123/61/82/58/24. All gates except permanent-greedy idle pass. Its paired mean
+is `+0.00567867`, but CI `[-0.00022269,+0.01242934]` exceeds the immutable
+`1/150` margin. V49 is rejected before confirmation; dev-v45 is retired
+unopened/unconsumed, dev-v46 is unconstructed, and held-out-v7 remains sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

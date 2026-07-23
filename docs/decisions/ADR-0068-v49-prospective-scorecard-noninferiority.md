@@ -109,3 +109,30 @@ that exposed no seed value or outcome.
   `6711d6e43fab8f65b21d97f091767c963f85458147fc43e47b8fd96b67c3b965`.
   The generator commit is recorded before reusable-v3 membership is
   constructed.
+
+## Construction and result
+
+The protocol and deterministic reusable-v3 generator were committed at
+`d5b9dc4bd2` before implementation or membership. Margin-aware reusable,
+confirmation, and final gates were committed at `38cccc05da`; the historical
+zero-margin path remains byte-compatible in its decision fields. The full
+Python suite passes 370 tests.
+
+Reusable-v3 was then constructed at 160 public roots in `[15B,16B)` with
+membership SHA-256 `8655fe3c785ba99e40fe8186643ddff731e1cfa36aa157594bb30f0ced9affe5`.
+Fresh permanent random and greedy won 61/160 and 82/160. The unchanged V47
+checkpoint won 123/160; matched random and greedy won 58/160 and 24/160. All
+four observed win comparisons, matched-greedy scorecard, mean DEFER
+(`0.163862 <= 0.25`), one-brain authority, reward, lineage, and reproducibility
+gates pass.
+
+V49 nevertheless fails its prospectively frozen permanent-greedy idle margin.
+Candidate-minus-greedy idle is `+0.00567867`, with paired 95% CI
+`[-0.00022269,+0.01242934]`; the upper bound exceeds the immutable `1/150`
+margin. Preflight SHA-256 is
+`4834b8c2832a0b6a2185307eedcddd6a57c5e7b049e07de491dbfcd83cc41158`.
+V49 is rejected before confirmation. Dev-v46 was never constructed and
+held-out-v7 remains sealed/unconsumed. The committed public result SHA-256 is
+`9e2f31ee8053b296fa8695ecab5f98308782e9c7be60b1570721e552952100d7`;
+the final 371-test Python suite, smoke, determinism, and
+664-checkpoint/16,200-tick golden replay pass.

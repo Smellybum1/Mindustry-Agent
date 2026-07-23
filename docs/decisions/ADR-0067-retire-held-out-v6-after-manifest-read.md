@@ -46,3 +46,14 @@ the repository's governance record false.
   final set identity rather than the learned policy or public evaluation data.
 - This ADR supersedes ADR-0053 only for the usability and state of held-out-v6;
   ADR-0053 remains the historical record of its value-free construction.
+
+## Replacement evidence
+
+The held-out-v7 umbrella and primary-only freezer were committed at
+`71d7fcf168` before construction. The freezer then created 160 roots in the
+exclusive `[17_000_000_000,18_000_000_000)` namespace without reading any
+retired or confirmation manifest or emitting a value. Its receipt SHA-256 is
+`8b78b27153d597fba7a51691d8495c4d14d856445ef072e81b82c6517922a3b1`;
+the sealed membership SHA-256 recorded by that receipt is
+`f6d84b50d10ec6fc4141e826a74df6717db3659af7df12ea2cc11c22b8d98657`.
+Held-out-v7 remains sealed and unconsumed.

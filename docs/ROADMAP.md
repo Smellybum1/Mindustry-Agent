@@ -2256,6 +2256,34 @@ not merely transfer-time cache inference. Public result SHA is
 `ae0818783ef7ed41...`. Dev-v45 remains unread/unconsumed and held-out-v6
 remains sealed. M8.5 remains unmet.
 
+ADR-0067 retires held-out-v6 as membership-exposed/unexecuted. A broad
+namespace-metadata search opened its manifest before authorization and
+displayed only the set id, with no seed value or outcome, but project policy
+treats any manifest read as access. The replacement held-out-v7 freezer was
+committed at `71d7fcf168` and created 160 roots value-free in `[17B,18B)`.
+Receipt/membership hashes are `8b78b27153d597fb...` /
+`f6d84b50d10ec6fc...`; held-out-v7 remains sealed and unconsumed.
+
+ADR-0068 precommits the owner-authorized V49 governance direction on fresh
+data. The selected V47 checkpoint is fixed unchanged; operational
+non-inferiority requires each paired mean and CI upper bound to stay within
+scenario-unit margins while strict held-out win CI separation remains exact.
+Protocol SHA is `6711d6e43fab8f65...`. The implementation preserves zero-margin
+historical behavior, passes the full Python suite, and binds protocol identity
+through reusable, confirmation, and final gates.
+
+Fresh reusable-v3 rejects V49 before confirmation. Candidate/permanent
+random/permanent greedy/matched random/matched greedy wins are
+123/61/82/58/24 of 160. Every win/control gate, matched-greedy scorecard,
+DEFER (`0.163862 <= 0.25`), one-brain authority, reward, lineage, and
+reproducibility check passes. Permanent-greedy idle is `+0.00567867`, but its
+95% CI `[-0.00022269,+0.01242934]` exceeds the frozen `1/150` margin. Public
+result/preflight hashes are `9e2f31ee8053b296...` /
+`4834b8c2832a0b6a...`. Dev-v45 is retired unopened/unconsumed, dev-v46 was
+never constructed, and held-out-v7 remains sealed. Public attribution locates
+the residual on no-transfer/seat-1 contexts while final seat 2 is favorable;
+another transfer-local M8 wrapper is not supported. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

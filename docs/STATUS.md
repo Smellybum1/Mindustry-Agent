@@ -2142,6 +2142,31 @@ repository-evidence mapping used for the M6 audit is:
   learned-policy shift rather than transfer-only inference. Public result SHA
   is `ae0818783ef7ed41...`. Dev-v45 remains unread/unconsumed and held-out-v6
   remains sealed.
+- ADR-0067 retires held-out-v6 as membership-exposed/unexecuted after a broad
+  metadata search opened its manifest before authorization. No seed value or
+  outcome was displayed or used. The committed primary-only replacement
+  freezer created held-out-v7 value-free in `[17B,18B)`; receipt/membership
+  hashes are `8b78b27153d597fb...` / `f6d84b50d10ec6fc...`. Held-out-v7 is
+  sealed and unconsumed.
+- ADR-0068 precommits owner-authorized V49 as a governance-only evaluation of
+  the unchanged V47 checkpoint. Historical callers retain zero-margin
+  decisions; V49 uses explicit scenario-unit operational non-inferiority
+  margins on fresh reusable-v3, with strict held-out win CI separation
+  unchanged. Protocol SHA is `6711d6e43fab8f65...`; margin-aware reusable,
+  confirmation, and final paths pass the full Python suite.
+- Fresh reusable-v3 rejects V49 before confirmation. Learned/permanent
+  random/permanent greedy/matched random/matched greedy wins are
+  123/61/82/58/24 of 160. All win/control gates, matched scorecard, DEFER
+  (`0.163862`), one-brain authority, reward, lineage, and reproducibility pass.
+  Permanent-greedy idle is `+0.00567867`, CI
+  `[-0.00022269,+0.01242934]`, exceeding the frozen `1/150` margin. Result and
+  preflight hashes are `9e2f31ee8053b296...` / `4834b8c2832a0b6a...`.
+  Dev-v45 is retired unopened/unconsumed, dev-v46 is unconstructed, and
+  held-out-v7 remains sealed. The residual is present without failover and is
+  unfavorable on final seats 0/1 but favorable on seat 2, pointing to a
+  seat-context/model-scope issue rather than another transfer-local defect.
+  The final 371-test Python suite, smoke, determinism, and
+  664-checkpoint/16,200-tick golden replay pass.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
@@ -2153,7 +2178,8 @@ repository-evidence mapping used for the M6 audit is:
   metrics are wired through M5.6; the shared M7.2 expert uses that surface.
   M8.4 selector rewards/training and the complete M8.5 lineage/dev/one-way-final
   machinery are implemented. V1, V8, and V9 failed promotion; their consumed
-  held-out gates cannot be rerun. Held-out-v6 remains sealed and unconsumed.
+  held-out gates cannot be rerun. Held-out-v6 is retired
+  membership-exposed/unexecuted; held-out-v7 remains sealed and unconsumed.
 - **`agent-plugin`** is no longer a stub. Its scripted M6 path and queued M10
   human goal/assignment/autonomy/quiet surface plus human build-plan and recent-
   construction reservation/yield are implemented; study instrumentation remains
