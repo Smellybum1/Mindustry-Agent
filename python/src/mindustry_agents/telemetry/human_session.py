@@ -10,8 +10,8 @@ from typing import Any
 
 from mindustry_agents import ARC_VERSION, ENGINE_COMMIT, ENGINE_TAG, PROTOCOL_VERSION
 
-CAPTURE_SCHEMA_VERSION = 3
-SUPPORTED_CAPTURE_SCHEMA_VERSIONS = (1, 2, 3)
+CAPTURE_SCHEMA_VERSION = 4
+SUPPORTED_CAPTURE_SCHEMA_VERSIONS = (1, 2, 3, 4)
 CAPTURE_PROVENANCE_FIELDS = (
     "repository_commit",
     "agent_plugin_sha256",
@@ -27,7 +27,19 @@ CAPTURE_PROVENANCE_FIELDS_BY_VERSION = {
         "agent_plugin_content_sha256",
         "server_content_sha256",
     ),
+    4: (
+        "repository_commit",
+        "agent_plugin_content_sha256",
+        "server_content_sha256",
+    ),
 }
+EXPERIMENT_FIELDS = (
+    "experiment_id",
+    "experiment_block",
+    "experiment_condition",
+    "experiment_order",
+    "trial_seed",
+)
 POPULATION_SCHEMA = "scripted_human_partner_population_v1"
 PROFILE_IDS = (
     "fast-expert",
@@ -95,6 +107,8 @@ def load_session(path: Path) -> list[dict[str, Any]]:
     ):
         if field not in start:
             raise ValueError(f"human session start missing {field}")
+    if start["capture_schema_version"] >= 4:
+        _validate_v4_condition(start)
     provenance_fields = CAPTURE_PROVENANCE_FIELDS_BY_VERSION[
         start["capture_schema_version"]
     ]
@@ -124,6 +138,42 @@ def load_session(path: Path) -> list[dict[str, Any]]:
 
     replay_controls(records)
     return records
+
+
+def _validate_v4_condition(start: dict[str, Any]) -> None:
+    condition = start.get("agent_condition")
+    if condition not in {"present", "absent"}:
+        raise ValueError("human session agent_condition must be present or absent")
+    policy = start.get("policy")
+    if policy == "agents-absent-human-only-v1" and condition != "absent":
+        raise ValueError("human session absent policy/condition mismatch")
+    if policy == "public-greedy-candidates-v1" and condition != "present":
+        raise ValueError("human session scripted policy/condition mismatch")
+
+    assigned = [field in start for field in EXPERIMENT_FIELDS]
+    if any(assigned) and not all(assigned):
+        raise ValueError("human session experiment assignment is incomplete")
+    if not any(assigned):
+        return
+    experiment_id = start["experiment_id"]
+    block_id = start["experiment_block"]
+    experiment_condition = start["experiment_condition"]
+    if not isinstance(experiment_id, str) or not experiment_id.strip():
+        raise ValueError("human session experiment_id must be non-empty")
+    if not isinstance(block_id, str) or not block_id.strip():
+        raise ValueError("human session experiment_block must be non-empty")
+    if experiment_condition not in {"absent", "scripted", "learned"}:
+        raise ValueError("human session experiment_condition is invalid")
+    order = start["experiment_order"]
+    seed = start["trial_seed"]
+    if isinstance(order, bool) or not isinstance(order, int) or not 1 <= order <= 3:
+        raise ValueError("human session experiment_order must be an integer from 1 to 3")
+    if isinstance(seed, bool) or not isinstance(seed, int) or seed < 0:
+        raise ValueError("human session trial_seed must be a non-negative integer")
+    if (experiment_condition == "absent") != (condition == "absent"):
+        raise ValueError("human session experiment/agent condition mismatch")
+    if policy == "public-greedy-candidates-v1" and experiment_condition != "scripted":
+        raise ValueError("human session public greedy policy must be scripted")
 
 
 def replay_controls(records: list[dict[str, Any]]) -> dict[str, Any]:

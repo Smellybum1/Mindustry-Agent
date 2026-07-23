@@ -33,7 +33,9 @@ final class DemoCoordinator{
     private final boolean waitForPlayer;
     private final boolean survivalProbe;
     private final boolean humanProbe;
+    private final boolean absentProbe;
     private final boolean publicPolicy;
+    private final boolean agentsEnabled;
     private final AnnouncementRenderer renderer = new AnnouncementRenderer();
     private final HumanControl.State humanControl = new HumanControl.State();
     private final HumanControl.CommandQueue humanCommands = new HumanControl.CommandQueue();
@@ -68,7 +70,8 @@ final class DemoCoordinator{
     private boolean exiting;
     private String exitCaptureReason = "closed";
 
-    DemoCoordinator(Scenario scenario, boolean probe, boolean waitForPlayer){
+    DemoCoordinator(Scenario scenario, boolean probe, boolean waitForPlayer,
+                    boolean agentsEnabled){
         this.scenario = scenario;
         this.probe = probe;
         this.waitForPlayer = waitForPlayer;
@@ -76,12 +79,19 @@ final class DemoCoordinator{
             .equalsIgnoreCase("survival");
         this.humanProbe = System.getProperty(AgentPlugin.modeProperty, "")
             .equalsIgnoreCase("human");
+        this.absentProbe = System.getProperty(AgentPlugin.modeProperty, "")
+            .equalsIgnoreCase("absent");
         this.publicPolicy = publicPolicyEnabled();
+        this.agentsEnabled = agentsEnabled;
         String capturePath = System.getProperty(AgentPlugin.capturePathProperty, "");
         if(!capturePath.isBlank() && !publicPolicy){
             throw new IllegalArgumentException("demo capture requires the public candidate policy");
         }
-        this.capture = DemoSessionCapture.open(capturePath, scenario, (long)state.tick);
+        String policyId = agentsEnabled ? "public-greedy-candidates-v1"
+            : "agents-absent-human-only-v1";
+        String agentCondition = agentsEnabled ? "present" : "absent";
+        this.capture = DemoSessionCapture.open(capturePath, scenario, (long)state.tick,
+            policyId, agentCondition);
         this.publishedSimulationTick = (long)state.tick;
         this.humanRegions = humanRegions(scenario);
         this.registry = new DemoAgentRegistry(scenario);
@@ -94,12 +104,20 @@ final class DemoCoordinator{
     }
 
     void spawn(){
+        if(!agentsEnabled){
+            Log.info("[agents] human-only condition active; no controlled units spawned.");
+            return;
+        }
         registry.spawn();
         Log.info("[agents] spawned @ controlled alpha units.", registry.size());
     }
 
     void playerJoined(Player player){
         if(player.team() != scenario.coreTeam) return;
+        if(!agentsEnabled){
+            player.sendMessage("[accent]Human-only comparison condition active. Type /agents resume when ready and /agents stop when finished.");
+            return;
+        }
         if(waitForPlayer && !driver.started() && !stopped){
             player.sendMessage("[accent]Cooperative agents ready. Type /agents resume when you are ready to watch.");
         }else{
@@ -132,6 +150,16 @@ final class DemoCoordinator{
             drainPublicSignals();
             drainPublicTraces();
             drainPublicAnnouncements();
+            if(absentProbe && tick >= 120L){
+                if(agentsEnabled || registry.size() != 0){
+                    throw new IllegalStateException("human-only probe spawned controlled agents");
+                }
+                Log.info("AGENT-DEMO ABSENT OK tick=@ agents=0 trajectories=captured", tick);
+                closeCapture("absent_probe_complete");
+                exiting = true;
+                Core.app.exit();
+                return;
+            }
             if(exitAfterUpdate){
                 closeCapture(exitCaptureReason);
                 exiting = true;
@@ -228,6 +256,7 @@ final class DemoCoordinator{
 
     String queueHumanCommand(String[] tokens, String authorId, Consumer<String> response){
         if(!publicPolicy) return "agents: command rejected reason=public_policy_required";
+        if(!agentsEnabled) return "agents: command rejected reason=agents_absent";
         if(stopped) return "agents: command rejected reason=stopped";
         EnqueueResult queued;
         synchronized(humanCommandLock){

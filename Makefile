@@ -18,7 +18,7 @@ SCRIPTS := scripts
         public-demo-parity \
         adaptive-planning-check \
         scenario-variation-check evaluate-ladder verify-rl-boundary \
-        training-gate demo-server human-session-check
+        training-gate demo-server human-session-check human-absent-check
 
 help: ## List available targets
 	@echo "mindustry-coop-agents — make targets:"
@@ -47,6 +47,7 @@ help: ## List available targets
 	@echo "  train-selector WSL2 audited one-seat PPO + exact checkpoint replay (M8.4)"
 	@echo "  demo-server   human-joinable real-time server (M6/M10)"
 	@echo "  human-session-check M10.3 capture/replay + M10.4 scorecard gate"
+	@echo "  human-absent-check M10 paired human-only capture gate"
 
 codex-status: ## Print compact read-only takeover status
 	@bash $(SCRIPTS)/codex-status.sh
@@ -122,3 +123,6 @@ demo-server: ## Human-joinable real-time server (M6/M10)
 
 human-session-check: ## Validate opt-in M10.3 session capture and replay
 	@bash $(SCRIPTS)/human-session-check.sh
+
+human-absent-check: ## Validate the M10 zero-agent comparison condition
+	@bash $(SCRIPTS)/human-absent-check.sh

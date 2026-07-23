@@ -22,7 +22,7 @@ def _line(value: dict) -> bytes:
     return (json.dumps(value, separators=(",", ":")) + "\n").encode()
 
 
-def _capture(path: Path, schema_version: int = 3) -> None:
+def _capture(path: Path, schema_version: int = 4) -> None:
     if schema_version == 2:
         provenance = {
             "repository_commit": "1" * 40,
@@ -49,6 +49,7 @@ def _capture(path: Path, schema_version: int = 3) -> None:
             "scenario_id": "bootstrap-defense-v0",
             "scenario_version": 1,
             "policy": "public-greedy-candidates-v1",
+            **({"agent_condition": "present"} if schema_version >= 4 else {}),
             "python_lockfile": "not_applicable_demo_runtime",
             "training_config": "not_applicable_demo_runtime",
             **provenance,
@@ -111,7 +112,7 @@ def test_load_replay_and_style_summary():
         assert session_summary(records)["session_content_sha256"] == records[-1][
             "content_sha256"
         ]
-        assert session_summary(records)["capture_schema_version"] == 3
+        assert session_summary(records)["capture_schema_version"] == 4
 
 
 def test_legacy_v1_capture_remains_readable():
@@ -132,7 +133,7 @@ def test_legacy_v2_capture_remains_readable():
         assert session_summary(records)["capture_schema_version"] == 2
 
 
-def test_v3_capture_rejects_invalid_artifact_provenance():
+def test_v4_capture_rejects_invalid_artifact_provenance():
     root = Path(__file__).parents[2]
     with TemporaryDirectory(dir=root / "runs") as directory:
         path = Path(directory) / "session-v3.jsonl"
@@ -148,6 +149,31 @@ def test_v3_capture_rejects_invalid_artifact_provenance():
             ValueError, match="server_content_sha256 is not lowercase hex"
         ):
             load_session(path)
+
+
+def test_v4_experiment_assignment_is_all_or_nothing():
+    root = Path(__file__).parents[2]
+    with TemporaryDirectory(dir=root / "runs") as directory:
+        path = Path(directory) / "session-v4.jsonl"
+        _capture(path)
+        raw = path.read_bytes()
+        path.write_bytes(
+            raw.replace(
+                b'"agent_condition":"present"',
+                b'"agent_condition":"present","experiment_id":"m10-final"',
+            )
+        )
+        with pytest.raises(ValueError, match="assignment is incomplete"):
+            load_session(path)
+
+
+def test_legacy_v3_capture_remains_readable():
+    root = Path(__file__).parents[2]
+    with TemporaryDirectory(dir=root / "runs") as directory:
+        path = Path(directory) / "session-v3.jsonl"
+        _capture(path, schema_version=3)
+        records = load_session(path)
+        assert session_summary(records)["capture_schema_version"] == 3
 
 
 def test_digest_and_control_tick_fail_closed():

@@ -28,6 +28,7 @@ public final class AgentPlugin extends Plugin{
     public static final String modeProperty = "mindustry.agents.demo.mode";
     public static final String portProperty = "mindustry.agents.demo.port";
     public static final String publicPolicyProperty = "mindustry.agents.demo.public-policy";
+    public static final String agentsEnabledProperty = "mindustry.agents.demo.agents-enabled";
     public static final String capturePathProperty = "mindustry.agents.demo.capture-path";
 
     private DemoCoordinator coordinator;
@@ -42,9 +43,9 @@ public final class AgentPlugin extends Plugin{
         Events.on(ServerLoadEvent.class, event -> {
             String mode = System.getProperty(modeProperty, "manual").trim().toLowerCase();
             if(mode.equals("probe") || mode.equals("join") || mode.equals("survival")
-                || mode.equals("human")){
+                || mode.equals("human") || mode.equals("absent")){
                 Core.app.post(() -> startDemo(mode.equals("join"),
-                    mode.equals("probe") || mode.equals("human")));
+                    mode.equals("probe") || mode.equals("human") || mode.equals("absent")));
             }else{
                 Log.info("[agents] plugin loaded; run 'agents start' or use DEMO_JOIN=1.");
             }
@@ -147,12 +148,14 @@ public final class AgentPlugin extends Plugin{
         logic.reset();
         state.rules = scenario.buildRules();
         state.map = demoMap(scenario);
+        seedAssignedTrial();
         scenario.load();
         if(deterministicProbe) seedProbePhysics(0L);
         logic.play();
         if(deterministicProbe) pathfinder.syncUpdate();
 
-        coordinator = new DemoCoordinator(scenario, probe, openServer);
+        boolean agentsEnabled = booleanProperty(agentsEnabledProperty, true);
+        coordinator = new DemoCoordinator(scenario, probe, openServer, agentsEnabled);
         coordinator.spawn();
 
         if(openServer){
@@ -207,6 +210,25 @@ public final class AgentPlugin extends Plugin{
             return parsed;
         }catch(NumberFormatException e){
             throw new IllegalArgumentException("invalid demo port: " + value);
+        }
+    }
+
+    private static boolean booleanProperty(String name, boolean fallback){
+        String configured = System.getProperty(name, Boolean.toString(fallback)).trim();
+        if(configured.equalsIgnoreCase("true")) return true;
+        if(configured.equalsIgnoreCase("false")) return false;
+        throw new IllegalArgumentException(name + " must be true or false, got: " + configured);
+    }
+
+    private static void seedAssignedTrial(){
+        String configured = System.getProperty("mindustry.agents.demo.trial-seed", "").trim();
+        if(configured.isEmpty()) return;
+        try{
+            long seed = Long.parseLong(configured);
+            if(seed < 0L) throw new NumberFormatException();
+            Mathf.rand.setSeed(seed);
+        }catch(NumberFormatException e){
+            throw new IllegalArgumentException("mindustry.agents.demo.trial-seed must be a non-negative integer", e);
         }
     }
 }

@@ -211,8 +211,8 @@ The existing training `state_hash` and selector tensor schema do not change for
 the empty-control default. Any later policy-visible control observation requires
 an explicit protocol/feature-schema version and fresh learning governance.
 
-Capture schema v3 is implemented in `DemoSessionCapture` and documented in
-`docs/HUMAN_SESSIONS.md`; the Python loader retains legacy-v1/v2 readability. An
+Capture schema v4 is implemented in `DemoSessionCapture` and documented in
+`docs/HUMAN_SESSIONS.md`; the Python loader retains legacy-v1/v2/v3 readability. An
 explicit `mindustry.agents.demo.capture-path`
 creates a new UTF-8 JSONL file and refuses overwrite. It records pinned session
 metadata, the existing public-candidate trajectory at every decision boundary,
@@ -270,19 +270,30 @@ the exact rating schema from four explicit human answers, obtains the binding
 digest from a fully validated capture, rejects unknown fields, and writes with
 create-new semantics. This removes manual digest transcription without
 weakening human authority over preference evidence.
-ADR-0058 governs multi-session evidence. The dependency-free schema-v2
+ADR-0058 governs exploratory multi-session evidence. The dependency-free schema-v2
 `mindustry_agents.tools.human_evidence` report reloads complete capture/rating
 pairs, rejects duplicate digests, and groups only exact engine/Arc/protocol/
 scenario/policy identities. Serious ratings count toward the roadmap's
-three-session floor, but the report keeps acceptance `not_evaluated`: scorecard
-targets are not yet precommitted, and rating v1 does not measure a paired
-agents-present versus agents-absent preference. Legacy capture v1/v2 is
+three-session floor, but the report keeps acceptance `not_evaluated`: rating v1
+does not measure a paired agents-present versus agents-absent preference, and
+ADR-0059's targets use a separate protocol report. Legacy capture v1/v2 is
 excluded from the collection floor; v3 groups require the project commit and
 both canonical runtime-content hashes. This prevents operational
 scripted sessions from being mislabeled as learned-team or north-star evidence.
 The deterministic probe currently yields 5/83 intervention ticks, one conflict
 with zero-tick yield latency, 1/1 eligible goal compliance, no observed help
 request, and 10 rendered/four suppressed announcements.
+
+ADR-0059 now precommits final M10 acceptance before any such session exists.
+Capture v4 adds `agent_condition` and, for assigned trials, an all-or-nothing
+experiment id/block/condition/order/seed tuple inside the content digest. Three
+blocks use a Latin square over absent, scripted, and learned conditions with a
+shared seed per block. The absent runtime uses the same plugin and scenario but
+spawns zero controlled units; `bash scripts/human-absent-check.sh` proves that
+path and validates its no-port capture. Final evaluation requires all six
+learned-versus-scripted objective means to non-regress plus direct paired owner
+preference for learned over absent. Protocol creation and learned trials remain
+closed until M8 promotes an exact learned policy and M10.5 integrates it.
 
 ## Acceptance gates
 

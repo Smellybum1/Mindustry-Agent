@@ -12,7 +12,7 @@ import java.util.*;
 
 /** Opt-in, simulation-thread-owned JSONL capture for human demo sessions. */
 final class DemoSessionCapture{
-    static final int schemaVersion = 3;
+    static final int schemaVersion = 4;
     static final String repositoryCommitProperty = "mindustry.agents.demo.repository-commit";
     static final String pluginContentSha256Property = "mindustry.agents.demo.plugin-content-sha256";
     static final String serverContentSha256Property = "mindustry.agents.demo.server-content-sha256";
@@ -25,7 +25,8 @@ final class DemoSessionCapture{
     private boolean closed;
     private String closeReason = "";
 
-    private DemoSessionCapture(Path path, Scenario scenario, long tick){
+    private DemoSessionCapture(Path path, Scenario scenario, long tick, String policyId,
+                               String agentCondition){
         String repositoryCommit = requireHexProperty(repositoryCommitProperty, 40);
         String pluginContentSha256 = requireHexProperty(pluginContentSha256Property, 64);
         String serverContentSha256 = requireHexProperty(serverContentSha256Property, 64);
@@ -51,7 +52,9 @@ final class DemoSessionCapture{
         start.put("protocol_version", RlServer.PROTOCOL_VERSION);
         start.put("scenario_id", scenario.id);
         start.put("scenario_version", scenario.version);
-        start.put("policy", "public-greedy-candidates-v1");
+        start.put("policy", Objects.requireNonNull(policyId));
+        start.put("agent_condition", Objects.requireNonNull(agentCondition));
+        addExperimentAssignment(start, policyId, agentCondition);
         start.put("repository_commit", repositoryCommit);
         start.put("agent_plugin_content_sha256", pluginContentSha256);
         start.put("server_content_sha256", serverContentSha256);
@@ -75,10 +78,50 @@ final class DemoSessionCapture{
         }, "mindustry-demo-capture-close"));
     }
 
-    static DemoSessionCapture open(String configured, Scenario scenario, long tick){
+    static DemoSessionCapture open(String configured, Scenario scenario, long tick,
+                                   String policyId, String agentCondition){
         if(configured == null || configured.isBlank()) return null;
         Path path = Path.of(configured.trim()).toAbsolutePath().normalize();
-        return new DemoSessionCapture(path, scenario, tick);
+        return new DemoSessionCapture(path, scenario, tick, policyId, agentCondition);
+    }
+
+    private static void addExperimentAssignment(Jval start, String policyId,
+                                                String agentCondition){
+        String experimentId = System.getProperty("mindustry.agents.demo.experiment-id", "").trim();
+        String blockId = System.getProperty("mindustry.agents.demo.experiment-block", "").trim();
+        String condition = System.getProperty("mindustry.agents.demo.experiment-condition", "").trim();
+        String orderValue = System.getProperty("mindustry.agents.demo.experiment-order", "").trim();
+        String seedValue = System.getProperty("mindustry.agents.demo.trial-seed", "").trim();
+        boolean any = !experimentId.isEmpty() || !blockId.isEmpty() || !condition.isEmpty()
+            || !orderValue.isEmpty() || !seedValue.isEmpty();
+        boolean all = !experimentId.isEmpty() && !blockId.isEmpty() && !condition.isEmpty()
+            && !orderValue.isEmpty() && !seedValue.isEmpty();
+        if(any && !all){
+            throw new IllegalArgumentException("demo experiment assignment fields must be provided together");
+        }
+        if(!any) return;
+        int order;
+        long seed;
+        try{
+            order = Integer.parseInt(orderValue);
+            seed = Long.parseLong(seedValue);
+        }catch(NumberFormatException e){
+            throw new IllegalArgumentException("demo experiment order/seed must be integers", e);
+        }
+        if(order < 1 || order > 3 || seed < 0L){
+            throw new IllegalArgumentException("demo experiment order must be 1..3 and seed non-negative");
+        }
+        if(condition.equals("absent") != agentCondition.equals("absent")){
+            throw new IllegalArgumentException("demo experiment condition does not match agent condition");
+        }
+        if(policyId.equals("public-greedy-candidates-v1") && !condition.equals("scripted")){
+            throw new IllegalArgumentException("public greedy policy requires scripted experiment condition");
+        }
+        start.put("experiment_id", experimentId);
+        start.put("experiment_block", blockId);
+        start.put("experiment_condition", condition);
+        start.put("experiment_order", order);
+        start.put("trial_seed", seed);
     }
 
     private static String requireHexProperty(String name, int length){

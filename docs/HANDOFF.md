@@ -939,8 +939,9 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   capture/digest/control-replay/style/profile gate. The verified probe produced
   504 records with 84 trajectory boundaries and 16/16 applied controls. The
   historical v1 content/control digests are `3e864f35ffc3cf3c...` /
-  `d30d529355b07ce1...`. Capture v3 adds the project commit and canonical plugin/
-  server runtime-content hashes; legacy v1/v2 remains loader-readable but
+  `d30d529355b07ce1...`. Capture v3 added the project commit and canonical plugin/
+  server runtime-content hashes; current v4 retains them and binds agent and
+  experiment conditions. Legacy v1/v2/v3 remains loader-readable, but v1/v2 is
   evidence-ineligible. V2 whole-JAR hashes exposed volatile upstream
   `version.properties`; v3 normalizes only its comment/`buildDate` and hashes
   all stable fields/content. Two fresh JVMs from committed implementation
@@ -967,10 +968,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   their captures. `mindustry_agents.tools.human_evidence` reloads capture/rating
   pairs, rejects duplicate digests, groups exact runtime/scenario/policy pins,
   and counts only serious ratings toward the three-session floor. It never
-  claims acceptance: learned/scripted targets are not precommitted and rating
-  v1 does not prove agents-present versus agents-absent preference. Legacy
+  claims acceptance because rating v1 does not prove agents-present versus
+  agents-absent preference. Legacy
   capture v1/v2 is excluded from the final-evidence floor; v3 requires exact
-  project-commit and canonical runtime-content provenance.
+  project-commit and canonical runtime-content provenance. ADR-0059 and capture
+  v4 now freeze the final comparison before collection: three counterbalanced
+  absent/scripted/learned blocks, capture-time condition/order/seed assignment,
+  six strict learned-versus-scripted objective non-regression targets, and
+  direct learned-versus-absent owner preference. The dependency-free protocol,
+  block-rating, and report validators are implemented. The real no-port absent
+  gate passes with zero spawned agents and a valid five-boundary capture.
+  Learned assignments fail closed until M8 promotion and M10.5; no final block
+  has begun and the M10 checkboxes remain open.
 - **Current V42 training identity**:
   `12980ee2b9e427d65be1883d014da6fc67a29c5a` (V40 training parents remain
   bound to `c288483436c1003d25dc64ce7aba968600d45f3a`).
@@ -988,8 +997,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; resolves `python` on Windows or `python3` on stock Ubuntu; ends `bootstrap: OK`, exit 0. Clean Ubuntu verification passed at `43d3b17db6`. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the complete Python suite (279 with the locked runtime, or the 33-test stdlib core boundary without it), then the `agent-core` / `rl-server` JUnit suites and `agent-plugin` compile check. Literal clean-checkout Ubuntu execution passed at `43d3b17db6`; hosted CI is still pending the first push. |
-| `make test-python` | With the locked dev/RL runtime, `pytest python/tests -q` runs all 279 tests. Without pytest, the script runs the governed 33-test stdlib-only core boundary under `python -S`; both paths pass. |
+| `make test` | Runs the complete Python suite (287 with the locked runtime, or the 33-test stdlib core boundary without it), then the `agent-core` / `rl-server` JUnit suites and `agent-plugin` compile check. Literal clean-checkout Ubuntu execution passed at `43d3b17db6`; hosted CI is still pending the first push. |
+| `make test-python` | With the locked dev/RL runtime, `pytest python/tests -q` runs all 287 tests. Without pytest, the script runs the governed 33-test stdlib-only core boundary under `python -S`; both paths pass. |
+| `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
+| `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
 | `make training-gate` | On WSL2 with pinned `UV`/`JAVA`, reconstructs the RL environment, runs the 1/2/4-JVM shadow-inference collector gate, then 10,000 resets. Current 4-JVM result 375.1x real-time; zero reset drift/leak/orphans; ends `TRAINING-GATE OK`. Verified 2026-07-21. |
 | `bash scripts/train-selector.sh` | Runs 27 reward adversaries, two independent train/dev PPO runs, two complete fresh-checkpoint replays, and exact manifest comparison. Current checkpoint `0b2bd8ac...`, full digest `56cc7b54...`, dev 0/10; ends `TRAIN-SELECTOR OK`. Held-out is not read. |

@@ -2057,8 +2057,12 @@ are complete; opt-in session capture is next.
   Per ADR-0058, three serious compatible v3 sessions meet only the
   collection floor: learned/scripted targets and a
   paired agents-present/absent protocol must be precommitted before acceptance
-  collection. Real serious sessions and human-entered ratings are still
-  required.
+  collection. ADR-0059 now freezes that protocol and its targets: three
+  counterbalanced absent/scripted/learned blocks, capture-time assignment,
+  strict per-metric learned-versus-scripted non-regression, and direct owner
+  preference. Capture v4 and the no-port zero-agent gate are implemented.
+  Learned assignments remain unavailable until M8 promotion and M10.5; real
+  serious sessions and human-entered ratings are still required.
 - 10.5 Learned policy in the demo seat: latency budget (decision within one
   real-time tick), safety invariants live (stop/pause instant, autonomy
   levels honored), fallback to scripted brain on policy-process failure.

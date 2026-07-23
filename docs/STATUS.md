@@ -19,7 +19,7 @@ and what is unverified.
   and all v1 message dataclasses; the M2 process/env layer (supervisor, env
   client, parallel-env facade, vector collector) is stdlib-only too. The
   governed **33-test core boundary passes under `python -S`** with no third-party
-  packages; the complete dev/RL suite passes all **279 tests** (verified
+  packages; the complete dev/RL suite passes all **287 tests** (verified
   2026-07-23).
 - **`scripts/bootstrap.sh`**: verifies and prints the toolchain; exits 0 on this
   machine (JDK 21 Temurin, Python 3.12.5, Git 2.46). Verified working in Git Bash.
@@ -1926,8 +1926,10 @@ repository-evidence mapping used for the M6 audit is:
   produced 504 records (84 trajectory boundaries, 16/16 controls, four presence
   changes, and one human-yield event). Its historical v1 content SHA-256 is
   `3e864f35ffc3cf3c...`; the control-schedule SHA-256 remains
-  `d30d529355b07ce1...`. Capture v3 now adds project-commit and canonical plugin/
-  server runtime-content hashes, with legacy-v1/v2 loader compatibility. V2's
+  `d30d529355b07ce1...`. Capture v3 added project-commit and canonical plugin/
+  server runtime-content hashes; current v4 retains them and adds authoritative
+  agent/experiment condition metadata, with legacy-v1/v2/v3 loader
+  compatibility. V2's
   whole-server-JAR hashes changed across committed builds (`7cee94a1...` /
   `489bbb68...`); per-entry diagnosis found only volatile generated
   `version.properties`. V3 normalizes only its comment/`buildDate` while hashing
@@ -1955,14 +1957,23 @@ repository-evidence mapping used for the M6 audit is:
   `rating_status=not_provided`, with 5/83 intervention ticks, one conflict at
   zero-tick yield latency, 1/1 eligible goal compliance, and 10 rendered/four
   suppressed announcements. No human preference result is claimed.
-  ADR-0058 and the dependency-free evidence report now govern multi-session
+  ADR-0058 and the dependency-free evidence report now govern exploratory multi-session
   aggregation: duplicate digests fail, exact engine/Arc/protocol/scenario/policy
   pins define comparable groups, and only serious ratings count toward the
-  minimum-three-session floor. The report deliberately keeps acceptance
-  `not_evaluated` because targets are not precommitted and rating v1 does not
-  measure paired agents-present versus agents-absent preference. Legacy v1/v2
+  minimum-three-session floor. That report deliberately keeps acceptance
+  `not_evaluated` because rating v1 does not measure paired agents-present
+  versus agents-absent preference. Legacy v1/v2
   sessions are excluded from the provenance-complete floor; v3 groups require
-  exact project-commit and canonical runtime-content identity.
+  exact project-commit and canonical runtime-content identity. ADR-0059 now
+  separately freezes final acceptance before any result exists: three
+  Latin-square blocks each pair absent, scripted, and learned conditions on one
+  trial seed; capture v4 binds condition/order/seed at session start; every
+  objective scorecard mean must non-regress against scripted; and direct owner
+  preference must favor learned over absent. `bash
+  scripts/human-absent-check.sh` passes through the real server/plugin with zero
+  controlled units, five trajectory boundaries, a valid capture, and no
+  network port. The learned condition remains unavailable until M8 promotion
+  and M10.5, so no final block has begun and no M10 exit checkbox is closed.
 - **Python subpackages** `process`, `env`, `policies`, and `tools` now carry real M1/M2/M5 code
   (`process/{launcher,supervisor}.py`, `env/{client,parallel_env,vector}.py`,
   `tools/{smoke,determinism,stress_reset,benchmark,policy_check,
@@ -1999,7 +2010,7 @@ repository-evidence mapping used for the M6 audit is:
   reproducible five-package dev lock, runs `make test`, and builds the custom
   distributions. The inherited upstream workflows are guarded to run only in
   `Anuken/Mindustry`, so this fork never follows their Arc `master` checkout.
-  Local equivalents pass (279 Python tests, Java suites/custom-module compile,
+  Local equivalents pass (287 Python tests, Java suites/custom-module compile,
   and distributions). A detached clean Ubuntu 24.04 worktree at `43d3b17db6`
   also passed literal `make bootstrap && make test` with an isolated JDK
   21.0.11, GNU Make 4.3, empty Gradle cache, and the 33-test zero-dependency

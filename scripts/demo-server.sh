@@ -54,6 +54,11 @@ case "${DEMO_PUBLIC_POLICY:-1}" in
     0) POLICY_ARGS=(-Dmindustry.agents.demo.public-policy=false) ;;
     *) echo "DEMO_PUBLIC_POLICY must be 0 or 1" >&2; exit 2 ;;
 esac
+case "${DEMO_AGENTS:-1}" in
+    1) AGENT_ARGS=(-Dmindustry.agents.demo.agents-enabled=true) ;;
+    0) AGENT_ARGS=(-Dmindustry.agents.demo.agents-enabled=false) ;;
+    *) echo "DEMO_AGENTS must be 0 or 1" >&2; exit 2 ;;
+esac
 
 CAPTURE_ARGS=()
 CAPTURE_FILE="${DEMO_CAPTURE_PATH:-}"
@@ -98,6 +103,9 @@ validate_and_score_capture(){
 if [[ "${DEMO_HUMAN_CAPTURE:-0}" == "1" && -z "$CAPTURE_FILE" ]]; then
     CAPTURE_FILE="$RUNTIME/human-session.jsonl"
 fi
+if [[ "${DEMO_ABSENT_CHECK:-0}" == "1" && -z "$CAPTURE_FILE" ]]; then
+    CAPTURE_FILE="$RUNTIME/absent-session.jsonl"
+fi
 if [[ -n "$CAPTURE_FILE" ]]; then
     check_new_output "$CAPTURE_FILE" "capture"
     REPOSITORY_COMMIT="$(git rev-parse --verify HEAD)"
@@ -115,6 +123,52 @@ if [[ -n "$CAPTURE_FILE" ]]; then
         -Dmindustry.agents.demo.plugin-content-sha256="$PLUGIN_CONTENT_SHA256"
         -Dmindustry.agents.demo.server-content-sha256="$SERVER_CONTENT_SHA256"
     )
+fi
+
+EXPERIMENT_ARGS=()
+EXPERIMENT_VALUES=(
+    "${DEMO_EXPERIMENT_ID:-}"
+    "${DEMO_EXPERIMENT_BLOCK:-}"
+    "${DEMO_EXPERIMENT_CONDITION:-}"
+    "${DEMO_EXPERIMENT_ORDER:-}"
+    "${DEMO_TRIAL_SEED:-}"
+)
+experiment_present=0
+for value in "${EXPERIMENT_VALUES[@]}"; do
+    [[ -n "$value" ]] && experiment_present=$((experiment_present + 1))
+done
+if [[ $experiment_present -ne 0 && $experiment_present -ne 5 ]]; then
+    echo "demo-server: paired experiment fields must be provided together" >&2
+    exit 2
+fi
+if [[ $experiment_present -eq 5 ]]; then
+    [[ -n "$CAPTURE_FILE" ]] || {
+        echo "demo-server: paired experiment assignment requires DEMO_CAPTURE_PATH" >&2
+        exit 2
+    }
+    case "${DEMO_EXPERIMENT_CONDITION}" in
+        absent) [[ "${DEMO_AGENTS:-1}" == "0" ]] || {
+            echo "demo-server: absent condition requires DEMO_AGENTS=0" >&2; exit 2; } ;;
+        scripted) [[ "${DEMO_AGENTS:-1}" == "1" && "${DEMO_PUBLIC_POLICY:-1}" == "1" ]] || {
+            echo "demo-server: scripted condition requires DEMO_AGENTS=1 and DEMO_PUBLIC_POLICY=1" >&2; exit 2; } ;;
+        learned) echo "demo-server: learned experiment condition is not available before M8 promotion" >&2; exit 2 ;;
+        *) echo "demo-server: experiment condition must be absent, scripted, or learned" >&2; exit 2 ;;
+    esac
+    EXPERIMENT_ARGS=(
+        -Dmindustry.agents.demo.experiment-id="$DEMO_EXPERIMENT_ID"
+        -Dmindustry.agents.demo.experiment-block="$DEMO_EXPERIMENT_BLOCK"
+        -Dmindustry.agents.demo.experiment-condition="$DEMO_EXPERIMENT_CONDITION"
+        -Dmindustry.agents.demo.experiment-order="$DEMO_EXPERIMENT_ORDER"
+        -Dmindustry.agents.demo.trial-seed="$DEMO_TRIAL_SEED"
+    )
+fi
+
+if [[ "${DEMO_AGENTS:-1}" == "0" ]]; then
+    [[ ( "${DEMO_JOIN:-0}" == "1" || "${DEMO_ABSENT_CHECK:-0}" == "1" )
+        && -n "$CAPTURE_FILE" ]] || {
+        echo "demo-server: DEMO_AGENTS=0 is restricted to captured private join sessions" >&2
+        exit 2
+    }
 fi
 
 if [[ "${DEMO_JOIN:-0}" == "1" ]]; then
@@ -143,7 +197,7 @@ if [[ "${DEMO_HUMAN_CONTROL:-0}" == "1" || "${DEMO_HUMAN_CAPTURE:-0}" == "1" ]];
     echo "demo-server: deterministic queued human-control probe (no network port)"
     cd "$RUNTIME"
     set +e
-    "$JAVA_BIN" "${POLICY_ARGS[@]}" "${CAPTURE_ARGS[@]}" \
+    "$JAVA_BIN" "${POLICY_ARGS[@]}" "${AGENT_ARGS[@]}" "${CAPTURE_ARGS[@]}" "${EXPERIMENT_ARGS[@]}" \
         -Dmindustry.agents.demo.mode=human -jar server.jar 2>&1 | tee "$LOG"
     server_status=${PIPESTATUS[0]}
     set -e
@@ -184,7 +238,7 @@ if [[ "${DEMO_SURVIVAL:-0}" == "1" ]]; then
     echo "demo-server: real-time three-wave survival probe (no network port)"
     cd "$RUNTIME"
     set +e
-    "$JAVA_BIN" "${POLICY_ARGS[@]}" "${CAPTURE_ARGS[@]}" \
+    "$JAVA_BIN" "${POLICY_ARGS[@]}" "${AGENT_ARGS[@]}" "${CAPTURE_ARGS[@]}" "${EXPERIMENT_ARGS[@]}" \
         -Dmindustry.agents.demo.mode=survival -jar server.jar 2>&1 | tee "$LOG"
     server_status=${PIPESTATUS[0]}
     set -e
@@ -211,6 +265,37 @@ if [[ "${DEMO_SURVIVAL:-0}" == "1" ]]; then
     exit 0
 fi
 
+if [[ "${DEMO_ABSENT_CHECK:-0}" == "1" ]]; then
+    [[ "${DEMO_AGENTS:-1}" == "0" ]] || {
+        echo "demo-server: DEMO_ABSENT_CHECK requires DEMO_AGENTS=0" >&2
+        exit 2
+    }
+    LOG="$ROOT/runs/demo-server-absent.log"
+    SCORECARD_FILE="$RUNTIME/absent-scorecard.json"
+    check_new_output "$SCORECARD_FILE" "scorecard"
+    echo "demo-server: deterministic human-only capture probe (no network port)"
+    cd "$RUNTIME"
+    set +e
+    "$JAVA_BIN" "${POLICY_ARGS[@]}" "${AGENT_ARGS[@]}" "${CAPTURE_ARGS[@]}" "${EXPERIMENT_ARGS[@]}" \
+        -Dmindustry.agents.demo.mode=absent -jar server.jar 2>&1 | tee "$LOG"
+    server_status=${PIPESTATUS[0]}
+    set -e
+    cd "$ROOT"
+    [[ $server_status -eq 0 ]] || exit "$server_status"
+    grep -F "AGENT-DEMO ABSENT OK" "$LOG" | grep -F "agents=0" >/dev/null
+    if grep -F "spawned 3 controlled alpha units" "$LOG" >/dev/null; then
+        echo "demo-server: human-only probe spawned controlled units" >&2
+        exit 1
+    fi
+    if grep -F "Opened a server on port" "$LOG" >/dev/null; then
+        echo "demo-server: human-only probe unexpectedly opened a network port" >&2
+        exit 1
+    fi
+    validate_and_score_capture "$CAPTURE_FILE" "$SCORECARD_FILE"
+    echo "demo-server: ABSENT OK"
+    exit 0
+fi
+
 if [[ "${DEMO_JOIN:-0}" == "1" ]]; then
     python - "$DEMO_PORT" <<'PY'
 import socket
@@ -232,7 +317,7 @@ PY
     echo "demo-server: connect a stock v159.7 client to localhost:$DEMO_PORT"
     cd "$RUNTIME"
     set +e
-    "$JAVA_BIN" "${POLICY_ARGS[@]}" "${CAPTURE_ARGS[@]}" \
+    "$JAVA_BIN" "${POLICY_ARGS[@]}" "${AGENT_ARGS[@]}" "${CAPTURE_ARGS[@]}" "${EXPERIMENT_ARGS[@]}" \
         -Dmindustry.agents.demo.mode=join \
         -Dmindustry.agents.demo.port="$DEMO_PORT" \
         -jar server.jar
@@ -252,7 +337,7 @@ LOG="$ROOT/runs/demo-server-probe.log"
 echo "demo-server: isolated acceptance probe (no network port will be opened)"
 cd "$RUNTIME"
 set +e
-"$JAVA_BIN" "${POLICY_ARGS[@]}" "${CAPTURE_ARGS[@]}" \
+"$JAVA_BIN" "${POLICY_ARGS[@]}" "${AGENT_ARGS[@]}" "${CAPTURE_ARGS[@]}" "${EXPERIMENT_ARGS[@]}" \
     -Dmindustry.agents.demo.mode=probe -jar server.jar 2>&1 | tee "$LOG"
 server_status=${PIPESTATUS[0]}
 set -e

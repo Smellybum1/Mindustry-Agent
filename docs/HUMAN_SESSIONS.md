@@ -60,8 +60,10 @@ Records are ordered and have these types:
 
 - `session_start`: engine tag/commit, Arc hash, protocol version, scenario and
   policy identity, and explicit not-applicable demo values for the Python
-  training lockfile/config fields. Current schema v3 also records the project
-  commit plus canonical agent-plugin and server runtime-content SHA-256 values;
+  training lockfile/config fields. Schema v3 added the project commit plus
+  canonical agent-plugin and server runtime-content SHA-256 values. Current
+  schema v4 also records `agent_condition` and can bind a paired experiment
+  assignment at capture time;
 - `trajectory`: the existing public-candidate team observations, candidate
   masks, typed actions, and action results at one decision boundary;
 - `control`: queued tick, applied tick, sequence, hashed/canonical author ID,
@@ -83,10 +85,11 @@ The loader remains backward-compatible with schema-v1/v2 captures. V1 lacks
 project and executable provenance. V2 recorded whole-JAR byte hashes, but the
 upstream server archive contains volatile generated packaging metadata, so
 fresh byte-identical builds cannot be expected. Both are exploratory only.
-Schema v3 hashes sorted entry names and decompressed bytes while normalizing
+Schema v3/v4 hashes sorted entry names and decompressed bytes while normalizing
 only `version.properties` comments and `buildDate`; stable build/version fields,
 all classes, and every other resource remain authoritative. Only v3 sessions
-can contribute to a provenance-complete serious-session floor.
+or later can contribute to a provenance-complete serious-session floor. Final
+paired acceptance requires v4.
 
 The committed schema-v3 reference at project commit
 `c19e652324d356112fcbc84bbb2b89d7e88eda8c` reproduces across two fresh JVMs:
@@ -194,8 +197,70 @@ groups sessions by matching engine, Arc, protocol, scenario, and policy pins.
 Only explicit
 `serious_session=true` ratings count toward the minimum-three-session floor.
 That floor is readiness evidence, not acceptance: rating v1 does not measure a
-paired agents-present versus agents-absent preference, and no learned/scripted
-target thresholds are precommitted yet. Legacy v1/v2 groups remain exploratory;
+paired agents-present versus agents-absent preference, and this legacy report
+does not evaluate ADR-0059's separately precommitted targets. Legacy v1/v2 groups remain exploratory;
 v3 groups additionally require exact project-commit and canonical runtime-
 content hashes. The report therefore states `acceptance_status=not_evaluated` even when a v3
 group meets the collection floor. See ADR-0058.
+
+## Paired final-acceptance protocol
+
+ADR-0059 freezes a three-block Latin-square comparison of `absent`, `scripted`,
+and `learned`. Each block uses one shared trial seed, and the capture itself
+records the experiment id, block, condition, order, and seed. Labels supplied
+after play cannot repair an unassigned or mismatched capture.
+
+The human-only runtime is already executable and spawns no controlled units:
+
+```bash
+bash scripts/human-absent-check.sh
+
+DEMO_AGENTS=0 DEMO_JOIN=1 \
+DEMO_CAPTURE_PATH="$PWD/runs/human-absent-exploratory.jsonl" \
+bash scripts/demo-server.sh
+```
+
+The first command is a deterministic no-port gate. The second is exploratory
+private play and is not protocol-assigned acceptance evidence.
+
+After M8 promotes a learned policy and M10.5 makes that exact policy available
+in the demo, freeze the create-new protocol from a validated v4 reference:
+
+```bash
+PYTHONPATH=python/src python -m mindustry_agents.tools.human_protocol create \
+  --reference-session runs/human-reference-v4.jsonl \
+  --experiment-id owner-acceptance-v1 \
+  --learned-policy learned-policy-exact-id \
+  --output runs/owner-acceptance-v1.protocol.json
+```
+
+Do not begin a serious assigned block before that file exists. Run its three
+conditions in the recorded order with the recorded seed, supplying all five
+`DEMO_EXPERIMENT_ID`, `DEMO_EXPERIMENT_BLOCK`,
+`DEMO_EXPERIMENT_CONDITION`, `DEMO_EXPERIMENT_ORDER`, and `DEMO_TRIAL_SEED`
+variables. The launcher rejects partial assignments, mismatched absent/scripted
+runtime modes, and every learned assignment until M10.5 is live.
+
+After rating all three sessions normally, create the direct block rating:
+
+```bash
+PYTHONPATH=python/src python -m mindustry_agents.tools.human_protocol rate-block \
+  --protocol runs/owner-acceptance-v1.protocol.json \
+  --block-id block-001 \
+  --session absent runs/block-001-absent.jsonl \
+  --session scripted runs/block-001-scripted.jsonl \
+  --session learned runs/block-001-learned.jsonl \
+  --learned-vs-absent-preference 1 \
+  --learned-vs-scripted-preference 0 \
+  --serious-block yes \
+  --output runs/block-001.rating.json
+```
+
+The paired ratings use the same `-2..2` scale and bind all three digests. Final
+acceptance needs three complete serious blocks, observations for every
+scorecard capability in both present-agent conditions, non-regressing paired
+means against scripted, learned preferred over absent in at least two blocks
+with a positive mean, learned no worse than scripted in at least two blocks
+with a non-negative mean, and `keep_this_team=true` for learned in at least two
+blocks. The report fails closed on missing metrics, duplicate sessions, wrong
+order/seed/policy/runtime pins, or post-hoc labels.
