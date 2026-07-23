@@ -1879,9 +1879,15 @@ repository-evidence mapping used for the M6 audit is:
   it must first be committed.
 - Committed freezer `5007a7b9f3` created dev-v39 value-free in `[7B,8B)`.
   Membership SHA is `0b88fda1b37647aa...`; its receipt records no emitted values
-  and zero membership-document reads. Dev-v39 is frozen unconsumed. The
-  membership/receipt packet is not yet committed and replica A remains
-  prohibited until it is.
+  and zero membership-document reads. The membership/receipt packet was
+  committed at `df7723c6cb` before replica A; dev-v39 remained unconsumed.
+- The V43 membership packet was committed at `df7723c6cb`; two pinned replicas
+  then reproduce exactly at update 27 with 10/10 wins, mean idle `0.00874233`,
+  checkpoint `b4cc691ad0c08d67...`, and full-run digest
+  `66385a8f85ec7db7...`. All win comparisons and permanent recovery pass, but
+  permanent announcements/idle and matched recovery remain uncertain. Report
+  SHA is `10f829a54a110507...`. V43 is rejected before confirmation; dev-v39 is
+  retired unopened/unconsumed and held-out-v6 remains sealed. M8.5 is unmet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

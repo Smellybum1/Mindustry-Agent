@@ -955,11 +955,21 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   namespace, and the sealed-final binding, then atomically writes membership and
   a value-free zero-read receipt. All 298 Python tests pass. The tool must be
   committed before it can execute; dev-v39 remains unconstructed.
-- **Dev-v39 frozen value-free, packet not yet committed**: committed freezer
+- **Dev-v39 frozen value-free and committed before training**: committed freezer
   `5007a7b9f3` created the 160-root set solely in `[7B,8B)`. Membership SHA is
   `0b88fda1b37647aa...`; the value-free receipt records zero document reads and
-  no emitted values. Dev-v39 is unconsumed. Commit membership, receipt, receipt
-  test, and docs before replica A.
+  no emitted values. Commit `df7723c6cb` froze the membership/receipt packet
+  before replica A; dev-v39 remained unconsumed.
+- **V43 exact replicas complete; reusable gate rejects**: both pinned runs
+  select update 27 at 10/10 wins and mean idle `0.00874233`; all 32 checkpoints
+  and canonical evidence match. Checkpoint/replay/full-run hashes are
+  `b4cc691ad0c08d67...` / `12ed6b616310deb7...` /
+  `66385a8f85ec7db7...`; lineage is `1f07166a5d27aa30...`. Permanent
+  random/greedy are 4/10 and 8/10; matched random/greedy are 5/10 and 6/10.
+  Permanent recovery now passes decisively, but permanent announcements/idle
+  and matched recovery remain uncertain. Report SHA is `10f829a54a110507...`.
+  V43 is rejected; dev-v39 is retired unopened/unconsumed and held-out-v6 stays
+  sealed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1174,12 +1184,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit the value-free dev-v39 membership/receipt packet before replica A.**
-   Do not read or render its membership.
-2. **Preserve retired dev-v38 unopened and unconsumed.** Never read, render, or
-   delegate its membership; held-out-v6 remains sealed.
-3. **After the freezer is committed, construct dev-v39 value-free and commit
-   its membership plus zero-read/no-values-emitted receipt before replica A.**
+1. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
+   dev-v39 membership; dev-v38 also remains retired unopened.
+2. **Keep held-out-v6 sealed and unconsumed.** V43 did not authorize access.
+3. **Require a new public/train/reusable architecture hypothesis before V44.**
+   Precommit its ADR/config/confirmation umbrella before implementation or model
+   work; do not weaken or bypass the frozen dual scorecards.
 4. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
    authorize V43 or any runtime prior and still fails two scorecard rows.
 5. **M9.1 remains gated.** The roadmap says to begin only after the single

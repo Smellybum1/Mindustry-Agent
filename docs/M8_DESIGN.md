@@ -832,6 +832,17 @@ smoke, deterministic golden/negative replay, and all 44 exact-config reward
 adversaries (`3e3210447ff4f428...`). Dev-v39 remains unconstructed and no V43
 training episode has run.
 
+Both V43 replicas then reproduce exactly at selected update 27: 10/10 wins,
+mean idle `0.00874233`, checkpoint `b4cc691ad0c08d67...`, replay
+`12ed6b616310deb7...`, and full-run digest `66385a8f85ec7db7...`. Direct lineage
+passes at `1f07166a5d27aa30...`. Fresh permanent random/greedy are 4/10 and 8/10;
+matched random/greedy are 5/10 and 6/10. Every win comparison passes and
+permanent recovery becomes decisively favorable, but the frozen scorecards
+still reject V43: permanent announcements and idle remain favorable but
+uncertain, and matched recovery remains uncertain. Report SHA is
+`10f829a54a110507...`. Dev-v39 is retired unopened/unconsumed and held-out-v6
+remains sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

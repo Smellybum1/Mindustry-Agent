@@ -141,3 +141,36 @@ the receipt reports
 `values_emitted=false`, zero membership-document reads, and no generated,
 retired-confirmation, or sealed-final read. Dev-v39 is frozen unconsumed. Replica
 A remains prohibited until this membership/receipt packet is committed.
+
+## Outcome
+
+The membership/receipt packet was committed at `df7723c6cb` before model work.
+Two independent pinned WSL Torch 2.12.1 constructions from that exact commit
+select update 27 at 10/10 reusable wins, mean return `7.57468`, mean core health
+`829.1`, and mean idle `0.008742327973619925`. All 32 checkpoint files are
+byte-identical and the canonical manifest comparator passes. Checkpoint, model-
+state, replay, action-state, and full-run hashes are
+`b4cc691ad0c08d67d6d560f0e4bfc66651df65e3a8945dcb27f22a0db8129bfa`,
+`0dea357a79bd33fcac9c7ddb8468ddf37a6a3fde267f611cc5c209035e65ab73`,
+`12ed6b616310deb7a78040faccf09193a6e51030f15ec90b5204d46ff917b64c`,
+`7224241af3bf6624501ebecca220bb7d72fdf547cf0518dc1b88cb27dbf8636b`,
+and `66385a8f85ec7db76b478c9ee1a167710e0839320d2e828de280082d193af9b1`.
+Direct-lineage digest/artifact hashes are `1f07166a5d27aa30...` /
+`9da8c719c366752c...`.
+
+Fresh selected-only permanent random/greedy baselines are 4/10 and 8/10. V43
+is 10/10 versus matched random/greedy 5/10 and 6/10, so every observed win
+comparison passes. The set-context architecture also makes permanent recovery a
+decisive pass (mean `-108.35` ticks, CI `[-196.15,-41.0475]`) and improves all
+matched announcement/duplicate/idle rows. The frozen dual scorecards still
+fail: permanent announcements (mean `-0.00104554`, CI
+`[-0.00652092,+0.00494021]`) and idle (mean `-0.00697822`, CI
+`[-0.02003760,+0.01159576]`) are favorable but uncertain, while matched recovery
+is uncertain (mean `-20.8`, CI `[-88.90875,+51.0025]`). Records/aggregate/report
+hashes are `a3bf222c25ec52ea...` / `12c0272429e14f42...` /
+`10f829a54a110507...`.
+
+V43 is rejected before confirmation. Dev-v39 is retired unopened and
+unconsumed without a membership read. Held-out-v6 remains sealed and
+unconsumed. M8.5 remains unmet; a successor requires a new precommitted public/
+train/reusable architecture hypothesis.

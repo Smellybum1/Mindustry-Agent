@@ -1966,7 +1966,21 @@ The committed freezer at `5007a7b9f3` has now created dev-v39 value-free.
 Membership SHA is `0b88fda1b37647aa...`; the receipt attests no emitted values,
 zero membership-document reads, and no generated, retired-confirmation, or
 sealed-final read. Dev-v39 remains unconsumed. Commit the membership and receipt
-packet before replica A.
+packet before replica A. That packet was committed at `df7723c6cb` before the
+replicas recorded below.
+
+V43's two pinned replicas reproduce exactly and select update 27 at 10/10
+reusable wins, mean idle `0.00874233`, checkpoint `b4cc691ad0c08d67...`, and
+full-run digest `66385a8f85ec7db7...`; direct lineage is
+`1f07166a5d27aa30...`. Fresh permanent random/greedy are 4/10 and 8/10; matched
+random/greedy are 5/10 and 6/10, so every win comparison passes. Permanent
+recovery now passes decisively, and matched announcement/duplicate/idle metrics
+pass. V43 nevertheless fails the frozen dual scorecards because permanent
+announcements and idle remain favorable but uncertain and matched recovery is
+uncertain. Records/aggregate/report hashes are `a3bf222c25ec52ea...` /
+`12c0272429e14f42...` / `10f829a54a110507...`. V43 is rejected before
+confirmation; dev-v39 is retired unopened/unconsumed, held-out-v6 remains
+sealed/unconsumed, and M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
