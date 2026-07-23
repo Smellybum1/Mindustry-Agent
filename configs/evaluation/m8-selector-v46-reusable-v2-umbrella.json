@@ -1,0 +1,77 @@
+{
+  "schema": "m8_reusable_scorecard_protocol_umbrella_v1",
+  "candidate_version": "v46",
+  "protocol_revision": "reusable-scorecard-v2",
+  "status": "reserved_before_reusable_membership_creation",
+  "owner_authorization": "explicit_direction_change_2026-07-23",
+  "candidate": {
+    "training_config": {
+      "path": "configs/training/m8-selector-v46-expert-defer-control.json",
+      "sha256": "b588ee43e66bd9d13a9bee5bacac08251cd4c49c3f8d5726eaf2675f06d5d835"
+    },
+    "checkpoint_sha256": "93694e4d70ec56e4677e8c3c66fdf657f19a833fae38975eba11ac56289f577a",
+    "model_state_sha256": "70c762f358ae8cced0d7bda595cef0600f22801ed1de2e9df87ccd03c9391d48",
+    "training_repository_commit": "25db7801e7013a13cdcc238882e05bca1582db74",
+    "lineage_sha256": "b6322349e4d14b31742587c158068e13c298f1d5459f028aa6e177597c43fe91"
+  },
+  "reusable_set": {
+    "seed_set_id": "bootstrap-defense-v1-reusable-scorecard-v2",
+    "seed_set_version": 2,
+    "split": "dev",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-reusable-scorecard-v2.json",
+    "exclusive_namespace": {
+      "minimum_inclusive": 11000000000,
+      "maximum_exclusive": 12000000000
+    },
+    "membership_state_at_reservation": "not_created",
+    "membership_visibility": "public_after_construction",
+    "uses": [
+      "fresh_permanent_baselines",
+      "matched_baselines",
+      "candidate_reusable_preflight"
+    ],
+    "forbidden_uses": [
+      "training",
+      "checkpoint_selection",
+      "hyperparameter_selection",
+      "confirmation",
+      "held_out_final"
+    ]
+  },
+  "replacement_confirmation_reservation": {
+    "seed_set_id": "bootstrap-defense-v1-dev-v43",
+    "seed_set_version": 43,
+    "split": "dev",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v43.json",
+    "exclusive_namespace": {
+      "minimum_inclusive": 12000000000,
+      "maximum_exclusive": 13000000000
+    },
+    "membership_state_at_reservation": "not_created",
+    "access_owner": "primary_agent_only",
+    "delegation_forbidden": true,
+    "construction_gate": "all_reusable_v2_gates_pass"
+  },
+  "retired_confirmation": {
+    "seed_set_id": "bootstrap-defense-v1-dev-v42",
+    "status": "retired_unopened_unconsumed",
+    "membership_read_authorized": false
+  },
+  "sealed_final": {
+    "seed_set_id": "bootstrap-defense-v1-held-out-v6",
+    "seed_set_version": 6,
+    "membership_sha256": "2bf4aa04ef54d873e961ff367db849c14c72b83bb4d280c4e31ba75bdeefa51c",
+    "status": "sealed_unconsumed",
+    "membership_read_authorized": false
+  },
+  "decision_rule": {
+    "confidence_rule": "unchanged_paired_bootstrap_ci95_upper_bound_at_or_below_zero",
+    "uncertainty_is_failure": true,
+    "all_four_win_comparisons_required": true,
+    "both_scorecard_families_required": true,
+    "maximum_mean_expert_defer_fraction_inclusive": 0.25,
+    "one_reusable_v2_screen": true
+  }
+}

@@ -2029,6 +2029,15 @@ repository-evidence mapping used for the M6 audit is:
   CI `[-82.11,+39.75125]`. Report SHA is `2af00337138b9939...`. V46 is rejected
   before confirmation; dev-v42 is retired unopened/unconsumed and held-out-v6
   remains sealed.
+- A reusable-only V46 no-DEFER ablation remains 10/10 and produces essentially
+  the same three uncertain rows (report `109d0bd5ef8ca177...`), so another
+  small control-head change is not evidence-backed. With explicit owner
+  authorization, ADR-0064 precommits a statistical-power correction: the exact
+  confidence rule stays frozen, while one canonical reusable screen uses 160
+  public roots in `[11B,12B)`. The V46 checkpoint is frozen; no retraining or
+  reselection is allowed. Replacement confirmation dev-v43 is reserved in
+  `[12B,13B)` but cannot be constructed unless all reusable-v2 gates pass.
+  Dev-v42 stays retired unopened and held-out-v6 stays sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

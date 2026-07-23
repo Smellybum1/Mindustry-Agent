@@ -1018,6 +1018,16 @@ has `-18.0`, CI `[-82.11,+39.75125]`. Report SHA-256 is
 V46 is rejected before confirmation; dev-v42 is retired unopened/unconsumed and
 held-out-v6 remains sealed.
 
+ADR-0064 corrects the reusable scorecard's statistical power with explicit
+owner authorization. The zero-crossing paired-bootstrap rule is unchanged, but
+the canonical reusable screen is precommitted at 160 public roots instead of
+ten. The frozen V46 checkpoint receives one rescreen with fresh permanent and
+matched baselines; it is not retrained or reselected. The public membership is
+reserved in `[11B,12B)`, while replacement confirmation dev-v43 is reserved
+value-free in `[12B,13B)` and remains unconstructed unless every reusable-v2
+gate passes. Dev-v42 remains retired unopened/unconsumed and held-out-v6
+remains sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

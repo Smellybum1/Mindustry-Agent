@@ -1089,6 +1089,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   announcements and idle, plus matched recovery. Report SHA is
   `2af00337138b9939...`. Dev-v42 is retired unopened/unconsumed and held-out-v6
   remains sealed.
+- **Reusable-scorecard power correction precommitted**: the ignored no-DEFER
+  ablation remains 10/10 and fails nearly identical confidence rows (report
+  `109d0bd5ef8ca177...`). With explicit owner authorization, ADR-0064 keeps the
+  strict zero-crossing rule but replaces the underpowered ten-root reusable
+  scorecard with one precommitted 160-root public screen in `[11B,12B)`. The
+  exact V46 checkpoint is frozen and gets no retraining/reselection. Dev-v43 is
+  reserved in `[12B,13B)` but unconstructed; dev-v42 remains retired unopened,
+  and held-out-v6 remains sealed. Commit the ADR/umbrella/generator before
+  constructing public reusable-v2 membership.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned

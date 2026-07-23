@@ -2135,6 +2135,17 @@ config/umbrella and atomically creates membership plus a value-free receipt. It
 has not executed. Commit the freezer before construction; dev-v40 remains
 unconstructed and replica A remains prohibited.
 
+ADR-0064 records the owner-authorized reusable-scorecard power correction after
+V46. A no-DEFER ablation remained 10/10 and failed essentially the same three
+confidence rows, so another small control coordinate is not justified. The
+paired-bootstrap zero-crossing rule remains exact; its canonical reusable
+sample increases from ten roots to 160 precommitted public roots in `[11B,12B)`.
+The frozen V46 checkpoint receives one screen with fresh permanent and matched
+baselines and cannot be retrained or reselected. Dev-v43 is reserved
+value-free in `[12B,13B)` but cannot be constructed unless every reusable-v2
+gate passes. Dev-v42 remains retired unopened/unconsumed, held-out-v6 remains
+sealed, and M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
