@@ -2375,7 +2375,9 @@ repository-evidence mapping used for the M6 audit is:
   runner support and exact entropy telemetry are implemented locally. Focused
   schedule, inheritance, real twin-update, authority, artifact, dispatch, and
   v1--v3 compatibility tests pass within the complete 417-test Python suite.
-  Commit-bound entropy evidence and the full gate are next; no v4 trajectory
+  Implementation commit `d232d64dc5` is pushed. Its entropy/inheritance report
+  reproduced byte-identically twice and is committed with SHA
+  `44a33c55693686d3...`. The full exact-commit gate is next; no v4 trajectory
   or model update exists.
 
 ## What is stubbed (compiles/imports, no real behaviour)

@@ -2432,7 +2432,9 @@ categorical; dev evaluation stays deterministic argmax. No v4 trajectory or
 optimizer update exists. Candidate-aware config/checkpoint/manifest/preflight/
 runner support, exact inheritance checks, and per-update entropy telemetry are
 implemented locally. Focused tests and the complete 417-test Python suite pass.
-Commit-bound entropy evidence and the complete exact-commit gate are next.
+Implementation commit `d232d64dc5` is pushed. Its entropy/inheritance report
+reproduced byte-identically twice and is committed with SHA
+`44a33c55693686d3...`. The complete exact-commit gate is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

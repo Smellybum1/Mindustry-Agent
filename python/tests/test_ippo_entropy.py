@@ -41,12 +41,29 @@ class TestIPPOEntropyAnneal(unittest.TestCase):
 
     def test_v4_inherits_v3_except_entropy_schedule(self):
         from mindustry_agents.training.ippo_entropy_check import build_report
+        from mindustry_agents.training.ippo_preflight import EXPECTED_V4
+        from mindustry_agents.training.ippo_ppo import sha256_path
 
         report = build_report(self.root)
         self.assertTrue(report["semantic_inheritance_exact"])
         self.assertEqual(report["training_root_count"], 2048)
         self.assertEqual(report["training_root_reuse_count"], 1)
         self.assertFalse(report["confirmation_or_held_out_access"])
+        evidence = (
+            self.root
+            / "configs/evaluation/m9-ippo-v4-entropy-optimizer-check.json"
+        )
+        self.assertEqual(
+            sha256_path(evidence),
+            EXPECTED_V4[
+                "configs/evaluation/m9-ippo-v4-entropy-optimizer-check.json"
+            ],
+        )
+        committed = json.loads(evidence.read_text(encoding="utf-8"))
+        self.assertEqual(
+            committed["implementation_commit"],
+            "d232d64dc5763c1a46bdada9b21c895459d493e8",
+        )
 
     def test_entropy_schedule_is_exact_and_strict(self):
         from mindustry_agents.training.ippo_ppo import (

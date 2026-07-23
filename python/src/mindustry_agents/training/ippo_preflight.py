@@ -56,6 +56,12 @@ EXPECTED_V3 = {
         "e8334ee662e718b7d6e4f53aadaff0d58b51f2afeba18113c06393e399dfbcdd"
     ),
 }
+EXPECTED_V4 = {
+    **EXPECTED_V3,
+    "configs/evaluation/m9-ippo-v4-entropy-optimizer-check.json": (
+        "44a33c55693686d347ad21fbca3874dc61222c07a8e9bdd55b131f8c4e2dcc49"
+    ),
+}
 
 GATES = (
     "test-python",
@@ -189,6 +195,12 @@ def _sequence_identity(report: dict[str, Any]) -> dict[str, Any]:
 
 
 def _diverse_identity(report: dict[str, Any]) -> dict[str, Any]:
+    result = copy.deepcopy(report)
+    result.pop("implementation_commit", None)
+    return result
+
+
+def _entropy_identity(report: dict[str, Any]) -> dict[str, Any]:
     result = copy.deepcopy(report)
     result.pop("implementation_commit", None)
     return result
@@ -360,6 +372,15 @@ def validate_v4_preflight(root: Path | None = None) -> dict[str, Any]:
     baseline = _load(
         root, "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json"
     )
+    committed_path = (
+        root
+        / "configs/evaluation/m9-ippo-v4-entropy-optimizer-check.json"
+    )
+    if sha256_path(committed_path) != EXPECTED_V4[
+        "configs/evaluation/m9-ippo-v4-entropy-optimizer-check.json"
+    ]:
+        raise ValueError("M9 v4 committed entropy evidence hash drifted")
+    committed = json.loads(committed_path.read_text(encoding="utf-8"))
     current_path = root / "runs/m9-ippo-v4-entropy-check.json"
     current = json.loads(current_path.read_text(encoding="utf-8"))
     expected = build_entropy_report(root)
@@ -368,17 +389,25 @@ def validate_v4_preflight(root: Path | None = None) -> dict[str, Any]:
         inherited.get("passed") is not True
         or inherited.get("confirmation_or_held_out_access") is not False
         or current != expected
+        or committed.get("schema") != "m9_ippo_v4_entropy_check_v1"
+        or committed.get("implementation_commit")
+        != "d232d64dc5763c1a46bdada9b21c895459d493e8"
+        or committed.get("config_sha256") != IPPO_V4_CONFIG_SHA256
+        or committed.get("protocol_sha256") != IPPO_V4_PROTOCOL_SHA256
+        or committed.get("semantic_inheritance_exact") is not True
+        or committed.get("all_passed") is not True
+        or committed.get("confirmation_or_held_out_access") is not False
         or current.get("implementation_commit") != commit
-        or current.get("all_passed") is not True
-        or current.get("confirmation_or_held_out_access") is not False
+        or _entropy_identity(current) != _entropy_identity(committed)
     ):
         raise ValueError("M9 v4 entropy evidence is incomplete or divergent")
     return {
         "schema": "m9_ippo_v4_preflight_v1",
         "implementation_commit": commit,
+        "entropy_implementation_commit": committed["implementation_commit"],
         "config_sha256": IPPO_V4_CONFIG_SHA256,
         "protocol_sha256": IPPO_V4_PROTOCOL_SHA256,
-        "artifacts": EXPECTED_V3,
+        "artifacts": EXPECTED_V4,
         "gates": list(V4_GATES),
         "public_baseline_wins": baseline["aggregate"]["wins"],
         "entropy_schedule_sha256": current["coefficient_schedule_sha256"],

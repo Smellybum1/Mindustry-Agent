@@ -1,0 +1,146 @@
+{
+  "all_passed": true,
+  "candidate_version": "m9-ippo-v4-entropy-anneal",
+  "coefficient_schedule": [
+    {
+      "entropy_coefficient": 0.02,
+      "update": 1
+    },
+    {
+      "entropy_coefficient": 0.01935483870967742,
+      "update": 2
+    },
+    {
+      "entropy_coefficient": 0.01870967741935484,
+      "update": 3
+    },
+    {
+      "entropy_coefficient": 0.01806451612903226,
+      "update": 4
+    },
+    {
+      "entropy_coefficient": 0.017419354838709676,
+      "update": 5
+    },
+    {
+      "entropy_coefficient": 0.016774193548387096,
+      "update": 6
+    },
+    {
+      "entropy_coefficient": 0.016129032258064516,
+      "update": 7
+    },
+    {
+      "entropy_coefficient": 0.015483870967741935,
+      "update": 8
+    },
+    {
+      "entropy_coefficient": 0.014838709677419355,
+      "update": 9
+    },
+    {
+      "entropy_coefficient": 0.014193548387096775,
+      "update": 10
+    },
+    {
+      "entropy_coefficient": 0.013548387096774195,
+      "update": 11
+    },
+    {
+      "entropy_coefficient": 0.012903225806451613,
+      "update": 12
+    },
+    {
+      "entropy_coefficient": 0.012258064516129033,
+      "update": 13
+    },
+    {
+      "entropy_coefficient": 0.01161290322580645,
+      "update": 14
+    },
+    {
+      "entropy_coefficient": 0.010967741935483872,
+      "update": 15
+    },
+    {
+      "entropy_coefficient": 0.01032258064516129,
+      "update": 16
+    },
+    {
+      "entropy_coefficient": 0.00967741935483871,
+      "update": 17
+    },
+    {
+      "entropy_coefficient": 0.00903225806451613,
+      "update": 18
+    },
+    {
+      "entropy_coefficient": 0.008387096774193548,
+      "update": 19
+    },
+    {
+      "entropy_coefficient": 0.007741935483870968,
+      "update": 20
+    },
+    {
+      "entropy_coefficient": 0.0070967741935483875,
+      "update": 21
+    },
+    {
+      "entropy_coefficient": 0.006451612903225807,
+      "update": 22
+    },
+    {
+      "entropy_coefficient": 0.005806451612903225,
+      "update": 23
+    },
+    {
+      "entropy_coefficient": 0.005161290322580645,
+      "update": 24
+    },
+    {
+      "entropy_coefficient": 0.004516129032258065,
+      "update": 25
+    },
+    {
+      "entropy_coefficient": 0.0038709677419354847,
+      "update": 26
+    },
+    {
+      "entropy_coefficient": 0.003225806451612901,
+      "update": 27
+    },
+    {
+      "entropy_coefficient": 0.002580645161290321,
+      "update": 28
+    },
+    {
+      "entropy_coefficient": 0.001935483870967744,
+      "update": 29
+    },
+    {
+      "entropy_coefficient": 0.0012903225806451639,
+      "update": 30
+    },
+    {
+      "entropy_coefficient": 0.0006451612903225802,
+      "update": 31
+    },
+    {
+      "entropy_coefficient": 0.0,
+      "update": 32
+    }
+  ],
+  "coefficient_schedule_sha256": "4cf5574d75f8b9d430135ef223549f7dba7af4a31e4c79858c509d669ff71573",
+  "config_sha256": "9b9495e03b11e0fdae744fefd64f65de513b85093cf96e2a088ac4235766d215",
+  "confirmation_or_held_out_access": false,
+  "implementation_commit": "d232d64dc5763c1a46bdada9b21c895459d493e8",
+  "parent_config_sha256": "5d437c390fc54423ac1be1f27b47395e68bd42e5f85a74e8abd13275c5f9b458",
+  "parent_protocol_sha256": "29085f124d958f563965a682adb029bdff24bf3a03df2148dd19c41c36e2a82f",
+  "protocol_sha256": "db9b5647f249d30889b911a075905a78f4ba9ccef5613bc25d09126e1d1e7ace",
+  "schema": "m9_ippo_v4_entropy_check_v1",
+  "semantic_inheritance_exact": true,
+  "training_root_count": 2048,
+  "training_root_reuse_count": 1,
+  "training_schedule_sha256": "a58244f31f21c24bbd96adb77953d231982fb799e61777993f9fb2b438833ec1"
+}

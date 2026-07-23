@@ -207,8 +207,9 @@ pins, and dependency lock.
    or optimizer update exists. Candidate-aware config/checkpoint/manifest/
    preflight/runner support and per-update entropy telemetry are implemented
    locally. Focused real-update/inheritance/authority/artifact coverage and the
-   complete 417-test Python suite pass. Commit-bound entropy evidence and the
-   full gate are next.
+   complete 417-test Python suite pass. Implementation commit `d232d64dc5` is
+   pushed; its twice-identical entropy/inheritance report is committed with SHA
+   `44a33c55693686d3...`. The full exact-commit gate is next.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 
