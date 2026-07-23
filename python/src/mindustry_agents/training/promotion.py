@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -47,9 +48,12 @@ from mindustry_agents.training.ppo_selector import (
     rollout_episode,
 )
 from mindustry_agents.training.selector import (
+    CONTROL_SCHEMA_V1,
+    CONTROL_SCHEMA_V2,
     FEATURE_SCHEMA,
     SelectorHistory,
     build_selector_features,
+    expected_control_schema,
     expected_feature_schema,
 )
 
@@ -94,6 +98,7 @@ def rollout_control_episode(
     control: str,
     scripted_partner_opening: dict[str, Any] | None = None,
     feature_schema: str = FEATURE_SCHEMA,
+    control_schema: str = CONTROL_SCHEMA_V1,
 ) -> EpisodeRollout:
     """Run one matched seat-0 control with the learned seat's scripted lifecycle."""
 
@@ -151,6 +156,10 @@ def rollout_control_episode(
             history=history,
             agent_id=LEARNED_SEAT,
             feature_schema=feature_schema,
+            control_schema=control_schema,
+            expert_action_index=(
+                lifecycle_index if control_schema == CONTROL_SCHEMA_V2 else None
+            ),
         )
         forced = (
             features.forced_task_action is not None
@@ -284,7 +293,82 @@ def _record(
     }
     record = ladder_episode_record(result, manifest, seed_set)
     record["decision_trace"] = rollout.trace
+    if "expert_defer_fraction" in rollout.coordination_metrics:
+        record["control"] = {
+            "schema": CONTROL_SCHEMA_V2,
+            "expert_defer_opportunities": int(
+                rollout.coordination_metrics["expert_defer_opportunities"]
+            ),
+            "expert_defer_count": int(
+                rollout.coordination_metrics["expert_defer_count"]
+            ),
+            "expert_defer_policy_decisions": int(
+                rollout.coordination_metrics["expert_defer_policy_decisions"]
+            ),
+            "expert_defer_fraction": float(
+                rollout.coordination_metrics["expert_defer_fraction"]
+            ),
+        }
     return record
+
+
+def _expert_defer_control_gate(
+    records: list[dict[str, Any]], config: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Apply the frozen V46 mean-defer cap to candidate episode records."""
+
+    if expected_control_schema(config) != CONTROL_SCHEMA_V2:
+        return None
+    candidate_control = [
+        item.get("control")
+        for item in records
+        if item.get("manifest", {}).get("policy") == CANDIDATE_POLICY
+    ]
+    if not candidate_control or any(
+        not isinstance(item, dict)
+        or item.get("schema") != CONTROL_SCHEMA_V2
+        for item in candidate_control
+    ):
+        raise RuntimeError("candidate expert-defer telemetry is incomplete")
+    for item in candidate_control:
+        opportunities = item.get("expert_defer_opportunities")
+        count = item.get("expert_defer_count")
+        decisions = item.get("expert_defer_policy_decisions")
+        fraction = item.get("expert_defer_fraction")
+        if (
+            isinstance(opportunities, bool)
+            or not isinstance(opportunities, int)
+            or isinstance(count, bool)
+            or not isinstance(count, int)
+            or isinstance(decisions, bool)
+            or not isinstance(decisions, int)
+            or isinstance(fraction, bool)
+            or not isinstance(fraction, (int, float))
+            or opportunities < 0
+            or count < 0
+            or decisions < 0
+            or count > opportunities
+            or opportunities > decisions
+            or not math.isfinite(float(fraction))
+            or not 0.0 <= float(fraction) <= 1.0
+            or float(fraction) != (count / decisions if decisions else 0.0)
+        ):
+            raise RuntimeError("candidate expert-defer telemetry is invalid")
+    maximum_defer = float(
+        config["dev_checkpoint_selection"][
+            "maximum_mean_expert_defer_fraction_inclusive"
+        ]
+    )
+    mean_defer = sum(
+        float(item["expert_defer_fraction"]) for item in candidate_control
+    ) / len(candidate_control)
+    return {
+        "schema": CONTROL_SCHEMA_V2,
+        "episodes": len(candidate_control),
+        "mean_expert_defer_fraction": mean_defer,
+        "maximum_mean_expert_defer_fraction_inclusive": maximum_defer,
+        "passed": mean_defer <= maximum_defer,
+    }
 
 
 def _matches_runtime_provenance(
@@ -433,6 +517,7 @@ def main(argv: list[str] | None = None) -> int:
     model = build_selector_model(config)
     reward_schema = str(config.get("reward_schema", REWARD_SCHEMA))
     feature_schema = expected_feature_schema(config)
+    control_schema = expected_control_schema(config)
     checkpoint_payload = load_checkpoint(
         args.checkpoint.resolve(),
         model,
@@ -527,6 +612,7 @@ def main(argv: list[str] | None = None) -> int:
                             partner_intent_duplication_risk
                         ),
                         feature_schema=feature_schema,
+                        control_schema=control_schema,
                     )
                 else:
                     rollout = rollout_control_episode(
@@ -537,6 +623,7 @@ def main(argv: list[str] | None = None) -> int:
                         control=policy,
                         scripted_partner_opening=scripted_partner_opening,
                         feature_schema=feature_schema,
+                        control_schema=control_schema,
                     )
                 records.append(
                     _record(
@@ -581,10 +668,19 @@ def main(argv: list[str] | None = None) -> int:
             },
         }
     )
+    control_gate = _expert_defer_control_gate(records, config)
+    if control_gate is not None:
+        if control_gate["episodes"] != len(seed_set["seeds"]):
+            raise RuntimeError("candidate expert-defer episode count mismatch")
+        preflight["expert_defer_control"] = control_gate
     preflight["eligible_for_held_out"] = bool(
         preflight["eligible_for_held_out"]
         and checkpoint_config_match
         and not unexpected_dirty
+        and (
+            control_schema != CONTROL_SCHEMA_V2
+            or preflight["expert_defer_control"]["passed"]
+        )
     )
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

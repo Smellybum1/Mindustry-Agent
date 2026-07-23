@@ -41,15 +41,21 @@ from mindustry_agents.training.reward import (
     SelectorReward,
 )
 from mindustry_agents.training.selector import (
+    ACTION_COUNT,
+    CONTROL_SCHEMA_V1,
+    CONTROL_SCHEMA_V2,
+    EXPERT_DEFER_ACTION_INDEX,
     FEATURE_SCHEMA,
     SelectorFeatures,
     SelectorHistory,
     build_selector_features,
+    expected_control_schema,
     expected_feature_schema,
     selector_action,
 )
 
 QUALITY_GATE_SELECTION_SCHEMA = "quality_gate_v1"
+QUALITY_CONTROL_GATE_SELECTION_SCHEMA = "quality_control_gate_v1"
 QUALITY_GATE_RANKING = (
     "wins_desc",
     "mean_return_desc",
@@ -571,7 +577,8 @@ def _dev_checkpoint_selection_policy(
         return None
     if (
         not isinstance(policy, dict)
-        or policy.get("schema") != QUALITY_GATE_SELECTION_SCHEMA
+        or policy.get("schema")
+        not in (QUALITY_GATE_SELECTION_SCHEMA, QUALITY_CONTROL_GATE_SELECTION_SCHEMA)
     ):
         raise ValueError("unsupported dev checkpoint selection schema")
     if tuple(policy.get("ranking", ())) != QUALITY_GATE_RANKING:
@@ -582,12 +589,20 @@ def _dev_checkpoint_selection_policy(
     )
     if minimum_wins < 1 or not 0.0 < maximum_idle <= 1.0:
         raise ValueError("invalid dev checkpoint selection gate")
-    return {
-        "schema": QUALITY_GATE_SELECTION_SCHEMA,
+    result = {
+        "schema": str(policy["schema"]),
         "minimum_wins": minimum_wins,
         "maximum_mean_idle_fraction_exclusive": maximum_idle,
         "ranking": list(QUALITY_GATE_RANKING),
     }
+    if policy["schema"] == QUALITY_CONTROL_GATE_SELECTION_SCHEMA:
+        maximum_defer = float(
+            policy.get("maximum_mean_expert_defer_fraction_inclusive", -1.0)
+        )
+        if not 0.0 <= maximum_defer < 1.0:
+            raise ValueError("invalid expert-defer checkpoint selection gate")
+        result["maximum_mean_expert_defer_fraction_inclusive"] = maximum_defer
+    return result
 
 
 def _select_dev_checkpoint_index(
@@ -604,6 +619,11 @@ def _select_dev_checkpoint_index(
             if int(row["wins"]) >= int(policy["minimum_wins"])
             and float(row["mean_idle_fraction"])
             < float(policy["maximum_mean_idle_fraction_exclusive"])
+            and (
+                policy["schema"] != QUALITY_CONTROL_GATE_SELECTION_SCHEMA
+                or float(row["mean_expert_defer_fraction"])
+                <= float(policy["maximum_mean_expert_defer_fraction_inclusive"])
+            )
         ]
         if not eligible:
             raise RuntimeError("no checkpoint passed the precommitted dev quality gate")
@@ -749,6 +769,32 @@ def _canonical_scripted_action(
     return action
 
 
+def _resolve_policy_control_action(
+    selected_index: int,
+    scripted_action: dict[str, Any],
+    candidates: list[dict[str, Any]],
+    *,
+    control_schema: str,
+) -> tuple[dict[str, Any], int, bool]:
+    """Translate one policy control index to the authoritative ordinary action."""
+
+    if selected_index == EXPERT_DEFER_ACTION_INDEX:
+        if control_schema != CONTROL_SCHEMA_V2:
+            raise ValueError("expert defer requires the V2 control schema")
+        effective_index = _scripted_index(scripted_action, candidates)
+        return scripted_action, effective_index, True
+    if selected_index < 0 or selected_index >= ACTION_COUNT:
+        raise ValueError(f"policy control action index out of range: {selected_index}")
+    return (
+        {
+            "agent_id": LEARNED_SEAT,
+            "task_action": selector_action(selected_index, candidates),
+        },
+        selected_index,
+        False,
+    )
+
+
 def _selected_candidate_diagnostics(
     candidates: list[dict[str, Any]], selected_index: int
 ) -> dict[str, Any] | None:
@@ -792,6 +838,7 @@ def rollout_episode(
     partner_intent_duplication_risk: dict[str, Any] | None = None,
     partner_intent_teacher_conflict_relabel: dict[str, Any] | None = None,
     feature_schema: str = FEATURE_SCHEMA,
+    control_schema: str = CONTROL_SCHEMA_V1,
 ) -> EpisodeRollout:
     policy_logit_adjustment = _policy_logit_adjustment(
         {"policy_logit_adjustment": policy_logit_adjustment}
@@ -850,6 +897,8 @@ def rollout_episode(
     game_events: list[dict[str, Any]] = []
     agent_loss_ticks: dict[int, int] = {}
     previous_dead = [bool(item["unit"]["dead"]) for item in observations]
+    expert_defer_opportunities = 0
+    expert_defer_count = 0
 
     while outcome == "running" and tick < int(metadata["tick_cap"]):
         scripted_bundle, opening_action = _apply_scripted_partner_opening(
@@ -864,12 +913,23 @@ def rollout_episode(
             observations,
             partner_intent_duplication_risk,
         )
+        scripted_action = _canonical_scripted_action(
+            scripted_bundle[LEARNED_SEAT],
+            observations[LEARNED_SEAT]["task_candidates"],
+        )
+        teacher_index = _scripted_index(
+            scripted_action, observations[LEARNED_SEAT]["task_candidates"]
+        )
         feature_kwargs = {
             "task_board": board,
             "boundary_reasons": boundary_reasons,
             "history": history,
             "agent_id": LEARNED_SEAT,
             "feature_schema": feature_schema,
+            "control_schema": control_schema,
+            "expert_action_index": (
+                teacher_index if control_schema == CONTROL_SCHEMA_V2 else None
+            ),
         }
         if partner_intent_duplication_risk is None:
             features = build_selector_features(
@@ -906,13 +966,6 @@ def rollout_episode(
         if logit_bias is not None:
             masked_logits = masked_logits + logit_bias
 
-        scripted_action = _canonical_scripted_action(
-            scripted_bundle[LEARNED_SEAT],
-            observations[LEARNED_SEAT]["task_candidates"],
-        )
-        teacher_index = _scripted_index(
-            scripted_action, observations[LEARNED_SEAT]["task_candidates"]
-        )
         teacher_original_conflict = teacher_index in risk_candidate_indices
         teacher_effective_index: int | None = teacher_index
         teacher_relabel_status: str | None = None
@@ -950,6 +1003,8 @@ def rollout_episode(
             selected_index = _scripted_index(
                 learned_action, observations[LEARNED_SEAT]["task_candidates"]
             )
+            effective_index = selected_index
+            expert_deferred = False
             log_prob = float(
                 torch.log_softmax(masked_logits, dim=-1)[selected_index].item()
             )
@@ -960,18 +1015,27 @@ def rollout_episode(
                 evaluation=evaluation,
                 generator=action_generator,
             )
-            learned_action = {
-                "agent_id": LEARNED_SEAT,
-                "task_action": selector_action(
-                    selected_index, observations[LEARNED_SEAT]["task_candidates"]
-                ),
-            }
+            learned_action, effective_index, expert_deferred = (
+                _resolve_policy_control_action(
+                    selected_index,
+                    scripted_action,
+                    observations[LEARNED_SEAT]["task_candidates"],
+                    control_schema=control_schema,
+                )
+            )
+        if control_schema == CONTROL_SCHEMA_V2 and bool(
+            features.action_mask[EXPERT_DEFER_ACTION_INDEX]
+        ):
+            expert_defer_opportunities += 1
         raw_action_valid = forced or bool(features.action_mask[selected_index])
+        if expert_deferred and raw_action_valid:
+            expert_defer_count += 1
         if not raw_action_valid:
             learned_action = {
                 "agent_id": LEARNED_SEAT,
                 "task_action": {"type": "WAIT"},
             }
+            effective_index = 9
         bundle = list(scripted_bundle)
         bundle[LEARNED_SEAT] = learned_action
 
@@ -1000,11 +1064,11 @@ def rollout_episode(
                 agent_loss_ticks[agent_id] = response.tick
             previous_dead[agent_id] = dead
         selected_task_type = None
-        if selected_index < 8 and selected_index < len(
+        if effective_index < 8 and effective_index < len(
             observations[LEARNED_SEAT]["task_candidates"]
         ):
             selected_task_type = observations[LEARNED_SEAT]["task_candidates"][
-                selected_index
+                effective_index
             ]["task_type"]
         for result in response.action_results:
             if int(result.get("agent_id", -1)) != LEARNED_SEAT or not result.get(
@@ -1015,7 +1079,7 @@ def rollout_episode(
                 reward.record_learned_selection(str(result.get("task_id", "")))
                 if selected_task_type is not None:
                     history.record_selection(selected_task_type, tick)
-        history.record_boundary(features, selected_index if raw_action_valid else 9)
+        history.record_boundary(features, effective_index if raw_action_valid else 9)
 
         current_team = dict(response.observations[0]["team"])
         reasons = list(response.decision_boundary.get("reasons", []))
@@ -1073,6 +1137,17 @@ def rollout_episode(
                 "action": learned_action["task_action"],
                 "agent_actions": bundle,
                 "action_index": selected_index,
+                **(
+                    {
+                        "effective_action_index": effective_index,
+                        "expert_defer_legal": bool(
+                            features.action_mask[EXPERT_DEFER_ACTION_INDEX]
+                        ),
+                        "expert_deferred": expert_deferred,
+                    }
+                    if control_schema == CONTROL_SCHEMA_V2
+                    else {}
+                ),
                 "teacher_action": scripted_action["task_action"],
                 "teacher_action_index": teacher_index,
                 "teacher_candidate_diagnostics": _selected_candidate_diagnostics(
@@ -1110,7 +1185,7 @@ def rollout_episode(
                     else {}
                 ),
                 "selected_candidate_diagnostics": _selected_candidate_diagnostics(
-                    observations[LEARNED_SEAT]["task_candidates"], selected_index
+                    observations[LEARNED_SEAT]["task_candidates"], effective_index
                 ),
                 "policy_loss_mask": transitions[-1].policy_loss_mask,
                 "raw_logits": [float(value) for value in raw_logits.tolist()],
@@ -1153,6 +1228,15 @@ def rollout_episode(
     for transition in transitions:
         transition.successful_episode = successful_episode
 
+    if control_schema == CONTROL_SCHEMA_V2:
+        final_metrics = dict(final_metrics)
+        policy_decisions = sum(item.policy_loss_mask for item in transitions)
+        final_metrics["expert_defer_opportunities"] = expert_defer_opportunities
+        final_metrics["expert_defer_count"] = expert_defer_count
+        final_metrics["expert_defer_policy_decisions"] = policy_decisions
+        final_metrics["expert_defer_fraction"] = (
+            expert_defer_count / policy_decisions if policy_decisions else 0.0
+        )
     return EpisodeRollout(
         seed=seed,
         outcome=outcome,
@@ -1207,6 +1291,14 @@ def _advantages(
             unbiased=False
         ).clamp_min(1e-8)
     return flat, advantage_tensor, torch.tensor(returns, dtype=torch.float32)
+
+
+def _ordinary_teacher_logits(masked_logits: torch.Tensor) -> torch.Tensor:
+    """Keep supervised expert labels confined to the ordinary action space."""
+
+    if masked_logits.shape[-1] < ACTION_COUNT:
+        raise ValueError("teacher logits do not contain all ordinary actions")
+    return masked_logits[..., :ACTION_COUNT]
 
 
 def ppo_update(
@@ -1342,6 +1434,9 @@ def ppo_update(
             if logit_biases is not None:
                 masked_logits = masked_logits + logit_biases[index]
             all_log_probs = torch.log_softmax(masked_logits, dim=-1)
+            ordinary_teacher_log_probs = torch.log_softmax(
+                _ordinary_teacher_logits(masked_logits), dim=-1
+            )
             log_probs = all_log_probs.gather(
                 1, actions[index, None]
             ).squeeze(1)
@@ -1370,7 +1465,7 @@ def ppo_update(
             else:
                 success_imitation_loss = values.sum() * 0.0
                 success_imitation_samples = 0.0
-            teacher_log_probs = all_log_probs.gather(
+            teacher_log_probs = ordinary_teacher_log_probs.gather(
                 1, effective_teacher_actions[index, None]
             ).squeeze(1)
             teacher = teacher_mask[index]
@@ -1387,7 +1482,7 @@ def ppo_update(
             else:
                 teacher_imitation_loss = values.sum() * 0.0
                 teacher_imitation_samples = 0.0
-            original_teacher_log_probs = all_log_probs.gather(
+            original_teacher_log_probs = ordinary_teacher_log_probs.gather(
                 1, original_teacher_actions[index, None]
             ).squeeze(1)
             successful_teacher = successful_teacher_mask[index]
@@ -1557,7 +1652,7 @@ def _teacher_trajectory_imitation_update(
         teacher_action = int(label)
         if (
             teacher_action < 0
-            or teacher_action >= transition.action_mask.numel()
+            or teacher_action >= ACTION_COUNT
             or not bool(transition.action_mask[teacher_action])
         ):
             raise RuntimeError("teacher warmup labeled a masked action")
@@ -1600,7 +1695,9 @@ def _teacher_trajectory_imitation_update(
             )
             if logit_biases is not None:
                 masked_logits = masked_logits + logit_biases[index]
-            loss = functional.cross_entropy(masked_logits, teacher_actions[index])
+            loss = functional.cross_entropy(
+                _ordinary_teacher_logits(masked_logits), teacher_actions[index]
+            )
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
@@ -1766,6 +1863,18 @@ def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
             )
         }
         | (
+            {
+                key: transition[key]
+                for key in (
+                    "effective_action_index",
+                    "expert_defer_legal",
+                    "expert_deferred",
+                )
+            }
+            if "expert_deferred" in transition
+            else {}
+        )
+        | (
             {"policy_logit_bias": transition["policy_logit_bias"]}
             if "policy_logit_bias" in transition
             else {}
@@ -1784,6 +1893,24 @@ def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
         "idle_fraction": float(episode.coordination_metrics.get("idle_fraction", 0.0)),
         "duplicate_work_incidents": int(
             episode.coordination_metrics.get("duplicate_work_incidents", 0)
+        ),
+        **(
+            {
+                "expert_defer_opportunities": int(
+                    episode.coordination_metrics["expert_defer_opportunities"]
+                ),
+                "expert_defer_count": int(
+                    episode.coordination_metrics["expert_defer_count"]
+                ),
+                "expert_defer_policy_decisions": int(
+                    episode.coordination_metrics["expert_defer_policy_decisions"]
+                ),
+                "expert_defer_fraction": float(
+                    episode.coordination_metrics["expert_defer_fraction"]
+                ),
+            }
+            if "expert_defer_fraction" in episode.coordination_metrics
+            else {}
         ),
         "trace_digest": _json_digest(action_state_trace),
     }
@@ -1804,6 +1931,7 @@ def _evaluate(
     _partner_intent_teacher_conflict_filter(config)
     _partner_intent_teacher_conflict_relabel(config)
     feature_schema = expected_feature_schema(config)
+    control_schema = expected_control_schema(config)
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
     with RlServerProcess(
         LaunchConfig(port=port, java=java, build_if_missing=False)
@@ -1824,6 +1952,7 @@ def _evaluate(
                 scripted_partner_opening=scripted_partner_opening,
                 partner_intent_duplication_risk=partner_intent_duplication_risk,
                 feature_schema=feature_schema,
+                control_schema=control_schema,
             )
             for seed in seeds
         ]
@@ -2059,6 +2188,7 @@ def _manifest(
         _partner_intent_teacher_conflict_relabel(config)
     )
     feature_schema = expected_feature_schema(config)
+    control_schema = expected_control_schema(config)
     manifest = {
         "schema": "selector_training_run_v1",
         "engine": {"tag": ENGINE_TAG, "commit": ENGINE_COMMIT, "arc": ARC_HASH},
@@ -2068,6 +2198,11 @@ def _manifest(
             "feature": feature_schema,
             "reward": str(config.get("reward_schema", REWARD_SCHEMA)),
             "model": expected_model_schema(config),
+            **(
+                {"control": control_schema}
+                if control_schema == CONTROL_SCHEMA_V2
+                else {}
+            ),
         },
         "repository": _git_evidence(root),
         "runtime": {
@@ -2124,6 +2259,11 @@ def _manifest(
                 if partner_intent_teacher_conflict_relabel is not None
                 else {}
             ),
+            **(
+                {"control_actions": config["control_actions"]}
+                if control_schema == CONTROL_SCHEMA_V2
+                else {}
+            ),
         },
         "normalizers": config["normalizers"],
         "model_architecture": config["model_architecture"],
@@ -2159,6 +2299,16 @@ def _manifest(
             "dev_episodes": len(dev_summaries),
             "dev_mean_core_health": sum(row["core_health"] for row in dev_summaries) / max(1, len(dev_summaries)),
             "dev_mean_idle_fraction": sum(row["idle_fraction"] for row in dev_summaries) / max(1, len(dev_summaries)),
+            **(
+                {
+                    "dev_mean_expert_defer_fraction": sum(
+                        row["expert_defer_fraction"] for row in dev_summaries
+                    )
+                    / max(1, len(dev_summaries))
+                }
+                if control_schema == CONTROL_SCHEMA_V2
+                else {}
+            ),
         },
         "action_state_trace_digest": _json_digest([row["trace_digest"] for row in dev_summaries]),
         "deterministic_checkpoint_verification": verification,
@@ -2212,6 +2362,8 @@ def _legacy_reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]
     selection_keys = ("update", "wins", "mean_return", "mean_core_health")
     if selection_policy is not None:
         selection_keys += ("mean_idle_fraction",)
+        if selection_policy.get("schema") == QUALITY_CONTROL_GATE_SELECTION_SCHEMA:
+            selection_keys += ("mean_expert_defer_fraction",)
     evidence = {
         "source_config_sha256": manifest["source_config"]["sha256"],
         "jvm_args": manifest["runtime"]["jvm_args"],
@@ -2293,6 +2445,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     root = repo_root()
     config = _load_json(config_path)
     feature_schema = expected_feature_schema(config)
+    control_schema = expected_control_schema(config)
     selection_policy = _dev_checkpoint_selection_policy(config)
     teacher_warmup_policy = _teacher_warmup_policy(config)
     teacher_rehearsal_policy = _teacher_rehearsal_policy(config)
@@ -2367,6 +2520,13 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
             row["mean_idle_fraction"] = sum(
                 item["idle_fraction"] for item in summaries
             ) / len(summaries)
+        if (
+            selection_policy is not None
+            and selection_policy["schema"] == QUALITY_CONTROL_GATE_SELECTION_SCHEMA
+        ):
+            row["mean_expert_defer_fraction"] = sum(
+                item["expert_defer_fraction"] for item in summaries
+            ) / len(summaries)
         dev_selection.append(row)
 
     with RlServerProcess(
@@ -2394,6 +2554,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                         partner_intent_teacher_conflict_relabel
                     ),
                     feature_schema=feature_schema,
+                    control_schema=control_schema,
                 )
                 for seed in teacher_warmup_seeds
             ]
@@ -2455,6 +2616,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                         partner_intent_teacher_conflict_relabel
                     ),
                     feature_schema=feature_schema,
+                    control_schema=control_schema,
                 )
                 for seed in seeds[start : start + episodes_per_update]
             ]

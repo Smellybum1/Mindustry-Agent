@@ -1051,6 +1051,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   above 25% is ineligible. Config/umbrella hashes are
   `b588ee43e66bd9d...` / `a78631d7ba9f1cd2...`; dev-v42 is reserved in
   `[10B,11B)` but unconstructed.
+- **V46 implementation/pretraining boundary green**: feature v3 and control v2
+  expose DEFER only for legal unforced non-WAIT expert proposals; effective
+  ordinary actions drive history and server submission. Model v5 preserves
+  V45's ordinary logits/masks/value bit-exactly at initialization and adds a
+  zero-output expert-conditioned DEFER head. Teacher losses remain actions
+  0..9, while validated checkpoint/reusable/confirmation/final telemetry caps
+  mean DEFER at 25%. Thirteen focused tests and the full 335-test embargo-safe
+  suite pass, along with pinned Java/custom modules, public 5/5 and ten staging
+  starts, both focused checks, smoke, deterministic golden/negative replay, and
+  44/44 exact-config reward adversaries (report
+  `ec3acb4c1056207...`). Dev-v42 remains unconstructed and no V46 training or
+  restricted membership read has occurred.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned

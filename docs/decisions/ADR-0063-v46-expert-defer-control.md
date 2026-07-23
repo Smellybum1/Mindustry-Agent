@@ -110,3 +110,20 @@ forced safety actions.
 - This precommit authorizes implementation and public/pretraining verification
   after commit. It does not authorize dev-v42 construction, model training,
   confirmation access, or held-out-v6 access.
+
+## Implementation evidence
+
+The policy-side adapter, feature v3, model v5, effective-action history,
+ordinary-only teacher losses, validated telemetry, and all four 25% cap
+enforcement points are implemented. V45's ordinary logits, masked logits, and
+critic are bit-exact at V46 initialization; the separately encoded DEFER output
+is exact zero.
+
+Thirteen focused V46 tests and the complete 335-test embargo-safe Python suite
+pass. Pinned Java/custom-module checks, public survival 5/5 with ten staging
+starts, both focused coordination checks, smoke, accepted golden/negative
+determinism, and all 44 exact-config reward adversaries pass. The reward report
+SHA-256 is
+`ec3acb4c1056207a1f83729cb62e5c38042164c5688e67c18c6d842d96a54b9e`.
+Dev-v42 remains unconstructed; no V46 training/checkpoint, confirmation read,
+or held-out read occurred.

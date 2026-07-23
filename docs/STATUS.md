@@ -1981,6 +1981,23 @@ repository-evidence mapping used for the M6 audit is:
   unconstructed. Implementation and the full public/pretraining boundary must
   be committed before membership construction or training. Dev-v41 remains
   retired unopened; held-out-v6 remains sealed.
+- The V46 implementation and full pretraining boundary are green. Feature v3,
+  control v2, and model v5 preserve V45's ten ordinary actor logits, masked
+  logits, and critic bit-exactly at initialization while adding a separately
+  encoded zero-output DEFER head. Translation stays policy-side and submits the
+  already-computed canonical structured expert action; forced, single-action,
+  and expert-WAIT boundaries cannot defer. History records the effective
+  ordinary action, teacher CE remains actions 0..9, and validated telemetry
+  enforces the inclusive 25% cap at checkpoint, reusable, confirmation, and
+  final gates.
+- Thirteen focused V46 tests and all 335 embargo-safe Python tests pass. Pinned
+  Java/custom modules, public 5/5 survival with ten staging starts, secondary
+  claim wake, owned-schematic staging, smoke, the 79-boundary deterministic
+  replay, 664-checkpoint/16,200-tick golden plus negative mutation check, and
+  all 44 exact-config reward adversaries pass. The adversary report SHA-256 is
+  `ec3acb4c1056207a1f83729cb62e5c38042164c5688e67c18c6d842d96a54b9e`.
+  Dev-v42 remains unconstructed; no V46 training/checkpoint or restricted
+  membership read has occurred.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

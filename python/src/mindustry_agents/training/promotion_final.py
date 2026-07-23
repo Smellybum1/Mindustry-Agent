@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +35,7 @@ from mindustry_agents.training.model import build_selector_model
 from mindustry_agents.training.ppo_selector import (
     _configure_torch,
     _git_evidence,
+    _partner_intent_duplication_risk,
     _policy_logit_adjustment,
     _scripted_partner_opening,
     _sha256,
@@ -44,10 +46,15 @@ from mindustry_agents.training.ppo_selector import (
 from mindustry_agents.training.promotion import (
     CANDIDATE_POLICY,
     GREEDY_MIXED,
+    _expert_defer_control_gate,
     _record,
     rollout_control_episode,
 )
-from mindustry_agents.training.selector import expected_feature_schema
+from mindustry_agents.training.selector import (
+    CONTROL_SCHEMA_V2,
+    expected_control_schema,
+    expected_feature_schema,
+)
 
 FINAL_SCHEMA = "selector_promotion_held_out_final_v1"
 ATTEMPT_SCHEMA = "selector_promotion_held_out_attempt_v1"
@@ -187,6 +194,17 @@ def _validate_dev_preflight(
         raise ValueError("dev preflight repository is not the active frozen commit")
     if not preflight.get("reward_adversaries_passed", False):
         raise ValueError("dev preflight reward adversaries did not pass")
+    config = _load_json(config_path)
+    if expected_control_schema(config) == CONTROL_SCHEMA_V2:
+        expected_limit = float(
+            config["dev_checkpoint_selection"][
+                "maximum_mean_expert_defer_fraction_inclusive"
+            ]
+        )
+        _validate_expert_defer_preflight(
+            preflight.get("expert_defer_control"),
+            expected_limit=expected_limit,
+        )
     for source, hash_key in (
         ("baseline_aggregate", "baseline_aggregate_sha256"),
         ("baseline_records", "baseline_records_sha256"),
@@ -196,6 +214,36 @@ def _validate_dev_preflight(
         if _sha256(path) != preflight["sources"][hash_key]:
             raise ValueError(f"dev preflight source changed: {source}")
     return preflight
+
+
+def _validate_expert_defer_preflight(
+    control: Any,
+    *,
+    expected_limit: float,
+) -> None:
+    """Fail closed on malformed or non-finite reusable DEFER evidence."""
+
+    if not isinstance(control, dict):
+        raise ValueError("dev preflight expert-defer gate did not pass")
+    episodes = control.get("episodes")
+    mean_defer = control.get("mean_expert_defer_fraction")
+    maximum_defer = control.get("maximum_mean_expert_defer_fraction_inclusive")
+    if (
+        control.get("schema") != CONTROL_SCHEMA_V2
+        or control.get("passed") is not True
+        or isinstance(episodes, bool)
+        or not isinstance(episodes, int)
+        or episodes <= 0
+        or isinstance(mean_defer, bool)
+        or not isinstance(mean_defer, (int, float))
+        or isinstance(maximum_defer, bool)
+        or not isinstance(maximum_defer, (int, float))
+        or not math.isfinite(float(mean_defer))
+        or not math.isfinite(float(maximum_defer))
+        or not 0.0 <= float(mean_defer) <= float(maximum_defer)
+        or float(maximum_defer) != expected_limit
+    ):
+        raise ValueError("dev preflight expert-defer gate did not pass")
 
 
 def _create_attempt(path: Path, evidence: dict[str, Any]) -> None:
@@ -291,6 +339,7 @@ def main(argv: list[str] | None = None) -> int:
     model = build_selector_model(config)
     reward_schema = str(config.get("reward_schema", REWARD_SCHEMA))
     feature_schema = expected_feature_schema(config)
+    control_schema = expected_control_schema(config)
     checkpoint = load_checkpoint(
         checkpoint_path,
         model,
@@ -331,6 +380,7 @@ def main(argv: list[str] | None = None) -> int:
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
+    partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     with RlServerProcess(
         LaunchConfig(port=args.port, java=args.java, build_if_missing=False)
     ) as env:
@@ -351,7 +401,11 @@ def main(argv: list[str] | None = None) -> int:
                         quality_reward=config.get("quality_reward"),
                         policy_logit_adjustment=policy_logit_adjustment,
                         scripted_partner_opening=scripted_partner_opening,
+                        partner_intent_duplication_risk=(
+                            partner_intent_duplication_risk
+                        ),
                         feature_schema=feature_schema,
+                        control_schema=control_schema,
                     )
                     record = _record(
                         rollout,
@@ -368,6 +422,7 @@ def main(argv: list[str] | None = None) -> int:
                         control=policy,
                         scripted_partner_opening=scripted_partner_opening,
                         feature_schema=feature_schema,
+                        control_schema=control_schema,
                     )
                     record = _record(
                         rollout,
@@ -390,6 +445,11 @@ def main(argv: list[str] | None = None) -> int:
         aggregates,
         reward_adversaries_passed=bool(preflight["reward_adversaries_passed"]),
     )
+    control_gate = _expert_defer_control_gate(records, config)
+    if control_gate is not None:
+        report["expert_defer_control"] = control_gate
+        report["promoted"] = bool(report["promoted"] and control_gate["passed"])
+        report["status"] = "promoted" if report["promoted"] else "not_promoted"
     report.update(
         {
             "repository": repository,

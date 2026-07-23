@@ -966,6 +966,24 @@ unconstructed. Implementation and the complete public/pretraining boundary
 must be committed before membership construction or model work. Dev-v41 remains
 retired unopened and held-out-v6 remains sealed.
 
+The V46 implementation and complete pretraining boundary are now green. Feature
+v3 appends only the canonical expert-action one-hot; control v2 exposes DEFER
+only for legal unforced non-WAIT expert proposals and records the effective
+ordinary action in history. Model v5 preserves V45's ten ordinary logits,
+masked logits, and critic bit-exactly at initialization, while its separate
+expert encoder feeds a zero-output DEFER head. Teacher losses remain sliced to
+actions 0..9, and checkpoint/reusable/confirmation/final gates enforce the
+inclusive 25% mean-DEFER cap with validated telemetry.
+
+Thirteen focused V46 tests and the complete 335-test embargo-safe Python suite
+pass, as do pinned Java/custom modules, public survival 5/5 with ten staging
+starts, both focused coordination checks, smoke, the accepted 79-boundary and
+664-checkpoint/16,200-tick golden replay plus negative mutation check, and all
+44 exact-config reward adversaries. The adversary report SHA-256 is
+`ec3acb4c1056207a1f83729cb62e5c38042164c5688e67c18c6d842d96a54b9e`.
+Dev-v42 remains unconstructed, no V46 training/checkpoint exists, dev-v41
+remains retired unopened/unconsumed, and held-out-v6 remains sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

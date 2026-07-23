@@ -9,9 +9,14 @@ from typing import Any
 
 FEATURE_SCHEMA = "selector_features_v1"
 FEATURE_SCHEMA_V2 = "selector_features_v2_lagged_boundary"
-FEATURE_SCHEMAS = (FEATURE_SCHEMA, FEATURE_SCHEMA_V2)
+FEATURE_SCHEMA_V3 = "selector_features_v3_expert_defer"
+FEATURE_SCHEMAS = (FEATURE_SCHEMA, FEATURE_SCHEMA_V2, FEATURE_SCHEMA_V3)
+CONTROL_SCHEMA_V1 = "selector_control_actions_v1"
+CONTROL_SCHEMA_V2 = "selector_control_actions_v2_expert_defer"
 MAX_CANDIDATES = 8
 ACTION_COUNT = 10
+EXPERT_DEFER_ACTION_INDEX = 10
+CONTROL_ACTION_COUNT = 11
 TASK_TYPES = (
     "HARVEST_RESOURCE",
     "BUILD_LINE",
@@ -88,7 +93,7 @@ class SelectorHistory:
             features.candidate_present
         ) != MAX_CANDIDATES:
             raise SelectorFeatureError("boundary snapshot candidate shape mismatch")
-        if len(features.scalars) not in (56, 160):
+        if len(features.scalars) not in (56, 160, 170):
             raise SelectorFeatureError("boundary snapshot scalar shape mismatch")
         present_rows = [
             row
@@ -233,11 +238,25 @@ def build_selector_features(
     truncated: bool = False,
     fixed_partner_intended_task_ids: Iterable[Any] | None = None,
     feature_schema: str = FEATURE_SCHEMA,
+    control_schema: str = CONTROL_SCHEMA_V1,
+    expert_action_index: int | None = None,
 ) -> SelectorFeatures:
     """Construct an exact governed plain-number selector boundary."""
 
     if feature_schema not in FEATURE_SCHEMAS:
         raise SelectorFeatureError(f"unknown selector feature schema: {feature_schema}")
+    if control_schema not in (CONTROL_SCHEMA_V1, CONTROL_SCHEMA_V2):
+        raise SelectorFeatureError(f"unknown selector control schema: {control_schema}")
+    if (feature_schema == FEATURE_SCHEMA_V3) != (
+        control_schema == CONTROL_SCHEMA_V2
+    ):
+        raise SelectorFeatureError("expert-defer feature/control schema mismatch")
+    if control_schema == CONTROL_SCHEMA_V2 and (
+        expert_action_index is None
+        or expert_action_index < 0
+        or expert_action_index >= ACTION_COUNT
+    ):
+        raise SelectorFeatureError("expert-defer action index is missing or invalid")
 
     if agent_id < 0 or agent_id >= len(observations) or agent_id >= len(action_masks):
         raise SelectorFeatureError("learned agent observation/mask is missing")
@@ -262,7 +281,7 @@ def build_selector_features(
         for index, candidate in enumerate(candidates)
     ]
     select_mask.extend([False] * (MAX_CANDIDATES - len(select_mask)))
-    action_mask = select_mask + [
+    ordinary_action_mask = select_mask + [
         bool(mask.get("continue_current_task", False)),
         bool(mask.get("wait", False)),
     ]
@@ -276,8 +295,19 @@ def build_selector_features(
         reason = str(skill.get("reason", "blocked")).lower()
         forced = {"type": "ABANDON", "reason": f"blocked_replan:{reason}"}
     if dead or terminated or truncated:
-        action_mask = [False] * 9 + [True]
+        ordinary_action_mask = [False] * 9 + [True]
         forced = {"type": "WAIT"}
+    ordinary_legal = sum(ordinary_action_mask)
+    action_mask = list(ordinary_action_mask)
+    if control_schema == CONTROL_SCHEMA_V2:
+        assert expert_action_index is not None
+        defer_legal = (
+            forced is None
+            and ordinary_legal > 1
+            and expert_action_index != 9
+            and bool(ordinary_action_mask[expert_action_index])
+        )
+        action_mask.append(defer_legal)
     legal = sum(action_mask)
     if legal == 0:
         raise SelectorFeatureError("live controllable selector mask has no legal action")
@@ -355,10 +385,17 @@ def build_selector_features(
     scalars.extend(1.0 if reason in reason_set else 0.0 for reason in BOUNDARY_REASONS)
     if len(scalars) != 56:
         raise AssertionError(f"scalar schema drift: {len(scalars)} values")
-    if feature_schema == FEATURE_SCHEMA_V2:
+    if feature_schema in (FEATURE_SCHEMA_V2, FEATURE_SCHEMA_V3):
         scalars.extend(recent.lagged_context())
         if len(scalars) != 160:
             raise AssertionError(f"lagged scalar schema drift: {len(scalars)} values")
+    if feature_schema == FEATURE_SCHEMA_V3:
+        assert expert_action_index is not None
+        expert_action = [0.0] * ACTION_COUNT
+        expert_action[expert_action_index] = 1.0
+        scalars.extend(expert_action)
+        if len(scalars) != 170:
+            raise AssertionError(f"expert-defer scalar schema drift: {len(scalars)} values")
     if any(not math.isfinite(value) or value < 0.0 or value > 1.0 for value in scalars):
         raise SelectorFeatureError("scalar output contains an invalid value")
     return SelectorFeatures(
@@ -383,6 +420,39 @@ def expected_feature_schema(config: Mapping[str, Any]) -> str:
     if schema not in FEATURE_SCHEMAS:
         raise ValueError(f"unknown selector feature schema: {schema!r}")
     return str(schema)
+
+
+def expected_control_schema(config: Mapping[str, Any]) -> str:
+    """Validate and return the config-selected policy control schema."""
+
+    control = config.get("control_actions")
+    if control is None:
+        return CONTROL_SCHEMA_V1
+    if not isinstance(control, Mapping):
+        raise ValueError("control_actions must be an object")
+    expected = {
+        "schema": CONTROL_SCHEMA_V2,
+        "ordinary_action_count": ACTION_COUNT,
+        "expert_defer_action_index": EXPERT_DEFER_ACTION_INDEX,
+        "expert_policy": "adaptive-v1",
+        "expert_proposal_input": "same_boundary_canonical_action_one_hot",
+        "translation": "already_computed_canonical_scripted_action",
+        "legal_when": "unforced_expert_nonwait_ordinary_action",
+        "forced_safety_override": False,
+        "history_records": "effective_submitted_ordinary_action",
+        "teacher_imitation_action_space": "ordinary_actions_0_9",
+        "reward_component": "none",
+    }
+    if dict(control) != expected:
+        raise ValueError("expert-defer control action declaration mismatch")
+    optimizer = config.get("optimizer_ppo")
+    if (
+        not isinstance(optimizer, Mapping)
+        or optimizer.get("teacher_imitation_action_space")
+        != "ordinary_actions_0_9"
+    ):
+        raise ValueError("expert-defer teacher imitation action space mismatch")
+    return CONTROL_SCHEMA_V2
 
 
 def selector_action(index: int, candidates: list[dict[str, Any]]) -> dict[str, Any]:

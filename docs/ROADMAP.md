@@ -1999,6 +1999,18 @@ unconstructed. The committed implementation and complete public/pretraining
 boundary are required before value-free membership construction or model work.
 Dev-v41 remains retired unopened and held-out-v6 remains sealed.
 
+The V46 policy-side control adapter, feature v3, model v5, ordinary-only teacher
+losses, effective-action history, validated telemetry, and 25% gates are now
+implemented. Focused tests prove V45 bit-exact ordinary logits/masks/value at
+initialization, zero-output DEFER construction, learned expert sensitivity,
+forced/WAIT/single-action exclusion, deterministic translation/fallback,
+reset-local history, exact schema validation, and cap enforcement. The full
+335-test embargo-safe Python suite, pinned Java/custom modules, public 5/5 gate
+with ten staging starts, both focused checks, smoke, accepted deterministic
+golden/negative replay, and 44/44 exact-config reward adversaries pass. The
+adversary report SHA is `ec3acb4c1056207...`. Dev-v42 remains unconstructed and
+no V46 training or restricted membership read has occurred.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:
