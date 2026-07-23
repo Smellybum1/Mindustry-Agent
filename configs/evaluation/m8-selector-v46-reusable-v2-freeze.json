@@ -1,0 +1,42 @@
+{
+  "schema": "m8_public_reusable_seed_freeze_v1",
+  "candidate_version": "v46",
+  "protocol_revision": "reusable-scorecard-v2",
+  "status": "membership_frozen_unevaluated",
+  "generator": {
+    "path": "scripts/generate-m8-reusable-scorecard-v2.py",
+    "sha256": "c939a64ac76ddeb690ba5c3f1802a483694ab54d78b8dbbfd247f664d06477e9",
+    "commit": "26d25acd64d9a9c80018898df0376ee47daf9ab7"
+  },
+  "umbrella": {
+    "path": "configs/evaluation/m8-selector-v46-reusable-v2-umbrella.json",
+    "sha256": "d623e7cadffaff1e67c16d081fdfb20fe7c2aa2b523cd8d98bd0b66493feb8c9",
+    "commit": "26d25acd64d9a9c80018898df0376ee47daf9ab7"
+  },
+  "membership": {
+    "path": "configs/evaluation/bootstrap-defense-v1-reusable-scorecard-v2.json",
+    "sha256": "c529951782ec0426f94671ece39824d0057e303c2aa7edc11b3610a63c7f86f3",
+    "count": 160,
+    "visibility": "public",
+    "evaluation_episodes_at_freeze": 0
+  },
+  "namespace_proof": {
+    "held_out_v6": [3000000000, 4000000000],
+    "v40_confirmation": [4000000000, 5000000000],
+    "v41_confirmation": [5000000000, 6000000000],
+    "v42_confirmation": [6000000000, 7000000000],
+    "v43_confirmation": [7000000000, 8000000000],
+    "v44_confirmation": [8000000000, 9000000000],
+    "v45_confirmation": [9000000000, 10000000000],
+    "v46_confirmation": [10000000000, 11000000000],
+    "reusable_scorecard_v2": [11000000000, 12000000000],
+    "reserved_dev_v43": [12000000000, 13000000000],
+    "method": "partitioned_numeric_namespaces_without_restricted_membership_reads"
+  },
+  "restricted_access": {
+    "dev_v42_membership_reads": 0,
+    "held_out_v6_membership_reads": 0,
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0
+  }
+}

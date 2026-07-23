@@ -83,3 +83,12 @@ held-out membership.
 - This ADR supersedes ADR-0063 only for reusable-screen sample size and the
   post-rejection v2 rescreen. All control, reward, determinism, threading,
   typed-action, and held-out rules remain in force.
+
+## Construction evidence
+
+The precommit packet was committed at `26d25acd64` before membership creation.
+Its pinned generator produced 160 unique public roots without running an
+episode. Membership SHA-256 is
+`c529951782ec0426f94671ece39824d0057e303c2aa7edc11b3610a63c7f86f3`;
+the receipt records zero dev-v42 or held-out-v6 reads and zero confirmation or
+final episodes. Reusable-v2 is frozen and unevaluated.

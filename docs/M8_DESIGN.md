@@ -1028,6 +1028,12 @@ value-free in `[12B,13B)` and remains unconstructed unless every reusable-v2
 gate passes. Dev-v42 remains retired unopened/unconsumed and held-out-v6
 remains sealed.
 
+The ADR-0064 precommit landed at `26d25acd64`. Its deterministic generator then
+froze the 160 public reusable-v2 roots at membership SHA
+`c529951782ec0426f...` without running an episode or reading dev-v42/held-out-v6
+membership. Reusable-v2 is frozen and unevaluated pending its separate
+membership/evidence commit.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

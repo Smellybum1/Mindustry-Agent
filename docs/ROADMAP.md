@@ -2146,6 +2146,11 @@ value-free in `[12B,13B)` but cannot be constructed unless every reusable-v2
 gate passes. Dev-v42 remains retired unopened/unconsumed, held-out-v6 remains
 sealed, and M8.5 remains unmet.
 
+The precommit was committed at `26d25acd64`; its pinned generator then froze
+160 public reusable-v2 roots (membership `c529951782ec0426...`) with zero
+restricted membership reads and zero episodes. Commit this data/evidence packet
+before refreshing baselines or evaluating V46. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

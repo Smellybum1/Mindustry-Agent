@@ -1098,6 +1098,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   reserved in `[12B,13B)` but unconstructed; dev-v42 remains retired unopened,
   and held-out-v6 remains sealed. Commit the ADR/umbrella/generator before
   constructing public reusable-v2 membership.
+- **Reusable-v2 membership frozen, unevaluated**: precommit `26d25acd64`
+  preceded deterministic construction of 160 public roots. Membership SHA is
+  `c529951782ec0426...`; the receipt records zero restricted membership reads
+  and zero episodes. Commit membership/receipt/tests/docs before baseline or
+  candidate evaluation.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned

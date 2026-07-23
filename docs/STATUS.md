@@ -2038,6 +2038,11 @@ repository-evidence mapping used for the M6 audit is:
   reselection is allowed. Replacement confirmation dev-v43 is reserved in
   `[12B,13B)` but cannot be constructed unless all reusable-v2 gates pass.
   Dev-v42 stays retired unopened and held-out-v6 stays sealed.
+- The ADR-0064 packet was committed at `26d25acd64` before construction. The
+  deterministic generator then froze 160 public reusable-v2 roots with
+  membership SHA `c529951782ec0426...`; its receipt records zero restricted
+  membership reads and zero evaluation episodes. The set is frozen and
+  unevaluated pending this data/evidence commit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
