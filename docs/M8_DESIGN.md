@@ -944,6 +944,12 @@ boundaries. V45 is rejected before confirmation; dev-v41 is retired unopened/
 unconsumed, held-out-v6 remains sealed, and no evidence-backed V46 coordinate
 is authorized.
 
+The legacy scenario-variation disjointness tests are now embargo-safe: their
+membership reads are limited to explicit fixed/train, dev-v1..v33, and held-
+out-v1..v4 contracts, while later governed replacements use receipts and
+existence checks only. All 44 focused tests and the complete 322-test Python
+suite pass without opening dev-v34..v41 or held-out-v5/v6 membership.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

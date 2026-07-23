@@ -1963,6 +1963,12 @@ repository-evidence mapping used for the M6 audit is:
   boundaries. V45 is rejected before confirmation. Dev-v41 is retired
   unopened/unconsumed without a read; held-out-v6 remains sealed/unconsumed.
   No evidence-backed V46 coordinate is authorized.
+- Scenario-variation governance no longer glob-reads every seed membership.
+  Its disjointness loops enumerate only explicit legacy/public memberships
+  (fixed/train, dev-v1..v33, held-out-v1..v4); governed replacement sets are
+  checked through value-free receipts and existence only. All 44 focused tests
+  and the complete embargo-safe Python suite pass (322 tests) without reading
+  dev-v34..v41 or held-out-v5/v6 membership.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

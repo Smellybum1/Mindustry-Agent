@@ -1038,6 +1038,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   all forced after the only legal teacher-agreed defense action, so another
   selector-memory coordinate is not supported. Dev-v41 is retired unopened/
   unconsumed and held-out-v6 remains sealed.
+- **Full Python suite restored without embargo access**: scenario-variation
+  disjointness now reads only explicit legacy/public memberships (fixed/train,
+  dev-v1..v33, held-out-v1..v4). Governed replacements remain receipt/existence
+  checks only. The focused module passes 44 tests and the full suite passes 322;
+  no dev-v34..v41 or held-out-v5/v6 membership was read.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned

@@ -1978,6 +1978,12 @@ new memory coordinate or an outcome-driven relaxation. V45 is rejected before
 confirmation; dev-v41 is retired unopened/unconsumed, held-out-v6 remains
 sealed/unconsumed, and M8.5 remains unmet.
 
+The scenario-variation governance module no longer glob-reads embargoed seed
+memberships. It limits membership reads to explicit legacy/public contracts and
+uses value-free receipts/existence for later governed sets. Its 44 tests and
+the complete 322-test Python suite pass without reading dev-v34..v41 or held-
+out-v5/v6 membership.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:

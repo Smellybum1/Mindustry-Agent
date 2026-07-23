@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
+from pathlib import Path
 
 import pytest
 
@@ -12,6 +14,25 @@ from mindustry_agents.tools.scenario_variation_check import (
     _load_seed_set,
     _validate_governance,
 )
+
+
+def _readable_seed_set_paths() -> list[Path]:
+    """List only legacy/public memberships; never open sealed or retired sets."""
+    paths = []
+    for path in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+        name = path.name
+        dev = re.fullmatch(r"bootstrap-defense-v1-dev-v(\d+)\.json", name)
+        held_out = re.fullmatch(
+            r"bootstrap-defense-v1-held-out-v(\d+)\.json", name
+        )
+        if (
+            name.startswith("bootstrap-defense-v0-fixed-")
+            or name.startswith("bootstrap-defense-v1-train-")
+            or (dev is not None and int(dev.group(1)) <= 33)
+            or (held_out is not None and int(held_out.group(1)) <= 4)
+        ):
+            paths.append(path)
+    return sorted(paths)
 
 
 def test_held_out_set_cannot_be_selected():
@@ -157,7 +178,7 @@ def test_v6_confirmation_dev_v2_is_exact_and_globally_disjoint():
     assert confirmation["split"] == "dev"
     assert confirmation["seeds"] == list(range(21001, 21041))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other == path:
             continue
         document = json.loads(other.read_text(encoding="utf-8"))
@@ -173,7 +194,7 @@ def test_v7_confirmation_dev_v3_is_exact_and_globally_disjoint():
     assert confirmation["split"] == "dev"
     assert confirmation["seeds"] == list(range(31001, 31041))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other == path:
             continue
         document = json.loads(other.read_text(encoding="utf-8"))
@@ -189,7 +210,7 @@ def test_v8_confirmation_dev_v4_is_exact_and_globally_disjoint():
     assert confirmation["split"] == "dev"
     assert confirmation["seeds"] == list(range(41001, 41041))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other == path:
             continue
         document = json.loads(other.read_text(encoding="utf-8"))
@@ -207,7 +228,7 @@ def test_post_v8_held_out_v3_is_sealed_exact_and_globally_disjoint():
     assert held_out["split"] == "held-out"
     assert held_out["seeds"] == list(range(920001, 920081))
     held_out_seeds = set(held_out["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other == path:
             continue
         document = json.loads(other.read_text(encoding="utf-8"))
@@ -223,7 +244,7 @@ def test_v9_confirmation_dev_v5_is_exact_and_globally_disjoint():
     assert confirmation["split"] == "dev"
     assert confirmation["seeds"] == list(range(51001, 51081))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other == path:
             continue
         document = json.loads(other.read_text(encoding="utf-8"))
@@ -241,7 +262,7 @@ def test_post_v9_held_out_v4_is_sealed_exact_and_globally_disjoint():
     assert held_out["split"] == "held-out"
     assert held_out["seeds"] == list(range(930001, 930161))
     held_out_seeds = set(held_out["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other == path:
             continue
         document = json.loads(other.read_text(encoding="utf-8"))
@@ -256,7 +277,7 @@ def test_v10_confirmation_dev_v6_is_exact_and_globally_disjoint():
     assert confirmation["split"] == "dev"
     assert confirmation["seeds"] == list(range(61001, 61161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other == path:
             continue
         document = json.loads(other.read_text(encoding="utf-8"))
@@ -285,7 +306,7 @@ def test_v11_confirmation_and_blend_are_precommitted():
     assert confirmation["seed_set_version"] == 7
     assert confirmation["seeds"] == list(range(71001, 71161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -312,7 +333,7 @@ def test_v12_quality_reward_and_dev_v8_are_precommitted():
     assert confirmation["seed_set_version"] == 8
     assert confirmation["seeds"] == list(range(81001, 81161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -344,7 +365,7 @@ def test_v13_quality_selection_and_dev_v9_are_precommitted():
     assert confirmation["seed_set_version"] == 9
     assert confirmation["seeds"] == list(range(91001, 91161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -381,7 +402,7 @@ def test_v14_corrected_boundary_retrain_and_dev_v10_are_precommitted():
     assert confirmation["seed_set_version"] == 10
     assert confirmation["seeds"] == list(range(101001, 101161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -418,7 +439,7 @@ def test_v15_quality_pressure_and_dev_v11_are_precommitted():
     assert confirmation["seed_set_version"] == 11
     assert confirmation["seeds"] == list(range(111001, 111161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -463,7 +484,7 @@ def test_v16_capped_idle_pressure_and_dev_v12_are_precommitted():
     assert confirmation["seed_set_version"] == 12
     assert confirmation["seeds"] == list(range(121001, 121161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -508,7 +529,7 @@ def test_v17_doubled_capped_idle_slope_and_dev_v13_are_precommitted():
     assert confirmation["seed_set_version"] == 13
     assert confirmation["seeds"] == list(range(131001, 131161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -554,7 +575,7 @@ def test_v18_scorecard_quality_and_dev_v14_are_precommitted():
     assert confirmation["seed_set_version"] == 14
     assert confirmation["seeds"] == list(range(141001, 141161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -604,7 +625,7 @@ def test_v19_unsaturated_idle_gradient_and_dev_v15_are_precommitted():
     assert confirmation["seed_set_version"] == 15
     assert confirmation["seeds"] == list(range(151001, 151161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -650,7 +671,7 @@ def test_v20_low_teacher_regularization_and_dev_v16_are_precommitted():
     assert confirmation["seed_set_version"] == 16
     assert confirmation["seeds"] == list(range(161001, 161161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -696,7 +717,7 @@ def test_v21_corrected_wait_boundary_and_dev_v17_are_precommitted():
     assert confirmation["seed_set_version"] == 17
     assert confirmation["seeds"] == list(range(171001, 171161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -740,7 +761,7 @@ def test_v22_retry_eligibility_and_dev_v18_are_precommitted():
     assert confirmation["seed_set_version"] == 18
     assert confirmation["seeds"] == list(range(181001, 181161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -784,7 +805,7 @@ def test_v23_available_idle_and_dev_v19_are_precommitted():
     assert confirmation["seed_set_version"] == 19
     assert confirmation["seeds"] == list(range(191001, 191161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -828,7 +849,7 @@ def test_v24_resource_scoped_retry_and_dev_v20_are_precommitted():
     assert confirmation["seed_set_version"] == 20
     assert confirmation["seeds"] == list(range(201001, 201161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -872,7 +893,7 @@ def test_v25_moderate_full_teacher_and_dev_v21_are_precommitted():
     assert confirmation["seed_set_version"] == 21
     assert confirmation["seeds"] == list(range(211001, 211161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -920,7 +941,7 @@ def test_v26_final_full_teacher_and_dev_v22_are_precommitted():
     assert confirmation["seed_set_version"] == 22
     assert confirmation["seeds"] == list(range(221001, 221161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -968,7 +989,7 @@ def test_v27_successful_teacher_warmup_and_dev_v23_are_precommitted():
     assert confirmation["seed_set_version"] == 23
     assert confirmation["seeds"] == list(range(231001, 231161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -1019,7 +1040,7 @@ def test_v28_successful_teacher_rehearsal_and_dev_v24_are_precommitted():
     assert confirmation["seed_set_version"] == 24
     assert confirmation["seeds"] == list(range(241001, 241161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -1070,7 +1091,7 @@ def test_v29_diverse_teacher_corpus_and_dev_v25_are_precommitted():
     assert teacher["split"] == "train"
     assert teacher["seeds"] == list(range(291001, 291257))
     teacher_seeds = set(teacher["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != teacher_path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert teacher_seeds.isdisjoint(document["seeds"]), other.name
@@ -1081,7 +1102,7 @@ def test_v29_diverse_teacher_corpus_and_dev_v25_are_precommitted():
     assert confirmation["seed_set_version"] == 25
     assert confirmation["seeds"] == list(range(251001, 251161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -1130,7 +1151,7 @@ def test_v30_budgeted_diverse_teacher_corpus_and_dev_v26_are_precommitted():
     assert confirmation["seed_set_version"] == 26
     assert confirmation["seeds"] == list(range(261001, 261161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -1179,7 +1200,7 @@ def test_v31_initial_schematic_prior_and_dev_v27_are_precommitted():
     assert confirmation["seed_set_version"] == 27
     assert confirmation["seeds"] == list(range(271001, 271161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -1233,7 +1254,7 @@ def test_v32_resource_actionability_staging_and_dev_v28_are_precommitted():
     assert confirmation["seed_set_version"] == 28
     assert confirmation["seeds"] == list(range(281001, 281161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -1287,7 +1308,7 @@ def test_v33_secondary_seat_staging_and_dev_v29_are_precommitted():
     assert confirmation["seed_set_version"] == 29
     assert confirmation["seeds"] == list(range(282001, 282161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -1340,7 +1361,7 @@ def test_v34_claim_loss_wake_and_dev_v30_are_precommitted():
     assert confirmation["seed_set_version"] == 30
     assert confirmation["seeds"] == list(range(283001, 283161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -1393,7 +1414,7 @@ def test_v35_secondary_claim_loss_wake_and_dev_v31_are_precommitted():
     assert confirmation["seed_set_version"] == 31
     assert confirmation["seeds"] == list(range(284001, 284161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -1446,7 +1467,7 @@ def test_v36_build_line_opening_and_dev_v32_are_precommitted():
     assert confirmation["seed_set_version"] == 32
     assert confirmation["seeds"] == list(range(285001, 285161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
@@ -1505,7 +1526,7 @@ def test_v37_seat2_harvest_opening_and_dev_v33_are_precommitted():
     assert confirmation["seed_set_version"] == 33
     assert confirmation["seeds"] == list(range(286001, 286161))
     confirmation_seeds = set(confirmation["seeds"])
-    for other in DEFAULT_SEED_SET.parent.glob("bootstrap-defense-*.json"):
+    for other in _readable_seed_set_paths():
         if other != path:
             document = json.loads(other.read_text(encoding="utf-8"))
             assert confirmation_seeds.isdisjoint(document["seeds"]), other.name
