@@ -1888,6 +1888,15 @@ repository-evidence mapping used for the M6 audit is:
   permanent announcements/idle and matched recovery remain uncertain. Report
   SHA is `10f829a54a110507...`. V43 is rejected before confirmation; dev-v39 is
   retired unopened/unconsumed and held-out-v6 remains sealed. M8.5 is unmet.
+- ADR-0061 precommits V44 as a bounded temporal successor. The remaining V43
+  misses are sequence-defined, but v2 sees only the current boundary; reusable
+  root 2004 pairs 65 WAIT decisions with the sole high-idle candidate trace.
+  V44 appends the previous boundary's 56 base scalars, masked 37-value candidate
+  mean, candidate-count fraction, and submitted ten-way action one-hot. The V43
+  set actor is retained with a 160-input scalar encoder. Config/umbrella hashes
+  are `9a23c90567754eb8...` / `4a526274d9568726...`. Dev-v40 is reserved in
+  `[8B,9B)` but remains unconstructed; dev-v39 remains retired without a read,
+  held-out-v6 remains sealed, and no V44 model work has occurred.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

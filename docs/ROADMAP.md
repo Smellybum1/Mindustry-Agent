@@ -1982,6 +1982,20 @@ uncertain. Records/aggregate/report hashes are `a3bf222c25ec52ea...` /
 confirmation; dev-v39 is retired unopened/unconsumed, held-out-v6 remains
 sealed/unconsumed, and M8.5 remains unmet.
 
+ADR-0061 now precommits V44 from the reusable temporal failure pattern. V43 is
+memoryless even though the three remaining failed rows measure decision churn,
+continued idling, and recovery after agent loss. V44 changes only the bounded
+feature/model architecture: it appends the prior authoritative boundary's base
+scalars, masked candidate mean/count, and submitted action one-hot, then feeds
+the resulting 160 scalars through the V43 set-context actor. Runtime authority,
+reward, teacher trajectory/relabeling, roots, budgets, optimizer, RNG values,
+scripted seats, and engine pins stay exact. Config/umbrella hashes are
+`9a23c90567754eb8...` / `4a526274d9568726...`. Dev-v40 is reserved primary-only
+in `[8B,9B)` and remains unconstructed; dev-v39 remains retired without a
+membership read and held-out-v6 remains sealed/unconsumed. The committed
+implementation and full public/pretraining boundary are required before
+value-free dev-v40 construction or model work. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

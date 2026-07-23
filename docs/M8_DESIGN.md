@@ -843,6 +843,30 @@ uncertain, and matched recovery remains uncertain. Report SHA is
 `10f829a54a110507...`. Dev-v39 is retired unopened/unconsumed and held-out-v6
 remains sealed.
 
+## V44 governed lagged-boundary successor
+
+ADR-0061 precommits the first bounded temporal coordinate. V43 routes the full
+current candidate set but remains memoryless, while every remaining failed
+metric is sequence-defined. On reusable root 2004 its 65 WAIT actions and only
+five SELECT actions coincide with the sole high-idle candidate trajectory.
+Current features cannot distinguish a newly changed team/catalog boundary from
+an otherwise similar repeated boundary.
+
+V44 retains the exact current 8x37 candidate rows and 56 scalars, then appends
+the immediately previous authoritative boundary's 56 base scalars, masked mean
+of its 37-value present candidate rows, candidate-count fraction, and submitted
+ten-way action one-hot. The initial lag is all zero and reset clears it. The
+model retains V43's set pooling and heads; only its scalar encoder grows from
+56 to 160 inputs. This is explicit one-boundary memory, not a recurrent hidden
+state, runtime prior, reward change, or teacher change.
+
+The immutable config/umbrella hashes are `9a23c90567754eb8...` /
+`4a526274d9568726...`. Dev-v40 is reserved primary-only in `[8B,9B)` but must
+not be constructed until the committed implementation and complete pretraining
+boundary pass. Dev-v39 remains retired without a membership read. Held-out-v6
+remains sealed and unconsumed. No V44 implementation, model construction, or
+restricted membership access preceded this precommit.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -970,6 +970,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   and matched recovery remain uncertain. Report SHA is `10f829a54a110507...`.
   V43 is rejected; dev-v39 is retired unopened/unconsumed and held-out-v6 stays
   sealed.
+- **V44 temporal successor precommitted**: ADR-0061 freezes one-boundary
+  structured memory: 56 prior scalars, a masked 37-value prior candidate mean,
+  prior candidate-count fraction, and a ten-way submitted-action one-hot. The
+  V43 set actor remains intact with a 160-input scalar encoder. Config/umbrella
+  hashes are `9a23c90567754eb8...` / `4a526274d9568726...`. Dev-v40 is reserved
+  in `[8B,9B)` but unconstructed; implementation and the complete public/
+  pretraining boundary are next. Dev-v39 remains retired without a read and
+  held-out-v6 remains sealed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1184,12 +1192,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
+1. **Implement only the precommitted V44 temporal coordinate.** ADR-0061,
+   config `m8-selector-v44-lagged-boundary-context.json`, and its confirmation
+   umbrella freeze the exact 160-scalar lagged-boundary architecture.
+2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
    dev-v39 membership; dev-v38 also remains retired unopened.
-2. **Keep held-out-v6 sealed and unconsumed.** V43 did not authorize access.
-3. **Require a new public/train/reusable architecture hypothesis before V44.**
-   Precommit its ADR/config/confirmation umbrella before implementation or model
-   work; do not weaken or bypass the frozen dual scorecards.
+3. **Keep held-out-v6 sealed and unconsumed.** V44 has not authorized access.
 4. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
    authorize V43 or any runtime prior and still fails two scorecard rows.
 5. **M9.1 remains gated.** The roadmap says to begin only after the single
@@ -1197,7 +1205,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0056` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0061` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1221,9 +1229,11 @@ teacher-conflict filter, green pretraining boundary, value-free dev-v36 freeze,
 exact replicas, direct lineage, and reusable-scorecard rejection. ADR-0055's
 V41 successor was frozen and constructed exactly, then rejected by both
 reusable scorecards before confirmation. ADR-0056 precommits V42's exact
-training-only teacher-conflict relabel with V40 filter fallback. Its production
-and focused-test packet is complete at 238 Python tests; the full public/
-pretraining boundary is next.
+training-only teacher-conflict relabel with V40 filter fallback. ADR-0060
+records V43's candidate-set-context actor, exact replicas, and reusable
+rejection before confirmation. ADR-0061 precommits V44's bounded lagged-
+boundary feature/model coordinate; implementation and the public/pretraining
+boundary are next.
 
 ## Deviations from the brief in this scaffold
 
