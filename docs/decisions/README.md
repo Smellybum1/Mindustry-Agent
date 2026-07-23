@@ -88,6 +88,12 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0081](ADR-0081-m9-v4-late-checkpoint-diagnostic-precommit.md) | Freeze the immutable-v4 late-checkpoint diagnostic |
 | [0082](ADR-0082-m9-v4-late-checkpoint-diagnostic-result.md) | Accept the v4 deterministic-mode instability signal |
 | [0083](ADR-0083-m9-ippo-v5-success-imitation-precommit.md) | Freeze M9 IPPO v5 success-conditioned self-imitation |
+| [0084](ADR-0084-reject-m9-ippo-v5-success-imitation.md) | Reject M9 IPPO v5 at public construction |
+| [0085](ADR-0085-precommit-m9-ippo-v5-mode-margin-diagnostic.md) | Freeze the immutable-v5 action-mode margin diagnostic |
+| [0086](ADR-0086-m9-ippo-v5-stochastic-success-retained.md) | Accept v5 stochastic retention without deterministic consolidation |
+| [0087](ADR-0087-precommit-m9-ippo-v6-success-margin.md) | Freeze M9 IPPO v6 strongest-alternative success margin |
+| [0088](ADR-0088-reject-m9-ippo-v6-success-margin.md) | Reject M9 IPPO v6 at public construction |
+| [0089](ADR-0089-precommit-m9-shared-expert-candidate-projection.md) | Freeze the shared-expert candidate-projection diagnostic |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

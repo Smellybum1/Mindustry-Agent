@@ -1,0 +1,57 @@
+{
+  "schema": "m9_shared_expert_candidate_projection_protocol_v1",
+  "data_classification": "public_dev_only",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": {
+    "path": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+    "sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+    "episodes": 40
+  },
+  "source_expert": {
+    "policy": "shared-expert-v1",
+    "implementation": "agentcore.coordination.ExpertCoordinationDriver",
+    "control_path": "server_shared_expert_policy",
+    "frozen_baseline_report": "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json",
+    "frozen_baseline_report_sha256": "ba4c9182f346a6eefc8c904d3e7825ee23933aede535b7c516ec63800f6a2d70",
+    "expected_wins": 36
+  },
+  "projection": {
+    "label_source": "simulation_thread_expert_select_task_decisions",
+    "observation_source": "same_boundary_authoritative_m9_candidate_catalog_and_action_mask",
+    "match_fields": [
+      "agent_id",
+      "task_type",
+      "semantic_target"
+    ],
+    "require_exactly_one_actor_valid_match": true,
+    "forbid_utility_or_outcome_tiebreak": true,
+    "forbid_wait_fallback": true,
+    "forced_controls_are_actor_excluded": true
+  },
+  "replay": {
+    "control_path": "ordinary_external_candidate_task_actions",
+    "fresh_jvm_runs": 2,
+    "require_byte_identical_reports": true,
+    "require_all_projected_actions_accepted": true,
+    "require_semantic_decision_sequence_parity": true,
+    "require_terminal_reset_replay": true
+  },
+  "classification": {
+    "minimum_unique_projection_fraction_all": 0.95,
+    "minimum_unique_projection_fraction_winning_episodes": 1.0,
+    "minimum_projected_replay_wins": 30,
+    "minimum_projected_replay_retention_fraction_of_source_wins": 0.8,
+    "pass": "candidate_native_supervision_source_supported",
+    "fail": "candidate_native_supervision_source_not_supported"
+  },
+  "authority": {
+    "may_modify_model": false,
+    "may_train": false,
+    "may_select_checkpoint": false,
+    "may_promote": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_v7": false
+  }
+}

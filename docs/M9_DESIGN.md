@@ -267,7 +267,13 @@ pins, and dependency lock.
    `37f3ecd470f7580a...`; no restricted access occurred. V5 and v6 now bound
    the failure of treating every actor-valid transition in a winning
    stochastic episode as a desirable deterministic label. A public-only
-   v1--v6 design synthesis is required before any v7 precommit.
+   v1--v6 design synthesis is complete in `docs/M9_V1_V6_SYNTHESIS.md`.
+   ADR-0089 freezes the next diagnostic before execution: expose the strong
+   36/40 internal shared expert's simulation-thread decisions, require unique
+   same-boundary semantic projection to actor-valid ordinary candidates, and
+   replay them exactly through the external action path in two fresh JVMs.
+   Protocol SHA is `3aea109ad7d876fb...`. The diagnostic has no model,
+   training, v7, confirmation, or held-out authority.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

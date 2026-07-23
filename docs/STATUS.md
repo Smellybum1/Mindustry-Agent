@@ -2458,7 +2458,15 @@ repository-evidence mapping used for the M6 audit is:
   and prohibits Replica B. Manifest/full-run digests are
   `d6ecb9f820ec975...` / `bc74e4b2f88a0e6...`; compact result SHA is
   `37f3ecd470f7580a...`. No restricted data was accessed. A public-only
-  v1--v6 design synthesis is required before any prospectively frozen v7.
+  v1--v6 design synthesis is now complete in
+  `docs/M9_V1_V6_SYNTHESIS.md`. It rejects another self-imitation scalar and
+  identifies the strong 36/40 internal shared expert as a possible new label
+  source only if its decisions project unambiguously onto ordinary candidate
+  actions. ADR-0089 prospectively freezes that public-only diagnostic at
+  protocol SHA `3aea109ad7d876fb...`: 95% overall/100% winning-episode unique
+  projection, exact twin replay, accepted semantic action parity, and at least
+  30/40 ordinary-path wins. Implementation and gates are next; no v7 model,
+  training, restricted namespace, or restricted access is authorized.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

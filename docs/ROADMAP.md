@@ -2501,7 +2501,13 @@ ADR-0088 rejects v6 and prohibits Replica B. Manifest/full-run digests are
 `37f3ecd470f7580a...`. No restricted data was accessed. Before any v7 model or
 trajectory, a public-only v1--v6 design synthesis must freeze a change in the
 source of action supervision rather than retune the rejected self-imitation
-scalars.
+scalars. That synthesis is complete in `docs/M9_V1_V6_SYNTHESIS.md`.
+ADR-0089 now freezes a public-only diagnostic of the 36/40 internal shared
+expert as a candidate-native supervision source. Protocol SHA is
+`3aea109ad7d876fb...`; it requires unique semantic projection onto the
+same-boundary ordinary candidate/mask surface, exact fresh-JVM replay, and at
+least 30/40 replay wins. It cannot train, modify a model, authorize v7, or
+access restricted data. Implementation and the complete gate are next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
