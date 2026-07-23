@@ -1,0 +1,130 @@
+{
+  "schema": "ippo_training_config_v4",
+  "candidate_version": "m9-ippo-v4-entropy-anneal",
+  "parent_candidate_version": "m9-ippo-v3-diverse2048",
+  "sole_learning_change": "linear_entropy_coefficient_anneal_0.02_to_0.0",
+  "runtime_contract": "atomic_all_seat_shared_recurrent_selector_v1",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "agent_count": 3,
+  "train_seed_set": "configs/evaluation/bootstrap-defense-v1-m9-train-diverse2048-v1.json",
+  "dev_seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "public_evaluation_protocol": "configs/evaluation/m9-ippo-v4-entropy-anneal-public-protocol.json",
+  "confirmation_seed_set": null,
+  "held_out_seed_set": null,
+  "reward_schema": "ippo_reward_v1",
+  "team_reward_schema": "selector_reward_v2",
+  "team_quality_reward": {
+    "idle_agent_tick_cost": 0.002,
+    "idle_agent_tick_cap": 8.0,
+    "duplicate_work_cost": 0.05,
+    "duplicate_work_cap": 7.0,
+    "announcement_cost": 0.01,
+    "announcement_cap": 1.0,
+    "team_abandonment_cost": 0.25,
+    "team_abandonment_cap": 2.0,
+    "recovery_delay_tick_cost": 0.001,
+    "recovery_delay_tick_cap": 3.0
+  },
+  "individual_shaping": {
+    "schema": "own_available_idle_ticks_v1",
+    "cost_per_tick": 0.00025,
+    "per_agent_episode_cap": 1.0,
+    "unavailable_ticks_charged": false,
+    "reward_key": "reward.agent.own_available_idle_ticks"
+  },
+  "teacher": null,
+  "model_init_seed": 9601,
+  "action_sampling_seed": 9602,
+  "shuffle_seed": 9603,
+  "minibatch_seed": 9604,
+  "torch_threads": 1,
+  "training_cycles": 32,
+  "episodes_per_update": 64,
+  "learning_rate": 0.0001,
+  "adam_epsilon": 1e-8,
+  "gamma_per_second": 0.99,
+  "gae_lambda": 0.95,
+  "clip_ratio": 0.2,
+  "ppo_epochs": 8,
+  "minibatch_size": 256,
+  "entropy_coefficient": 0.02,
+  "entropy_coefficient_schedule": {
+    "schema": "linear_update_v1",
+    "start": 0.02,
+    "end": 0.0,
+    "first_update": 1,
+    "last_update": 32,
+    "interpolation": "inclusive"
+  },
+  "value_coefficient": 0.5,
+  "max_grad_norm": 0.5,
+  "training_root_schedule": {
+    "schema": "unique_root_per_episode_v1",
+    "root_count": 2048,
+    "reuse_count": 1,
+    "shuffle": "single_deterministic_full_schedule",
+    "shuffle_seed": 9603,
+    "updates": 32,
+    "episodes_per_update": 64
+  },
+  "recurrent_backpropagation": {
+    "schema": "one_boundary_truncation_v1",
+    "hidden_input": "stored_rollout_state",
+    "hidden_output": "private_next_boundary_state",
+    "cross_agent_state": false
+  },
+  "normalizers": {
+    "feature_schema": "selector_features_v2_lagged_boundary",
+    "source": "scenario metadata, fixed protocol bounds, authoritative structured board, and the previous authoritative boundary for the same seat",
+    "running_statistics": false
+  },
+  "model_architecture": {
+    "schema": "ippo_shared_recurrent_selector_v1",
+    "agent_count": 3,
+    "candidate_encoder": [37, 64, 64],
+    "current_scalar_encoder": [56, 64, 64],
+    "lagged_context_encoder": [104, 64, 64],
+    "role_embedding": [3, 8],
+    "recurrent_cell": [200, 64],
+    "select_head": [200, 64, 1],
+    "special_head": [136, 64, 2],
+    "critic": [200, 64, 1],
+    "activation": "Tanh",
+    "action_count": 10,
+    "hidden_state": "private_per_seat_zero_on_reset_or_death"
+  },
+  "checkpoint_selection": {
+    "schema": "m9_ippo_public_quality_gate_v1",
+    "minimum_wins": 30,
+    "maximum_mean_team_idle_fraction_exclusive": 0.25,
+    "ranking": [
+      "wins_desc",
+      "mean_team_return_desc",
+      "mean_core_health_desc",
+      "mean_team_idle_fraction_asc",
+      "update_asc"
+    ]
+  },
+  "optimizer_ppo": {
+    "optimizer": "Adam",
+    "learning_rate": 0.0001,
+    "adam_epsilon": 1e-8,
+    "gamma_per_second": 0.99,
+    "gae_lambda": 0.95,
+    "clip_ratio": 0.2,
+    "ppo_epochs": 8,
+    "minibatch_size": 256,
+    "entropy_coefficient": 0.02,
+    "entropy_coefficient_schedule": {
+      "schema": "linear_update_v1",
+      "start": 0.02,
+      "end": 0.0,
+      "first_update": 1,
+      "last_update": 32,
+      "interpolation": "inclusive"
+    },
+    "value_coefficient": 0.5,
+    "max_grad_norm": 0.5
+  }
+}

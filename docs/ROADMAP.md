@@ -2424,6 +2424,13 @@ ADR-0078 accepts the predeclared sampling signal but keeps v3 rejected and
 records compact result SHA `50c823d2d3d6123d...`. No restricted data was
 accessed. The recommended v4 isolates entropy annealing toward zero over the
 otherwise exact v3 recipe and requires a separate precommit before model work.
+ADR-0079 now freezes `m9-ippo-v4-entropy-anneal`: every v3 mechanism remains
+exact except the entropy coefficient, which follows the inclusive schedule
+`0.02 * (32 - update) / 31` from update 1 through 32. Config/protocol hashes
+are `9b9495e03b11e0fd...` and `db9b5647f249d308...`. Collection stays
+categorical; dev evaluation stays deterministic argmax. No v4 trajectory or
+optimizer update exists. Implementation and the complete exact-commit gate are
+next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

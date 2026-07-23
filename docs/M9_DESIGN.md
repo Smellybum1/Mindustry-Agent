@@ -198,6 +198,13 @@ pins, and dependency lock.
    `50c823d2d3d6123d...`; no restricted data was accessed. The recommended v4
    isolates entropy annealing toward zero over the unchanged v3 recipe and
    requires a separate precommit before model work.
+   **V4 precommitted 2026-07-24:** ADR-0079 freezes
+   `m9-ippo-v4-entropy-anneal`. V4 inherits v3 exactly and changes only the
+   entropy coefficient from constant 0.02 to the inclusive linear schedule
+   `0.02 * (32 - update) / 31` across updates 1--32. Config/protocol hashes are
+   `9b9495e03b11e0fd...` and `db9b5647f249d308...`. Collection remains
+   categorical and public dev remains deterministic argmax. No v4 trajectory
+   or optimizer update exists; implementation and the complete gate are next.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

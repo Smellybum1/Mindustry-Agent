@@ -1516,15 +1516,19 @@ queue.
    streams, and two exact fresh-JVM runs. ADR-0078 records exact twin digest
    `8b0b5fdd9083953d...`, argmax 0/40, and categorical 56/160. V3 remains
    rejected. Precommit the recommended v4 entropy-annealing successor before
-   any new model work.
-5. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
+   any new model work. ADR-0079 now freezes v4's sole change as the inclusive
+   linear entropy schedule `0.02 * (32 - update) / 31`; implementation is next.
+5. **Implement ADR-0079's v4 boundary and pass its exact full gate before
+   Replica A.** Preserve every v3 mechanism except the scheduled entropy
+   coefficient and record its value per optimizer update.
+6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
-6. **Do not start the learned human-session block.** No M9 learned checkpoint
+7. **Do not start the learned human-session block.** No M9 learned checkpoint
    has passed construction or public comparison.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0077` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0079` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

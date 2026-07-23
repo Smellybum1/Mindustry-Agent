@@ -2365,6 +2365,13 @@ repository-evidence mapping used for the M6 audit is:
   accepts the frozen sampling signal but keeps v3 rejected. Compact result SHA
   is `50c823d2d3d6123d...`; no restricted data was accessed. The recommended v4
   isolates entropy annealing toward zero and requires a separate precommit.
+- ADR-0079 now precommits `m9-ippo-v4-entropy-anneal` before implementation or
+  training. V4 inherits v3's unique roots, one-use schedule, model, rewards,
+  one-boundary recurrence, other PPO values, RNGs, dev roots, baseline, budget,
+  and thresholds. Its sole learning change is the inclusive linear entropy
+  schedule `0.02 * (32 - update) / 31`, from 0.02 at update 1 to zero at update
+  32. Config/protocol hashes are `9b9495e03b11e0fd...` and
+  `db9b5647f249d308...`. No v4 trajectory or model update exists.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
