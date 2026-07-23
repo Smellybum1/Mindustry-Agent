@@ -11,6 +11,9 @@ from typing import Any
 
 from mindustry_agents.process.launcher import repo_root
 from mindustry_agents.training.ippo_diverse_roots_check import build_report
+from mindustry_agents.training.ippo_entropy_check import (
+    build_report as build_entropy_report,
+)
 from mindustry_agents.training.ippo_ppo import (
     IPPO_V1_CONFIG_SHA256,
     IPPO_V1_PROTOCOL_SHA256,
@@ -18,9 +21,12 @@ from mindustry_agents.training.ippo_ppo import (
     IPPO_V2_PROTOCOL_SHA256,
     IPPO_V3_CONFIG_SHA256,
     IPPO_V3_PROTOCOL_SHA256,
+    IPPO_V4_CONFIG_SHA256,
+    IPPO_V4_PROTOCOL_SHA256,
     load_ippo_v1_config,
     load_ippo_v2_config,
     load_ippo_v3_config,
+    load_ippo_v4_config,
     sha256_path,
 )
 
@@ -79,6 +85,18 @@ V3_GATES = (
     "m9-shared-policy-check",
     "m9-rollout-check",
     "m9-diverse-roots-check",
+    "m9-artifact-check",
+    "smoke",
+    "determinism",
+)
+V4_GATES = (
+    "test-python",
+    "test-java",
+    "m9-reward-check",
+    "m9-shared-policy-check",
+    "m9-rollout-check",
+    "m9-diverse-roots-check",
+    "m9-entropy-check",
     "m9-artifact-check",
     "smoke",
     "determinism",
@@ -321,6 +339,55 @@ def validate_v3_preflight(root: Path | None = None) -> dict[str, Any]:
     }
 
 
+def validate_v4_preflight(root: Path | None = None) -> dict[str, Any]:
+    """Validate ADR-0079's public entropy-annealing boundary."""
+
+    root = root or repo_root()
+    config_path = root / "configs/training/m9-ippo-v4-entropy-anneal.json"
+    config = load_ippo_v4_config(config_path)
+    protocol_path = root / config["public_evaluation_protocol"]
+    if sha256_path(protocol_path) != IPPO_V4_PROTOCOL_SHA256:
+        raise ValueError("M9 v4 public protocol hash drifted")
+    if sha256_path(config_path) != IPPO_V4_CONFIG_SHA256:
+        raise ValueError("M9 v4 config hash drifted")
+    if (
+        config["confirmation_seed_set"] is not None
+        or config["held_out_seed_set"] is not None
+    ):
+        raise ValueError("M9 v4 pretraining config gained sealed-data authority")
+
+    inherited = validate_v3_preflight(root)
+    baseline = _load(
+        root, "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json"
+    )
+    current_path = root / "runs/m9-ippo-v4-entropy-check.json"
+    current = json.loads(current_path.read_text(encoding="utf-8"))
+    expected = build_entropy_report(root)
+    commit = _project_commit(root)
+    if (
+        inherited.get("passed") is not True
+        or inherited.get("confirmation_or_held_out_access") is not False
+        or current != expected
+        or current.get("implementation_commit") != commit
+        or current.get("all_passed") is not True
+        or current.get("confirmation_or_held_out_access") is not False
+    ):
+        raise ValueError("M9 v4 entropy evidence is incomplete or divergent")
+    return {
+        "schema": "m9_ippo_v4_preflight_v1",
+        "implementation_commit": commit,
+        "config_sha256": IPPO_V4_CONFIG_SHA256,
+        "protocol_sha256": IPPO_V4_PROTOCOL_SHA256,
+        "artifacts": EXPECTED_V3,
+        "gates": list(V4_GATES),
+        "public_baseline_wins": baseline["aggregate"]["wins"],
+        "entropy_schedule_sha256": current["coefficient_schedule_sha256"],
+        "training_schedule_sha256": current["training_schedule_sha256"],
+        "confirmation_or_held_out_access": False,
+        "passed": True,
+    }
+
+
 def write_preflight(
     path: Path,
     root: Path | None = None,
@@ -331,6 +398,8 @@ def write_preflight(
         result = validate_v2_preflight(root)
     elif candidate == "v3":
         result = validate_v3_preflight(root)
+    elif candidate == "v4":
+        result = validate_v4_preflight(root)
     else:
         result = validate_preflight(root)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -352,18 +421,26 @@ def main() -> int:
         type=Path,
         help="atomically write the deterministic preflight result",
     )
-    parser.add_argument("--candidate", choices=("v1", "v2", "v3"), default="v1")
+    parser.add_argument(
+        "--candidate",
+        choices=("v1", "v2", "v3", "v4"),
+        default="v1",
+    )
     args = parser.parse_args()
     result = (
         write_preflight(args.output, candidate=args.candidate)
         if args.output is not None
         else (
-            validate_v2_preflight()
-            if args.candidate == "v2"
+            validate_v4_preflight()
+            if args.candidate == "v4"
             else (
-                validate_v3_preflight()
-                if args.candidate == "v3"
-                else validate_preflight()
+                validate_v2_preflight()
+                if args.candidate == "v2"
+                else (
+                    validate_v3_preflight()
+                    if args.candidate == "v3"
+                    else validate_preflight()
+                )
             )
         )
     )

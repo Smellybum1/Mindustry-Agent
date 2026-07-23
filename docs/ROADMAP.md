@@ -2429,8 +2429,10 @@ exact except the entropy coefficient, which follows the inclusive schedule
 `0.02 * (32 - update) / 31` from update 1 through 32. Config/protocol hashes
 are `9b9495e03b11e0fd...` and `db9b5647f249d308...`. Collection stays
 categorical; dev evaluation stays deterministic argmax. No v4 trajectory or
-optimizer update exists. Implementation and the complete exact-commit gate are
-next.
+optimizer update exists. Candidate-aware config/checkpoint/manifest/preflight/
+runner support, exact inheritance checks, and per-update entropy telemetry are
+implemented locally. Focused tests and the complete 417-test Python suite pass.
+Commit-bound entropy evidence and the complete exact-commit gate are next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

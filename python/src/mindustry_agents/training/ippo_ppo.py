@@ -37,6 +37,12 @@ IPPO_V3_CONFIG_SHA256 = (
 IPPO_V3_PROTOCOL_SHA256 = (
     "29085f124d958f563965a682adb029bdff24bf3a03df2148dd19c41c36e2a82f"
 )
+IPPO_V4_CONFIG_SHA256 = (
+    "9b9495e03b11e0fdae744fefd64f65de513b85093cf96e2a088ac4235766d215"
+)
+IPPO_V4_PROTOCOL_SHA256 = (
+    "db9b5647f249d30889b911a075905a78f4ba9ccef5613bc25d09126e1d1e7ace"
+)
 
 
 @dataclass(frozen=True)
@@ -196,6 +202,71 @@ def load_ippo_v3_config(path: Path) -> dict[str, Any]:
     return config
 
 
+def load_ippo_v4_config(path: Path) -> dict[str, Any]:
+    """Load and fail closed on ADR-0079's entropy-annealing recipe."""
+
+    if sha256_path(path) != IPPO_V4_CONFIG_SHA256:
+        raise ValueError("M9 IPPO v4 config hash does not match ADR-0079")
+    config = json.loads(path.read_text(encoding="utf-8"))
+    if config.get("schema") != "ippo_training_config_v4":
+        raise ValueError("M9 IPPO v4 config schema is invalid")
+    if config.get("candidate_version") != "m9-ippo-v4-entropy-anneal":
+        raise ValueError("M9 IPPO v4 candidate identity is invalid")
+    if (
+        config.get("parent_candidate_version") != "m9-ippo-v3-diverse2048"
+        or config.get("sole_learning_change")
+        != "linear_entropy_coefficient_anneal_0.02_to_0.0"
+    ):
+        raise ValueError("M9 IPPO v4 successor identity drifted")
+    if config.get("model_architecture") != IPPO_MODEL_ARCHITECTURE:
+        raise ValueError("M9 IPPO v4 model architecture drifted")
+    if config.get("teacher") is not None:
+        raise ValueError("M9 IPPO v4 does not authorize a teacher")
+    if config.get("confirmation_seed_set") is not None:
+        raise ValueError("M9 IPPO confirmation access is not authorized")
+    if config.get("held_out_seed_set") is not None:
+        raise ValueError("M9 IPPO held-out access is not authorized")
+    if int(config.get("torch_threads", 0)) != 1:
+        raise ValueError("M9 IPPO v4 requires one torch CPU thread")
+    if int(config["training_cycles"]) * int(config["episodes_per_update"]) != 2048:
+        raise ValueError("M9 IPPO v4 episode budget drifted")
+    if config.get("training_root_schedule") != {
+        "schema": "unique_root_per_episode_v1",
+        "root_count": 2048,
+        "reuse_count": 1,
+        "shuffle": "single_deterministic_full_schedule",
+        "shuffle_seed": 9603,
+        "updates": 32,
+        "episodes_per_update": 64,
+    }:
+        raise ValueError("M9 IPPO v4 diverse-root schedule contract drifted")
+    if config.get("recurrent_backpropagation") != {
+        "schema": "one_boundary_truncation_v1",
+        "hidden_input": "stored_rollout_state",
+        "hidden_output": "private_next_boundary_state",
+        "cross_agent_state": False,
+    }:
+        raise ValueError("M9 IPPO v4 one-boundary optimizer contract drifted")
+    schedule = {
+        "schema": "linear_update_v1",
+        "start": 0.02,
+        "end": 0.0,
+        "first_update": 1,
+        "last_update": 32,
+        "interpolation": "inclusive",
+    }
+    if (
+        config.get("entropy_coefficient") != 0.02
+        or config.get("entropy_coefficient_schedule") != schedule
+        or config.get("optimizer_ppo", {}).get(
+            "entropy_coefficient_schedule"
+        )
+        != schedule
+    ):
+        raise ValueError("M9 IPPO v4 entropy schedule contract drifted")
+    return config
+
+
 def load_ippo_config(path: Path) -> dict[str, Any]:
     """Load one accepted immutable M9 IPPO recipe by its exact hash."""
 
@@ -206,6 +277,8 @@ def load_ippo_config(path: Path) -> dict[str, Any]:
         return load_ippo_v2_config(path)
     if digest == IPPO_V3_CONFIG_SHA256:
         return load_ippo_v3_config(path)
+    if digest == IPPO_V4_CONFIG_SHA256:
+        return load_ippo_v4_config(path)
     raise ValueError("M9 IPPO config hash is not an accepted recipe")
 
 
@@ -217,6 +290,8 @@ def config_sha256(config: dict[str, Any]) -> str:
         return IPPO_V2_CONFIG_SHA256
     if candidate == "m9-ippo-v3-diverse2048":
         return IPPO_V3_CONFIG_SHA256
+    if candidate == "m9-ippo-v4-entropy-anneal":
+        return IPPO_V4_CONFIG_SHA256
     raise ValueError("M9 IPPO candidate identity is unsupported")
 
 
@@ -228,7 +303,30 @@ def protocol_sha256(config: dict[str, Any]) -> str:
         return IPPO_V2_PROTOCOL_SHA256
     if candidate == "m9-ippo-v3-diverse2048":
         return IPPO_V3_PROTOCOL_SHA256
+    if candidate == "m9-ippo-v4-entropy-anneal":
+        return IPPO_V4_PROTOCOL_SHA256
     raise ValueError("M9 IPPO candidate identity is unsupported")
+
+
+def entropy_coefficient_for_update(
+    config: dict[str, Any],
+    update: int | None,
+) -> float:
+    """Return one candidate's immutable per-update entropy coefficient."""
+
+    if config.get("candidate_version") != "m9-ippo-v4-entropy-anneal":
+        return float(config["entropy_coefficient"])
+    if update is None:
+        raise ValueError("M9 IPPO v4 optimizer update number is required")
+    schedule = config["entropy_coefficient_schedule"]
+    first = int(schedule["first_update"])
+    last = int(schedule["last_update"])
+    if update < first or update > last:
+        raise ValueError("M9 IPPO v4 optimizer update number is out of range")
+    start = float(schedule["start"])
+    end = float(schedule["end"])
+    fraction = (update - first) / (last - first)
+    return start + (end - start) * fraction
 
 
 def _validate_transition(item: IPPOTransition) -> None:
@@ -666,6 +764,8 @@ def ippo_update(
     episodes: Sequence[IPPOEpisodeRollout],
     config: dict[str, Any],
     shuffle_generator: torch.Generator,
+    *,
+    update_number: int | None = None,
 ) -> dict[str, float]:
     """Dispatch one accepted M9 IPPO recurrent optimization contract."""
 
@@ -679,11 +779,22 @@ def ippo_update(
             shuffle_generator,
         )
     if schema in (None, "one_boundary_truncation_v1"):
-        return _ippo_one_boundary_update(
+        if config.get("candidate_version") != "m9-ippo-v4-entropy-anneal":
+            return _ippo_one_boundary_update(
+                model,
+                optimizer,
+                episodes,
+                config,
+                shuffle_generator,
+            )
+        coefficient = entropy_coefficient_for_update(config, update_number)
+        scheduled_config = {**config, "entropy_coefficient": coefficient}
+        metrics = _ippo_one_boundary_update(
             model,
             optimizer,
             episodes,
-            config,
+            scheduled_config,
             shuffle_generator,
         )
+        return {**metrics, "entropy_coefficient": coefficient}
     raise ValueError("unsupported M9 IPPO recurrent optimization contract")

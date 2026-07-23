@@ -2371,7 +2371,12 @@ repository-evidence mapping used for the M6 audit is:
   and thresholds. Its sole learning change is the inclusive linear entropy
   schedule `0.02 * (32 - update) / 31`, from 0.02 at update 1 to zero at update
   32. Config/protocol hashes are `9b9495e03b11e0fd...` and
-  `db9b5647f249d308...`. No v4 trajectory or model update exists.
+  `db9b5647f249d308...`. Candidate-aware config/checkpoint/manifest/preflight/
+  runner support and exact entropy telemetry are implemented locally. Focused
+  schedule, inheritance, real twin-update, authority, artifact, dispatch, and
+  v1--v3 compatibility tests pass within the complete 417-test Python suite.
+  Commit-bound entropy evidence and the full gate are next; no v4 trajectory
+  or model update exists.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

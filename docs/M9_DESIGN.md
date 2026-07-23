@@ -204,7 +204,11 @@ pins, and dependency lock.
    `0.02 * (32 - update) / 31` across updates 1--32. Config/protocol hashes are
    `9b9495e03b11e0fd...` and `db9b5647f249d308...`. Collection remains
    categorical and public dev remains deterministic argmax. No v4 trajectory
-   or optimizer update exists; implementation and the complete gate are next.
+   or optimizer update exists. Candidate-aware config/checkpoint/manifest/
+   preflight/runner support and per-update entropy telemetry are implemented
+   locally. Focused real-update/inheritance/authority/artifact coverage and the
+   complete 417-test Python suite pass. Commit-bound entropy evidence and the
+   full gate are next.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 
