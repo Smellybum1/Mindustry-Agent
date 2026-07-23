@@ -2085,6 +2085,18 @@ repository-evidence mapping used for the M6 audit is:
   `64463e76e5606fb...`. The receipt records zero membership-document,
   cancelled-dev-v43, retired-confirmation, or sealed-final reads. Dev-v44 is
   frozen and unconsumed. Commit the membership/receipt packet before replica A.
+- Two V47 replicas reproduce exactly at update 25: 10/10 public-dev wins,
+  checkpoint `ea821b97dd1e6f4c...`, replay `c37a4403cd7df405...`, full-run
+  `6f107b1e2f6e432c...`, lineage `3756990a5152e50c...`, idle `0.01586387`,
+  and DEFER `0.13594699`.
+- Reusable-v2 rejects V47 before confirmation. It wins 125/160 versus permanent
+  greedy 84/160 and matched greedy 22/160; DEFER, one-brain telemetry, and all
+  but two quality rows pass. Permanent idle is uncertain (`-0.00006783`, CI
+  `[-0.00408121,+0.00412951]`), and one automatic `plan_removed` event makes
+  abandonment uncertain against both greedy comparators. Preflight SHA is
+  `8eb91b92dc36a22...`. Highest-living failover and frontier updates 27/32 also
+  fail the unchanged scorecard. Dev-v44 is retired unopened/unconsumed,
+  held-out-v6 remains sealed, and no restricted membership was read.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

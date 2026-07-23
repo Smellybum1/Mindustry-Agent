@@ -1,0 +1,132 @@
+{
+  "schema": "m8_public_reusable_result_v1",
+  "candidate_version": "v47",
+  "data_classification": "public_reusable_only",
+  "repository_commit": "277a0493233d92d8d9c5403ad40eac042f4d11df",
+  "checkpoint": {
+    "selected_update": 25,
+    "sha256": "ea821b97dd1e6f4ccdf69b89ee0bf0b0b83f934f1dfccb68e72a823f58e90030",
+    "model_state_sha256": "ae3affeea7c1d22f19489cadd3cff060cd15269ce0d0ca5aa7836c0ae8ece12c",
+    "checkpoint_replay_sha256": "c37a4403cd7df40591b5085ad0a26394fc04098386b30c658632e0e5472b7966",
+    "full_run_reproducibility_sha256": "6f107b1e2f6e432cfb72fdd48cfb69133b8351ac83e7fe1e9129fa278b7e886e",
+    "direct_lineage_sha256": "3756990a5152e50c74843b8fbff3328a75802bdec3bc498f452f9d3da3a68e82"
+  },
+  "construction": {
+    "replicas_bit_exact": true,
+    "dev_wins": 10,
+    "dev_episodes": 10,
+    "dev_mean_idle_fraction": 0.01586387158654238,
+    "dev_mean_expert_defer_fraction": 0.1359469927774574,
+    "dev_mean_learned_seat_transfer_count": 0.9,
+    "maximum_simultaneous_learned_seats": 1
+  },
+  "reusable_v2": {
+    "episodes_per_policy": 160,
+    "wins": {
+      "learned-selector-v2": 125,
+      "random-valid": 62,
+      "greedy-utility": 84,
+      "random-mixed-seat0": 48,
+      "greedy-mixed-seat0": 22
+    },
+    "expert_defer": {
+      "mean": 0.14895143627510496,
+      "maximum_inclusive": 0.25,
+      "passed": true
+    },
+    "single_brain": {
+      "candidate_transfers": 207,
+      "matched_transfers": 320,
+      "maximum_simultaneous_learned_seats": 1,
+      "passed": true
+    },
+    "permanent_greedy_failures": {
+      "idle_fraction": {
+        "mean_difference": -0.000067826656766617,
+        "ci95": [
+          -0.004081205852878449,
+          0.004129512128132931
+        ]
+      },
+      "task_abandonment_rate": {
+        "mean_difference": 0.0001524390243902439,
+        "ci95": [
+          0.0,
+          0.0004573170731707318
+        ]
+      }
+    },
+    "matched_greedy_failure": {
+      "task_abandonment_rate": {
+        "mean_difference": 0.0001524390243902439,
+        "ci95": [
+          0.0,
+          0.0004573170731707318
+        ]
+      }
+    },
+    "all_other_permanent_and_matched_scorecard_rows_pass": true,
+    "eligible_for_confirmation": false
+  },
+  "artifacts": {
+    "baseline_records_sha256": "614e99fef69af6860d5b43bb585f3d39a51d99faa9c3670a9f0b318f1c7f846d",
+    "baseline_aggregate_sha256": "3cdf9ddb71288b7e0d2bfe1da9eab5210c1b6a75de7f56db9d7d3dbdb83f811e",
+    "candidate_and_matched_records_sha256": "6030f230d7427137bff19bdf4dabaceebc3974d9a8c21c8bedd30cf2a6b12a5c",
+    "aggregate_sha256": "ff0665bb743f1d4b09a1f0258699011d7e0fef8087aa0f815d23c17808a9b32c",
+    "preflight_sha256": "8eb91b92dc36a22ecea2b6427be60ac8f19e1a33b983ed9a8744e5602e4a81d2",
+    "lineage_manifest_sha256": "6a76ae3f82b3d7741b01f2da751d27164e7c7b589bb0dd7290d2219008e591cd",
+    "reward_adversary_sha256": "5e6aec4530d278234e650a334ffb9801214846b1a4165c1a3805dfe29c372826"
+  },
+  "public_diagnostics": {
+    "abandonment": {
+      "episodes": 1,
+      "events": 1,
+      "reason_code": "plan_removed",
+      "mechanism": "automatic skill failure after learned expansion selection while adaptive expert proposed WAIT"
+    },
+    "highest_living_failover": {
+      "wins": 120,
+      "mean_idle_fraction": 0.021287781257536526,
+      "mean_task_abandonment_rate": 0.0001524390243902439,
+      "scorecard_passed": false,
+      "report_sha256": "099e8e659f12d3ea31962ef3d46f8a7b1651ab2258137850445b999ca596980d"
+    },
+    "frontier_update_27": {
+      "dev_wins": 10,
+      "reusable_wins": 125,
+      "mean_idle_fraction": 0.01693292503984357,
+      "mean_task_abandonment_rate": 0.0,
+      "permanent_idle_difference": 0.0017598200109017112,
+      "permanent_idle_ci95": [
+        -0.0028020477429944587,
+        0.006539785698498905
+      ],
+      "scorecard_passed": false
+    },
+    "frontier_update_32": {
+      "dev_wins": 9,
+      "reusable_wins": 128,
+      "mean_idle_fraction": 0.012286686723808728,
+      "mean_task_abandonment_rate": 0.0,
+      "permanent_idle_difference": -0.002886418305133133,
+      "permanent_idle_ci95": [
+        -0.006533212981038235,
+        0.0010788433564610643
+      ],
+      "scorecard_passed": false,
+      "report_sha256": "ad1978913e08671cf966f521405e2006705d32da6072101e7df423df2086e92f"
+    },
+    "update_32_idle_by_final_active_seat": {
+      "seat_0_mean_difference": -0.00255224324492656,
+      "seat_1_mean_difference": 0.003446721059566299,
+      "seat_2_mean_difference": -0.006094397735676272
+    }
+  },
+  "restricted_state": {
+    "dev_v44": "retired_unopened_unconsumed",
+    "dev_v44_membership_read": false,
+    "held_out_v6": "sealed_unconsumed",
+    "held_out_v6_membership_read": false
+  },
+  "decision": "rejected_before_confirmation"
+}

@@ -1134,6 +1134,15 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   value-free. Membership SHA is `82ea1b7d59f23a0d...`; the receipt records zero
   membership reads. Dev-v44 is frozen/unconsumed. Commit its membership and
   receipt before replica A.
+- **V47 rejected before confirmation**: exact replicas select update 25 at
+  10/10 public-dev wins, checkpoint `ea821b97dd1e6f4c...`, idle `0.01586387`,
+  DEFER `0.13594699`, and full-run `6f107b1e2f6e432c...`. Reusable-v2 wins
+  125/160 versus permanent greedy 84/160 and matched greedy 22/160. Permanent
+  idle is uncertain around equality, and one automatic `plan_removed` event
+  fails abandonment against both greedy comparators. Preflight is
+  `8eb91b92dc36a22...`. Highest-living and frontier update 27/32 diagnostics
+  also fail. Dev-v44 is retired unopened/unconsumed; held-out-v6 remains
+  sealed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1348,16 +1357,15 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit the dev-v44 membership/receipt packet.** Never read or render
-   membership; exclude the four protected user files.
-2. **Train exact V47 replicas.** Require matching full-run/checkpoint evidence,
-   >=9/10 construction wins, idle <0.25, and DEFER <=0.25.
-3. **Run reusable-v2 before restricted confirmation.** Require direct lineage
-   and both unchanged 160-root scorecards.
-4. **Open dev-v44 only if every public gate passes.** Its one-way attempt must
-   be created before the primary agent reads membership.
-5. **Keep held-out-v6 sealed and M9.1 gated.** Confirmation and final access
-   remain conditional; M9 begins only after M8 promotion.
+1. **Commit V47's public rejection packet.** Never read or render retired
+   dev-v44 membership; exclude the four protected user files.
+2. **Precommit one V48 causal adapter coordinate.** Preserve one brain and
+   lowest-living failover, but cache each scripted seat's authoritative prior
+   boundary instead of resetting temporal history on transfer.
+3. **Complete V48 implementation/public gates before any new membership.**
+   No freezer or training may precede the committed boundary.
+4. **Keep held-out-v6 sealed.** No V47 result authorizes final access.
+5. **Keep M9.1 gated on M8 promotion.** Do not bypass the accepted roadmap.
 
 ## Decisions
 

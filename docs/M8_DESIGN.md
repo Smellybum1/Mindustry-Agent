@@ -1072,6 +1072,22 @@ The committed freezer constructed dev-v44 value-free. Membership SHA is
 implementation `64463e76e5...` and attests zero membership reads. Dev-v44 is
 frozen and unconsumed. Commit this membership/receipt packet before replica A.
 
+V47's replicas reproduce exactly at update 25 with 10/10 public-dev wins,
+idle `0.01586387`, DEFER `0.13594699`, and checkpoint
+`ea821b97dd1e6f4c...`. Reusable-v2 wins are 125/160 versus permanent greedy
+84/160 and matched greedy 22/160. All control gates and nearly every quality row
+pass, but permanent idle remains uncertain around equality and one automatic
+`plan_removed` event makes non-forced abandonment uncertain against both
+greedy comparators. Preflight is `8eb91b92dc36a22...`; V47 is rejected,
+dev-v44 is retired unopened/unconsumed, and held-out-v6 remains sealed.
+
+Public diagnostics close simple rescue paths. Highest-living failover worsens
+idle and wins. Frontier update 27 removes abandonment but worsens idle. Update
+32 reaches 128/160 wins, zero abandonment, and favorable mean idle, but its
+paired interval still crosses zero. The remaining variance concentrates after
+failover, especially when authority ends on seat 1. V47's mandatory history
+reset discards that surviving seat's immediately prior scripted boundary.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -2197,6 +2197,23 @@ binds membership `82ea1b7d59f23a0d...` and implementation
 retired, or sealed membership reads. Dev-v44 is frozen and unconsumed. Commit
 the membership/receipt packet before replica A. M8.5 remains unmet.
 
+Two exact V47 replicas select update 25 at 10/10 public-dev wins, idle
+`0.01586387`, DEFER `0.13594699`, checkpoint `ea821b97dd1e6f4c...`, and
+full-run `6f107b1e2f6e432c...`. Reusable-v2 wins are candidate 125/160,
+permanent random 62/160, permanent greedy 84/160, matched random 48/160, and
+matched greedy 22/160. All win/control gates pass, but permanent idle remains
+uncertain (`-0.00006783`, CI `[-0.00408121,+0.00412951]`) and one automatic
+`plan_removed` event makes abandonment uncertain against both greedy
+comparators. Preflight is `8eb91b92dc36a22...`. V47 is rejected; dev-v44 is
+retired unopened/unconsumed and held-out-v6 remains sealed.
+
+Public diagnostics reject highest-living failover and frontier update 27.
+Update 32 improves to 128/160 wins, zero abandonment, and favorable mean idle,
+but its CI still crosses zero. The residual variance concentrates after
+failover, especially when authority ends on seat 1; V47 resets and discards the
+surviving scripted seat's prior temporal context. A successor requires a new
+precommit before implementation or training. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

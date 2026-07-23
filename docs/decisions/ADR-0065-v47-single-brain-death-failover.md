@@ -133,3 +133,24 @@ generator `56dab3eb9eeabc47...`, and implementation `64463e76e5606fb...`,
 and records zero membership-document, cancelled-dev-v43, retired-confirmation,
 or sealed-final reads. Dev-v44 is frozen and unconsumed. Commit the
 membership/receipt packet before replica A.
+
+Two pinned V47 replicas reproduce exactly and select update 25 at 10/10 public
+dev wins. Checkpoint/replay/full-run/lineage prefixes are
+`ea821b97dd1e6f4c...` / `c37a4403cd7df405...` /
+`6f107b1e2f6e432c...` / `3756990a5152e50c...`. Mean dev idle is
+`0.01586387`, mean DEFER is `0.13594699`, and the one-brain maximum is 1.
+
+Reusable-v2 rejects V47 before confirmation. Candidate/permanent-random/
+permanent-greedy/matched-random/matched-greedy wins are
+125/62/84/48/22. DEFER and failover telemetry pass, and every scorecard row
+except permanent idle and one non-forced abandonment passes. Permanent idle is
+nearly equal but uncertain (`-0.00006783`, CI
+`[-0.00408121,+0.00412951]`). One automatic `plan_removed` event produces
+abandonment `+0.00015244`, CI `[0,+0.00045732]`, against both greedy
+comparators. Report SHA is `8eb91b92dc36a22...`.
+
+Public diagnostics reject highest-living failover and both governed frontier
+alternatives. Update 32 is strongest at 128/160 wins, zero abandonment, and
+idle difference `-0.00288642`, but its interval still crosses zero at
+`+0.00107884`. Dev-v44 is retired unopened/unconsumed and held-out-v6 remains
+sealed. No restricted membership was read.
