@@ -23,9 +23,10 @@ Deliverables:
       pinned CPU training runtime and `requirements-dev-linux-py312.lock` for
       the CI test tools; both hash-locked and reproducible with uv 0.11.16)
 - [x] `AGENTS.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `STATUS.md`, `HANDOFF.md`
-- [ ] CI builds Java and runs basic Python tests (`coop-agent-ci.yml` is
-      implemented with SHA-pinned actions and hash-locked Python dependencies;
-      the first hosted run remains pending because this local task must not push)
+- [x] CI builds Java and runs Python tests (`coop-agent-ci.yml` uses SHA-pinned
+      actions and hash-locked Python dependencies; hosted Ubuntu 24.04 run
+      `29972868046` passed bootstrap, all tests, and distribution builds on
+      2026-07-23)
 - [x] One-command bootstrap for reference runtime (`make bootstrap` / `scripts/bootstrap.sh`)
 
 Exit criteria:

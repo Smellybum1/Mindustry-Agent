@@ -1996,6 +1996,14 @@ repository-evidence mapping used for the M6 audit is:
 - **`configs/`**: the M7.5 train/dev/held-out-v1 seed sets, M7.6 fixed seed set,
   and ADR-0013 held-out-v2 successor are active governance artifacts; unrelated
   example training YAML remains unused.
+- **Project CI is hosted-run verified.** The SHA-pinned Ubuntu 24.04 workflow
+  installs both hash-locked Python environments, runs `make test`, and builds
+  the custom distributions. The first complete green hosted run is
+  [29972868046](https://github.com/Smellybum1/Mindustry-Agent/actions/runs/29972868046)
+  at commit `6b4afc4d3f`; bootstrap, dependency installation, all 287 Python
+  tests, Java suites/custom-module compilation, and distribution builds passed
+  in 2m37s. The first attempted run correctly exposed and led to repair of a
+  clean-checkout test that had required ignored local V41 diagnostics.
 
 ## What is unverified
 
@@ -2004,18 +2012,6 @@ repository-evidence mapping used for the M6 audit is:
   build + JUnit suite are now verified** (`./gradlew agent-core:test` → 108 tests
   green, including 31 M3/M4 skill tests). `agent-plugin:dist` and its isolated
   real-server acceptance probe are verified.
-- **Project CI is configured but not yet hosted-run verified.**
-  `.github/workflows/coop-agent-ci.yml` uses SHA-pinned checkout/JDK/Python
-  actions on Ubuntu 24.04, installs the existing hash-locked RL runtime plus the
-  reproducible five-package dev lock, runs `make test`, and builds the custom
-  distributions. The inherited upstream workflows are guarded to run only in
-  `Anuken/Mindustry`, so this fork never follows their Arc `master` checkout.
-  Local equivalents pass (287 Python tests, Java suites/custom-module compile,
-  and distributions). A detached clean Ubuntu 24.04 worktree at `43d3b17db6`
-  also passed literal `make bootstrap && make test` with an isolated JDK
-  21.0.11, GNU Make 4.3, empty Gradle cache, and the 33-test zero-dependency
-  Python boundary. The disposable toolchain/worktree and daemon were removed
-  after verification. The no-push rule leaves only the first hosted run pending.
 - **RL lock is verified** for Linux CPython 3.12 CPU; core remains dependency
   free. Native Windows training, CUDA, and other Python/platform locks are not
   certified and require an explicit later decision.

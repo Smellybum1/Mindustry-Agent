@@ -4,6 +4,7 @@ name: Coop Agent CI
 on:
   push:
     branches:
+      - coop-agent/v159.7
       - coop-agent/**
       - codex/**
   pull_request:
