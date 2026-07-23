@@ -125,3 +125,10 @@ detected. All 44 exact-config reward adversaries pass; the ignored report hashes
 to `3e3210447ff4f428a6e3fcc7a77b86e2bf82c9e42df89b9df8a2ef37ce467060`.
 Dev-v39 remains unconstructed, dev-v38 remains retired without a membership
 read, held-out-v6 remains sealed, and no V43 training episode has run.
+
+The primary-only dev-v39 freezer is now implemented and fail-closed against the
+exact committed config/umbrella hashes, repository paths, candidate identity,
+count, `[7B,8B)` namespace, and sealed-final binding. It atomically creates the
+membership and a value-free receipt without reading any membership document.
+All 298 Python tests pass. The freezer has not yet executed; dev-v39 remains
+unconstructed until this tool commit becomes an ancestor of `HEAD`.

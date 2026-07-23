@@ -1872,6 +1872,11 @@ repository-evidence mapping used for the M6 audit is:
   44 exact-config reward adversaries (report SHA `3e3210447ff4f428...`). Dev-v39
   remains unconstructed, dev-v38 remains retired without a membership read,
   held-out-v6 remains sealed, and no V43 training episode has run.
+- The primary-only dev-v39 freezer is implemented and tests exact config/
+  umbrella hashes, paths, identity, count, namespace, and sealed-final binding.
+  It atomically creates membership plus a value-free zero-read receipt. All 298
+  Python tests pass. The freezer has not executed and dev-v39 is unconstructed;
+  it must first be committed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1956,6 +1956,12 @@ and negative replay, and all 44 exact-config reward adversaries (report SHA
 episode has run. Commit this boundary before implementing and committing the
 primary-only value-free freezer.
 
+The primary-only dev-v39 freezer and its no-read namespace tests are now
+implemented; all 298 Python tests pass. The tool validates the exact committed
+config/umbrella and creates membership plus a value-free receipt atomically.
+It has not executed. Commit the freezer before construction; dev-v39 remains
+unconstructed and replica A remains prohibited.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
