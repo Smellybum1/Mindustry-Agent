@@ -2430,7 +2430,9 @@ repository-evidence mapping used for the M6 audit is:
   chosen-action probability/top-two legal-logit margins, and exact
   retained-versus-eroded classification. Protocol SHA is
   `9a9b44e36a22d68d...`. It has no training, selection, promotion, confirmation,
-  or held-out authority. No diagnostic episode has run.
+  or held-out authority. The fail-closed two-JVM runner, action-mode
+  measurement, exact classification, command surface, and four focused tests
+  are implemented in the current boundary. No diagnostic episode has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

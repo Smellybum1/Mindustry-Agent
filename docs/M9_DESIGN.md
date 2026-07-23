@@ -245,7 +245,9 @@ pins, and dependency lock.
    same public roots, one argmax plus four fixed categorical streams, two
    fresh JVMs, descriptive chosen-action probability/top-two logit margins,
    and exact retained-versus-eroded classification. Protocol SHA is
-   `9a9b44e36a22d68d...`; no diagnostic episode has run.
+   `9a9b44e36a22d68d...`. Its fail-closed runner, measurement path,
+   classification, command, and four focused tests are implemented in the
+   current boundary; no diagnostic episode has run.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

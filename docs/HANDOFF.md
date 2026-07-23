@@ -1358,6 +1358,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make m9-success-imitation-check` | Verifies ADR-0083's exact v4 inheritance, winning actor-transition filter, sampled-action NLL, telemetry, and deterministic twin optimizer result. Committed report SHA is `c8676245cee741f0...`. |
 | `make m9-v5-pretraining-check` | Runs every public-only gate required before v5 Replica A and writes exact-current-commit authority. Passed at `84af0016f6`. |
 | `make train-m9-ippo-v5` | Reconstructs the pinned CPU runtime, requires exact-current-commit v5 authority, runs A first, and prohibits B unless A passes construction. A completed and failed at a best 1/40; B is prohibited by ADR-0084. |
+| `make m9-v5-mode-margin-diagnostic` | Runs ADR-0085's rejected-v5 update-7/32 argmax/categorical matrix twice in fresh JVMs and records actor-valid chosen-action probability/top-two logit margins. Implemented; not yet executed. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
 | `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
@@ -1531,8 +1532,9 @@ queue.
    roots, argmax/categorical seeds, action-mode margins, successful-action
    probability measurements, classification thresholds, and no-selection
    authority before opening either checkpoint for the diagnostic. ADR-0085 and
-   protocol SHA `9a9b44e36a22d68d...` now bind that exact packet. Implement
-   its fail-closed runner and tests, then commit before execution. Do not
+   protocol SHA `9a9b44e36a22d68d...` now bind that exact packet. Its
+   fail-closed runner and four focused tests are implemented in the current
+   boundary. Commit it, then execute the exact two-JVM matrix once. Do not
    retune, resume, repair, or promote v4/v5.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.

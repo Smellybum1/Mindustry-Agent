@@ -20,7 +20,7 @@ SCRIPTS := scripts
         m9-v2-pretraining-check m9-diverse-roots-check m9-v3-pretraining-check \
         m9-policy-mode-diagnostic m9-entropy-check m9-v4-pretraining-check \
         m9-late-checkpoint-diagnostic m9-success-imitation-check \
-        m9-v5-pretraining-check \
+        m9-v5-pretraining-check m9-v5-mode-margin-diagnostic \
         m9-baseline train-m9-ippo train-m9-ippo-v2 train-m9-ippo-v3 \
         train-m9-ippo-v4 train-m9-ippo-v5 \
         secondary-claim-wake-check \
@@ -66,6 +66,7 @@ help: ## List available targets
 	@echo "  m9-success-imitation-check M9 v5 inheritance/optimizer check"
 	@echo "  m9-v5-pretraining-check complete success-imitation gate before A"
 	@echo "  train-m9-ippo-v5 governed success-imitation IPPO construction"
+	@echo "  m9-v5-mode-margin-diagnostic rejected-v5 public mode diagnostic"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -187,6 +188,9 @@ m9-v5-pretraining-check: ## Run all gates required before M9 v5 training
 
 train-m9-ippo-v5: ## Run governed M9 v5 success-imitation construction
 	@bash $(SCRIPTS)/train-m9-ippo-v5.sh
+
+m9-v5-mode-margin-diagnostic: ## Diagnose rejected-v5 stochastic modes/margins
+	@bash $(SCRIPTS)/m9-v5-mode-margin-diagnostic.sh
 
 secondary-claim-wake-check: ## Verify V35's fixed-seat claim-loss boundary
 	@bash $(SCRIPTS)/secondary-claim-wake-check.sh

@@ -2474,7 +2474,10 @@ ADR-0085 now freezes that diagnostic before checkpoint execution: v5 updates
 streams, two exact fresh JVMs, descriptive chosen-action probability/top-two
 legal-logit margins, and integer-only retained-versus-eroded classification.
 Protocol SHA is `9a9b44e36a22d68d...`. It cannot select, repair, train,
-promote, or access restricted data. No diagnostic episode has run.
+promote, or access restricted data. The fail-closed two-JVM runner,
+action-mode measurement, exact classification, command surface, and four
+focused tests are implemented in the current boundary. No diagnostic episode
+has run.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
