@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +31,17 @@ EXPECTED = {
     ),
 }
 
+GATES = (
+    "test-python",
+    "test-java",
+    "m9-reward-check",
+    "m9-shared-policy-check",
+    "m9-rollout-check",
+    "m9-artifact-check",
+    "smoke",
+    "determinism",
+)
+
 
 def _load(root: Path, relative: str) -> dict[str, Any]:
     path = root / relative
@@ -36,6 +49,14 @@ def _load(root: Path, relative: str) -> dict[str, Any]:
     if actual != EXPECTED[relative]:
         raise ValueError(f"M9 pretraining artifact hash drifted: {relative}")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _project_commit(root: Path) -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", "HEAD"],
+        cwd=root,
+        text=True,
+    ).strip()
 
 
 def validate_preflight(root: Path | None = None) -> dict[str, Any]:
@@ -85,9 +106,11 @@ def validate_preflight(root: Path | None = None) -> dict[str, Any]:
         raise ValueError("M9 checkpoint/manifest evidence is invalid")
     return {
         "schema": "m9_ippo_preflight_v1",
+        "implementation_commit": _project_commit(root),
         "config_sha256": IPPO_V1_CONFIG_SHA256,
         "protocol_sha256": IPPO_V1_PROTOCOL_SHA256,
         "artifacts": EXPECTED,
+        "gates": list(GATES),
         "public_baseline_wins": baseline["aggregate"]["wins"],
         "checkpoint_content_sha256": checkpoint["checkpoint_content_sha256"],
         "checkpoint_trace_sha256": artifact["episode"]["trace_sha256"],
@@ -99,8 +122,34 @@ def validate_preflight(root: Path | None = None) -> dict[str, Any]:
     }
 
 
+def write_preflight(path: Path, root: Path | None = None) -> dict[str, Any]:
+    result = validate_preflight(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp")
+    temporary.write_text(
+        json.dumps(result, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    temporary.replace(path)
+    return result
+
+
 def main() -> int:
-    print(json.dumps(validate_preflight(), sort_keys=True))
+    parser = argparse.ArgumentParser(
+        description="Validate committed M9 pretraining evidence."
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="atomically write the deterministic preflight result",
+    )
+    args = parser.parse_args()
+    result = (
+        write_preflight(args.output)
+        if args.output is not None
+        else validate_preflight()
+    )
+    print(json.dumps(result, sort_keys=True))
     return 0
 
 

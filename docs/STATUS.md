@@ -2244,12 +2244,16 @@ repository-evidence mapping used for the M6 audit is:
   `2a5b536ce71d07ee...`.
 - `m9-pretraining-check` combines the full Python/Java, reward, parity,
   stochastic rollout, artifact, smoke, determinism, golden, and committed
-  public-evidence checks. Its implementation must be committed and the whole
+  public-evidence checks. It atomically writes the implementation-bound result
+  to `runs/m9-ippo-preflight.json`. The Java gate executes a CRLF-normalized
+  wrapper view when a shared Windows checkout exposes `gradlew` with CRLF; it
+  does not modify the upstream wrapper or machine Git settings. The whole
   command must pass before replica A.
 - Current Python regression passes 382 tests. Prior pinned Java/custom-module
   tests, smoke, five-seed direct/traversed M9 parity, stochastic terminal-reset
   replay, cross-process/reset determinism, and the 664-checkpoint golden pass;
-  the complete combined command awaits the implementation commit.
+  the complete combined command awaits execution from its exact implementation
+  commit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1254,8 +1254,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   identity. Two separate processes and fresh JVMs reproduce trace
   `f85b6d34835594b0...`; path-independent manifest evidence is
   `64ca9645816d99f8...`, and the public-only report is
-  `2a5b536ce71d07ee...`. The combined `m9-pretraining-check` is implemented but
-  must be committed and run in full before replica A.
+  `2a5b536ce71d07ee...`. The combined `m9-pretraining-check` atomically writes
+  `runs/m9-ippo-preflight.json`, including the exact implementation commit and
+  gate inventory. Its Java phase is CRLF-safe in a shared Windows/WSL checkout
+  without editing upstream `gradlew`. It must run in full before replica A.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1471,9 +1473,9 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Review, commit, and push the checkpoint/manifest/preflight boundary.**
-   Exclude the four protected user files.
-2. **Run the complete `m9-pretraining-check` from that exact commit.**
+1. **Run the complete `m9-pretraining-check` from the exact gate commit.**
+   Preserve the generated implementation-bound preflight result.
+2. **Version the passing preflight evidence and keep status/handoff truthful.**
 3. **Run exact replica A/B only after the complete gate passes.** Use frozen M9 train/dev
    roots and preserve direct replay/manifest lineage.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final

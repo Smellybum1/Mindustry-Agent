@@ -507,13 +507,25 @@ class TestSharedRecurrentIPPO(unittest.TestCase):
                 compare_ippo_run_manifests(first, second)
 
     def test_committed_ippo_preflight_is_public_only_and_complete(self):
-        from mindustry_agents.training.ippo_preflight import validate_preflight
+        from mindustry_agents.training.ippo_preflight import (
+            validate_preflight,
+            write_preflight,
+        )
 
         result = validate_preflight()
         self.assertTrue(result["passed"])
         self.assertFalse(result["confirmation_or_held_out_access"])
         self.assertEqual(result["public_baseline_wins"], 36)
         self.assertEqual(len(result["artifacts"]), 4)
+        self.assertEqual(len(result["implementation_commit"]), 40)
+        self.assertIn("determinism", result["gates"])
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "preflight.json"
+            written = write_preflight(path)
+            self.assertEqual(
+                json.loads(path.read_text(encoding="utf-8")),
+                written,
+            )
 
 
 if __name__ == "__main__":

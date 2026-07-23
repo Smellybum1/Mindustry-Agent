@@ -16,4 +16,5 @@ bash scripts/m9-rollout-check.sh
 bash scripts/m9-artifact-check.sh
 bash scripts/smoke.sh
 bash scripts/determinism.sh
-"$PY" -m mindustry_agents.training.ippo_preflight
+"$PY" -m mindustry_agents.training.ippo_preflight \
+  --output "$ROOT/runs/m9-ippo-preflight.json"
