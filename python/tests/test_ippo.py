@@ -388,6 +388,133 @@ class TestSharedRecurrentIPPO(unittest.TestCase):
         self.assertEqual(first_metrics, second_metrics)
         self.assertEqual(model_state_digest(first), model_state_digest(second))
 
+    def test_ippo_checkpoint_roundtrip_rejects_state_tampering(self):
+        import torch
+
+        from mindustry_agents.training.ippo import (
+            SharedRecurrentSelector,
+            model_state_digest,
+        )
+        from mindustry_agents.training.ippo_artifacts import (
+            load_ippo_checkpoint,
+            save_ippo_checkpoint,
+        )
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "checkpoint.pt"
+            source = SharedRecurrentSelector(9601)
+            optimizer = torch.optim.Adam(source.parameters(), lr=0.0001, eps=1e-8)
+            evidence = save_ippo_checkpoint(
+                path,
+                source,
+                optimizer,
+                update=0,
+                parent_checkpoint_content_sha256=None,
+            )
+            twin = save_ippo_checkpoint(
+                Path(directory) / "different-name.pt",
+                source,
+                optimizer,
+                update=0,
+                parent_checkpoint_content_sha256=None,
+            )
+            self.assertEqual(
+                evidence["checkpoint_content_sha256"],
+                twin["checkpoint_content_sha256"],
+            )
+            loaded = SharedRecurrentSelector(123)
+            loaded_optimizer = torch.optim.Adam(
+                loaded.parameters(), lr=0.0001, eps=1e-8
+            )
+            payload = load_ippo_checkpoint(path, loaded, loaded_optimizer)
+            self.assertEqual(model_state_digest(source), model_state_digest(loaded))
+            self.assertEqual(payload["model_state_sha256"], evidence["model_state_sha256"])
+
+            payload["model_state"]["role_embedding.weight"][0, 0] += 1.0
+            tampered = Path(directory) / "tampered.pt"
+            torch.save(payload, tampered)
+            with self.assertRaisesRegex(ValueError, "model digest"):
+                load_ippo_checkpoint(
+                    tampered, SharedRecurrentSelector(9601)
+                )
+
+    def test_ippo_run_manifests_compare_path_independent_evidence(self):
+        import torch
+
+        from mindustry_agents.process.launcher import repo_root
+        from mindustry_agents.training.ippo import (
+            SharedRecurrentSelector,
+            model_state_digest,
+        )
+        from mindustry_agents.training.ippo_artifacts import (
+            atomic_write_manifest,
+            base_run_manifest,
+            compare_ippo_run_manifests,
+            finalize_run_manifest,
+        )
+
+        root = repo_root()
+        train_path = root / "configs/evaluation/bootstrap-defense-v1-m9-train-v1.json"
+        dev_path = root / "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json"
+        train = json.loads(train_path.read_text(encoding="utf-8"))
+        dev = json.loads(dev_path.read_text(encoding="utf-8"))
+        seed_identity = lambda document, path: {
+            "id": document["seed_set_id"],
+            "version": document["seed_set_version"],
+            "split": document["split"],
+            "path": str(path.relative_to(root).as_posix()),
+            "sha256": __import__("hashlib").sha256(path.read_bytes()).hexdigest(),
+        }
+        torch.set_num_threads(1)
+        manifest = base_run_manifest(
+            root / "configs/training/m9-ippo-v1.json",
+            initial_model_state_sha256=model_state_digest(
+                SharedRecurrentSelector(9601)
+            ),
+            train_seed_set=seed_identity(train, train_path),
+            dev_seed_set=seed_identity(dev, dev_path),
+            baseline_path=(
+                root
+                / "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json"
+            ),
+        )
+        manifest["selected_checkpoint"] = {
+            "update": 1,
+            "parent_checkpoint_content_sha256": None,
+            "model_state_sha256": "model-a",
+            "optimizer_state_sha256": "optimizer-a",
+        }
+        manifest["deterministic_checkpoint_verification"] = {
+            "seed": 18000000001,
+            "trace_digest_a": "trace-a",
+            "trace_digest_b": "trace-a",
+            "bit_exact": True,
+        }
+        manifest = finalize_run_manifest(manifest)
+        with tempfile.TemporaryDirectory() as directory:
+            first = Path(directory) / "replica-a.json"
+            second = Path(directory) / "replica-b.json"
+            atomic_write_manifest(first, manifest)
+            atomic_write_manifest(second, manifest)
+            compare_ippo_run_manifests(first, second)
+            changed = deepcopy(manifest)
+            changed["deterministic_checkpoint_verification"][
+                "trace_digest_b"
+            ] = "trace-b"
+            changed = finalize_run_manifest(changed)
+            atomic_write_manifest(second, changed)
+            with self.assertRaisesRegex(RuntimeError, "diverged"):
+                compare_ippo_run_manifests(first, second)
+
+    def test_committed_ippo_preflight_is_public_only_and_complete(self):
+        from mindustry_agents.training.ippo_preflight import validate_preflight
+
+        result = validate_preflight()
+        self.assertTrue(result["passed"])
+        self.assertFalse(result["confirmation_or_held_out_access"])
+        self.assertEqual(result["public_baseline_wins"], 36)
+        self.assertEqual(len(result["artifacts"]), 4)
+
 
 if __name__ == "__main__":
     unittest.main()

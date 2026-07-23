@@ -91,8 +91,10 @@ pins, and dependency lock.
    The hash-bound loader, per-seat cumulative reward, private-seat GAE,
    stored-hidden one-boundary optimizer, stochastic real-JVM rollout, and six
    individual-reward adversaries pass. The rollout repeats exactly after
-   terminal combat reset. Run/checkpoint manifest orchestration, two
-   independent training runs, and checkpoint replay evidence remain pending.
+   terminal combat reset. Run/checkpoint manifest orchestration and exact
+   checkpoint replay are now implemented: canonical model/optimizer/content
+   lineage and path-independent manifest evidence reproduce across processes
+   and fresh JVMs. Two independent training runs remain pending.
    The fixed server-expert baseline is frozen from implementation commit
    `dea79c487a`: 36/40 public wins, mean core `967.95`, mean team return
    `-1.641725`, exact terminal-reset replay, report `ba4c9182f346a6ee...`.

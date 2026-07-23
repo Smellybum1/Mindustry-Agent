@@ -1239,7 +1239,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   reset now clears only free entries before reseeding entity IDs. The
   regenerated golden changes 128 state hashes from checkpoint 535 and zero
   actions/events/ticks/outcomes; fixture SHA is `c753376fbe6db2ec...`.
-  The 379-test Python suite, pinned Java checks, smoke, five-seed parity,
+  The 382-test Python suite, pinned Java checks, smoke, five-seed parity,
   determinism, and 664-checkpoint golden pass. Exact training replicas have
   not started.
 - **M9 fixed baseline frozen before training**: from exact implementation
@@ -1248,6 +1248,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `-1.641725`, and task-board idle `1.0`. The legacy driver acts outside board
   assignment accounting, so the idle value is retained honestly. Terminal
   reset repeats exactly; report SHA is `ba4c9182f346a6ee...`.
+- **M9 checkpoint/manifest boundary implemented**: canonical checkpoint
+  content `0d391dea0287ea28...` binds schema/config/update/parent plus model and
+  optimizer states without treating serializer-specific bytes as replica
+  identity. Two separate processes and fresh JVMs reproduce trace
+  `f85b6d34835594b0...`; path-independent manifest evidence is
+  `64ca9645816d99f8...`, and the public-only report is
+  `2a5b536ce71d07ee...`. The combined `m9-pretraining-check` is implemented but
+  must be committed and run in full before replica A.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1463,10 +1471,10 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement and commit run/checkpoint manifests plus exact checkpoint
-   replay.** Preserve the frozen `m9-ippo-v1` recipe and baseline identities.
-2. **Run the final pretraining gate before any training episode.**
-3. **Run exact replica A/B only after that gate.** Use the frozen M9 train/dev
+1. **Review, commit, and push the checkpoint/manifest/preflight boundary.**
+   Exclude the four protected user files.
+2. **Run the complete `m9-pretraining-check` from that exact commit.**
+3. **Run exact replica A/B only after the complete gate passes.** Use frozen M9 train/dev
    roots and preserve direct replay/manifest lineage.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.

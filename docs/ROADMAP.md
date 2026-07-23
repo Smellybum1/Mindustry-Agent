@@ -2328,7 +2328,12 @@ state hashes, with zero action/event/tick/outcome changes. Exact replicas have
 not started. The fixed server expert is now frozen from implementation commit
 `dea79c487a` on all 40 public dev roots: 36 wins, mean core `967.95`, mean team
 return `-1.641725`, idle `1.0`, and exact terminal-reset replay. Evidence SHA is
-`ba4c9182f346a6ee...`. Run/checkpoint manifests and checkpoint replay are next.
+`ba4c9182f346a6ee...`. Run/checkpoint manifests and exact replay are now
+implemented. Cross-process checkpoint content, fresh-JVM trace, and manifest
+digests are `0d391dea0287ea28...`, `f85b6d34835594b0...`, and
+`64ca9645816d99f8...`; public-only artifact report SHA is
+`2a5b536ce71d07ee...`. The complete `m9-pretraining-check` command is the final
+gate before replica A and has not yet authorized a training episode.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

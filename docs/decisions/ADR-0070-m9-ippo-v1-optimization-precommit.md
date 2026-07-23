@@ -109,3 +109,12 @@ skills outside task-board assignment accounting, so its survival is strong but
 its idle ledger is intentionally not repaired post hoc. The immutable evidence
 SHA-256 is `ba4c9182f346a6eefc8c904d3e7825ee23933aede535b7c516ec63800f6a2d70`.
 No M9 training episode preceded this baseline freeze.
+
+The checkpoint/manifest boundary subsequently fixes canonical content lineage
+separately from serializer-specific file integrity. Two independent Python
+processes reconstruct checkpoint content
+`0d391dea0287ea28781bd1bb8b21c229220ba1b7025b5951f0c0ebc0e6122fa5`,
+load it into differently initialized models, and produce identical fresh-JVM
+trace `f85b6d34835594b0...`. Path-independent manifest evidence reproduces as
+`64ca9645816d99f8...`; the complete public-only artifact report hashes to
+`2a5b536ce71d07ee...`. Confirmation and held-out authority remain absent.

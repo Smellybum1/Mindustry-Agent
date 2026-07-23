@@ -2234,12 +2234,22 @@ repository-evidence mapping used for the M6 audit is:
   frozen from exact implementation commit `dea79c487a` and runnable JAR
   `fdbd1d5482b556137...`: 36/40 wins, mean core `967.95`, mean shared team
   return `-1.641725`, task-board idle `1.0`, and exact terminal-reset replay.
-  Report SHA-256 is `ba4c9182f346a6ee...`. Run/checkpoint manifest
-  orchestration and exact checkpoint replay still need implementation before
-  training.
-- Final implementation gates pass: 379 Python tests, pinned Java/custom-module
+  Report SHA-256 is `ba4c9182f346a6ee...`.
+- M9 checkpoints now bind schema/config/update/parent content plus canonical
+  model and optimizer digests. Raw serializer SHA remains per-file integrity,
+  while replica identity uses canonical content. Two separate processes load
+  the reconstructed update-0 content `0d391dea0287ea28...` and produce the
+  same fresh-JVM trace `f85b6d34835594b0...`. Path-independent manifest twins
+  reproduce at `64ca9645816d99f8...`; report SHA is
+  `2a5b536ce71d07ee...`.
+- `m9-pretraining-check` combines the full Python/Java, reward, parity,
+  stochastic rollout, artifact, smoke, determinism, golden, and committed
+  public-evidence checks. Its implementation must be committed and the whole
+  command must pass before replica A.
+- Current Python regression passes 382 tests. Prior pinned Java/custom-module
   tests, smoke, five-seed direct/traversed M9 parity, stochastic terminal-reset
-  replay, cross-process/reset determinism, and the 664-checkpoint golden.
+  replay, cross-process/reset determinism, and the 664-checkpoint golden pass;
+  the complete combined command awaits the implementation commit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

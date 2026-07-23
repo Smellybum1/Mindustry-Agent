@@ -1,0 +1,41 @@
+{
+  "checkpoint": {
+    "checkpoint_content_sha256": "0d391dea0287ea28781bd1bb8b21c229220ba1b7025b5951f0c0ebc0e6122fa5",
+    "model_state_sha256": "e82745a19729aa3183df197cb91c5e2fa9ba17ee334748b979d6d623e402de21",
+    "optimizer_state_sha256": "6f1dec20664b7962253f27c1314e1b81da146b06906b0b49b9a2889545f06ef7",
+    "parent_checkpoint_content_sha256": null,
+    "update": 0
+  },
+  "config": "configs/training/m9-ippo-v1.json",
+  "confirmation_or_held_out_access": false,
+  "episode": {
+    "core_health": 0.0,
+    "individual_reward_totals": [
+      0.061,
+      0.5445,
+      0.226
+    ],
+    "model_state_sha256": "e82745a19729aa3183df197cb91c5e2fa9ba17ee334748b979d6d623e402de21",
+    "outcome": "loss",
+    "seed": 18000000001,
+    "shared_reward_components": {
+      "reward.penalty.abandonment_liability": 0.0,
+      "reward.penalty.communication": -0.13999999999999999,
+      "reward.penalty.duplicate_work": -0.15000000000000002,
+      "reward.penalty.invalid_action": 0.0,
+      "reward.penalty.recovery_delay_ticks": -3.0,
+      "reward.penalty.team_abandonment": 0.0,
+      "reward.penalty.team_idle_ticks": -6.651999999999999,
+      "reward.team.milestone_highwater": 2.0,
+      "reward.team.terminal_outcome": -10.0,
+      "reward.team.unresolved_tick_cost": -1.7999999999999956
+    },
+    "tick": 6940,
+    "trace_sha256": "f85b6d34835594b00501d68be9e429c4b3d572501868395a14471fb502a924d7",
+    "transitions": 48
+  },
+  "fresh_checkpoint_replays_equal": true,
+  "manifest_reproducibility_digest": "64ca9645816d99f8138a6a5f77958641a94ce651a8a46c69f811678d5e1200e3",
+  "manifest_twins_equal": true,
+  "schema": "m9_ippo_artifact_check_v1"
+}
