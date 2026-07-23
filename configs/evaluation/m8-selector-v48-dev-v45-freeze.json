@@ -1,0 +1,70 @@
+{
+  "candidate_version": "v48",
+  "disjointness_method": "partitioned_numeric_namespace_without_reads",
+  "generated_membership_read_after_write": false,
+  "generator_commit": "cdfd8f83042023d7f2c04c71031fcf2e2bdb7b73",
+  "global_disjointness_verified": true,
+  "helper_commit": "56dab3eb9eeabc47641ccba943145653f70467dc",
+  "implementation_commit": "07c6951a7ffe8da0252b83a63b1e0afea6f9ca7a",
+  "membership_documents_read": 0,
+  "namespace_proof": {
+    "cancelled_dev_v43_max_exclusive": 13000000000,
+    "cancelled_dev_v43_min_inclusive": 12000000000,
+    "held_out_v6_max_exclusive": 4000000000,
+    "held_out_v6_min_inclusive": 3000000000,
+    "legacy_max_exclusive": 1000000000,
+    "reusable_v2_max_exclusive": 12000000000,
+    "reusable_v2_min_inclusive": 11000000000,
+    "v38_sealed_max_exclusive": 2000000000,
+    "v39_confirmation_max_exclusive": 2147483648,
+    "v40_confirmation_max_exclusive": 5000000000,
+    "v40_confirmation_min_inclusive": 4000000000,
+    "v41_confirmation_max_exclusive": 6000000000,
+    "v41_confirmation_min_inclusive": 5000000000,
+    "v42_confirmation_max_exclusive": 7000000000,
+    "v42_confirmation_min_inclusive": 6000000000,
+    "v43_confirmation_max_exclusive": 8000000000,
+    "v43_confirmation_min_inclusive": 7000000000,
+    "v44_confirmation_max_exclusive": 9000000000,
+    "v44_confirmation_min_inclusive": 8000000000,
+    "v45_confirmation_max_exclusive": 10000000000,
+    "v45_confirmation_min_inclusive": 9000000000,
+    "v46_confirmation_max_exclusive": 11000000000,
+    "v46_confirmation_min_inclusive": 10000000000,
+    "v47_confirmation_max_exclusive": 14000000000,
+    "v47_confirmation_min_inclusive": 13000000000,
+    "v48_confirmation_max_exclusive": 15000000000,
+    "v48_confirmation_min_inclusive": 14000000000
+  },
+  "public_evidence": {
+    "path": "configs/evaluation/m8-selector-v47-reusable-v2-result.json",
+    "sha256": "d30226fb7ecd0a2d4320ad856ec104311a61ce65bb5d46981e36206eac9a7cb9"
+  },
+  "repository_head_before_generation": "cdfd8f83042023d7f2c04c71031fcf2e2bdb7b73",
+  "retired_confirmation_membership_read": false,
+  "retired_dev_v44_membership_read": false,
+  "schema": "m8_confirmation_seed_freeze_v1",
+  "sealed_final_membership_read": false,
+  "set": {
+    "count": 160,
+    "exclusive_namespace": {
+      "maximum_exclusive": 15000000000,
+      "minimum_inclusive": 14000000000
+    },
+    "exclusive_umbrella_attempt": "runs/m8-selector-v48-dev-v45-umbrella-attempt.json",
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v45.json",
+    "replaces": "bootstrap-defense-v1-dev-v44",
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v45",
+    "seed_set_version": 45,
+    "sha256": "79dd2a1d0958bcf122f984c676cfac6f6040b3389ad3ed5f25eddb8e10c0737b",
+    "split": "dev"
+  },
+  "status": "membership_frozen_unconsumed",
+  "umbrella": {
+    "commit": "dfd49fc88bd23fdc6279f58658a175d43bb8299b",
+    "path": "configs/evaluation/m8-selector-v48-confirmation-umbrella.json",
+    "sha256": "656602be6dd5c3cf7107420d44f9ba8543f9bfc4170a28930ce3e382a7cec7b7"
+  },
+  "values_emitted": false
+}

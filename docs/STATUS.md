@@ -2120,9 +2120,14 @@ repository-evidence mapping used for the M6 audit is:
 - The V48 value-free freezer is implemented and pins implementation
   `07c6951a7ffe8da...`, exact config/umbrella/public evidence, the
   `[14B,15B)` namespace, retired dev-v44, and sealed held-out-v6. Its four pure
-  tests bring the full suite to 361. It has not run: dev-v45 is still
-  unconstructed, no restricted membership was read, and the freezer must be
-  committed before construction.
+  tests brought the pre-execution suite to 361, and it was committed before
+  construction.
+- The committed freezer has now atomically constructed dev-v45 without
+  reading or rendering it. Receipt SHA is `ee51d681fa5127be...`; the receipt
+  records membership SHA `79dd2a1d0958bcf...`, `values_emitted=false`, and
+  zero membership-document reads. Its committed-receipt test brings the suite
+  to 362. Dev-v45 is frozen unconsumed; confirmation and held-out-v6 remain
+  forbidden.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

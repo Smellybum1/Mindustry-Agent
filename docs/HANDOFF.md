@@ -1163,8 +1163,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 - **V48 value-free freezer ready**: the primary-only freezer binds
   implementation `07c6951a7ffe8da...`, exact config/umbrella/public evidence,
   `[14B,15B)`, retired dev-v44, and sealed held-out-v6. Four pure tests bring
-  the full suite to 361. The freezer has not run; commit it before atomically
-  constructing dev-v45, and never read or render the resulting membership.
+  the pre-execution suite to 361; the freezer was committed before execution.
+- **Dev-v45 frozen unconsumed**: the committed freezer constructed membership
+  atomically without reading or rendering it. Value-free receipt SHA is
+  `ee51d681fa5127be...`; it records membership SHA `79dd2a1d0958bcf...`,
+  `values_emitted=false`, and zero membership reads. The receipt test brings
+  the suite to 362. Do not read dev-v45 except through an authorized
+  confirmation attempt after reusable-v2 passes.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1380,11 +1385,10 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit the V48 value-free freezer.** Never read or render retired dev-v44
-   membership; exclude the four protected user files.
-2. **Construct dev-v45 atomically with the committed freezer.** Commit only its
-   value-free receipt and membership file without reading or rendering values.
-3. **Train two exact V48 replicas, then run reusable-v2.** Confirmation remains
+1. **Commit dev-v45 and its value-free receipt without reading membership.**
+   Never read or render retired dev-v44; exclude the four protected user files.
+2. **Train two exact V48 replicas and prove complete reproducibility.**
+3. **Run reusable-v2 with the unchanged dual scorecard.** Confirmation remains
    forbidden unless the unchanged reusable gates all pass.
 4. **Keep held-out-v6 sealed.** No reusable result authorizes final access.
 5. **Keep M9.1 gated on M8 promotion.** Do not bypass the accepted roadmap.

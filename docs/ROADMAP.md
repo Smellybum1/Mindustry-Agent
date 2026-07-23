@@ -2238,8 +2238,12 @@ still unconstructed and no V48 training has run. M8.5 remains unmet.
 A separate primary-only V48 freezer now binds implementation
 `07c6951a7ffe8da...`, the exact config/umbrella/public evidence,
 `[14B,15B)`, retired dev-v44, and sealed held-out-v6 without membership reads.
-Its four pure tests pass. It must be committed before atomically constructing
-dev-v45; this does not authorize confirmation or held-out access.
+Its four pure tests pass. The committed freezer has now atomically constructed
+dev-v45 without reading or rendering membership. Receipt SHA is
+`ee51d681fa5127be...`; it records membership SHA `79dd2a1d0958bcf...`,
+`values_emitted=false`, and zero membership reads. The committed-receipt test
+brings the suite to 362. Dev-v45 remains unconsumed; this does not authorize
+confirmation or held-out access.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

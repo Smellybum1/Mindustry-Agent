@@ -1117,8 +1117,11 @@ The V48 value-free freezer is implemented separately from the runtime. It pins
 implementation `07c6951a7ffe8da...`, the immutable config/umbrella, V47's
 public reusable evidence, the `[14B,15B)` namespace, retired dev-v44, and
 sealed held-out-v6 without reading any restricted membership. Its pure tests
-prove range, exact reservation, and value-free receipt behavior. The freezer
-must be committed before it may atomically construct dev-v45.
+prove range, exact reservation, and value-free receipt behavior. The committed
+freezer has now atomically constructed dev-v45 without reading or rendering
+membership. The value-free receipt is `ee51d681fa5127be...`; it records
+membership SHA `79dd2a1d0958bcf...`, `values_emitted=false`, and zero
+membership-document reads. Dev-v45 remains unconsumed and restricted.
 
 ## M8.1 acceptance review
 
