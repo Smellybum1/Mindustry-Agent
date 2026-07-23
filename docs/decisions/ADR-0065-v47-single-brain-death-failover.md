@@ -100,3 +100,21 @@ No confirmation, retired, or held-out membership was read.
 - This precommit authorizes implementation and public/pretraining verification
   after commit. It does not authorize dev-v44 construction, training,
   reusable-v2 evaluation, confirmation, or held-out access.
+
+## Implementation evidence
+
+The adapter, matched controls, lineage binding, reusable/final promotion gates,
+and dynamic partner-intent path are implemented. A public live JVM gate on root
+`11307756240` observes exact death-only transfers `0->1` at tick 2738 and
+`1->2` at tick 4462, keeps
+`maximum_simultaneous_learned_seats=1`, and survives to the tick-9000 win.
+Focused V47 tests and the complete 348-test Python suite pass. Pinned Java
+tests/custom-module compilation, public 5/5 survival with ten proactive staging
+starts, secondary-claim wake, owned-schematic staging, smoke, cross-process and
+reset determinism, the 664-checkpoint golden plus negative replay, and all 44
+exact-config reward adversaries also pass. The adversary report SHA-256 is
+`5e6aec4530d278234e650a334ffb9801214846b1a4165c1a3805dfe29c372826`.
+
+Dev-v44 remains unconstructed and no V47 training episode has run. Membership
+construction still requires this implementation/evidence boundary to be
+committed first.

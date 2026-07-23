@@ -2171,6 +2171,19 @@ unconstructed; dev-v44 is reserved in `[13B,14B)` but unconstructed. The
 committed implementation and complete public/pretraining boundary are required
 before membership construction or training. M8.5 remains unmet.
 
+The V47 implementation and complete public/pretraining boundary are green.
+The one learned brain is sticky while alive, transfers only after observed
+death, resets history, and uses the active seat's existing structured action
+path; matched controls and every lineage/promotion gate bind the same schema.
+A repeatable public JVM check transfers `0->1->2` at ticks 2738/4462, records
+one maximum simultaneous learned seat, and wins at tick 9000. The complete 348
+Python tests, pinned Java/custom modules, public 5/5 gate with ten staging
+starts, both focused coordination checks, smoke, deterministic golden/negative
+replay, and 44/44 exact-config reward adversaries pass (report
+`5e6aec4530d27823...`). Dev-v44 remains unconstructed and no V47 training
+episode has run. Commit this boundary before implementing its value-free
+freezer. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

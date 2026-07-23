@@ -15,9 +15,11 @@ from mindustry_agents.training.checkpoint_interpolation import (
 )
 from mindustry_agents.training.model import build_selector_model
 from mindustry_agents.training.ppo_selector import (
+    LEARNED_SEAT_FAILOVER_SCHEMA,
     REWARD_SCHEMA,
     _git_evidence,
     _json_digest,
+    _learned_seat_failover,
     _model_state_digest,
     _reproducibility_evidence,
     _sha256,
@@ -65,6 +67,7 @@ def _expected_lineage_schemas(config: dict[str, Any]) -> dict[str, str]:
     """Return the exact schema coordinate recorded by a governed training run."""
 
     control_schema = expected_control_schema(config)
+    learned_seat_failover = _learned_seat_failover(config)
     return {
         "feature": expected_feature_schema(config),
         "reward": str(config.get("reward_schema", REWARD_SCHEMA)),
@@ -72,6 +75,11 @@ def _expected_lineage_schemas(config: dict[str, Any]) -> dict[str, str]:
         **(
             {"control": control_schema}
             if control_schema == CONTROL_SCHEMA_V2
+            else {}
+        ),
+        **(
+            {"seat_control": LEARNED_SEAT_FAILOVER_SCHEMA}
+            if learned_seat_failover is not None
             else {}
         ),
     }

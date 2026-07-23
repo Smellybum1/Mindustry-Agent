@@ -33,8 +33,10 @@ from mindustry_agents.training.checkpoint_interpolation import (
 from mindustry_agents.training.checkpoint_lineage import validate_lineage_manifest
 from mindustry_agents.training.model import build_selector_model
 from mindustry_agents.training.ppo_selector import (
+    LEARNED_SEAT_FAILOVER_SCHEMA,
     _configure_torch,
     _git_evidence,
+    _learned_seat_failover,
     _partner_intent_duplication_risk,
     _policy_logit_adjustment,
     _scripted_partner_opening,
@@ -47,6 +49,7 @@ from mindustry_agents.training.promotion import (
     CANDIDATE_POLICY,
     GREEDY_MIXED,
     _expert_defer_control_gate,
+    _learned_seat_failover_gate,
     _record,
     rollout_control_episode,
 )
@@ -205,6 +208,10 @@ def _validate_dev_preflight(
             preflight.get("expert_defer_control"),
             expected_limit=expected_limit,
         )
+    if _learned_seat_failover(config) is not None:
+        _validate_learned_seat_failover_preflight(
+            preflight.get("learned_seat_failover")
+        )
     for source, hash_key in (
         ("baseline_aggregate", "baseline_aggregate_sha256"),
         ("baseline_records", "baseline_records_sha256"),
@@ -244,6 +251,24 @@ def _validate_expert_defer_preflight(
         or float(maximum_defer) != expected_limit
     ):
         raise ValueError("dev preflight expert-defer gate did not pass")
+
+
+def _validate_learned_seat_failover_preflight(control: Any) -> None:
+    """Require reusable evidence for exactly one active learned brain."""
+
+    if (
+        not isinstance(control, dict)
+        or control.get("schema") != LEARNED_SEAT_FAILOVER_SCHEMA
+        or control.get("passed") is not True
+        or isinstance(control.get("candidate_episodes"), bool)
+        or not isinstance(control.get("candidate_episodes"), int)
+        or control["candidate_episodes"] <= 0
+        or isinstance(control.get("matched_episodes"), bool)
+        or not isinstance(control.get("matched_episodes"), int)
+        or control["matched_episodes"] <= 0
+        or control.get("maximum_simultaneous_learned_seats") != 1
+    ):
+        raise ValueError("dev preflight single-brain failover gate did not pass")
 
 
 def _create_attempt(path: Path, evidence: dict[str, Any]) -> None:
@@ -381,6 +406,7 @@ def main(argv: list[str] | None = None) -> int:
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
+    learned_seat_failover = _learned_seat_failover(config)
     with RlServerProcess(
         LaunchConfig(port=args.port, java=args.java, build_if_missing=False)
     ) as env:
@@ -406,6 +432,7 @@ def main(argv: list[str] | None = None) -> int:
                         ),
                         feature_schema=feature_schema,
                         control_schema=control_schema,
+                        learned_seat_failover=learned_seat_failover,
                     )
                     record = _record(
                         rollout,
@@ -423,6 +450,7 @@ def main(argv: list[str] | None = None) -> int:
                         scripted_partner_opening=scripted_partner_opening,
                         feature_schema=feature_schema,
                         control_schema=control_schema,
+                        learned_seat_failover=learned_seat_failover,
                     )
                     record = _record(
                         rollout,
@@ -449,6 +477,11 @@ def main(argv: list[str] | None = None) -> int:
     if control_gate is not None:
         report["expert_defer_control"] = control_gate
         report["promoted"] = bool(report["promoted"] and control_gate["passed"])
+        report["status"] = "promoted" if report["promoted"] else "not_promoted"
+    failover_gate = _learned_seat_failover_gate(records, config)
+    if failover_gate is not None:
+        report["learned_seat_failover"] = failover_gate
+        report["promoted"] = bool(report["promoted"] and failover_gate["passed"])
         report["status"] = "promoted" if report["promoted"] else "not_promoted"
     report.update(
         {

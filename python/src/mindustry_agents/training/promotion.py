@@ -32,13 +32,16 @@ from mindustry_agents.tools.expert_common import EpisodeResult
 from mindustry_agents.training.model import build_selector_model
 from mindustry_agents.training.checkpoint_lineage import validate_lineage_manifest
 from mindustry_agents.training.ppo_selector import (
+    LEARNED_SEAT_FAILOVER_SCHEMA,
     LEARNED_SEAT,
     REWARD_SCHEMA,
     EpisodeRollout,
+    _advance_learned_seat,
     _apply_scripted_partner_opening,
     _canonical_scripted_action,
     _configure_torch,
     _git_evidence,
+    _learned_seat_failover,
     _partner_intent_duplication_risk,
     _policy_logit_adjustment,
     _scripted_partner_opening,
@@ -99,11 +102,15 @@ def rollout_control_episode(
     scripted_partner_opening: dict[str, Any] | None = None,
     feature_schema: str = FEATURE_SCHEMA,
     control_schema: str = CONTROL_SCHEMA_V1,
+    learned_seat_failover: dict[str, Any] | None = None,
 ) -> EpisodeRollout:
-    """Run one matched seat-0 control with the learned seat's scripted lifecycle."""
+    """Run one matched control with the learned brain's scripted lifecycle."""
 
     scripted_partner_opening = _scripted_partner_opening(
         {"scripted_partner_opening": scripted_partner_opening}
+    )
+    learned_seat_failover = _learned_seat_failover(
+        {"learned_seat_failover": learned_seat_failover}
     )
 
     reset = env.reset(
@@ -133,8 +140,20 @@ def rollout_control_episode(
     previous_dead = [bool(item["unit"]["dead"]) for item in observations]
     outcome = "running"
     final_metrics: dict[str, Any] = {}
+    active_agent_id = (
+        int(learned_seat_failover["initial_agent_id"])
+        if learned_seat_failover is not None
+        else LEARNED_SEAT
+    )
+    learned_seat_transfers: list[dict[str, Any]] = []
 
     while outcome == "running" and tick < int(metadata["tick_cap"]):
+        active_agent_id, history, transfer = _advance_learned_seat(
+            observations, active_agent_id, history, learned_seat_failover
+        )
+        if transfer is not None:
+            transfer["tick"] = tick
+            learned_seat_transfers.append(transfer)
         bundle, opening_action = _apply_scripted_partner_opening(
             adaptive.actions(observations, masks),
             observations,
@@ -142,9 +161,9 @@ def rollout_control_episode(
             tick=tick,
             opening=scripted_partner_opening,
         )
-        candidates = observations[LEARNED_SEAT]["task_candidates"]
+        candidates = observations[active_agent_id]["task_candidates"]
         lifecycle_action, lifecycle_index = _canonical_control_action(
-            bundle[LEARNED_SEAT], candidates
+            bundle[active_agent_id], candidates
         )
         lifecycle_type = lifecycle_action.get("task_action", {}).get("type")
         features = build_selector_features(
@@ -154,7 +173,7 @@ def rollout_control_episode(
             task_board=board,
             boundary_reasons=boundary_reasons,
             history=history,
-            agent_id=LEARNED_SEAT,
+            agent_id=active_agent_id,
             feature_schema=feature_schema,
             control_schema=control_schema,
             expert_action_index=(
@@ -172,13 +191,13 @@ def rollout_control_episode(
         else:
             selected_action, selected_index = _canonical_control_action(
                 selector.action(
-                    LEARNED_SEAT,
-                    observations[LEARNED_SEAT],
-                    masks[LEARNED_SEAT],
+                    active_agent_id,
+                    observations[active_agent_id],
+                    masks[active_agent_id],
                 ),
                 candidates,
             )
-        bundle[LEARNED_SEAT] = selected_action
+        bundle[active_agent_id] = selected_action
 
         response = env.step(
             episode_id,
@@ -209,7 +228,7 @@ def rollout_control_episode(
         if selected_action["task_action"]["type"] == "SELECT_CANDIDATE_TASK":
             selected_task_type = candidates[selected_index]["task_type"]
             if any(
-                int(item.get("agent_id", -1)) == LEARNED_SEAT
+                int(item.get("agent_id", -1)) == active_agent_id
                 and item.get("accepted", False)
                 for item in response.action_results
             ):
@@ -220,6 +239,12 @@ def rollout_control_episode(
         trace.append(
             {
                 "tick": tick,
+                "active_learned_agent_id": active_agent_id,
+                **(
+                    {"learned_seat_transfer": transfer}
+                    if transfer is not None
+                    else {}
+                ),
                 "advanced_ticks": int(
                     response.decision_boundary.get(
                         "advanced_ticks", response.tick - tick
@@ -245,6 +270,15 @@ def rollout_control_episode(
         tick = response.tick
         outcome = response.outcome
         final_metrics = response.coordination_metrics
+
+    if learned_seat_failover is not None:
+        final_metrics = dict(final_metrics)
+        final_metrics["learned_seat_failover_schema"] = LEARNED_SEAT_FAILOVER_SCHEMA
+        final_metrics["learned_seat_initial_agent_id"] = LEARNED_SEAT
+        final_metrics["learned_seat_final_agent_id"] = active_agent_id
+        final_metrics["learned_seat_transfer_count"] = len(learned_seat_transfers)
+        final_metrics["learned_seat_transfers"] = learned_seat_transfers
+        final_metrics["maximum_simultaneous_learned_seats"] = 1
 
     return EpisodeRollout(
         seed=seed,
@@ -309,7 +343,121 @@ def _record(
                 rollout.coordination_metrics["expert_defer_fraction"]
             ),
         }
+    if "learned_seat_failover_schema" in rollout.coordination_metrics:
+        record["seat_control"] = {
+            "schema": str(
+                rollout.coordination_metrics["learned_seat_failover_schema"]
+            ),
+            "initial_agent_id": int(
+                rollout.coordination_metrics["learned_seat_initial_agent_id"]
+            ),
+            "final_agent_id": int(
+                rollout.coordination_metrics["learned_seat_final_agent_id"]
+            ),
+            "transfer_count": int(
+                rollout.coordination_metrics["learned_seat_transfer_count"]
+            ),
+            "transfers": list(
+                rollout.coordination_metrics["learned_seat_transfers"]
+            ),
+            "maximum_simultaneous_learned_seats": int(
+                rollout.coordination_metrics[
+                    "maximum_simultaneous_learned_seats"
+                ]
+            ),
+        }
     return record
+
+
+def _learned_seat_failover_gate(
+    records: list[dict[str, Any]], config: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Require candidate and matched controls to preserve exactly one brain."""
+
+    failover = _learned_seat_failover(config)
+    if failover is None:
+        return None
+    governed = [
+        item
+        for item in records
+        if item.get("manifest", {}).get("policy")
+        in (CANDIDATE_POLICY, GREEDY_MIXED, RANDOM_MIXED)
+    ]
+    if not governed:
+        raise RuntimeError("single-brain failover telemetry is missing")
+    controls = [item.get("seat_control") for item in governed]
+
+    def valid(control: Any) -> bool:
+        if (
+            not isinstance(control, dict)
+            or control.get("schema") != LEARNED_SEAT_FAILOVER_SCHEMA
+            or control.get("initial_agent_id") != LEARNED_SEAT
+            or control.get("maximum_simultaneous_learned_seats") != 1
+            or isinstance(control.get("transfer_count"), bool)
+            or not isinstance(control.get("transfer_count"), int)
+            or not isinstance(control.get("transfers"), list)
+            or control.get("transfer_count") != len(control["transfers"])
+        ):
+            return False
+        active = LEARNED_SEAT
+        previous_tick = -1
+        for transfer in control["transfers"]:
+            if not isinstance(transfer, dict) or set(transfer) != {
+                "tick",
+                "from_agent_id",
+                "to_agent_id",
+                "reason",
+            }:
+                return False
+            tick = transfer["tick"]
+            source = transfer["from_agent_id"]
+            target = transfer["to_agent_id"]
+            if (
+                isinstance(tick, bool)
+                or not isinstance(tick, int)
+                or tick < previous_tick
+                or isinstance(source, bool)
+                or not isinstance(source, int)
+                or isinstance(target, bool)
+                or not isinstance(target, int)
+                or source != active
+                or target <= source
+                or target > 2
+                or transfer["reason"] != "active_agent_dead"
+            ):
+                return False
+            active = target
+            previous_tick = tick
+        return control.get("final_agent_id") == active
+
+    if any(
+        not valid(item)
+        for item in controls
+    ):
+        raise RuntimeError("single-brain failover telemetry is invalid")
+    candidate = [
+        item
+        for item in governed
+        if item["manifest"]["policy"] == CANDIDATE_POLICY
+    ]
+    matched = [
+        item
+        for item in governed
+        if item["manifest"]["policy"] in (GREEDY_MIXED, RANDOM_MIXED)
+    ]
+    return {
+        "schema": LEARNED_SEAT_FAILOVER_SCHEMA,
+        "candidate_episodes": len(candidate),
+        "matched_episodes": len(matched),
+        "candidate_transfers": sum(
+            int(item["seat_control"]["transfer_count"]) for item in candidate
+        ),
+        "matched_transfers": sum(
+            int(item["seat_control"]["transfer_count"]) for item in matched
+        ),
+        "maximum_simultaneous_learned_seats": 1,
+        "passed": True,
+    }
 
 
 def _expert_defer_control_gate(
@@ -531,6 +679,7 @@ def main(argv: list[str] | None = None) -> int:
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
+    learned_seat_failover = _learned_seat_failover(config)
     lineage = validate_lineage_manifest(
         manifest_path=args.lineage_manifest,
         config_path=args.config,
@@ -613,6 +762,7 @@ def main(argv: list[str] | None = None) -> int:
                         ),
                         feature_schema=feature_schema,
                         control_schema=control_schema,
+                        learned_seat_failover=learned_seat_failover,
                     )
                 else:
                     rollout = rollout_control_episode(
@@ -624,6 +774,7 @@ def main(argv: list[str] | None = None) -> int:
                         scripted_partner_opening=scripted_partner_opening,
                         feature_schema=feature_schema,
                         control_schema=control_schema,
+                        learned_seat_failover=learned_seat_failover,
                     )
                 records.append(
                     _record(
@@ -673,6 +824,13 @@ def main(argv: list[str] | None = None) -> int:
         if control_gate["episodes"] != len(seed_set["seeds"]):
             raise RuntimeError("candidate expert-defer episode count mismatch")
         preflight["expert_defer_control"] = control_gate
+    failover_gate = _learned_seat_failover_gate(records, config)
+    if failover_gate is not None:
+        if failover_gate["candidate_episodes"] != len(seed_set["seeds"]):
+            raise RuntimeError("candidate single-brain episode count mismatch")
+        if failover_gate["matched_episodes"] != 2 * len(seed_set["seeds"]):
+            raise RuntimeError("matched single-brain episode count mismatch")
+        preflight["learned_seat_failover"] = failover_gate
     preflight["eligible_for_held_out"] = bool(
         preflight["eligible_for_held_out"]
         and checkpoint_config_match
@@ -680,6 +838,10 @@ def main(argv: list[str] | None = None) -> int:
         and (
             control_schema != CONTROL_SCHEMA_V2
             or preflight["expert_defer_control"]["passed"]
+        )
+        and (
+            learned_seat_failover is None
+            or preflight["learned_seat_failover"]["passed"]
         )
     )
 

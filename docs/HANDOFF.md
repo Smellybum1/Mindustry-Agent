@@ -1111,7 +1111,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `[-0.00166438,+0.00971554]`). Preflight SHA is `d272edd51197166b...`.
   Dev-v43 remains unconstructed; held-out-v6 remains sealed. Diagnose any V47
   coordinate only from the public 160-root records.
-- **V47 single-brain death failover precommitted**: public traces show early
+- **V47 single-brain death failover implemented**: public traces show early
   seat-0 death on 63 roots with idle/announcement gaps `+0.02701331` /
   `+0.00769989`, versus favorable gaps after late death. All 30 greedy-only wins
   contain a seat-0 death; the fixed learned seat is then forced to WAIT.
@@ -1119,8 +1119,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   when dead to the lowest-ID living seat, with history reset and dynamic
   nonactive partner intent. Config/umbrella hashes are
   `ff112f910c13603c...` / `8e6fccc9d07de4ef...`. Dev-v43 is cancelled without
-  construction; dev-v44 is reserved in `[13B,14B)` but unconstructed. Commit
-  the design packet before implementation.
+  construction; dev-v44 is reserved in `[13B,14B)` but unconstructed. The
+  adapter, matched controls, lineage, and promotion gates are implemented. A
+  repeatable public JVM gate transfers `0->1->2` at ticks 2738/4462, keeps one
+  learned seat, and wins at tick 9000. The full 348-test Python suite, pinned
+  Java, public/focused/smoke/determinism gates, and 44/44 reward adversaries
+  pass (report `5e6aec4530d27823...`). Commit this implementation boundary
+  before implementing the dev-v44 freezer; no V47 training has run.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1335,18 +1340,18 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Preserve rejected V44 and retired dev-v40 evidence.** Never read or render
-   dev-v40 membership; dev-v39 also remains retired unopened.
-2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
-   dev-v39 membership; dev-v38 also remains retired unopened.
-3. **Keep held-out-v6 sealed and unconsumed.** V44 did not authorize access.
-4. **Preserve rejected V45 and retired dev-v41 evidence.** Never read or render
-   dev-v41 membership. Implement ADR-0063's exact V46 control coordinate and
-   complete the public/pretraining boundary before constructing dev-v42.
-5. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
-   authorize V43 or any runtime prior and still fails two scorecard rows.
-6. **M9.1 remains gated.** The roadmap says to begin only after the single
-   learned seat promotes; do not silently bypass that prerequisite.
+1. **Commit V47's green implementation boundary.** Exclude the four protected
+   user files. Dev-v44 must remain unconstructed until after this commit.
+2. **Implement and commit the value-free dev-v44 freezer.** Bind the exact V47
+   config/umbrella/implementation and `[13B,14B)` namespace; do not execute it
+   until its no-read tests pass and the tool itself is committed.
+3. **Construct dev-v44 value-free, then train exact V47 replicas.** Never read
+   or render membership; commit the receipt packet before replica A.
+4. **Run reusable-v2 before restricted confirmation.** Require replica
+   reproducibility, direct lineage, >=9/10 construction wins, idle <0.25,
+   DEFER <=0.25, and both unchanged 160-root scorecards.
+5. **Keep held-out-v6 sealed and M9.1 gated.** Confirmation and final access
+   remain conditional; M9 begins only after M8 promotion.
 
 ## Decisions
 

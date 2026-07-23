@@ -67,6 +67,10 @@ SCRIPTED_PARTNER_OPENING_SCHEMA = "fixed_seat_initial_task_type_v1"
 PARTNER_INTENT_DUPLICATION_RISK_SCHEMA = (
     "fixed_partner_selected_task_duplication_risk_v1"
 )
+PARTNER_INTENT_DUPLICATION_RISK_DYNAMIC_SCHEMA = (
+    "dynamic_nonactive_partner_selected_task_duplication_risk_v2"
+)
+LEARNED_SEAT_FAILOVER_SCHEMA = "single_learned_brain_death_failover_v1"
 PARTNER_INTENT_TEACHER_CONFLICT_FILTER_SCHEMA = (
     "partner_intent_teacher_conflict_filter_v1"
 )
@@ -313,38 +317,117 @@ def _scripted_partner_opening(config: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def _learned_seat_failover(
+    config: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Validate the optional one-brain, death-only active-seat policy."""
+
+    failover = config.get("learned_seat_failover")
+    if failover is None:
+        return None
+    expected = {
+        "schema": LEARNED_SEAT_FAILOVER_SCHEMA,
+        "initial_agent_id": LEARNED_SEAT,
+        "selection": "lowest_alive_agent_id",
+        "switch_trigger": "active_agent_dead",
+        "maximum_active_learned_seats": 1,
+        "history_on_switch": "reset",
+        "partner_intent_agents": "all_nonactive_alive_agents",
+        "teacher_policy": "adaptive-v1_for_active_agent",
+        "forced_safety_override": False,
+        "server_action_path": "unchanged_task_action_bundle",
+    }
+    if not isinstance(failover, dict) or failover != expected:
+        raise ValueError("invalid learned_seat_failover config")
+    return expected
+
+
+def _active_learned_agent_id(
+    observations: list[dict[str, Any]],
+    current_agent_id: int,
+    failover: dict[str, Any] | None,
+) -> tuple[int, dict[str, Any] | None]:
+    """Keep one active seat sticky, transferring only after observed death."""
+
+    if current_agent_id < 0 or current_agent_id >= len(observations):
+        raise ValueError("active learned agent is unavailable")
+    if failover is None:
+        return LEARNED_SEAT, None
+    if not bool(observations[current_agent_id].get("unit", {}).get("dead", False)):
+        return current_agent_id, None
+    living = [
+        agent_id
+        for agent_id, observation in enumerate(observations)
+        if not bool(observation.get("unit", {}).get("dead", False))
+    ]
+    if not living:
+        return current_agent_id, None
+    next_agent_id = min(living)
+    if next_agent_id == current_agent_id:
+        raise RuntimeError("death failover selected the dead active agent")
+    return next_agent_id, {
+        "from_agent_id": current_agent_id,
+        "to_agent_id": next_agent_id,
+        "reason": "active_agent_dead",
+    }
+
+
+def _advance_learned_seat(
+    observations: list[dict[str, Any]],
+    current_agent_id: int,
+    history: SelectorHistory,
+    failover: dict[str, Any] | None,
+) -> tuple[int, SelectorHistory, dict[str, Any] | None]:
+    """Advance one-brain authority and reset temporal history on transfer."""
+
+    next_agent_id, transfer = _active_learned_agent_id(
+        observations, current_agent_id, failover
+    )
+    return (
+        next_agent_id,
+        SelectorHistory() if transfer is not None else history,
+        transfer,
+    )
+
+
 def _partner_intent_duplication_risk(
     config: dict[str, Any],
 ) -> dict[str, Any] | None:
-    """Validate optional fixed-partner intent evidence for selector features."""
+    """Validate optional structured partner-intent evidence for selector features."""
 
     intervention = config.get("partner_intent_duplication_risk")
     if intervention is None:
         return None
-    expected = {
+    fixed = {
         "schema": PARTNER_INTENT_DUPLICATION_RISK_SCHEMA,
         "agent_ids": [1, 2],
         "match": "task_id",
         "feature": "utility_features.duplication_risk",
         "value": 1.0,
     }
-    if not isinstance(intervention, dict) or intervention.keys() != expected.keys():
+    dynamic = {
+        "schema": PARTNER_INTENT_DUPLICATION_RISK_DYNAMIC_SCHEMA,
+        "agent_ids": "all_nonactive_alive_agents",
+        "match": "task_id",
+        "feature": "utility_features.duplication_risk",
+        "value": 1.0,
+    }
+    if not isinstance(intervention, dict):
         raise ValueError("invalid partner_intent_duplication_risk config")
-    agent_ids = intervention.get("agent_ids")
-    value = intervention.get("value")
     if (
-        intervention.get("schema") != expected["schema"]
-        or agent_ids != expected["agent_ids"]
-        or not isinstance(agent_ids, list)
-        or any(type(agent_id) is not int for agent_id in agent_ids)
-        or intervention.get("match") != expected["match"]
-        or intervention.get("feature") != expected["feature"]
-        or type(value) is not float
-        or not math.isfinite(value)
-        or value != 1.0
+        intervention.get("schema") == PARTNER_INTENT_DUPLICATION_RISK_SCHEMA
+        and intervention == fixed
+        and all(type(agent_id) is int for agent_id in intervention["agent_ids"])
+        and type(intervention["value"]) is float
+    ):
+        return fixed
+    if (
+        intervention != dynamic
+        or type(intervention.get("value")) is not float
+        or _learned_seat_failover(config) is None
     ):
         raise ValueError("invalid partner_intent_duplication_risk config")
-    return expected
+    return dynamic
 
 
 def _partner_intent_teacher_conflict_filter(
@@ -455,6 +538,8 @@ def _fixed_partner_intended_task_ids(
     actions: list[dict[str, Any]],
     observations: list[dict[str, Any]],
     intervention: dict[str, Any] | None,
+    *,
+    active_agent_id: int = LEARNED_SEAT,
 ) -> tuple[str, ...]:
     """Extract deterministic structured partner intents, failing closed on drift."""
 
@@ -462,7 +547,18 @@ def _fixed_partner_intended_task_ids(
         return ()
     intended: list[str] = []
     seen: set[str] = set()
-    for agent_id in intervention["agent_ids"]:
+    configured_agent_ids = intervention["agent_ids"]
+    agent_ids = (
+        [
+            agent_id
+            for agent_id, observation in enumerate(observations)
+            if agent_id != active_agent_id
+            and not bool(observation.get("unit", {}).get("dead", False))
+        ]
+        if configured_agent_ids == "all_nonactive_alive_agents"
+        else configured_agent_ids
+    )
+    for agent_id in agent_ids:
         if agent_id >= len(actions) or agent_id >= len(observations):
             continue
         action = actions[agent_id]
@@ -775,6 +871,7 @@ def _resolve_policy_control_action(
     candidates: list[dict[str, Any]],
     *,
     control_schema: str,
+    agent_id: int = LEARNED_SEAT,
 ) -> tuple[dict[str, Any], int, bool]:
     """Translate one policy control index to the authoritative ordinary action."""
 
@@ -787,7 +884,7 @@ def _resolve_policy_control_action(
         raise ValueError(f"policy control action index out of range: {selected_index}")
     return (
         {
-            "agent_id": LEARNED_SEAT,
+            "agent_id": agent_id,
             "task_action": selector_action(selected_index, candidates),
         },
         selected_index,
@@ -839,6 +936,7 @@ def rollout_episode(
     partner_intent_teacher_conflict_relabel: dict[str, Any] | None = None,
     feature_schema: str = FEATURE_SCHEMA,
     control_schema: str = CONTROL_SCHEMA_V1,
+    learned_seat_failover: dict[str, Any] | None = None,
 ) -> EpisodeRollout:
     policy_logit_adjustment = _policy_logit_adjustment(
         {"policy_logit_adjustment": policy_logit_adjustment}
@@ -846,8 +944,14 @@ def rollout_episode(
     scripted_partner_opening = _scripted_partner_opening(
         {"scripted_partner_opening": scripted_partner_opening}
     )
+    learned_seat_failover = _learned_seat_failover(
+        {"learned_seat_failover": learned_seat_failover}
+    )
     partner_intent_duplication_risk = _partner_intent_duplication_risk(
-        {"partner_intent_duplication_risk": partner_intent_duplication_risk}
+        {
+            "partner_intent_duplication_risk": partner_intent_duplication_risk,
+            "learned_seat_failover": learned_seat_failover,
+        }
     )
     partner_intent_teacher_conflict_relabel = (
         _partner_intent_teacher_conflict_relabel(
@@ -858,6 +962,7 @@ def rollout_episode(
                 "partner_intent_teacher_conflict_relabel": (
                     partner_intent_teacher_conflict_relabel
                 ),
+                "learned_seat_failover": learned_seat_failover,
                 "successful_teacher_imitation_coefficient": 0.0,
                 "optimizer_ppo": {
                     "successful_teacher_imitation_coefficient": 0.0
@@ -899,8 +1004,20 @@ def rollout_episode(
     previous_dead = [bool(item["unit"]["dead"]) for item in observations]
     expert_defer_opportunities = 0
     expert_defer_count = 0
+    active_agent_id = (
+        int(learned_seat_failover["initial_agent_id"])
+        if learned_seat_failover is not None
+        else LEARNED_SEAT
+    )
+    learned_seat_transfers: list[dict[str, Any]] = []
 
     while outcome == "running" and tick < int(metadata["tick_cap"]):
+        active_agent_id, history, transfer = _advance_learned_seat(
+            observations, active_agent_id, history, learned_seat_failover
+        )
+        if transfer is not None:
+            transfer["tick"] = tick
+            learned_seat_transfers.append(transfer)
         scripted_bundle, opening_action = _apply_scripted_partner_opening(
             scripted.actions(observations, masks),
             observations,
@@ -912,19 +1029,20 @@ def rollout_episode(
             scripted_bundle,
             observations,
             partner_intent_duplication_risk,
+            active_agent_id=active_agent_id,
         )
         scripted_action = _canonical_scripted_action(
-            scripted_bundle[LEARNED_SEAT],
-            observations[LEARNED_SEAT]["task_candidates"],
+            scripted_bundle[active_agent_id],
+            observations[active_agent_id]["task_candidates"],
         )
         teacher_index = _scripted_index(
-            scripted_action, observations[LEARNED_SEAT]["task_candidates"]
+            scripted_action, observations[active_agent_id]["task_candidates"]
         )
         feature_kwargs = {
             "task_board": board,
             "boundary_reasons": boundary_reasons,
             "history": history,
-            "agent_id": LEARNED_SEAT,
+            "agent_id": active_agent_id,
             "feature_schema": feature_schema,
             "control_schema": control_schema,
             "expert_action_index": (
@@ -947,7 +1065,7 @@ def rollout_episode(
             [
                 index
                 for index, candidate in enumerate(
-                    observations[LEARNED_SEAT].get("task_candidates", [])[:8]
+                    observations[active_agent_id].get("task_candidates", [])[:8]
                 )
                 if isinstance(candidate, dict)
                 and candidate.get("task_id") in intended_task_ids
@@ -958,7 +1076,7 @@ def rollout_episode(
         with torch.no_grad():
             raw_logits, masked_logits, value, tensors = _model_outputs(model, features)
         logit_bias = _task_type_logit_bias(
-            observations[LEARNED_SEAT]["task_candidates"],
+            observations[active_agent_id]["task_candidates"],
             features.action_mask,
             tick=tick,
             adjustment=policy_logit_adjustment,
@@ -973,9 +1091,9 @@ def rollout_episode(
             if teacher_original_conflict:
                 teacher_effective_index = (
                     scripted.alternate_nonconflicting_candidate(
-                        LEARNED_SEAT,
-                        observations[LEARNED_SEAT],
-                        masks[LEARNED_SEAT],
+                        active_agent_id,
+                        observations[active_agent_id],
+                        masks[active_agent_id],
                         risk_candidate_indices,
                     )
                 )
@@ -1001,7 +1119,7 @@ def rollout_episode(
         if forced or teacher_controlled:
             learned_action = scripted_action
             selected_index = _scripted_index(
-                learned_action, observations[LEARNED_SEAT]["task_candidates"]
+                learned_action, observations[active_agent_id]["task_candidates"]
             )
             effective_index = selected_index
             expert_deferred = False
@@ -1019,8 +1137,9 @@ def rollout_episode(
                 _resolve_policy_control_action(
                     selected_index,
                     scripted_action,
-                    observations[LEARNED_SEAT]["task_candidates"],
+                    observations[active_agent_id]["task_candidates"],
                     control_schema=control_schema,
+                    agent_id=active_agent_id,
                 )
             )
         if control_schema == CONTROL_SCHEMA_V2 and bool(
@@ -1032,12 +1151,12 @@ def rollout_episode(
             expert_defer_count += 1
         if not raw_action_valid:
             learned_action = {
-                "agent_id": LEARNED_SEAT,
+                "agent_id": active_agent_id,
                 "task_action": {"type": "WAIT"},
             }
             effective_index = 9
         bundle = list(scripted_bundle)
-        bundle[LEARNED_SEAT] = learned_action
+        bundle[active_agent_id] = learned_action
 
         response = env.step(
             episode_id,
@@ -1065,13 +1184,13 @@ def rollout_episode(
             previous_dead[agent_id] = dead
         selected_task_type = None
         if effective_index < 8 and effective_index < len(
-            observations[LEARNED_SEAT]["task_candidates"]
+            observations[active_agent_id]["task_candidates"]
         ):
-            selected_task_type = observations[LEARNED_SEAT]["task_candidates"][
+            selected_task_type = observations[active_agent_id]["task_candidates"][
                 effective_index
             ]["task_type"]
         for result in response.action_results:
-            if int(result.get("agent_id", -1)) != LEARNED_SEAT or not result.get(
+            if int(result.get("agent_id", -1)) != active_agent_id or not result.get(
                 "accepted", False
             ):
                 continue
@@ -1134,6 +1253,12 @@ def rollout_episode(
             {
                 "tick": tick,
                 "advanced_ticks": transitions[-1].advanced_ticks,
+                "active_learned_agent_id": active_agent_id,
+                **(
+                    {"learned_seat_transfer": transfer}
+                    if transfer is not None
+                    else {}
+                ),
                 "action": learned_action["task_action"],
                 "agent_actions": bundle,
                 "action_index": selected_index,
@@ -1151,7 +1276,7 @@ def rollout_episode(
                 "teacher_action": scripted_action["task_action"],
                 "teacher_action_index": teacher_index,
                 "teacher_candidate_diagnostics": _selected_candidate_diagnostics(
-                    observations[LEARNED_SEAT]["task_candidates"], teacher_index
+                    observations[active_agent_id]["task_candidates"], teacher_index
                 ),
                 **(
                     {"scripted_partner_opening": opening_action}
@@ -1185,7 +1310,7 @@ def rollout_episode(
                     else {}
                 ),
                 "selected_candidate_diagnostics": _selected_candidate_diagnostics(
-                    observations[LEARNED_SEAT]["task_candidates"], effective_index
+                    observations[active_agent_id]["task_candidates"], effective_index
                 ),
                 "policy_loss_mask": transitions[-1].policy_loss_mask,
                 "raw_logits": [float(value) for value in raw_logits.tolist()],
@@ -1237,6 +1362,14 @@ def rollout_episode(
         final_metrics["expert_defer_fraction"] = (
             expert_defer_count / policy_decisions if policy_decisions else 0.0
         )
+    if learned_seat_failover is not None:
+        final_metrics = dict(final_metrics)
+        final_metrics["learned_seat_failover_schema"] = LEARNED_SEAT_FAILOVER_SCHEMA
+        final_metrics["learned_seat_initial_agent_id"] = LEARNED_SEAT
+        final_metrics["learned_seat_final_agent_id"] = active_agent_id
+        final_metrics["learned_seat_transfer_count"] = len(learned_seat_transfers)
+        final_metrics["learned_seat_transfers"] = learned_seat_transfers
+        final_metrics["maximum_simultaneous_learned_seats"] = 1
     return EpisodeRollout(
         seed=seed,
         outcome=outcome,
@@ -1879,6 +2012,20 @@ def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
             if "policy_logit_bias" in transition
             else {}
         )
+        | (
+            {
+                "active_learned_agent_id": transition[
+                    "active_learned_agent_id"
+                ],
+                **(
+                    {"learned_seat_transfer": transition["learned_seat_transfer"]}
+                    if "learned_seat_transfer" in transition
+                    else {}
+                ),
+            }
+            if "active_learned_agent_id" in transition
+            else {}
+        )
         for transition in episode.trace
     ]
     return {
@@ -1912,6 +2059,23 @@ def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
             if "expert_defer_fraction" in episode.coordination_metrics
             else {}
         ),
+        **(
+            {
+                "learned_seat_transfer_count": int(
+                    episode.coordination_metrics["learned_seat_transfer_count"]
+                ),
+                "learned_seat_final_agent_id": int(
+                    episode.coordination_metrics["learned_seat_final_agent_id"]
+                ),
+                "maximum_simultaneous_learned_seats": int(
+                    episode.coordination_metrics[
+                        "maximum_simultaneous_learned_seats"
+                    ]
+                ),
+            }
+            if "learned_seat_failover_schema" in episode.coordination_metrics
+            else {}
+        ),
         "trace_digest": _json_digest(action_state_trace),
     }
 
@@ -1928,6 +2092,7 @@ def _evaluate(
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
+    learned_seat_failover = _learned_seat_failover(config)
     _partner_intent_teacher_conflict_filter(config)
     _partner_intent_teacher_conflict_relabel(config)
     feature_schema = expected_feature_schema(config)
@@ -1953,6 +2118,7 @@ def _evaluate(
                 partner_intent_duplication_risk=partner_intent_duplication_risk,
                 feature_schema=feature_schema,
                 control_schema=control_schema,
+                learned_seat_failover=learned_seat_failover,
             )
             for seed in seeds
         ]
@@ -2184,6 +2350,7 @@ def _manifest(
     selection_policy = _dev_checkpoint_selection_policy(config)
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
+    learned_seat_failover = _learned_seat_failover(config)
     partner_intent_teacher_conflict_relabel = (
         _partner_intent_teacher_conflict_relabel(config)
     )
@@ -2201,6 +2368,11 @@ def _manifest(
             **(
                 {"control": control_schema}
                 if control_schema == CONTROL_SCHEMA_V2
+                else {}
+            ),
+            **(
+                {"seat_control": LEARNED_SEAT_FAILOVER_SCHEMA}
+                if learned_seat_failover is not None
                 else {}
             ),
         },
@@ -2264,6 +2436,11 @@ def _manifest(
                 if control_schema == CONTROL_SCHEMA_V2
                 else {}
             ),
+            **(
+                {"learned_seat_failover": learned_seat_failover}
+                if learned_seat_failover is not None
+                else {}
+            ),
         },
         "normalizers": config["normalizers"],
         "model_architecture": config["model_architecture"],
@@ -2307,6 +2484,21 @@ def _manifest(
                     / max(1, len(dev_summaries))
                 }
                 if control_schema == CONTROL_SCHEMA_V2
+                else {}
+            ),
+            **(
+                {
+                    "dev_mean_learned_seat_transfer_count": sum(
+                        row["learned_seat_transfer_count"]
+                        for row in dev_summaries
+                    )
+                    / max(1, len(dev_summaries)),
+                    "maximum_simultaneous_learned_seats": max(
+                        row["maximum_simultaneous_learned_seats"]
+                        for row in dev_summaries
+                    ),
+                }
+                if learned_seat_failover is not None
                 else {}
             ),
         },
@@ -2452,6 +2644,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
+    learned_seat_failover = _learned_seat_failover(config)
     _partner_intent_teacher_conflict_filter(config)
     partner_intent_teacher_conflict_relabel = (
         _partner_intent_teacher_conflict_relabel(config)
@@ -2555,6 +2748,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     ),
                     feature_schema=feature_schema,
                     control_schema=control_schema,
+                    learned_seat_failover=learned_seat_failover,
                 )
                 for seed in teacher_warmup_seeds
             ]
@@ -2617,6 +2811,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     ),
                     feature_schema=feature_schema,
                     control_schema=control_schema,
+                    learned_seat_failover=learned_seat_failover,
                 )
                 for seed in seeds[start : start + episodes_per_update]
             ]

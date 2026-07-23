@@ -1050,6 +1050,17 @@ History resets, partner intent becomes all living nonactive agents, and the
 feature/model/reward/control schemas stay exact. Dev-v43 is cancelled
 unconstructed; dev-v44 is reserved in `[13B,14B)` but unconstructed.
 
+The V47 implementation and complete public/pretraining boundary are green.
+Training and matched controls share the same active-seat sequence; history
+resets on transfer; dynamic intent excludes the active and dead seats; lineage,
+reusable, confirmation, and final reports bind the one-brain schema. The live
+public failover gate transfers `0->1->2` at ticks 2738/4462 and wins at tick
+9000 with a maximum of one learned seat. The 348-test Python suite, pinned Java
+boundary, public 5/5 survival gate, focused checks, smoke, deterministic
+golden/negative replay, and 44/44 exact-config reward adversaries pass
+(`5e6aec4530d27823...`). Dev-v44 remains unconstructed and no V47 model work
+has begun.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

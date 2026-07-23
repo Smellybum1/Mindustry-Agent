@@ -13,7 +13,8 @@ SCRIPTS := scripts
 
 .PHONY: help codex-status bootstrap build test test-java test-python smoke \
         determinism stress-reset benchmark scripted-demo evaluate-scripted \
-        candidate-policy-check secondary-claim-wake-check \
+        candidate-policy-check single-brain-failover-check \
+        secondary-claim-wake-check \
         owned-schematic-staging-check coordination-parity \
         public-demo-parity \
         adaptive-planning-check \
@@ -35,6 +36,7 @@ help: ## List available targets
 	@echo "  scripted-demo headless public greedy team (M7.3)"
 	@echo "  evaluate-scripted five-seed greedy summaries (M7.3)"
 	@echo "  candidate-policy-check public greedy candidate-policy survival (M7.3)"
+	@echo "  single-brain-failover-check V47 live death-only control transfer"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -87,6 +89,9 @@ evaluate-scripted: ## Evaluate the public M7.3 greedy expert
 
 candidate-policy-check: ## Evaluate the public greedy candidate policy
 	@bash $(SCRIPTS)/candidate-policy-check.sh
+
+single-brain-failover-check: ## Verify V47's live death-only control transfer
+	@bash $(SCRIPTS)/single-brain-failover-check.sh
 
 secondary-claim-wake-check: ## Verify V35's fixed-seat claim-loss boundary
 	@bash $(SCRIPTS)/secondary-claim-wake-check.sh

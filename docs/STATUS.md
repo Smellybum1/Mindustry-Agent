@@ -2061,8 +2061,19 @@ repository-evidence mapping used for the M6 audit is:
   lowest-ID living agent, resets history, and never controls two seats.
   Config/umbrella hashes are `ff112f910c13603c...` /
   `8e6fccc9d07de4ef...`. Dev-v43 is cancelled unconstructed; dev-v44 is
-  reserved in `[13B,14B)` but unconstructed. No V47 code or model work has
-  occurred.
+  reserved in `[13B,14B)` but unconstructed.
+- V47's adapter and governance boundary are implemented and green. Exactly one
+  learned brain starts at seat 0, moves only after authoritative death
+  observation, resets history, and uses the active seat's existing
+  observation/mask/expert/action slot. Matched controls, manifests, lineage,
+  reusable confirmation, and final gates use and validate the same sequence.
+  The public live gate transfers `0->1` at tick 2738 and `1->2` at tick 4462,
+  records a maximum of one learned seat, and wins at tick 9000. Focused tests
+  and all 348 Python tests pass; pinned Java/custom modules, 5/5 public
+  survival with ten staging starts, both focused coordination checks, smoke,
+  deterministic golden/negative replay, and 44/44 exact-config reward
+  adversaries pass. The adversary report SHA is `5e6aec4530d27823...`.
+  Dev-v44 remains unconstructed and no V47 training episode has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
