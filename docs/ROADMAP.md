@@ -2483,6 +2483,13 @@ categorical. ADR-0086 accepts retained stochastic success without deterministic
 consolidation, keeps v5 rejected, and authorizes only a separately precommitted
 strongest-alternative margin mechanism. Compact result SHA is
 `0c0cbe21a53bf7d6...`; no restricted access occurred.
+ADR-0087 now freezes `m9-ippo-v6-success-margin` before implementation or
+training. V6 inherits v4 and adds only coefficient `0.02`, target `0.1`
+`relu(target - (sampled_logit - strongest_other_legal_logit))` over
+current-update winning actor transitions in every existing PPO minibatch.
+V5's NLL is absent. Config/protocol SHA prefixes are `bd8e84acd0e340b6...` /
+`f0adddd4c8b2127a...`. No v6 implementation, trajectory, or restricted access
+exists.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

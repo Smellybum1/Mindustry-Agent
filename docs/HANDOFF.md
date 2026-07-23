@@ -1532,8 +1532,10 @@ queue.
    current-update winning actor transitions relative to the strongest other
    legal action. Keep every v4 mechanism, root, reward, RNG, architecture, and
    deterministic evaluation exact; do not add NLL, replay, teacher data, or
-   restricted authority. Commit the immutable config/protocol before any v6
-   implementation or training.
+   restricted authority. ADR-0087 and config/protocol SHA prefixes
+   `bd8e84acd0e340b6...` / `f0adddd4c8b2127a...` now bind coefficient `0.02`
+   and target margin `0.1`. Implement its exact optimizer, telemetry,
+   artifacts, authority, runner, and tests before any v6 training.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

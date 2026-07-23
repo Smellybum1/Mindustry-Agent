@@ -253,6 +253,11 @@ pins, and dependency lock.
    without deterministic consolidation. Compact result SHA is
    `0c0cbe21a53bf7d6...`; no restricted access occurred. A separately
    precommitted strongest-alternative margin mechanism is next.
+   ADR-0087 now freezes `m9-ippo-v6-success-margin`: exact v4 plus coefficient
+   `0.02`, target `0.1` hinge loss that pushes each current-update winning
+   actor action above the strongest other legal action. V5's NLL is absent.
+   Config/protocol SHA prefixes are `bd8e84acd0e340b6...` /
+   `f0adddd4c8b2127a...`. No v6 implementation or trajectory exists.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

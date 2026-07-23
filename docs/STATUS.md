@@ -2439,6 +2439,13 @@ repository-evidence mapping used for the M6 audit is:
   deterministic consolidation and keeps v5 rejected. Compact result SHA is
   `0c0cbe21a53bf7d6...`. No restricted data was accessed. A separately
   precommitted strongest-alternative margin mechanism is the next direction.
+- ADR-0087 now precommits `m9-ippo-v6-success-margin` before implementation or
+  training. V6 inherits v4 exactly and adds one coefficient `0.02`, target
+  `0.1` hinge that pushes each current-update winning actor action above the
+  strongest other legal action. V5's NLL is absent; no replay, pass, teacher,
+  RNG, root, reward, or restricted data is added. Config/protocol SHA prefixes
+  are `bd8e84acd0e340b6...` / `f0adddd4c8b2127a...`. No v6 trajectory or model
+  update exists.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
