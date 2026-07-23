@@ -1043,6 +1043,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   dev-v1..v33, held-out-v1..v4). Governed replacements remain receipt/existence
   checks only. The focused module passes 44 tests and the full suite passes 322;
   no dev-v34..v41 or held-out-v5/v6 membership was read.
+- **V46 control expansion precommitted**: with explicit owner authorization,
+  ADR-0063 adds one learned `DEFER_TO_SCRIPTED_EXPERT` policy index translated
+  to the already-computed canonical adaptive-v1 action. It cannot override
+  forced safety/lifecycle actions or duplicate expert WAIT. The V45 ordinary
+  actor/critic stays exact, teacher losses stay on actions 0..9, and mean DEFER
+  above 25% is ineligible. Config/umbrella hashes are
+  `b588ee43e66bd9d...` / `a78631d7ba9f1cd2...`; dev-v42 is reserved in
+  `[10B,11B)` but unconstructed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1263,9 +1271,8 @@ queue.
    dev-v39 membership; dev-v38 also remains retired unopened.
 3. **Keep held-out-v6 sealed and unconsumed.** V44 did not authorize access.
 4. **Preserve rejected V45 and retired dev-v41 evidence.** Never read or render
-   dev-v41 membership. Do not invent V46 or relax the frozen scorecard from
-   outcome-driven evidence; a successor requires a new public/train/reusable
-   hypothesis that can act inside the selector's authority.
+   dev-v41 membership. Implement ADR-0063's exact V46 control coordinate and
+   complete the public/pretraining boundary before constructing dev-v42.
 5. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
    authorize V43 or any runtime prior and still fails two scorecard rows.
 6. **M9.1 remains gated.** The roadmap says to begin only after the single

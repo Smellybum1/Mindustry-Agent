@@ -1984,6 +1984,21 @@ uses value-free receipts/existence for later governed sets. Its 44 tests and
 the complete 322-test Python suite pass without reading dev-v34..v41 or held-
 out-v5/v6 membership.
 
+ADR-0063 now precommits V46 under the project owner's explicit learned-control
+scope expansion. A new policy index may defer one otherwise-unforced boundary
+to the already-computed canonical adaptive-v1 seat-0 action; it is unavailable
+for expert WAIT and cannot override any deterministic safety/lifecycle force.
+The existing ten V45 logits and critic remain the exact base. A same-boundary
+expert-action one-hot and zero-initialized DEFER head are appended, teacher
+losses remain ordinary-action only, and PPO learns the control choice. Mean
+DEFER above 25% makes a checkpoint ineligible.
+
+Config/umbrella hashes are `b588ee43e66bd9d...` /
+`a78631d7ba9f1cd2...`. Dev-v42 is reserved primary-only in `[10B,11B)` but
+unconstructed. The committed implementation and complete public/pretraining
+boundary are required before value-free membership construction or model work.
+Dev-v41 remains retired unopened and held-out-v6 remains sealed.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:

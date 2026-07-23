@@ -1,0 +1,47 @@
+{
+  "schema": "m8_confirmation_evaluation_umbrella_v1",
+  "candidate_version": "v46",
+  "status": "reserved_before_membership_creation",
+  "created_date": "2026-07-23",
+  "repository_parent_commit": "237f44bd94b1289c63fcc3983741099675908bb6",
+  "training_config": {
+    "path": "configs/training/m8-selector-v46-expert-defer-control.json",
+    "sha256": "b588ee43e66bd9d13a9bee5bacac08251cd4c49c3f8d5726eaf2675f06d5d835"
+  },
+  "access_owner": "primary_agent_only",
+  "delegation_forbidden": true,
+  "replacement_set": {
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v42",
+    "seed_set_version": 42,
+    "split": "dev",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v42.json",
+    "exclusive_namespace": {
+      "minimum_inclusive": 10000000000,
+      "maximum_exclusive": 11000000000
+    },
+    "membership_state_at_reservation": "not_created",
+    "exclusive_umbrella_attempt": "runs/m8-selector-v46-dev-v42-umbrella-attempt.json",
+    "replaces": "bootstrap-defense-v1-dev-v41"
+  },
+  "sealed_final_binding": {
+    "seed_set_id": "bootstrap-defense-v1-held-out-v6",
+    "seed_set_version": 6,
+    "split": "held-out",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-held-out-v6.json",
+    "sha256": "2bf4aa04ef54d873e961ff367db849c14c72b83bb4d280c4e31ba75bdeefa51c",
+    "consumption_state": "sealed_unconsumed",
+    "membership_read_for_v46_reservation": false
+  },
+  "rules": [
+    "This reservation and the exact V46 expert-defer control coordinate must be committed before dev-v42 membership creation or model work.",
+    "Membership construction and disjointness verification are primary-agent-only and must not render seed values into agent output.",
+    "Dev-v42 must be generated solely within [10000000000,11000000000), disjoint by namespace from every prior governed set without reading their membership.",
+    "The committed one-way consumer must atomically create the dev-v42 umbrella attempt before its first manifest read or baseline episode.",
+    "A started, aborted, failed, exposed, or completed dev-v42 attempt consumes that set permanently.",
+    "No dev-v42 access is authorized until exact replicas, the reusable 25 percent expert-defer cap, and permanent-greedy and matched-greedy scorecards all pass.",
+    "Held-out-v6 remains governed by ADR-0053 and cannot be read until dev-v42 passes every frozen gate."
+  ]
+}

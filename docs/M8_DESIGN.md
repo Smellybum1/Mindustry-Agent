@@ -950,6 +950,22 @@ out-v1..v4 contracts, while later governed replacements use receipts and
 existence checks only. All 44 focused tests and the complete 322-test Python
 suite pass without opening dev-v34..v41 or held-out-v5/v6 membership.
 
+ADR-0063 uses the project owner's explicit scope-change authorization to
+precommit V46's one bounded control action. `DEFER_TO_SCRIPTED_EXPERT` is a
+policy-side index translated to the already-computed canonical adaptive-v1
+seat-0 action at the same immutable boundary. It cannot override forced safety
+or lifecycle actions and is unavailable for expert WAIT. The V45 ordinary
+actor/critic remains the exact base; a same-boundary expert-action one-hot and
+zero-initialized DEFER head are appended. Teacher losses remain ordinary-action
+only, while PPO learns the control decision. Promotion caps mean DEFER at 25%
+of unforced policy decisions.
+
+Config/umbrella hashes are `b588ee43e66bd9d...` /
+`a78631d7ba9f1cd2...`. Dev-v42 is reserved value-free in `[10B,11B)` but
+unconstructed. Implementation and the complete public/pretraining boundary
+must be committed before membership construction or model work. Dev-v41 remains
+retired unopened and held-out-v6 remains sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

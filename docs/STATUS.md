@@ -1969,6 +1969,18 @@ repository-evidence mapping used for the M6 audit is:
   checked through value-free receipts and existence only. All 44 focused tests
   and the complete embargo-safe Python suite pass (322 tests) without reading
   dev-v34..v41 or held-out-v5/v6 membership.
+- With explicit owner authorization to expand learned control, ADR-0063
+  precommits V46's bounded `DEFER_TO_SCRIPTED_EXPERT` policy action. It
+  translates to the already-computed canonical adaptive-v1 seat-0 action,
+  cannot override forced safety/lifecycle decisions, and is unavailable for
+  expert WAIT. V45's ten ordinary logits/critic stay exact; a same-boundary
+  expert-action input and zero-initialized DEFER head are appended. Teacher
+  losses stay on actions 0..9 and promotion caps mean DEFER at 25%.
+- V46 config/umbrella hashes are `b588ee43e66bd9d...` /
+  `a78631d7ba9f1cd2...`. Dev-v42 is reserved value-free in `[10B,11B)` but
+  unconstructed. Implementation and the full public/pretraining boundary must
+  be committed before membership construction or training. Dev-v41 remains
+  retired unopened; held-out-v6 remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

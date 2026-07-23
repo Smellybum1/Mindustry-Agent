@@ -64,6 +64,10 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0057](ADR-0057-m10-human-control-and-demo-candidate-parity.md) | M10 human control and demo candidate-path parity |
 | [0058](ADR-0058-m10-human-evidence-governance.md) | M10 pin-compatible human evidence governance |
 | [0059](ADR-0059-m10-paired-human-acceptance-protocol.md) | M10 paired absent/scripted/learned acceptance protocol |
+| [0060](ADR-0060-v43-candidate-set-context-actor.md) | V43 candidate-set-context actor |
+| [0061](ADR-0061-v44-lagged-boundary-context.md) | V44 lagged-boundary context |
+| [0062](ADR-0062-v45-residual-lagged-context.md) | V45 residual lagged context |
+| [0063](ADR-0063-v46-expert-defer-control.md) | V46 bounded expert-defer control |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.
