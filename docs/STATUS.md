@@ -2465,8 +2465,15 @@ repository-evidence mapping used for the M6 audit is:
   actions. ADR-0089 prospectively freezes that public-only diagnostic at
   protocol SHA `3aea109ad7d876fb...`: 95% overall/100% winning-episode unique
   projection, exact twin replay, accepted semantic action parity, and at least
-  30/40 ordinary-path wins. Implementation and gates are next; no v7 model,
-  training, restricted namespace, or restricted access is authorized.
+  30/40 ordinary-path wins. Implementation commit `6d9bd3708b` passed the full
+  suites, rebuilt-runtime smoke, determinism, and golden replay. Two fresh JVM
+  source passes then reproduced 36/40 wins, but only 65/3,833 selections
+  projected uniquely, including 51/3,585 in winning episodes. BUILD_LINE,
+  BUILD_SCHEMATIC, and SUPPLY_TURRET had zero unique matches, so the frozen
+  thresholds failed and replay did not run. ADR-0090 rejects direct legacy-
+  expert distillation. Full/compact report SHA prefixes are
+  `83a457b702048960...` / `1d8eb99978ebf148...`. A separately governed
+  candidate-native planner is next; no v7 or restricted access is authorized.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -64,6 +64,16 @@ separately precommitted v7 candidate-native distillation corpus. Failing would
 close legacy-expert projection and require a new candidate-native planner
 before learning resumes.
 
+## Projection result
+
+ADR-0090 records the completed negative diagnostic. Two fresh JVM source runs
+reproduced the expert's 36/40 wins, but exact candidate projection covered only
+65/3,833 selections overall and 51/3,585 selections in winning episodes.
+BUILD_LINE, BUILD_SCHEMATIC, and SUPPLY_TURRET had zero unique matches. The
+frozen thresholds failed before replay, so direct legacy-expert distillation is
+closed. The recommended new supervision source is now a separately governed
+planner that itself acts through ordinary authoritative candidates and masks.
+
 ## Preserved boundaries
 
 External fixed stepping, one environment per JVM, simulation-thread ownership,

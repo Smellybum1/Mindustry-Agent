@@ -94,6 +94,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0087](ADR-0087-precommit-m9-ippo-v6-success-margin.md) | Freeze M9 IPPO v6 strongest-alternative success margin |
 | [0088](ADR-0088-reject-m9-ippo-v6-success-margin.md) | Reject M9 IPPO v6 at public construction |
 | [0089](ADR-0089-precommit-m9-shared-expert-candidate-projection.md) | Freeze the shared-expert candidate-projection diagnostic |
+| [0090](ADR-0090-reject-m9-shared-expert-candidate-projection.md) | Reject direct shared-expert candidate projection |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

@@ -1362,6 +1362,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make m9-success-margin-check` | Verifies ADR-0087's exact v4 inheritance, strongest-other hinge, winning actor filter, telemetry, and deterministic twin optimizer result. Committed report SHA is `4dc0463838756789...`. |
 | `make m9-v6-pretraining-check` | Runs every public-only gate required before v6 Replica A and writes exact-current-commit authority. Passed at `f805e52842`. |
 | `make train-m9-ippo-v6` | Reconstructs the pinned CPU runtime, requires exact-current-commit v6 authority, runs A first, and prohibits B unless A passes construction. A completed and failed at a best 2/40; B is prohibited by ADR-0088. |
+| `make m9-expert-projection-diagnostic` | Runs ADR-0089's public-only shared-expert candidate projection twice in fresh JVMs. Exact result: 65/3,833 unique overall and 51/3,585 in winning episodes; replay prohibited and direct projection rejected by ADR-0090. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
 | `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
@@ -1529,19 +1530,19 @@ queue.
    rejected. Precommit the recommended v4 entropy-annealing successor before
    any new model work. ADR-0079 now freezes v4's sole change as the inclusive
    linear entropy schedule `0.02 * (32 - update) / 31`; implementation is next.
-5. **Implement the precommitted shared-expert candidate projection
-   diagnostic.** ADR-0088
+5. **Precommit a candidate-native planner before any v7 model.** ADR-0088
    rejects v6 after its exact gate and full Replica A: best 2/40 at update 29,
    final 0/40, manifest/full-run digests `d6ecb9f820ec975...` /
    `bc74e4b2f88a0e6...`. Replica B is prohibited. V5 and v6 jointly reject
    uniformly treating all actor-valid transitions from a winning stochastic
    episode as deterministic labels. `docs/M9_V1_V6_SYNTHESIS.md` is complete.
-   ADR-0089 and protocol SHA `3aea109ad7d876fb...` freeze a public-only
-   diagnostic of whether the strong internal shared expert can project
-   uniquely to ordinary candidate actions and retain at least 30/40 wins in
-   exact twin replay. Implement its bounded simulation-thread telemetry,
-   fail-closed projection, replay, tests, and full gate. It cannot authorize
-   v7 or restricted access.
+   ADR-0089's public-only diagnostic is complete. Two fresh JVM source runs
+   reproduce 36/40 wins, but only 65/3,833 expert selections project uniquely,
+   including 51/3,585 in winning episodes. The gate failed before replay.
+   ADR-0090 closes direct legacy-expert distillation; compact result SHA is
+   `1d8eb99978ebf148...`. Define a planner that acts natively through the
+   ordinary authoritative candidate/mask surface and freeze its randomized-
+   family survival and exact-replay gate before it can supply v7 labels.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1549,7 +1550,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0089` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0090` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1589,7 +1590,7 @@ public fixed-role comparison before reward/trainer implementation or training.
 ADR-0071 records the public-only A0 pre-update validator abort, preserves
 forced control boundaries as actor-excluded critic samples, retires A0, and
 requires a new exact-commit full gate before the clean replica restart.
-ADR-0072 through ADR-0089 govern the completed M9 IPPO v1--v6 construction
+ADR-0072 through ADR-0090 govern the completed M9 IPPO v1--v6 construction
 line, its public-only diagnostics, and the current requirement for design
 synthesis plus shared-expert candidate projection before any v7 precommit.
 Every candidate remains rejected; no M9 checkpoint is selected and MAPPO

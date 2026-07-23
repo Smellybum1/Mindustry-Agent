@@ -2507,7 +2507,14 @@ expert as a candidate-native supervision source. Protocol SHA is
 `3aea109ad7d876fb...`; it requires unique semantic projection onto the
 same-boundary ordinary candidate/mask surface, exact fresh-JVM replay, and at
 least 30/40 replay wins. It cannot train, modify a model, authorize v7, or
-access restricted data. Implementation and the complete gate are next.
+access restricted data. Implementation commit `6d9bd3708b` passed the full
+gate and rebuilt-runtime replay checks. Two fresh JVM source runs reproduced
+36/40 wins, but exact projection covered only 65/3,833 selections overall and
+51/3,585 winning-episode selections. The frozen thresholds failed before
+replay. ADR-0090 closes direct shared-expert distillation; compact result SHA
+is `1d8eb99978ebf148...`. The next supervision source must be a prospectively
+defined candidate-native planner that proves its own randomized-family
+survival before any v7 model or trajectory.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

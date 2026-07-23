@@ -1,0 +1,56 @@
+{
+  "schema": "m9_shared_expert_candidate_projection_compact_result_v1",
+  "data_classification": "public_dev_only",
+  "implementation_commit": "6d9bd3708b1c9d3fbcc57fbf409bffcbeaa250d6",
+  "protocol_sha256": "3aea109ad7d876fb4f0b220162a8b545a0adf2e0de5ea7d6f823e28d21369dc9",
+  "full_report_sha256": "83a457b702048960b84808eabb2988dd02e8c5a6b0258e3183742ecb9e7170c4",
+  "source": {
+    "episodes": 40,
+    "wins": 36,
+    "losses": 4,
+    "fresh_jvm_reports_equal": true,
+    "terminal_reset_replay_equal": true
+  },
+  "projection": {
+    "selection_rows": 3833,
+    "unique_projection_rows": 65,
+    "unique_projection_fraction_all": 0.01695799634750848,
+    "winning_selection_rows": 3585,
+    "winning_unique_projection_rows": 51,
+    "unique_projection_fraction_winning_episodes": 0.014225941422594143,
+    "by_task_type": {
+      "BUILD_LINE": {
+        "selections": 40,
+        "unique": 0
+      },
+      "BUILD_SCHEMATIC": {
+        "selections": 1748,
+        "unique": 0
+      },
+      "HARVEST_RESOURCE": {
+        "selections": 700,
+        "unique": 28
+      },
+      "SUPPLY_TURRET": {
+        "selections": 997,
+        "unique": 0
+      },
+      "DEFEND_REGION": {
+        "selections": 272,
+        "unique": 29
+      },
+      "REPAIR_REGION": {
+        "selections": 76,
+        "unique": 8
+      }
+    }
+  },
+  "projected_replay": {
+    "ran": false,
+    "reason": "projection thresholds failed before replay",
+    "wins": 0
+  },
+  "classification": "candidate_native_supervision_source_not_supported",
+  "passed": false,
+  "confirmation_or_held_out_access": false
+}

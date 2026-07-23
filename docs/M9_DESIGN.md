@@ -272,8 +272,13 @@ pins, and dependency lock.
    36/40 internal shared expert's simulation-thread decisions, require unique
    same-boundary semantic projection to actor-valid ordinary candidates, and
    replay them exactly through the external action path in two fresh JVMs.
-   Protocol SHA is `3aea109ad7d876fb...`. The diagnostic has no model,
-   training, v7, confirmation, or held-out authority.
+   Protocol SHA is `3aea109ad7d876fb...`. Implementation commit `6d9bd3708b`
+   passed the complete gate. Two fresh JVM source runs reproduced 36/40 wins,
+   but only 65/3,833 selections projected uniquely, including 51/3,585 from
+   winning episodes; the thresholds failed before replay. ADR-0090 rejects
+   direct shared-expert distillation. Compact result SHA is
+   `1d8eb99978ebf148...`. A separately governed candidate-native planner is
+   required before v7; no restricted access occurred.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 
