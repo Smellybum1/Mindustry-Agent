@@ -2308,10 +2308,13 @@ repository-evidence mapping used for the M6 audit is:
   loss. Focused tests prove length-one bit-exact v1 optimizer equivalence,
   later-to-earlier recurrent gradient flow, padding invariance, v2
   config/checkpoint lineage, and exact CPU twins. The complete Python suite
-  passes 397 tests. A preliminary public-free synthetic pair also matches model,
-  optimizer, and canonical checkpoint content across two CPU processes. The
-  implementation still requires a commit-bound rerun of that evidence and the
-  complete exact-commit pretraining gate before any v2 training episode.
+  passes 397 tests. Two public-free synthetic workers rerun from exact
+  implementation commit `9428d90055` and reproduce model state
+  `b5495c745f29c311...`, optimizer state `95fdc80083899212...`, and canonical
+  checkpoint `bb134fd817965992...`; versioned report SHA is
+  `580493699e7c342b...`. V2 fail-closed preflight and training entry points are
+  implemented locally. Their packet must be committed and the complete
+  exact-commit gate must pass before any v2 training episode.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

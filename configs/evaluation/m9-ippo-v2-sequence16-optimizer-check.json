@@ -1,0 +1,45 @@
+{
+  "candidate_version": "m9-ippo-v2-sequence16",
+  "checkpoint": {
+    "checkpoint_content_sha256": "bb134fd817965992f72b3f020907160689aa6f002cff6f82f4492f1c99a38ec0",
+    "file_integrity_verified_in_both_processes": true,
+    "model_state_sha256": "b5495c745f29c311a1b9d4a619295ad110d01e06fdf380ee97479938aaaf9402",
+    "optimizer_state_sha256": "95fdc800838992125cb0fe4f9e3b0b858497337e003c91b86514caa1e78dd7d2",
+    "parent_checkpoint_content_sha256": null,
+    "raw_serializer_hash_excluded_from_replica_identity": true,
+    "update": 1
+  },
+  "config_sha256": "266e50429902de0d97049eaeb80558b22bb20fffedda926e92091102489a76da",
+  "confirmation_or_held_out_access": false,
+  "final_model_state_sha256": "b5495c745f29c311a1b9d4a619295ad110d01e06fdf380ee97479938aaaf9402",
+  "implementation_commit": "9428d90055f28c402b5bb1456cf1b42b08c81a9e",
+  "independent_processes_exact": true,
+  "initial_model_state_sha256": "e82745a19729aa3183df197cb91c5e2fa9ba17ee334748b979d6d623e402de21",
+  "optimizer_and_checkpoint_exact": true,
+  "optimizer_metrics": {
+    "batches": 8.0,
+    "entropy": 2.3011771142482758,
+    "padded_transition_slots": 528.0,
+    "policy_loss": -0.0015007817709040694,
+    "real_transition_presentations": 240.0,
+    "sequence_windows": 6.0,
+    "value_loss": 14.835676431655884
+  },
+  "processes": 2,
+  "schema": "m9_ippo_v2_sequence_check_v1",
+  "synthetic_public_free_evidence": {
+    "actor_transitions": 29,
+    "critic_only_transitions": 1,
+    "episodes": 2,
+    "recurrent_resets": 6,
+    "transitions": 30,
+    "window_lengths": [
+      5,
+      5,
+      5,
+      5,
+      5,
+      5
+    ]
+  }
+}

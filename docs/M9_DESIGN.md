@@ -141,11 +141,13 @@ pins, and dependency lock.
    and right padding is excluded from both losses. Focused tests prove
    length-one v1 equivalence, cross-boundary gradient flow, padding invariance,
    v2 checkpoint/config binding, and deterministic twin updates; the full
-   Python suite passes 397 tests. Commit-bound worker evidence and the complete
-   gate remain pending, so no v2 training is authorized yet. A preliminary
-   public-free synthetic check produces exact model, optimizer, and canonical
-   checkpoint content across two CPU processes; it must be rerun from the
-   committed implementation before becoming evidence.
+   Python suite passes 397 tests. Two public-free synthetic workers rerun from
+   exact implementation commit `9428d90055` and reproduce model state
+   `b5495c745f29c311...`, optimizer state `95fdc80083899212...`, and canonical
+   checkpoint `bb134fd817965992...`; report SHA is `580493699e7c342b...`.
+   The v2 preflight/training commands are implemented locally, but their packet
+   and the complete exact-commit gate remain pending, so no v2 training is
+   authorized yet.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

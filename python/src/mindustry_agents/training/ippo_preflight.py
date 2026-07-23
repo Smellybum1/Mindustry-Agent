@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import subprocess
 from pathlib import Path
@@ -12,7 +13,10 @@ from mindustry_agents.process.launcher import repo_root
 from mindustry_agents.training.ippo_ppo import (
     IPPO_V1_CONFIG_SHA256,
     IPPO_V1_PROTOCOL_SHA256,
+    IPPO_V2_CONFIG_SHA256,
+    IPPO_V2_PROTOCOL_SHA256,
     load_ippo_v1_config,
+    load_ippo_v2_config,
     sha256_path,
 )
 
@@ -28,6 +32,12 @@ EXPECTED = {
     ),
     "configs/evaluation/m9-ippo-v1-artifact-check.json": (
         "2a5b536ce71d07eea54d122c3be0714140e3eeb1a22dbc5cef4dcb4929622e3f"
+    ),
+}
+EXPECTED_V2 = {
+    **EXPECTED,
+    "configs/evaluation/m9-ippo-v2-sequence16-optimizer-check.json": (
+        "580493699e7c342b1932afd272c43353fed20180b1fa6511fb2ad76809f6ea63"
     ),
 }
 
@@ -133,8 +143,98 @@ def validate_preflight(root: Path | None = None) -> dict[str, Any]:
     }
 
 
-def write_preflight(path: Path, root: Path | None = None) -> dict[str, Any]:
-    result = validate_preflight(root)
+def _sequence_identity(report: dict[str, Any]) -> dict[str, Any]:
+    result = copy.deepcopy(report)
+    result.pop("implementation_commit", None)
+    return result
+
+
+def validate_v2_preflight(root: Path | None = None) -> dict[str, Any]:
+    """Validate ADR-0073's committed and freshly rerun sequence boundary."""
+
+    root = root or repo_root()
+    config_path = root / "configs/training/m9-ippo-v2-sequence16.json"
+    config = load_ippo_v2_config(config_path)
+    protocol_path = root / config["public_evaluation_protocol"]
+    if sha256_path(protocol_path) != IPPO_V2_PROTOCOL_SHA256:
+        raise ValueError("M9 v2 public protocol hash drifted")
+    if sha256_path(config_path) != IPPO_V2_CONFIG_SHA256:
+        raise ValueError("M9 v2 config hash drifted")
+    if (
+        config["confirmation_seed_set"] is not None
+        or config["held_out_seed_set"] is not None
+    ):
+        raise ValueError("M9 v2 pretraining config gained sealed-data authority")
+
+    inherited = validate_preflight(root)
+    baseline = _load(
+        root, "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json"
+    )
+    sequence_path = (
+        root
+        / "configs/evaluation/m9-ippo-v2-sequence16-optimizer-check.json"
+    )
+    if sha256_path(sequence_path) != EXPECTED_V2[
+        "configs/evaluation/m9-ippo-v2-sequence16-optimizer-check.json"
+    ]:
+        raise ValueError("M9 v2 committed sequence evidence hash drifted")
+    sequence = json.loads(sequence_path.read_text(encoding="utf-8"))
+    current_sequence_path = root / "runs/m9-ippo-v2-sequence-check.json"
+    current_sequence = json.loads(
+        current_sequence_path.read_text(encoding="utf-8")
+    )
+    commit = _project_commit(root)
+    if (
+        inherited.get("passed") is not True
+        or inherited.get("confirmation_or_held_out_access") is not False
+    ):
+        raise ValueError("M9 v2 inherited public evidence is incomplete")
+    if (
+        sequence.get("schema") != "m9_ippo_v2_sequence_check_v1"
+        or sequence.get("implementation_commit")
+        != "9428d90055f28c402b5bb1456cf1b42b08c81a9e"
+        or sequence.get("config_sha256") != IPPO_V2_CONFIG_SHA256
+        or sequence.get("independent_processes_exact") is not True
+        or sequence.get("optimizer_and_checkpoint_exact") is not True
+        or sequence.get("confirmation_or_held_out_access") is not False
+        or current_sequence.get("implementation_commit") != commit
+        or _sequence_identity(current_sequence)
+        != _sequence_identity(sequence)
+    ):
+        raise ValueError("M9 v2 sequence evidence is incomplete or divergent")
+    return {
+        "schema": "m9_ippo_v2_preflight_v1",
+        "implementation_commit": commit,
+        "sequence_implementation_commit": sequence[
+            "implementation_commit"
+        ],
+        "config_sha256": IPPO_V2_CONFIG_SHA256,
+        "protocol_sha256": IPPO_V2_PROTOCOL_SHA256,
+        "artifacts": EXPECTED_V2,
+        "gates": list(V2_GATES),
+        "public_baseline_wins": baseline["aggregate"]["wins"],
+        "sequence_checkpoint_content_sha256": sequence["checkpoint"][
+            "checkpoint_content_sha256"
+        ],
+        "sequence_final_model_state_sha256": sequence[
+            "final_model_state_sha256"
+        ],
+        "confirmation_or_held_out_access": False,
+        "passed": True,
+    }
+
+
+def write_preflight(
+    path: Path,
+    root: Path | None = None,
+    *,
+    candidate: str = "v1",
+) -> dict[str, Any]:
+    result = (
+        validate_v2_preflight(root)
+        if candidate == "v2"
+        else validate_preflight(root)
+    )
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
     temporary.write_text(
@@ -154,11 +254,16 @@ def main() -> int:
         type=Path,
         help="atomically write the deterministic preflight result",
     )
+    parser.add_argument("--candidate", choices=("v1", "v2"), default="v1")
     args = parser.parse_args()
     result = (
-        write_preflight(args.output)
+        write_preflight(args.output, candidate=args.candidate)
         if args.output is not None
-        else validate_preflight()
+        else (
+            validate_v2_preflight()
+            if args.candidate == "v2"
+            else validate_preflight()
+        )
     )
     print(json.dumps(result, sort_keys=True))
     return 0

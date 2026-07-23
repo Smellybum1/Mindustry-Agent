@@ -2371,10 +2371,13 @@ boundary are now implemented locally. Focused tests prove length-one v1
 equivalence, deterministic episode/seat/reset partitioning, padding invariance,
 cross-boundary gradient flow, successor config/checkpoint binding, and exact
 twin CPU updates; all 397 Python tests pass. Commit-bound worker evidence and
-the complete gate are still required before replica A. A preliminary
-public-free synthetic worker pair matches model, optimizer, and canonical
-checkpoint content exactly; it must be rerun from the committed implementation
-before it is versioned.
+the complete gate are still required before replica A. The public-free
+synthetic workers were rerun from exact implementation commit `9428d90055` and
+match model state `b5495c745f29c311...`, optimizer state
+`95fdc80083899212...`, and canonical checkpoint `bb134fd817965992...`.
+Versioned report SHA is `580493699e7c342b...`. V2 fail-closed preflight and
+training commands are implemented locally; commit and the complete
+exact-commit gate are next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

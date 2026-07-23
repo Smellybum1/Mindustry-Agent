@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import tempfile
@@ -99,6 +100,19 @@ class TestIPPOSequenceOptimization(unittest.TestCase):
         )
         self.assertIsNone(config["confirmation_seed_set"])
         self.assertIsNone(config["held_out_seed_set"])
+        evidence_path = (
+            Path(__file__).resolve().parents[2]
+            / "configs/evaluation/"
+            "m9-ippo-v2-sequence16-optimizer-check.json"
+        )
+        evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+        self.assertEqual(
+            hashlib.sha256(evidence_path.read_bytes()).hexdigest(),
+            "580493699e7c342b1932afd272c43353fed20180b1fa6511fb2ad76809f6ea63",
+        )
+        self.assertTrue(evidence["independent_processes_exact"])
+        self.assertTrue(evidence["optimizer_and_checkpoint_exact"])
+        self.assertFalse(evidence["confirmation_or_held_out_access"])
 
     def test_v2_checkpoint_and_manifest_bind_successor_config(self):
         import torch
