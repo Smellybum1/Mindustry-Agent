@@ -203,13 +203,14 @@ pins, and dependency lock.
    entropy coefficient from constant 0.02 to the inclusive linear schedule
    `0.02 * (32 - update) / 31` across updates 1--32. Config/protocol hashes are
    `9b9495e03b11e0fd...` and `db9b5647f249d308...`. Collection remains
-   categorical and public dev remains deterministic argmax. No v4 trajectory
-   or optimizer update exists. Candidate-aware config/checkpoint/manifest/
-   preflight/runner support and per-update entropy telemetry are implemented
-   locally. Focused real-update/inheritance/authority/artifact coverage and the
-   complete 417-test Python suite pass. Implementation commit `d232d64dc5` is
-   pushed; its twice-identical entropy/inheritance report is committed with SHA
-   `44a33c55693686d3...`. The full exact-commit gate is next.
+   categorical and public dev remains deterministic argmax. The full gate
+   passed at evidence commit `fbca0c6bbc`; Replica A then completed all 2,048
+   public episodes and 32 updates. The late frontier improved to 16/40 at
+   update 30 and 18/40 at update 31, with update-31 idle `0.09766800`, before
+   the zero-entropy update 32 collapsed to 0/40. ADR-0080 rejects v4 and
+   prohibits Replica B. Compact result SHA is `e85eb1d267412db4...`; no
+   restricted data was accessed. A prospectively frozen immutable-v4
+   late-checkpoint diagnostic is required before any v5 recipe.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

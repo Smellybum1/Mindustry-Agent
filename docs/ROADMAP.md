@@ -2432,9 +2432,14 @@ categorical; dev evaluation stays deterministic argmax. No v4 trajectory or
 optimizer update exists. Candidate-aware config/checkpoint/manifest/preflight/
 runner support, exact inheritance checks, and per-update entropy telemetry are
 implemented locally. Focused tests and the complete 417-test Python suite pass.
-Implementation commit `d232d64dc5` is pushed. Its entropy/inheritance report
-reproduced byte-identically twice and is committed with SHA
-`44a33c55693686d3...`. The complete exact-commit gate is next.
+Implementation commit `d232d64dc5` and evidence commit `fbca0c6bbc` are
+pushed. The complete gate passed at `fbca0c6bbc`, then Replica A completed all
+2,048 public episodes and 32 updates. The deterministic frontier reached 16/40
+at update 30 and 18/40 at update 31 with idle `0.09766800`, then update 32
+collapsed to 0/40. ADR-0080 rejects v4 and prohibits Replica B. Compact result
+SHA is `e85eb1d267412db4...`; no restricted data was accessed. A precommitted
+public-only immutable-v4 late-checkpoint diagnostic is next, before any v5
+recipe.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

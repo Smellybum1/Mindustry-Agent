@@ -2375,10 +2375,16 @@ repository-evidence mapping used for the M6 audit is:
   runner support and exact entropy telemetry are implemented locally. Focused
   schedule, inheritance, real twin-update, authority, artifact, dispatch, and
   v1--v3 compatibility tests pass within the complete 417-test Python suite.
-  Implementation commit `d232d64dc5` is pushed. Its entropy/inheritance report
-  reproduced byte-identically twice and is committed with SHA
-  `44a33c55693686d3...`. The full exact-commit gate is next; no v4 trajectory
-  or model update exists.
+  Implementation commit `d232d64dc5` and evidence commit `fbca0c6bbc` are
+  pushed. The full exact-commit gate passed at `fbca0c6bbc`, then Replica A
+  completed all 2,048 public training episodes and 32 updates. Update 31 set
+  the strongest M9 deterministic frontier at 18/40, return `-6.20459`, core
+  `491.4`, and idle `0.09766800`; update 32 regressed to 0/40. Training won
+  603/2,048 episodes. ADR-0080 rejects v4, prohibits Replica B, and requires a
+  precommitted public-only late-checkpoint diagnostic before v5. Manifest,
+  full-run, and compact-result SHA prefixes are `2e2f63b412629fcd...`,
+  `69ee6d687d95eaff...`, and `e85eb1d267412db4...`. No restricted data was
+  accessed; held-out-v7 remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -75,6 +75,16 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0068](ADR-0068-v49-prospective-scorecard-noninferiority.md) | V49 prospective scorecard non-inferiority |
 | [0069](ADR-0069-m9-entry-gate-supersession.md) | Supersede the M9 entry gate after the M8 one-brain ceiling |
 | [0070](ADR-0070-m9-ippo-v1-optimization-precommit.md) | Freeze the first M9 IPPO optimization and public comparison |
+| [0071](ADR-0071-forced-control-critic-transitions.md) | Keep forced-control transitions in critic targets while masking actor loss |
+| [0072](ADR-0072-m9-ippo-v1-public-construction-rejection.md) | Reject M9 IPPO v1 at public construction |
+| [0073](ADR-0073-m9-ippo-v2-sequence16-precommit.md) | Freeze M9 IPPO v2 sequence-16 learning |
+| [0074](ADR-0074-m9-ippo-v2-sequence16-rejection.md) | Reject M9 IPPO v2 at public construction |
+| [0075](ADR-0075-m9-ippo-v3-diverse2048-precommit.md) | Freeze M9 IPPO v3 diverse one-use roots |
+| [0076](ADR-0076-m9-ippo-v3-diverse2048-rejection.md) | Reject M9 IPPO v3 at public construction |
+| [0077](ADR-0077-m9-v3-policy-mode-diagnostic-precommit.md) | Freeze the immutable-v3 policy-mode diagnostic |
+| [0078](ADR-0078-m9-v3-policy-mode-diagnostic-result.md) | Accept the v3 categorical-sampling diagnostic signal |
+| [0079](ADR-0079-m9-ippo-v4-entropy-anneal-precommit.md) | Freeze M9 IPPO v4 entropy annealing |
+| [0080](ADR-0080-m9-ippo-v4-entropy-anneal-rejection.md) | Reject M9 IPPO v4 at public construction |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

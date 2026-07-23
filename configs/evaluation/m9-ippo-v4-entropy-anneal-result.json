@@ -1,0 +1,108 @@
+{
+  "schema": "m9_ippo_construction_result_v1",
+  "candidate_version": "m9-ippo-v4-entropy-anneal",
+  "data_classification": "public_train_and_dev_only",
+  "implementation_commit": "fbca0c6bbc5b4f00ada903f17301211b59fd5b3c",
+  "pretraining_gate": {
+    "passed": true,
+    "implementation_commit": "fbca0c6bbc5b4f00ada903f17301211b59fd5b3c",
+    "sha256": "40f47103f1945d391f9f79b9df62e83cd7c22679256bfa2bbee7edcb9b831789"
+  },
+  "recipe": {
+    "config_sha256": "9b9495e03b11e0fdae744fefd64f65de513b85093cf96e2a088ac4235766d215",
+    "protocol_sha256": "db9b5647f249d30889b911a075905a78f4ba9ccef5613bc25d09126e1d1e7ace",
+    "training_schedule_sha256": "a58244f31f21c24bbd96adb77953d231982fb799e61777993f9fb2b438833ec1",
+    "entropy_schedule_sha256": "4cf5574d75f8b9d430135ef223549f7dba7af4a31e4c79858c509d669ff71573",
+    "episodes": 2048,
+    "unique_training_roots": 2048,
+    "root_reuse_count": 1,
+    "updates": 32,
+    "dev_episodes_per_update": 40,
+    "sole_change_from_v3": "replace_constant_0.02_entropy_coefficient_with_inclusive_linear_0.02_to_0.0_schedule"
+  },
+  "replica_a1": {
+    "manifest_sha256": "2e2f63b412629fcd96304e4117866541bd87c74fd7fb64f9767359ed712fdde8",
+    "full_run_reproducibility_digest": "69ee6d687d95eaff12871190eccfe2511d63ddbf3860f9ff7b4595a436b1a402",
+    "bit_exact": true,
+    "training_episodes": 2048,
+    "optimizer_updates": 32,
+    "construction_passed": false
+  },
+  "replica_b": {
+    "executed": false,
+    "reason": "ADR-0079 prohibits replica B after replica A fails construction"
+  },
+  "public_frontier": {
+    "eligible_checkpoints": 0,
+    "required_minimum_wins": 30,
+    "required_maximum_mean_team_idle_fraction_exclusive": 0.25,
+    "best_observed": {
+      "update": 31,
+      "wins": 18,
+      "episodes": 40,
+      "mean_team_return": -6.204589999999997,
+      "mean_core_health": 491.4,
+      "mean_team_idle_fraction": 0.09766800277095616,
+      "entropy_coefficient": 0.0006451612903225802,
+      "checkpoint_content_sha256": "bf27acd77cede591b9c71dbacbe5b7bff06dce070ae7fb8b4406707fe2d6ac20",
+      "checkpoint_file_sha256": "08e402155a21f0d86eba9600d14c837e2a8f45c8a454f1ca71fcf9e8bcb67728",
+      "model_state_sha256": "3050904cd04e2131d31387897d3a400cea615d99a7263a96aa21bc42df510b3c"
+    },
+    "penultimate_improvement": {
+      "update": 30,
+      "wins": 16,
+      "episodes": 40,
+      "mean_team_return": -7.325769999999997,
+      "mean_core_health": 431.45,
+      "mean_team_idle_fraction": 0.10254551350913621,
+      "entropy_coefficient": 0.0012903225806451639
+    },
+    "final_update": {
+      "update": 32,
+      "wins": 0,
+      "episodes": 40,
+      "mean_team_return": -19.036949999999997,
+      "mean_core_health": 0.0,
+      "mean_team_idle_fraction": 0.32090273211194703,
+      "entropy_coefficient": 0.0,
+      "checkpoint_content_sha256": "0558663ef9fe1b076c621b5110d0bbca94f1ccf0420df63a144e1e41a42771c4",
+      "checkpoint_file_sha256": "369fe5d11d130ea70416e61d598158dab03c938c954d0490f3f5030701c12196",
+      "model_state_sha256": "07d4126f161c4290b0fb8cf57d1a54ef22f95e7cde7772c4907c28e5feb08f78"
+    }
+  },
+  "public_training_summary": {
+    "episodes": 2048,
+    "wins": 603,
+    "losses": 1445,
+    "transitions": 187797,
+    "mean_team_return": -10.227253124999995,
+    "mean_team_idle_fraction": 0.14188983965941904,
+    "v1_train_wins": 598,
+    "v2_train_wins": 513,
+    "v3_train_wins": 585,
+    "interpretation": "Entropy annealing preserved stochastic training survival and produced a late deterministic frontier at 18/40, but the zero-entropy final update collapsed to 0/40 and no checkpoint reached the frozen construction floor."
+  },
+  "public_baseline": {
+    "policy": "shared-expert-v1",
+    "wins": 36,
+    "episodes": 40,
+    "mean_team_return": -1.641725,
+    "mean_core_health": 967.95
+  },
+  "decision": {
+    "construction_passed": false,
+    "failure": "no checkpoint passed the public quality gate",
+    "selected_checkpoint": null,
+    "replica_b_authorized": false,
+    "mappo_authorized": false,
+    "candidate_status": "rejected"
+  },
+  "restricted_state": {
+    "confirmation_namespace_exists": false,
+    "m9_held_out_namespace_exists": false,
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0,
+    "confirmation_or_held_out_access": false,
+    "m8_held_out_v7": "sealed_unconsumed"
+  }
+}
