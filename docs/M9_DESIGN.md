@@ -219,7 +219,13 @@ pins, and dependency lock.
    candidate repair, selection, training, promotion, or restricted-data
    authority. Fail-closed source validation, immutable-model execution, exact
    twin-JVM comparison, and classification are implemented locally; all 420
-   Python tests pass. No diagnostic episode has run.
+   Python tests pass. The two fresh JVMs reproduce exactly at digest
+   `a69c48c6120b87f1...`. Update 31 is 18/40 argmax and 64/160 categorical;
+   update 32 is 0/40 argmax but 60/160 categorical, retaining 93.75%. ADR-0082
+   accepts deterministic mode instability, keeps v4 rejected, and recommends
+   a separately precommitted success-conditioned self-imitation mechanism.
+   Compact result SHA is `7273098097889601...`; no restricted data was
+   accessed.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

@@ -1354,7 +1354,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make m9-entropy-check` | Verifies ADR-0079's exact v3 inheritance, 32-update entropy schedule, and unchanged diverse-root schedule. Committed report SHA is `44a33c55693686d3...`. |
 | `make m9-v4-pretraining-check` | Runs every public-only gate required before v4 Replica A and writes exact-commit authority. Passed at `fbca0c6bbc`. |
 | `make train-m9-ippo-v4` | Reconstructs the pinned CPU runtime, requires exact-current-commit v4 authority, runs A first, and prohibits B unless A passes construction. A completed and failed at a best 18/40; B is prohibited by ADR-0080. |
-| `make m9-late-checkpoint-diagnostic` | Runs ADR-0081's immutable v4 update-31/32 argmax/categorical matrix twice in fresh JVMs and applies only the frozen public-only classification. Implemented locally; no episode has run. |
+| `make m9-late-checkpoint-diagnostic` | Runs ADR-0081's immutable v4 update-31/32 argmax/categorical matrix twice in fresh JVMs and applies only the frozen public-only classification. Exact result: 64/160 to 60/160 categorical retention despite 18/40 to 0/40 argmax; deterministic mode instability. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
 | `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
@@ -1522,13 +1522,12 @@ queue.
    rejected. Precommit the recommended v4 entropy-annealing successor before
    any new model work. ADR-0079 now freezes v4's sole change as the inclusive
    linear entropy schedule `0.02 * (32 - update) / 31`; implementation is next.
-5. **Implement and run ADR-0081's public-only late-checkpoint diagnostic.**
-   V4 completed at a best 18/40 and is rejected; do not rerun, retune, select
-   update 31, or execute Replica B. Validate immutable updates 31/32, run each
-   with argmax and four fixed categorical streams on the 40 public roots,
-   reproduce the complete matrix in two fresh JVMs, and apply only the frozen
-   80%-retention/50%-collapse classification. Bind exact compact evidence
-   before separately precommitting one v5 mechanism.
+5. **Precommit ADR-0082's v5 successful-mode consolidation mechanism.** V4
+   remains rejected; do not rerun, retune, select update 31, or execute Replica
+   B. Freeze one success-conditioned self-imitation loss over the candidate's
+   own unforced actor-valid transitions from winning public training episodes.
+   Pin its coefficient, PPO/entropy interaction, telemetry, data flow, budget,
+   roots, RNGs, and gates before implementation or training.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

@@ -2445,7 +2445,13 @@ fixed categorical streams, two fresh JVMs, and exact 80%-retention versus
 50%-collapse classification. Protocol SHA is `d68fee034d3b90e7...`. It cannot
 select, repair, train, promote, or access restricted data. The fail-closed
 runner, exact twin-JVM comparison, command surface, and focused tests are
-implemented locally; all 420 Python tests pass. No diagnostic episode has run.
+implemented locally; all 420 Python tests pass. The two fresh JVMs reproduce
+exactly at digest `a69c48c6120b87f1...`: update 31 is 18/40 argmax and 64/160
+categorical, while update 32 is 0/40 argmax but retains 60/160 categorical
+wins. ADR-0082 accepts deterministic mode instability, keeps v4 rejected, and
+requires a separate precommit before one success-conditioned self-imitation
+mechanism. Compact result SHA is `7273098097889601...`; no restricted data was
+accessed.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

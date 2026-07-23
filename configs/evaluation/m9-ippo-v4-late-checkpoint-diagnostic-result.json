@@ -1,0 +1,84 @@
+{
+  "schema": "m9_ippo_v4_late_checkpoint_diagnostic_result_v1",
+  "implementation_commit": "a73bf9582270f56ad424a65bae3bf6c2fd84e12f",
+  "data_classification": "public_dev_only",
+  "protocol_sha256": "d68fee034d3b90e720988639bb47b3e6df2961c7fabc46a0b9b161bab32b2dc1",
+  "full_report": {
+    "path": "runs/m9-ippo-v4-late-checkpoint-diagnostic.json",
+    "sha256": "c82fa1f01c045a537540e64e96f215b368a631de851dc4acf51500655231083e",
+    "fresh_jvm_runs": 2,
+    "fresh_jvm_runs_equal": true,
+    "run_sha256": "a69c48c6120b87f1465326fb6d5ffed29c6d5b225d51c221a2ff8252675674aa"
+  },
+  "source": {
+    "candidate_version": "m9-ippo-v4-entropy-anneal",
+    "candidate_status": "rejected",
+    "training_commit": "fbca0c6bbc5b4f00ada903f17301211b59fd5b3c",
+    "result_sha256": "e85eb1d267412db47fd81dc0bc0ad9f935ac8c08c42f1d9ee929ed57d2698258",
+    "manifest_sha256": "2e2f63b412629fcd96304e4117866541bd87c74fd7fb64f9767359ed712fdde8"
+  },
+  "update_31": {
+    "checkpoint_content_sha256": "bf27acd77cede591b9c71dbacbe5b7bff06dce070ae7fb8b4406707fe2d6ac20",
+    "model_state_sha256": "3050904cd04e2131d31387897d3a400cea615d99a7263a96aa21bc42df510b3c",
+    "model_unchanged": true,
+    "deterministic_argmax": {
+      "episodes": 40,
+      "wins": 18,
+      "mean_team_return": -6.204589999999997,
+      "mean_core_health": 491.4,
+      "mean_team_idle_fraction": 0.09766800277095616
+    },
+    "stochastic_categorical": {
+      "episodes": 160,
+      "wins": 64,
+      "mean_team_return": -7.659692499999996,
+      "mean_core_health": 354.89375,
+      "mean_team_idle_fraction": 0.11916190482703377,
+      "stream_wins": [15, 18, 21, 10]
+    }
+  },
+  "update_32": {
+    "checkpoint_content_sha256": "0558663ef9fe1b076c621b5110d0bbca94f1ccf0420df63a144e1e41a42771c4",
+    "model_state_sha256": "07d4126f161c4290b0fb8cf57d1a54ef22f95e7cde7772c4907c28e5feb08f78",
+    "model_unchanged": true,
+    "deterministic_argmax": {
+      "episodes": 40,
+      "wins": 0,
+      "mean_team_return": -19.036949999999997,
+      "mean_core_health": 0.0,
+      "mean_team_idle_fraction": 0.32090273211194703
+    },
+    "stochastic_categorical": {
+      "episodes": 160,
+      "wins": 60,
+      "mean_team_return": -7.951017499999996,
+      "mean_core_health": 311.08125,
+      "mean_team_idle_fraction": 0.11437973422624995,
+      "stream_wins": [11, 20, 13, 16]
+    }
+  },
+  "classification": {
+    "argmax_win_drop": 18,
+    "categorical_win_retention_numerator": 60,
+    "categorical_win_retention_denominator": 64,
+    "categorical_win_retention_fraction": 0.9375,
+    "mode_instability_signal": true,
+    "optimizer_distribution_collapse_signal": false,
+    "outcome": "deterministic_mode_instability"
+  },
+  "decision": {
+    "v4_status": "rejected",
+    "checkpoint_selection_authorized": false,
+    "replica_b_authorized": false,
+    "mappo_authorized": false,
+    "training_authorized": false,
+    "promotion_authorized": false,
+    "next_direction": "precommit_one_successful_mode_consolidation_mechanism"
+  },
+  "restricted_state": {
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0,
+    "confirmation_or_held_out_access": false,
+    "m8_held_out_v7": "sealed_unconsumed"
+  }
+}

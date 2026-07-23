@@ -2394,7 +2394,14 @@ repository-evidence mapping used for the M6 audit is:
   or held-out authority. Fail-closed multi-checkpoint validation, exact
   argmax/categorical execution, fresh-JVM comparison, classification, command
   surface, and focused tests are implemented locally. All 420 Python tests
-  pass. No diagnostic episode has run.
+  pass. The exact two-JVM diagnostic then reproduced at digest
+  `a69c48c6120b87f1...`: update 31 scored 18/40 argmax and 64/160 categorical;
+  update 32 scored 0/40 argmax but retained 60/160 categorical wins (93.75%).
+  ADR-0082 accepts the frozen deterministic-mode-instability signal and rejects
+  whole-distribution collapse at this boundary. Compact result SHA is
+  `7273098097889601...`. V4 remains rejected; no checkpoint selection,
+  training, promotion, or restricted access occurred. A separately
+  precommitted success-conditioned self-imitation mechanism is next.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
