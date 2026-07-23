@@ -131,3 +131,9 @@ or held-out read occurred.
 The primary-only dev-v42 freezer is implemented on commit-bound atomic/no-read
 primitives and covered by the now-339-test embargo-safe suite. It has not
 executed and must be committed before membership construction.
+
+The committed generator `e9a828a7d01ed7e9...` constructed dev-v42 value-free.
+Its receipt binds membership
+`8f518384f19c193fa793034a141c0a89c6973dbe788de87520a6b86b16bed865`
+and implementation `173cd5c2a11f3237...`, and records zero membership reads.
+Dev-v42 is frozen and unconsumed; the receipt-aware suite passes 340 tests.

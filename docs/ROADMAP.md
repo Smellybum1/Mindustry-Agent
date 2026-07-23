@@ -2016,6 +2016,12 @@ primitives and binds the exact V46 implementation, config, umbrella, namespace,
 and sealed-final contract. Its receipt contains no seed values. The embargo-safe
 suite passes 339 tests. It has not run; commit this tool before construction.
 
+The committed freezer then constructed dev-v42 value-free. The receipt binds
+membership `8f518384f19c193f...`, generator `e9a828a7d01ed7e9...`,
+implementation `173cd5c2a11f3237...`, and zero membership reads. Dev-v42 is
+frozen and unconsumed pending exact replicas plus reusable scorecard/control
+gates; the receipt-aware suite passes 340 tests.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:

@@ -1,0 +1,57 @@
+{
+  "candidate_version": "v46",
+  "disjointness_method": "partitioned_numeric_namespace_without_reads",
+  "generated_membership_read_after_write": false,
+  "generator_commit": "e9a828a7d01ed7e91a60bdb1bcd80914fb46080d",
+  "global_disjointness_verified": true,
+  "helper_commit": "e1600a63f18147ccac2e1b0454b51fe2f2cc4635",
+  "implementation_commit": "173cd5c2a11f3237768fc344d47d365e7afa2a61",
+  "membership_documents_read": 0,
+  "namespace_proof": {
+    "held_out_v6_max_exclusive": 4000000000,
+    "held_out_v6_min_inclusive": 3000000000,
+    "legacy_max_exclusive": 1000000000,
+    "v38_sealed_max_exclusive": 2000000000,
+    "v39_confirmation_max_exclusive": 2147483648,
+    "v40_confirmation_max_exclusive": 5000000000,
+    "v40_confirmation_min_inclusive": 4000000000,
+    "v41_confirmation_max_exclusive": 6000000000,
+    "v41_confirmation_min_inclusive": 5000000000,
+    "v42_confirmation_max_exclusive": 7000000000,
+    "v42_confirmation_min_inclusive": 6000000000,
+    "v43_confirmation_max_exclusive": 8000000000,
+    "v43_confirmation_min_inclusive": 7000000000,
+    "v44_confirmation_max_exclusive": 9000000000,
+    "v44_confirmation_min_inclusive": 8000000000,
+    "v45_confirmation_max_exclusive": 10000000000,
+    "v45_confirmation_min_inclusive": 9000000000,
+    "v46_confirmation_max_exclusive": 11000000000,
+    "v46_confirmation_min_inclusive": 10000000000
+  },
+  "repository_head_before_generation": "e9a828a7d01ed7e91a60bdb1bcd80914fb46080d",
+  "retired_confirmation_membership_read": false,
+  "schema": "m8_confirmation_seed_freeze_v1",
+  "sealed_final_membership_read": false,
+  "set": {
+    "count": 160,
+    "exclusive_namespace": {
+      "maximum_exclusive": 11000000000,
+      "minimum_inclusive": 10000000000
+    },
+    "exclusive_umbrella_attempt": "runs/m8-selector-v46-dev-v42-umbrella-attempt.json",
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v42.json",
+    "replaces": "bootstrap-defense-v1-dev-v41",
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v42",
+    "seed_set_version": 42,
+    "sha256": "8f518384f19c193fa793034a141c0a89c6973dbe788de87520a6b86b16bed865",
+    "split": "dev"
+  },
+  "status": "membership_frozen_unconsumed",
+  "umbrella": {
+    "commit": "bdefc6790d83ec09f3adf004a5823726c8fb0023",
+    "path": "configs/evaluation/m8-selector-v46-confirmation-umbrella.json",
+    "sha256": "a78631d7ba9f1cd20d46da6dd44822f4440209b3c9d1d760c2607af1f1d64e71"
+  },
+  "values_emitted": false
+}

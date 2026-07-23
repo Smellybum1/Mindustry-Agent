@@ -990,6 +990,14 @@ umbrella commits, validates the `[10B,11B)` namespace and held-out-v6 binding,
 and can emit only a value-free receipt. The embargo-safe suite now passes 339
 tests. Commit the freezer before membership construction.
 
+The committed freezer constructed dev-v42 without emitting or reading
+membership. Its value-free receipt binds membership
+`8f518384f19c193fa793034a141c0a89c6973dbe788de87520a6b86b16bed865`,
+generator `e9a828a7d01ed7e9...`, and implementation `173cd5c2a11f3237...`,
+and records zero membership-document reads. Dev-v42 is frozen and unconsumed;
+do not access it until exact replicas and every reusable scorecard/control gate
+pass. The receipt-aware embargo-safe suite now passes 340 tests.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -1068,6 +1068,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   config, umbrella, `[10B,11B)` namespace, and held-out-v6 contract. Its receipt
   is value-free; 339 embargo-safe Python tests pass. Commit the freezer before
   constructing dev-v42.
+- **V46 confirmation packet frozen, unconsumed**: the committed freezer created
+  dev-v42 without emitting or reading membership. The value-free receipt binds
+  membership `8f518384f19c193f...`, generator `e9a828a7d01ed7e9...`, and
+  implementation `173cd5c2a11f3237...`, with zero membership reads. Do not
+  consume dev-v42 until exact replicas and all reusable scorecard/control gates
+  pass. The receipt-aware embargo-safe suite passes 340 tests.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
