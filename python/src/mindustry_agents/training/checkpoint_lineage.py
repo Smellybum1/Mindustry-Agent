@@ -16,10 +16,12 @@ from mindustry_agents.training.checkpoint_interpolation import (
 from mindustry_agents.training.model import build_selector_model
 from mindustry_agents.training.ppo_selector import (
     LEARNED_SEAT_FAILOVER_SCHEMA,
+    LEARNED_SEAT_HISTORY_SCHEMA,
     REWARD_SCHEMA,
     _git_evidence,
     _json_digest,
     _learned_seat_failover,
+    _learned_seat_history,
     _model_state_digest,
     _reproducibility_evidence,
     _sha256,
@@ -68,6 +70,7 @@ def _expected_lineage_schemas(config: dict[str, Any]) -> dict[str, str]:
 
     control_schema = expected_control_schema(config)
     learned_seat_failover = _learned_seat_failover(config)
+    learned_seat_history = _learned_seat_history(config)
     return {
         "feature": expected_feature_schema(config),
         "reward": str(config.get("reward_schema", REWARD_SCHEMA)),
@@ -80,6 +83,11 @@ def _expected_lineage_schemas(config: dict[str, Any]) -> dict[str, str]:
         **(
             {"seat_control": LEARNED_SEAT_FAILOVER_SCHEMA}
             if learned_seat_failover is not None
+            else {}
+        ),
+        **(
+            {"seat_history": LEARNED_SEAT_HISTORY_SCHEMA}
+            if learned_seat_history is not None
             else {}
         ),
     }

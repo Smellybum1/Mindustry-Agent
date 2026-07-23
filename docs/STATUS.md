@@ -2105,7 +2105,18 @@ repository-evidence mapping used for the M6 audit is:
   rather than resetting to zeros. One model evaluation and one learned action
   remain the maximum per boundary. Config/umbrella hashes are
   `714bd13db0ffee6f...` / `656602be6dd5c3cf...`. Dev-v45 is reserved in
-  `[14B,15B)` but unconstructed. No V48 code or training has begun.
+  `[14B,15B)` but unconstructed.
+- V48 is implemented and its complete public/pretraining boundary is green.
+  Candidate and matched controls keep one cache per seat, update only living
+  seats from drained structured state, retain dead caches, and adopt the target
+  cache on death transfer. Schema authority is bound through manifests,
+  lineage, traces, promotion gates, and telemetry, with at most one model
+  evaluation/action per boundary. The live public gate reproduces two same-JVM
+  wins at tick 9000 and exact transfers `0->1@2738`, `1->2@4462`. All 357
+  Python tests, custom Java modules, public 5/5 survival, both focused checks,
+  smoke, deterministic golden/negative replay, and 44/44 reward adversaries
+  pass; adversary report SHA is `8cfe56b3a000d4c...`. Dev-v45 remains
+  unconstructed and no V48 training has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

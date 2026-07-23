@@ -33,6 +33,7 @@ from mindustry_agents.training.model import build_selector_model
 from mindustry_agents.training.checkpoint_lineage import validate_lineage_manifest
 from mindustry_agents.training.ppo_selector import (
     LEARNED_SEAT_FAILOVER_SCHEMA,
+    LEARNED_SEAT_HISTORY_SCHEMA,
     LEARNED_SEAT,
     REWARD_SCHEMA,
     EpisodeRollout,
@@ -40,12 +41,16 @@ from mindustry_agents.training.ppo_selector import (
     _apply_scripted_partner_opening,
     _canonical_scripted_action,
     _configure_torch,
+    _fixed_partner_intended_task_ids,
     _git_evidence,
     _learned_seat_failover,
+    _learned_seat_history,
     _partner_intent_duplication_risk,
     _policy_logit_adjustment,
     _scripted_partner_opening,
     _scripted_index,
+    _scripted_seat_history_boundaries,
+    _record_scripted_seat_history_boundaries,
     _sha256,
     load_checkpoint,
     rollout_episode,
@@ -103,6 +108,8 @@ def rollout_control_episode(
     feature_schema: str = FEATURE_SCHEMA,
     control_schema: str = CONTROL_SCHEMA_V1,
     learned_seat_failover: dict[str, Any] | None = None,
+    learned_seat_history: dict[str, Any] | None = None,
+    partner_intent_duplication_risk: dict[str, Any] | None = None,
 ) -> EpisodeRollout:
     """Run one matched control with the learned brain's scripted lifecycle."""
 
@@ -111,6 +118,18 @@ def rollout_control_episode(
     )
     learned_seat_failover = _learned_seat_failover(
         {"learned_seat_failover": learned_seat_failover}
+    )
+    learned_seat_history = _learned_seat_history(
+        {
+            "learned_seat_failover": learned_seat_failover,
+            "learned_seat_history": learned_seat_history,
+        }
+    )
+    partner_intent_duplication_risk = _partner_intent_duplication_risk(
+        {
+            "partner_intent_duplication_risk": partner_intent_duplication_risk,
+            "learned_seat_failover": learned_seat_failover,
+        }
     )
 
     reset = env.reset(
@@ -126,7 +145,17 @@ def rollout_control_episode(
     tick = reset.tick
     board: list[dict[str, Any]] = []
     boundary_reasons: list[str] = []
-    history = SelectorHistory()
+    seat_histories = (
+        [SelectorHistory() for _ in observations]
+        if learned_seat_history is not None
+        else None
+    )
+    history = (
+        seat_histories[LEARNED_SEAT]
+        if seat_histories is not None
+        else SelectorHistory()
+    )
+    seat_history_boundary_updates = [0 for _ in observations]
     adaptive = GreedyUtilityPolicy()
     selector = (
         PureGreedyUtilityPolicy()
@@ -149,7 +178,11 @@ def rollout_control_episode(
 
     while outcome == "running" and tick < int(metadata["tick_cap"]):
         active_agent_id, history, transfer = _advance_learned_seat(
-            observations, active_agent_id, history, learned_seat_failover
+            observations,
+            active_agent_id,
+            history,
+            learned_seat_failover,
+            seat_histories,
         )
         if transfer is not None:
             transfer["tick"] = tick
@@ -166,19 +199,50 @@ def rollout_control_episode(
             bundle[active_agent_id], candidates
         )
         lifecycle_type = lifecycle_action.get("task_action", {}).get("type")
-        features = build_selector_features(
+        feature_kwargs = {
+            "task_board": board,
+            "boundary_reasons": boundary_reasons,
+            "history": history,
+            "agent_id": active_agent_id,
+            "feature_schema": feature_schema,
+            "control_schema": control_schema,
+            "expert_action_index": (
+                lifecycle_index if control_schema == CONTROL_SCHEMA_V2 else None
+            ),
+        }
+        if partner_intent_duplication_risk is None:
+            features = build_selector_features(
+                observations,
+                masks,
+                metadata,
+                **feature_kwargs,
+            )
+        else:
+            intended_task_ids = _fixed_partner_intended_task_ids(
+                bundle,
+                observations,
+                partner_intent_duplication_risk,
+                active_agent_id=active_agent_id,
+            )
+            features = build_selector_features(
+                observations,
+                masks,
+                metadata,
+                fixed_partner_intended_task_ids=intended_task_ids,
+                **feature_kwargs,
+            )
+        scripted_history_boundaries = _scripted_seat_history_boundaries(
             observations,
             masks,
             metadata,
+            bundle,
+            active_agent_id=active_agent_id,
+            histories=seat_histories,
             task_board=board,
             boundary_reasons=boundary_reasons,
-            history=history,
-            agent_id=active_agent_id,
+            partner_intent_duplication_risk=partner_intent_duplication_risk,
             feature_schema=feature_schema,
             control_schema=control_schema,
-            expert_action_index=(
-                lifecycle_index if control_schema == CONTROL_SCHEMA_V2 else None
-            ),
         )
         forced = (
             features.forced_task_action is not None
@@ -234,6 +298,16 @@ def rollout_control_episode(
             ):
                 history.record_selection(selected_task_type, tick)
         history.record_boundary(features, selected_index)
+        if seat_histories is not None:
+            seat_history_boundary_updates[active_agent_id] += 1
+        _record_scripted_seat_history_boundaries(
+            seat_histories,
+            scripted_history_boundaries,
+            response.action_results,
+            observations,
+            tick=tick,
+            update_counts=seat_history_boundary_updates,
+        )
 
         reasons = list(response.decision_boundary.get("reasons", []))
         trace.append(
@@ -243,6 +317,23 @@ def rollout_control_episode(
                 **(
                     {"learned_seat_transfer": transfer}
                     if transfer is not None
+                    else {}
+                ),
+                **(
+                    {
+                        "learned_seat_history_agent_ids_updated": sorted(
+                            [
+                                active_agent_id,
+                                *scripted_history_boundaries,
+                            ]
+                        ),
+                        "learned_seat_history_source": (
+                            "target_agent_cache"
+                            if transfer is not None
+                            else "active_agent_cache"
+                        ),
+                    }
+                    if learned_seat_history is not None
                     else {}
                 ),
                 "advanced_ticks": int(
@@ -279,6 +370,17 @@ def rollout_control_episode(
         final_metrics["learned_seat_transfer_count"] = len(learned_seat_transfers)
         final_metrics["learned_seat_transfers"] = learned_seat_transfers
         final_metrics["maximum_simultaneous_learned_seats"] = 1
+        if learned_seat_history is not None:
+            final_metrics["learned_seat_history_schema"] = (
+                LEARNED_SEAT_HISTORY_SCHEMA
+            )
+            final_metrics["learned_seat_history_boundary_updates"] = (
+                seat_history_boundary_updates
+            )
+            final_metrics[
+                "maximum_learned_model_evaluations_per_boundary"
+            ] = 0
+            final_metrics["maximum_learned_actions_per_boundary"] = 1
 
     return EpisodeRollout(
         seed=seed,
@@ -365,6 +467,33 @@ def _record(
                     "maximum_simultaneous_learned_seats"
                 ]
             ),
+            **(
+                {
+                    "history_schema": str(
+                        rollout.coordination_metrics[
+                            "learned_seat_history_schema"
+                        ]
+                    ),
+                    "history_boundary_updates": list(
+                        rollout.coordination_metrics[
+                            "learned_seat_history_boundary_updates"
+                        ]
+                    ),
+                    "maximum_model_evaluations_per_boundary": int(
+                        rollout.coordination_metrics[
+                            "maximum_learned_model_evaluations_per_boundary"
+                        ]
+                    ),
+                    "maximum_learned_actions_per_boundary": int(
+                        rollout.coordination_metrics[
+                            "maximum_learned_actions_per_boundary"
+                        ]
+                    ),
+                }
+                if "learned_seat_history_schema"
+                in rollout.coordination_metrics
+                else {}
+            ),
         }
     return record
 
@@ -377,6 +506,7 @@ def _learned_seat_failover_gate(
     failover = _learned_seat_failover(config)
     if failover is None:
         return None
+    seat_history = _learned_seat_history(config)
     governed = [
         item
         for item in records
@@ -399,6 +529,33 @@ def _learned_seat_failover_gate(
             or control.get("transfer_count") != len(control["transfers"])
         ):
             return False
+        if seat_history is not None:
+            updates = control.get("history_boundary_updates")
+            if (
+                control.get("history_schema") != LEARNED_SEAT_HISTORY_SCHEMA
+                or not isinstance(updates, list)
+                or len(updates) != 3
+                or any(
+                    isinstance(value, bool)
+                    or not isinstance(value, int)
+                    or value < 0
+                    for value in updates
+                )
+                or sum(updates) <= 0
+                or isinstance(
+                    control.get("maximum_model_evaluations_per_boundary"),
+                    bool,
+                )
+                or not isinstance(
+                    control.get("maximum_model_evaluations_per_boundary"),
+                    int,
+                )
+                or not 0
+                <= control["maximum_model_evaluations_per_boundary"]
+                <= 1
+                or control.get("maximum_learned_actions_per_boundary") != 1
+            ):
+                return False
         active = LEARNED_SEAT
         previous_tick = -1
         for transfer in control["transfers"]:
@@ -456,6 +613,25 @@ def _learned_seat_failover_gate(
             int(item["seat_control"]["transfer_count"]) for item in matched
         ),
         "maximum_simultaneous_learned_seats": 1,
+        **(
+            {
+                "history_schema": LEARNED_SEAT_HISTORY_SCHEMA,
+                "maximum_model_evaluations_per_boundary": max(
+                    int(item["seat_control"][
+                        "maximum_model_evaluations_per_boundary"
+                    ])
+                    for item in governed
+                ),
+                "maximum_learned_actions_per_boundary": max(
+                    int(item["seat_control"][
+                        "maximum_learned_actions_per_boundary"
+                    ])
+                    for item in governed
+                ),
+            }
+            if seat_history is not None
+            else {}
+        ),
         "passed": True,
     }
 
@@ -680,6 +856,7 @@ def main(argv: list[str] | None = None) -> int:
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     learned_seat_failover = _learned_seat_failover(config)
+    learned_seat_history = _learned_seat_history(config)
     lineage = validate_lineage_manifest(
         manifest_path=args.lineage_manifest,
         config_path=args.config,
@@ -763,6 +940,7 @@ def main(argv: list[str] | None = None) -> int:
                         feature_schema=feature_schema,
                         control_schema=control_schema,
                         learned_seat_failover=learned_seat_failover,
+                        learned_seat_history=learned_seat_history,
                     )
                 else:
                     rollout = rollout_control_episode(
@@ -775,6 +953,12 @@ def main(argv: list[str] | None = None) -> int:
                         feature_schema=feature_schema,
                         control_schema=control_schema,
                         learned_seat_failover=learned_seat_failover,
+                        learned_seat_history=learned_seat_history,
+                        partner_intent_duplication_risk=(
+                            partner_intent_duplication_risk
+                            if learned_seat_history is not None
+                            else None
+                        ),
                     )
                 records.append(
                     _record(

@@ -34,9 +34,11 @@ from mindustry_agents.training.checkpoint_lineage import validate_lineage_manife
 from mindustry_agents.training.model import build_selector_model
 from mindustry_agents.training.ppo_selector import (
     LEARNED_SEAT_FAILOVER_SCHEMA,
+    LEARNED_SEAT_HISTORY_SCHEMA,
     _configure_torch,
     _git_evidence,
     _learned_seat_failover,
+    _learned_seat_history,
     _partner_intent_duplication_risk,
     _policy_logit_adjustment,
     _scripted_partner_opening,
@@ -210,7 +212,8 @@ def _validate_dev_preflight(
         )
     if _learned_seat_failover(config) is not None:
         _validate_learned_seat_failover_preflight(
-            preflight.get("learned_seat_failover")
+            preflight.get("learned_seat_failover"),
+            expected_history=_learned_seat_history(config) is not None,
         )
     for source, hash_key in (
         ("baseline_aggregate", "baseline_aggregate_sha256"),
@@ -253,7 +256,11 @@ def _validate_expert_defer_preflight(
         raise ValueError("dev preflight expert-defer gate did not pass")
 
 
-def _validate_learned_seat_failover_preflight(control: Any) -> None:
+def _validate_learned_seat_failover_preflight(
+    control: Any,
+    *,
+    expected_history: bool = False,
+) -> None:
     """Require reusable evidence for exactly one active learned brain."""
 
     if (
@@ -269,6 +276,12 @@ def _validate_learned_seat_failover_preflight(control: Any) -> None:
         or control.get("maximum_simultaneous_learned_seats") != 1
     ):
         raise ValueError("dev preflight single-brain failover gate did not pass")
+    if expected_history and (
+        control.get("history_schema") != LEARNED_SEAT_HISTORY_SCHEMA
+        or control.get("maximum_model_evaluations_per_boundary") != 1
+        or control.get("maximum_learned_actions_per_boundary") != 1
+    ):
+        raise ValueError("dev preflight seat-history gate did not pass")
 
 
 def _create_attempt(path: Path, evidence: dict[str, Any]) -> None:
@@ -407,6 +420,7 @@ def main(argv: list[str] | None = None) -> int:
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     learned_seat_failover = _learned_seat_failover(config)
+    learned_seat_history = _learned_seat_history(config)
     with RlServerProcess(
         LaunchConfig(port=args.port, java=args.java, build_if_missing=False)
     ) as env:
@@ -433,6 +447,7 @@ def main(argv: list[str] | None = None) -> int:
                         feature_schema=feature_schema,
                         control_schema=control_schema,
                         learned_seat_failover=learned_seat_failover,
+                        learned_seat_history=learned_seat_history,
                     )
                     record = _record(
                         rollout,
@@ -451,6 +466,12 @@ def main(argv: list[str] | None = None) -> int:
                         feature_schema=feature_schema,
                         control_schema=control_schema,
                         learned_seat_failover=learned_seat_failover,
+                        learned_seat_history=learned_seat_history,
+                        partner_intent_duplication_risk=(
+                            partner_intent_duplication_risk
+                            if learned_seat_history is not None
+                            else None
+                        ),
                     )
                     record = _record(
                         rollout,

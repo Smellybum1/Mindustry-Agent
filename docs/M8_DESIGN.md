@@ -1099,6 +1099,20 @@ budget, optimizer, and RNGs remain V47-exact. Config/umbrella hashes are
 `[14B,15B)` but unconstructed. No V48 implementation or model work preceded
 this precommit.
 
+The V48 implementation and complete public/pretraining boundary are now
+green. Candidate and matched-control rollouts maintain three reset-local
+caches, update only living seats from the already-drained structured boundary,
+retain dead-seat caches, and adopt the target cache on transfer. Manifests,
+lineage, traces, reusable/final gates, and live telemetry bind
+`per_seat_scripted_prior_boundary_cache_v1`; the candidate performs exactly
+one model evaluation and submits at most one learned action per boundary.
+The focused live gate repeats the public `0->1->2` death sequence twice in one
+JVM and wins at tick 9000 with transfers at ticks 2738 and 4462. All 357 Python
+tests, custom Java modules, public 5/5 survival, focused coordination checks,
+smoke, deterministic golden/negative replay, and 44/44 exact-config reward
+adversaries pass (report SHA `8cfe56b3a000d4c...`). Dev-v45 remains
+unconstructed and no V48 training episode has run.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

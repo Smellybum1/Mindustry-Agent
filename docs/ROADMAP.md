@@ -2222,8 +2222,18 @@ seat's cache instead of all zeros. Feature/model/reward/control schemas,
 training roots, 2,048-episode budget, optimizer, RNGs, and every gate remain
 exact. Config/umbrella hashes are `714bd13db0ffee6f...` /
 `656602be6dd5c3cf...`. Dev-v45 is reserved in `[14B,15B)` but unconstructed;
-dev-v44 remains retired unopened and held-out-v6 remains sealed. Commit the
-design packet before implementation. M8.5 remains unmet.
+dev-v44 remains retired unopened and held-out-v6 remains sealed.
+
+V48 is now implemented through the candidate and matched-control paths.
+Each living seat records its already-drained structured boundary and submitted
+canonical/effective action; dead caches retain their last boundary, and death
+transfer adopts the target cache. Manifests, lineage, traces, reusable/final
+gates, and telemetry bind the cache schema and one-model/one-action authority.
+The live public `0->1->2` gate wins twice in one JVM at tick 9000 with exact
+transfers at 2738/4462. All 357 Python tests, custom Java modules, public 5/5
+survival, focused checks, smoke, deterministic golden/negative replay, and
+44/44 exact-config reward adversaries pass (`8cfe56b3a000d4c...`). Dev-v45 is
+still unconstructed and no V48 training has run. M8.5 remains unmet.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

@@ -71,6 +71,7 @@ PARTNER_INTENT_DUPLICATION_RISK_DYNAMIC_SCHEMA = (
     "dynamic_nonactive_partner_selected_task_duplication_risk_v2"
 )
 LEARNED_SEAT_FAILOVER_SCHEMA = "single_learned_brain_death_failover_v1"
+LEARNED_SEAT_HISTORY_SCHEMA = "per_seat_scripted_prior_boundary_cache_v1"
 PARTNER_INTENT_TEACHER_CONFLICT_FILTER_SCHEMA = (
     "partner_intent_teacher_conflict_filter_v1"
 )
@@ -331,14 +332,63 @@ def _learned_seat_failover(
         "selection": "lowest_alive_agent_id",
         "switch_trigger": "active_agent_dead",
         "maximum_active_learned_seats": 1,
-        "history_on_switch": "reset",
         "partner_intent_agents": "all_nonactive_alive_agents",
         "teacher_policy": "adaptive-v1_for_active_agent",
         "forced_safety_override": False,
         "server_action_path": "unchanged_task_action_bundle",
     }
-    if not isinstance(failover, dict) or failover != expected:
+    if (
+        not isinstance(failover, dict)
+        or failover.get("history_on_switch")
+        not in ("reset", "use_target_seat_cached_prior_boundary")
+        or failover
+        != {
+            **expected,
+            "history_on_switch": failover.get("history_on_switch"),
+        }
+    ):
         raise ValueError("invalid learned_seat_failover config")
+    return dict(failover)
+
+
+def _learned_seat_history(
+    config: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Validate the optional reset-local per-seat structured-history cache."""
+
+    history = config.get("learned_seat_history")
+    failover = _learned_seat_failover(config)
+    if history is None:
+        if (
+            failover is not None
+            and failover["history_on_switch"]
+            == "use_target_seat_cached_prior_boundary"
+        ):
+            raise ValueError("learned_seat_history is required by failover config")
+        return None
+    expected = {
+        "schema": LEARNED_SEAT_HISTORY_SCHEMA,
+        "agents": "all_agents",
+        "initial_value": "selector_history_all_zero",
+        "nonactive_update": (
+            "canonical_submitted_scripted_action_and_structured_boundary"
+        ),
+        "active_update": (
+            "effective_submitted_ordinary_action_and_structured_boundary"
+        ),
+        "dead_agent_update": "retain_last_boundary",
+        "switch_behavior": "use_target_agent_cache",
+        "model_evaluations_per_boundary": 1,
+        "learned_actions_per_boundary": 1,
+    }
+    if not isinstance(history, dict) or history != expected:
+        raise ValueError("invalid learned_seat_history config")
+    if (
+        failover is None
+        or failover["history_on_switch"]
+        != "use_target_seat_cached_prior_boundary"
+    ):
+        raise ValueError("learned_seat_history requires cached death failover")
     return expected
 
 
@@ -377,15 +427,28 @@ def _advance_learned_seat(
     current_agent_id: int,
     history: SelectorHistory,
     failover: dict[str, Any] | None,
+    seat_histories: list[SelectorHistory] | None = None,
 ) -> tuple[int, SelectorHistory, dict[str, Any] | None]:
-    """Advance one-brain authority and reset temporal history on transfer."""
+    """Advance one-brain authority and select the governed temporal history."""
 
     next_agent_id, transfer = _active_learned_agent_id(
         observations, current_agent_id, failover
     )
+    if transfer is None:
+        return next_agent_id, history, None
+    if (
+        failover is not None
+        and failover["history_on_switch"]
+        == "use_target_seat_cached_prior_boundary"
+    ):
+        if seat_histories is None or len(seat_histories) != len(observations):
+            raise ValueError("per-seat learned history cache is unavailable")
+        next_history = seat_histories[next_agent_id]
+    else:
+        next_history = SelectorHistory()
     return (
         next_agent_id,
-        SelectorHistory() if transfer is not None else history,
+        next_history,
         transfer,
     )
 
@@ -802,6 +865,12 @@ def _configure_torch(config: dict[str, Any]) -> None:
         pass
 
 
+def _action_generator(seed: int) -> torch.Generator:
+    """Create one deterministically seeded sampling generator inside training."""
+
+    return torch.Generator().manual_seed(int(seed))
+
+
 def _model_outputs(
     model: SelectorModel, features: SelectorFeatures
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, tuple[torch.Tensor, ...]]:
@@ -863,6 +932,112 @@ def _canonical_scripted_action(
             "task_action": {"type": "WAIT"},
         }
     return action
+
+
+def _scripted_seat_history_boundaries(
+    observations: list[dict[str, Any]],
+    masks: list[dict[str, Any]],
+    metadata: dict[str, Any],
+    scripted_bundle: list[dict[str, Any]],
+    *,
+    active_agent_id: int,
+    histories: list[SelectorHistory] | None,
+    task_board: list[dict[str, Any]],
+    boundary_reasons: list[str],
+    partner_intent_duplication_risk: dict[str, Any] | None,
+    feature_schema: str,
+    control_schema: str,
+) -> dict[int, tuple[SelectorFeatures, int, dict[str, Any]]]:
+    """Build each living nonactive seat's structured scripted cache input."""
+
+    if histories is None:
+        return {}
+    if len(histories) != len(observations):
+        raise ValueError("per-seat learned history cache shape mismatch")
+    boundaries: dict[int, tuple[SelectorFeatures, int, dict[str, Any]]] = {}
+    for agent_id, observation in enumerate(observations):
+        if agent_id == active_agent_id or bool(
+            observation.get("unit", {}).get("dead", False)
+        ):
+            continue
+        candidates = observation["task_candidates"]
+        action = _canonical_scripted_action(
+            scripted_bundle[agent_id],
+            candidates,
+        )
+        action_index = _scripted_index(action, candidates)
+        intended_task_ids = _fixed_partner_intended_task_ids(
+            scripted_bundle,
+            observations,
+            partner_intent_duplication_risk,
+            active_agent_id=agent_id,
+        )
+        feature_kwargs = {
+            "task_board": task_board,
+            "boundary_reasons": boundary_reasons,
+            "history": histories[agent_id],
+            "agent_id": agent_id,
+            "feature_schema": feature_schema,
+            "control_schema": control_schema,
+            "expert_action_index": (
+                action_index if control_schema == CONTROL_SCHEMA_V2 else None
+            ),
+        }
+        if partner_intent_duplication_risk is None:
+            features = build_selector_features(
+                observations,
+                masks,
+                metadata,
+                **feature_kwargs,
+            )
+        else:
+            features = build_selector_features(
+                observations,
+                masks,
+                metadata,
+                fixed_partner_intended_task_ids=intended_task_ids,
+                **feature_kwargs,
+            )
+        boundaries[agent_id] = (features, action_index, action)
+    return boundaries
+
+
+def _record_scripted_seat_history_boundaries(
+    histories: list[SelectorHistory] | None,
+    boundaries: dict[int, tuple[SelectorFeatures, int, dict[str, Any]]],
+    action_results: list[dict[str, Any]],
+    observations: list[dict[str, Any]],
+    *,
+    tick: int,
+    update_counts: list[int],
+) -> None:
+    """Record submitted nonactive actions without reading post-step mutable state."""
+
+    if histories is None:
+        if boundaries:
+            raise ValueError("scripted history boundaries require seat caches")
+        return
+    accepted = {
+        int(result["agent_id"])
+        for result in action_results
+        if result.get("accepted", False)
+        and type(result.get("agent_id")) is int
+    }
+    for agent_id, (features, action_index, action) in boundaries.items():
+        if (
+            agent_id in accepted
+            and action.get("task_action", {}).get("type")
+            == "SELECT_CANDIDATE_TASK"
+            and action_index < 8
+            and action_index
+            < len(observations[agent_id].get("task_candidates", []))
+        ):
+            task_type = observations[agent_id]["task_candidates"][action_index][
+                "task_type"
+            ]
+            histories[agent_id].record_selection(str(task_type), tick)
+        histories[agent_id].record_boundary(features, action_index)
+        update_counts[agent_id] += 1
 
 
 def _resolve_policy_control_action(
@@ -937,6 +1112,7 @@ def rollout_episode(
     feature_schema: str = FEATURE_SCHEMA,
     control_schema: str = CONTROL_SCHEMA_V1,
     learned_seat_failover: dict[str, Any] | None = None,
+    learned_seat_history: dict[str, Any] | None = None,
 ) -> EpisodeRollout:
     policy_logit_adjustment = _policy_logit_adjustment(
         {"policy_logit_adjustment": policy_logit_adjustment}
@@ -946,6 +1122,12 @@ def rollout_episode(
     )
     learned_seat_failover = _learned_seat_failover(
         {"learned_seat_failover": learned_seat_failover}
+    )
+    learned_seat_history = _learned_seat_history(
+        {
+            "learned_seat_failover": learned_seat_failover,
+            "learned_seat_history": learned_seat_history,
+        }
     )
     partner_intent_duplication_risk = _partner_intent_duplication_risk(
         {
@@ -983,7 +1165,17 @@ def rollout_episode(
     tick = reset.tick
     board: list[dict[str, Any]] = []
     boundary_reasons: list[str] = []
-    history = SelectorHistory()
+    seat_histories = (
+        [SelectorHistory() for _ in observations]
+        if learned_seat_history is not None
+        else None
+    )
+    history = (
+        seat_histories[LEARNED_SEAT]
+        if seat_histories is not None
+        else SelectorHistory()
+    )
+    seat_history_boundary_updates = [0 for _ in observations]
     if reward_schema not in {REWARD_SCHEMA, REWARD_SCHEMA_V2}:
         raise ValueError(f"unsupported reward schema: {reward_schema}")
     if reward_schema == REWARD_SCHEMA and quality_reward is not None:
@@ -1013,7 +1205,11 @@ def rollout_episode(
 
     while outcome == "running" and tick < int(metadata["tick_cap"]):
         active_agent_id, history, transfer = _advance_learned_seat(
-            observations, active_agent_id, history, learned_seat_failover
+            observations,
+            active_agent_id,
+            history,
+            learned_seat_failover,
+            seat_histories,
         )
         if transfer is not None:
             transfer["tick"] = tick
@@ -1061,6 +1257,19 @@ def rollout_episode(
                 fixed_partner_intended_task_ids=intended_task_ids,
                 **feature_kwargs,
             )
+        scripted_history_boundaries = _scripted_seat_history_boundaries(
+            observations,
+            masks,
+            metadata,
+            scripted_bundle,
+            active_agent_id=active_agent_id,
+            histories=seat_histories,
+            task_board=board,
+            boundary_reasons=boundary_reasons,
+            partner_intent_duplication_risk=partner_intent_duplication_risk,
+            feature_schema=feature_schema,
+            control_schema=control_schema,
+        )
         risk_candidate_indices = (
             [
                 index
@@ -1199,6 +1408,16 @@ def rollout_episode(
                 if selected_task_type is not None:
                     history.record_selection(selected_task_type, tick)
         history.record_boundary(features, effective_index if raw_action_valid else 9)
+        if seat_histories is not None:
+            seat_history_boundary_updates[active_agent_id] += 1
+        _record_scripted_seat_history_boundaries(
+            seat_histories,
+            scripted_history_boundaries,
+            response.action_results,
+            observations,
+            tick=tick,
+            update_counts=seat_history_boundary_updates,
+        )
 
         current_team = dict(response.observations[0]["team"])
         reasons = list(response.decision_boundary.get("reasons", []))
@@ -1257,6 +1476,23 @@ def rollout_episode(
                 **(
                     {"learned_seat_transfer": transfer}
                     if transfer is not None
+                    else {}
+                ),
+                **(
+                    {
+                        "learned_seat_history_agent_ids_updated": sorted(
+                            [
+                                active_agent_id,
+                                *scripted_history_boundaries,
+                            ]
+                        ),
+                        "learned_seat_history_source": (
+                            "target_agent_cache"
+                            if transfer is not None
+                            else "active_agent_cache"
+                        ),
+                    }
+                    if learned_seat_history is not None
                     else {}
                 ),
                 "action": learned_action["task_action"],
@@ -1370,6 +1606,17 @@ def rollout_episode(
         final_metrics["learned_seat_transfer_count"] = len(learned_seat_transfers)
         final_metrics["learned_seat_transfers"] = learned_seat_transfers
         final_metrics["maximum_simultaneous_learned_seats"] = 1
+        if learned_seat_history is not None:
+            final_metrics["learned_seat_history_schema"] = (
+                LEARNED_SEAT_HISTORY_SCHEMA
+            )
+            final_metrics["learned_seat_history_boundary_updates"] = (
+                seat_history_boundary_updates
+            )
+            final_metrics[
+                "maximum_learned_model_evaluations_per_boundary"
+            ] = 1
+            final_metrics["maximum_learned_actions_per_boundary"] = 1
     return EpisodeRollout(
         seed=seed,
         outcome=outcome,
@@ -2022,6 +2269,18 @@ def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
                     if "learned_seat_transfer" in transition
                     else {}
                 ),
+                **(
+                    {
+                        "learned_seat_history_agent_ids_updated": transition[
+                            "learned_seat_history_agent_ids_updated"
+                        ],
+                        "learned_seat_history_source": transition[
+                            "learned_seat_history_source"
+                        ],
+                    }
+                    if "learned_seat_history_source" in transition
+                    else {}
+                ),
             }
             if "active_learned_agent_id" in transition
             else {}
@@ -2076,6 +2335,30 @@ def _episode_summary(episode: EpisodeRollout) -> dict[str, Any]:
             if "learned_seat_failover_schema" in episode.coordination_metrics
             else {}
         ),
+        **(
+            {
+                "learned_seat_history_schema": str(
+                    episode.coordination_metrics["learned_seat_history_schema"]
+                ),
+                "learned_seat_history_boundary_updates": list(
+                    episode.coordination_metrics[
+                        "learned_seat_history_boundary_updates"
+                    ]
+                ),
+                "maximum_learned_model_evaluations_per_boundary": int(
+                    episode.coordination_metrics[
+                        "maximum_learned_model_evaluations_per_boundary"
+                    ]
+                ),
+                "maximum_learned_actions_per_boundary": int(
+                    episode.coordination_metrics[
+                        "maximum_learned_actions_per_boundary"
+                    ]
+                ),
+            }
+            if "learned_seat_history_schema" in episode.coordination_metrics
+            else {}
+        ),
         "trace_digest": _json_digest(action_state_trace),
     }
 
@@ -2093,6 +2376,7 @@ def _evaluate(
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     learned_seat_failover = _learned_seat_failover(config)
+    learned_seat_history = _learned_seat_history(config)
     _partner_intent_teacher_conflict_filter(config)
     _partner_intent_teacher_conflict_relabel(config)
     feature_schema = expected_feature_schema(config)
@@ -2119,6 +2403,7 @@ def _evaluate(
                 feature_schema=feature_schema,
                 control_schema=control_schema,
                 learned_seat_failover=learned_seat_failover,
+                learned_seat_history=learned_seat_history,
             )
             for seed in seeds
         ]
@@ -2351,6 +2636,7 @@ def _manifest(
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     learned_seat_failover = _learned_seat_failover(config)
+    learned_seat_history = _learned_seat_history(config)
     partner_intent_teacher_conflict_relabel = (
         _partner_intent_teacher_conflict_relabel(config)
     )
@@ -2373,6 +2659,11 @@ def _manifest(
             **(
                 {"seat_control": LEARNED_SEAT_FAILOVER_SCHEMA}
                 if learned_seat_failover is not None
+                else {}
+            ),
+            **(
+                {"seat_history": LEARNED_SEAT_HISTORY_SCHEMA}
+                if learned_seat_history is not None
                 else {}
             ),
         },
@@ -2439,6 +2730,11 @@ def _manifest(
             **(
                 {"learned_seat_failover": learned_seat_failover}
                 if learned_seat_failover is not None
+                else {}
+            ),
+            **(
+                {"learned_seat_history": learned_seat_history}
+                if learned_seat_history is not None
                 else {}
             ),
         },
@@ -2645,6 +2941,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     learned_seat_failover = _learned_seat_failover(config)
+    learned_seat_history = _learned_seat_history(config)
     _partner_intent_teacher_conflict_filter(config)
     partner_intent_teacher_conflict_relabel = (
         _partner_intent_teacher_conflict_relabel(config)
@@ -2749,6 +3046,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     feature_schema=feature_schema,
                     control_schema=control_schema,
                     learned_seat_failover=learned_seat_failover,
+                    learned_seat_history=learned_seat_history,
                 )
                 for seed in teacher_warmup_seeds
             ]
@@ -2812,6 +3110,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     feature_schema=feature_schema,
                     control_schema=control_schema,
                     learned_seat_failover=learned_seat_failover,
+                    learned_seat_history=learned_seat_history,
                 )
                 for seed in seeds[start : start + episodes_per_update]
             ]

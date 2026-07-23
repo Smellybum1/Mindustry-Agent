@@ -14,6 +14,7 @@ SCRIPTS := scripts
 .PHONY: help codex-status bootstrap build test test-java test-python smoke \
         determinism stress-reset benchmark scripted-demo evaluate-scripted \
         candidate-policy-check single-brain-failover-check \
+        per-seat-history-check \
         secondary-claim-wake-check \
         owned-schematic-staging-check coordination-parity \
         public-demo-parity \
@@ -37,6 +38,7 @@ help: ## List available targets
 	@echo "  evaluate-scripted five-seed greedy summaries (M7.3)"
 	@echo "  candidate-policy-check public greedy candidate-policy survival (M7.3)"
 	@echo "  single-brain-failover-check V47 live death-only control transfer"
+	@echo "  per-seat-history-check V48 live target-seat history-cache transfer"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -92,6 +94,9 @@ candidate-policy-check: ## Evaluate the public greedy candidate policy
 
 single-brain-failover-check: ## Verify V47's live death-only control transfer
 	@bash $(SCRIPTS)/single-brain-failover-check.sh
+
+per-seat-history-check: ## Verify V48's live per-seat history-cache transfer
+	@bash $(SCRIPTS)/per-seat-history-check.sh
 
 secondary-claim-wake-check: ## Verify V35's fixed-seat claim-loss boundary
 	@bash $(SCRIPTS)/secondary-claim-wake-check.sh

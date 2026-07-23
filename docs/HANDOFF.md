@@ -1150,7 +1150,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   target cache on transfer. Feature/model/reward/control, roots, budget,
   optimizer, RNGs, and gates remain exact. Config/umbrella hashes are
   `714bd13db0ffee6f...` / `656602be6dd5c3cf...`. Dev-v45 is reserved in
-  `[14B,15B)` but unconstructed. Commit the design packet before implementation.
+  `[14B,15B)` but unconstructed.
+- **V48 implementation/public boundary green**: candidate and matched controls
+  keep per-seat reset-local structured caches, retain dead-seat history, and
+  adopt the target cache on death transfer without another model evaluation or
+  learned action. Manifests, lineage, traces, promotion gates, and telemetry
+  bind the cache schema. The public live gate repeats exact `0->1@2738`,
+  `1->2@4462` transfers twice in one JVM and wins at tick 9000. All 357 Python
+  tests, custom Java modules, public 5/5 survival, focused checks, smoke,
+  golden/negative determinism, and 44/44 reward adversaries pass (report SHA
+  `8cfe56b3a000d4c...`). Dev-v45 remains unconstructed; no training has run.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1229,6 +1238,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make smoke` | Runs exact stepping + M3/M4 ledgers/combat/acceptance and M5.2–5.6 coordination/policy/reservation/chaos/announcement checks twice across fresh JVMs, plus omitted-defense loss checks. Ends `SCENARIO OK`, exit 0. Verified 2026-07-21. |
 | `make determinism` | Runs the legacy 79-boundary cross-process replay, reset purity with deterministic unique episode IDs, seed sensitivity, then the checked-in golden (664 checkpoints / 16,200 ticks / two wins). Exit 0. Verified 2026-07-21; `REPLAY_NEGATIVE=1` also passes. |
 | `make candidate-policy-check` | Runs the pure public greedy selector over all five pinned seeds; requires 5/5 wins through the ordinary candidate/mask/task-action seam. Verified 2026-07-23. |
+| `make per-seat-history-check` | Repeats V48's public death sequence twice in one JVM; requires target-cache adoption, one action authority, exact `0->1@2738` / `1->2@4462` transfers, and a tick-9000 win. Verified 2026-07-23. |
 | `make secondary-claim-wake-check` | Proves V35 wakes fixed scripted seat 1 after atomic claim loss while preserving learned-seat scheduling. Verified 2026-07-22. |
 | `make coordination-parity` | Compares two complete recorded decision sequences, runs the fixed-step shared expert, then boots the no-port plugin and requires identical live-opening digest/count. Current result: 356 recorded decisions; live digest `1571…a6c2`, 43 selections. Verified 2026-07-21. |
 | `make adaptive-planning-check` | Runs adaptive-v1 and frozen M6 on fixed+delayed-loadout scenarios. Requires adaptive 2/2 wins, fixed frozen win, probe frozen loss, all four decision-event reasons, lower mean idle fraction (0.125 < 0.878), and lower defense-ready tick (817 < 5251). Verified 2026-07-21. |
@@ -1365,18 +1375,18 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit the V48 design packet.** Never read or render retired dev-v44
-   membership; exclude the four protected user files.
-2. **Implement the exact per-seat history cache.** Preserve one model
-   evaluation/action and every V47 invariant.
-3. **Complete V48 implementation/public gates before any new membership.**
-   No freezer or training may precede the committed boundary.
-4. **Keep held-out-v6 sealed.** No V47 result authorizes final access.
+1. **Commit the green V48 implementation boundary.** Never read or render
+   retired dev-v44 membership; exclude the four protected user files.
+2. **Add and commit a V48 value-free freezer.** It must bind the exact
+   implementation/config/umbrella before constructing dev-v45 atomically.
+3. **Train two exact V48 replicas, then run reusable-v2.** Confirmation remains
+   forbidden unless the unchanged reusable gates all pass.
+4. **Keep held-out-v6 sealed.** No reusable result authorizes final access.
 5. **Keep M9.1 gated on M8 promotion.** Do not bypass the accepted roadmap.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0065` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0066` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
