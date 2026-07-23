@@ -50,6 +50,12 @@ IPPO_V5_CONFIG_SHA256 = (
 IPPO_V5_PROTOCOL_SHA256 = (
     "205508d8cfaba9109825d1b31fb13dc295e0d988296aef89379980f5b559b460"
 )
+IPPO_V6_CONFIG_SHA256 = (
+    "bd8e84acd0e340b61933677608395da3b8d214469e89841ecfa1fd47fde8114b"
+)
+IPPO_V6_PROTOCOL_SHA256 = (
+    "f0adddd4c8b2127af68a55dff80610363a8b7c5e629049b5caba5a3a311b55ac"
+)
 
 
 @dataclass(frozen=True)
@@ -345,6 +351,88 @@ def load_ippo_v5_config(path: Path) -> dict[str, Any]:
     return config
 
 
+def load_ippo_v6_config(path: Path) -> dict[str, Any]:
+    """Load and fail closed on ADR-0087's success-margin recipe."""
+
+    if sha256_path(path) != IPPO_V6_CONFIG_SHA256:
+        raise ValueError("M9 IPPO v6 config hash does not match ADR-0087")
+    config = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        config.get("schema") != "ippo_training_config_v6"
+        or config.get("candidate_version") != "m9-ippo-v6-success-margin"
+        or config.get("parent_candidate_version")
+        != "m9-ippo-v4-entropy-anneal"
+        or config.get("sole_learning_change")
+        != (
+            "add_within_update_winning_action_strongest_"
+            "alternative_hinge_margin_0.1_coefficient_0.02"
+        )
+    ):
+        raise ValueError("M9 IPPO v6 successor identity drifted")
+    parent = load_ippo_v4_config(
+        path.with_name("m9-ippo-v4-entropy-anneal.json")
+    )
+    inherited = copy.deepcopy(config)
+    baseline = copy.deepcopy(parent)
+    for document in (inherited, baseline):
+        for key in (
+            "schema",
+            "candidate_version",
+            "parent_candidate_version",
+            "sole_learning_change",
+            "public_evaluation_protocol",
+        ):
+            document.pop(key)
+    margin = inherited.pop("success_conditioned_margin_alignment", None)
+    optimizer_margin = inherited["optimizer_ppo"].pop(
+        "success_conditioned_margin_alignment", None
+    )
+    if inherited != baseline:
+        raise ValueError("M9 IPPO v6 inheritance from v4 drifted")
+    if margin != {
+        "schema": (
+            "within_update_winning_action_strongest_alternative_hinge_v1"
+        ),
+        "coefficient": 0.02,
+        "target_margin": 0.1,
+        "source": "current_64_episode_public_training_batch_only",
+        "episode_filter": "authoritative_terminal_outcome_equals_win",
+        "transition_filter": "policy_loss_mask_true",
+        "target": "sampled_action_after_authoritative_mask",
+        "alternative": (
+            "maximum_logit_over_other_authoritatively_legal_actions"
+        ),
+        "loss": (
+            "mean_relu_target_margin_minus_sampled_logit_minus_"
+            "strongest_alternative_logit_per_minibatch"
+        ),
+        "empty_minibatch": "exact_zero_with_no_gradient",
+        "application": "every_ppo_minibatch_in_each_of_8_epochs",
+        "cross_update_replay": False,
+        "external_teacher": False,
+        "extra_rng": False,
+        "success_action_nll": False,
+        "telemetry": [
+            "coefficient",
+            "target_margin",
+            "qualifying_episodes",
+            "qualifying_transitions",
+            "active_minibatches",
+            "mean_active_minibatch_loss",
+        ],
+    }:
+        raise ValueError("M9 IPPO v6 success-margin contract drifted")
+    if optimizer_margin != {
+        "schema": (
+            "within_update_winning_action_strongest_alternative_hinge_v1"
+        ),
+        "coefficient": 0.02,
+        "target_margin": 0.1,
+    }:
+        raise ValueError("M9 IPPO v6 optimizer margin contract drifted")
+    return config
+
+
 def load_ippo_config(path: Path) -> dict[str, Any]:
     """Load one accepted immutable M9 IPPO recipe by its exact hash."""
 
@@ -359,6 +447,8 @@ def load_ippo_config(path: Path) -> dict[str, Any]:
         return load_ippo_v4_config(path)
     if digest == IPPO_V5_CONFIG_SHA256:
         return load_ippo_v5_config(path)
+    if digest == IPPO_V6_CONFIG_SHA256:
+        return load_ippo_v6_config(path)
     raise ValueError("M9 IPPO config hash is not an accepted recipe")
 
 
@@ -374,6 +464,8 @@ def config_sha256(config: dict[str, Any]) -> str:
         return IPPO_V4_CONFIG_SHA256
     if candidate == "m9-ippo-v5-success-imitation":
         return IPPO_V5_CONFIG_SHA256
+    if candidate == "m9-ippo-v6-success-margin":
+        return IPPO_V6_CONFIG_SHA256
     raise ValueError("M9 IPPO candidate identity is unsupported")
 
 
@@ -389,6 +481,8 @@ def protocol_sha256(config: dict[str, Any]) -> str:
         return IPPO_V4_PROTOCOL_SHA256
     if candidate == "m9-ippo-v5-success-imitation":
         return IPPO_V5_PROTOCOL_SHA256
+    if candidate == "m9-ippo-v6-success-margin":
+        return IPPO_V6_PROTOCOL_SHA256
     raise ValueError("M9 IPPO candidate identity is unsupported")
 
 
@@ -401,6 +495,7 @@ def entropy_coefficient_for_update(
     if config.get("candidate_version") not in (
         "m9-ippo-v4-entropy-anneal",
         "m9-ippo-v5-success-imitation",
+        "m9-ippo-v6-success-margin",
     ):
         return float(config["entropy_coefficient"])
     if update is None:
@@ -748,6 +843,192 @@ def _ippo_success_imitation_update(
     }
 
 
+def _success_margin_loss(
+    masked_logits: torch.Tensor,
+    actions: torch.Tensor,
+    successful: torch.Tensor,
+    *,
+    target_margin: float,
+) -> torch.Tensor:
+    """Return the winning sampled-action hinge against its strongest peer."""
+
+    if masked_logits.ndim != 2:
+        raise ValueError("M9 success-margin logits must be rank two")
+    if actions.shape != (masked_logits.shape[0],):
+        raise ValueError("M9 success-margin action shape drifted")
+    if successful.shape != (masked_logits.shape[0],):
+        raise ValueError("M9 success-margin filter shape drifted")
+    if target_margin != 0.1:
+        raise ValueError("M9 success-margin target drifted")
+    if not bool(successful.any()):
+        return masked_logits.new_zeros(())
+    selected_logits = masked_logits[successful]
+    selected_actions = actions[successful]
+    sampled = selected_logits.gather(
+        1, selected_actions[:, None]
+    ).squeeze(1)
+    alternatives = selected_logits.clone()
+    alternatives.scatter_(
+        1,
+        selected_actions[:, None],
+        torch.finfo(alternatives.dtype).min,
+    )
+    strongest_other = alternatives.max(dim=1).values
+    return functional.relu(
+        target_margin - (sampled - strongest_other)
+    ).mean()
+
+
+def _ippo_success_margin_update(
+    model: SharedRecurrentSelector,
+    optimizer: torch.optim.Optimizer,
+    episodes: Sequence[IPPOEpisodeRollout],
+    config: dict[str, Any],
+    shuffle_generator: torch.Generator,
+) -> dict[str, float]:
+    """Apply v4 PPO plus ADR-0087's winning-action ordering margin."""
+
+    transitions, advantages, returns = ippo_advantages(
+        episodes,
+        gamma_per_second=float(config["gamma_per_second"]),
+        gae_lambda=float(config["gae_lambda"]),
+    )
+    candidates = torch.stack([item.candidates for item in transitions])
+    scalars = torch.stack([item.scalars for item in transitions])
+    present = torch.stack([item.candidate_present for item in transitions])
+    masks = torch.stack([item.action_mask for item in transitions])
+    hidden = torch.stack([item.hidden_input for item in transitions]).detach()
+    agent_ids = torch.tensor(
+        [item.agent_id for item in transitions], dtype=torch.long
+    )
+    actions = torch.tensor(
+        [item.action for item in transitions], dtype=torch.long
+    )
+    old_log_probs = torch.tensor(
+        [item.old_log_prob for item in transitions], dtype=torch.float32
+    )
+    actor_mask = torch.tensor(
+        [item.policy_loss_mask for item in transitions], dtype=torch.bool
+    )
+    success_mask = torch.tensor(
+        [
+            episode.outcome == "win" and item.policy_loss_mask
+            for episode in episodes
+            for item in episode.transitions
+        ],
+        dtype=torch.bool,
+    )
+    if len(success_mask) != len(transitions):
+        raise AssertionError("M9 success-margin transition alignment drifted")
+    margin = config["success_conditioned_margin_alignment"]
+    coefficient = float(margin["coefficient"])
+    target_margin = float(margin["target_margin"])
+    if coefficient != 0.02 or target_margin != 0.1:
+        raise ValueError("M9 success-margin optimizer contract drifted")
+    batch_size = int(config["minibatch_size"])
+    if batch_size < 1:
+        raise ValueError("IPPO minibatch size must be positive")
+    qualifying_episodes = sum(
+        episode.outcome == "win" for episode in episodes
+    )
+    qualifying_transitions = int(success_mask.sum().item())
+    totals = {
+        "policy_loss": 0.0,
+        "value_loss": 0.0,
+        "entropy": 0.0,
+        "batches": 0.0,
+        "success_margin_loss": 0.0,
+        "success_margin_active_minibatches": 0.0,
+    }
+    for _ in range(int(config["ppo_epochs"])):
+        order = torch.randperm(len(transitions), generator=shuffle_generator)
+        for start in range(0, len(transitions), batch_size):
+            index = order[start : start + batch_size]
+            _, masked_logits, values, _ = model(
+                candidates[index],
+                scalars[index],
+                present[index],
+                masks[index],
+                agent_ids[index],
+                hidden[index],
+            )
+            log_probabilities = torch.log_softmax(masked_logits, dim=-1)
+            log_probs = log_probabilities.gather(
+                1, actions[index, None]
+            ).squeeze(1)
+            probabilities = torch.softmax(masked_logits, dim=-1)
+            entropy = -(probabilities * log_probabilities).sum(dim=-1)
+            active = actor_mask[index]
+            if active.any():
+                ratio = torch.exp(
+                    log_probs[active] - old_log_probs[index][active]
+                )
+                unclipped = ratio * advantages[index][active]
+                clipped = torch.clamp(
+                    ratio,
+                    1.0 - float(config["clip_ratio"]),
+                    1.0 + float(config["clip_ratio"]),
+                ) * advantages[index][active]
+                policy_loss = -torch.minimum(unclipped, clipped).mean()
+                entropy_loss = entropy[active].mean()
+            else:
+                policy_loss = values.sum() * 0.0
+                entropy_loss = values.sum() * 0.0
+            successful = success_mask[index]
+            success_margin_loss = _success_margin_loss(
+                masked_logits,
+                actions[index],
+                successful,
+                target_margin=target_margin,
+            )
+            if successful.any():
+                totals["success_margin_loss"] += float(
+                    success_margin_loss.item()
+                )
+                totals["success_margin_active_minibatches"] += 1.0
+            value_loss = functional.mse_loss(values, returns[index])
+            loss = (
+                policy_loss
+                + float(config["value_coefficient"]) * value_loss
+                - float(config["entropy_coefficient"]) * entropy_loss
+                + coefficient * success_margin_loss
+            )
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(
+                model.parameters(), float(config["max_grad_norm"])
+            )
+            optimizer.step()
+            totals["policy_loss"] += float(policy_loss.item())
+            totals["value_loss"] += float(value_loss.item())
+            totals["entropy"] += float(entropy_loss.item())
+            totals["batches"] += 1.0
+    divisor = max(1.0, totals["batches"])
+    active_divisor = max(
+        1.0, totals["success_margin_active_minibatches"]
+    )
+    return {
+        "policy_loss": totals["policy_loss"] / divisor,
+        "value_loss": totals["value_loss"] / divisor,
+        "entropy": totals["entropy"] / divisor,
+        "batches": totals["batches"],
+        "success_margin_coefficient": coefficient,
+        "success_margin_target": target_margin,
+        "success_margin_qualifying_episodes": float(
+            qualifying_episodes
+        ),
+        "success_margin_qualifying_transitions": float(
+            qualifying_transitions
+        ),
+        "success_margin_active_minibatches": totals[
+            "success_margin_active_minibatches"
+        ],
+        "success_margin_mean_active_minibatch_loss": (
+            totals["success_margin_loss"] / active_divisor
+        ),
+    }
+
+
 def ippo_sequence_windows(
     episodes: Sequence[IPPOEpisodeRollout],
     *,
@@ -1015,6 +1296,7 @@ def ippo_update(
         if candidate not in (
             "m9-ippo-v4-entropy-anneal",
             "m9-ippo-v5-success-imitation",
+            "m9-ippo-v6-success-margin",
         ):
             return _ippo_one_boundary_update(
                 model,
@@ -1027,6 +1309,14 @@ def ippo_update(
         scheduled_config = {**config, "entropy_coefficient": coefficient}
         if candidate == "m9-ippo-v5-success-imitation":
             metrics = _ippo_success_imitation_update(
+                model,
+                optimizer,
+                episodes,
+                scheduled_config,
+                shuffle_generator,
+            )
+        elif candidate == "m9-ippo-v6-success-margin":
+            metrics = _ippo_success_margin_update(
                 model,
                 optimizer,
                 episodes,

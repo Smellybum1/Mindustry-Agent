@@ -132,6 +132,19 @@ V5_GATES = (
     "smoke",
     "determinism",
 )
+V6_GATES = (
+    "test-python",
+    "test-java",
+    "m9-reward-check",
+    "m9-shared-policy-check",
+    "m9-rollout-check",
+    "m9-diverse-roots-check",
+    "m9-entropy-check",
+    "m9-success-margin-check",
+    "m9-artifact-check",
+    "smoke",
+    "determinism",
+)
 
 
 def _load(root: Path, relative: str) -> dict[str, Any]:

@@ -354,6 +354,7 @@ def base_run_manifest(
                 "m9-ippo-v3-diverse2048",
                 "m9-ippo-v4-entropy-anneal",
                 "m9-ippo-v5-success-imitation",
+                "m9-ippo-v6-success-margin",
             )
             else {}
         ),
