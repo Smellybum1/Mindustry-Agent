@@ -984,6 +984,12 @@ starts, both focused coordination checks, smoke, the accepted 79-boundary and
 Dev-v42 remains unconstructed, no V46 training/checkpoint exists, dev-v41
 remains retired unopened/unconsumed, and held-out-v6 remains sealed.
 
+The primary-only dev-v42 freezer is implemented but has not executed. It reuses
+the committed atomic/no-read primitives, pins the V46 implementation/config/
+umbrella commits, validates the `[10B,11B)` namespace and held-out-v6 binding,
+and can emit only a value-free receipt. The embargo-safe suite now passes 339
+tests. Commit the freezer before membership construction.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

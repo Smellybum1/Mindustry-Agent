@@ -1063,6 +1063,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   44/44 exact-config reward adversaries (report
   `ec3acb4c1056207...`). Dev-v42 remains unconstructed and no V46 training or
   restricted membership read has occurred.
+- **V46 freezer implemented, not executed**: the primary-only generator reuses
+  committed atomic/no-read primitives and binds the exact implementation,
+  config, umbrella, `[10B,11B)` namespace, and held-out-v6 contract. Its receipt
+  is value-free; 339 embargo-safe Python tests pass. Commit the freezer before
+  constructing dev-v42.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned

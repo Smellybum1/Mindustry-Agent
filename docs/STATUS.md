@@ -1998,6 +1998,11 @@ repository-evidence mapping used for the M6 audit is:
   `ec3acb4c1056207a1f83729cb62e5c38042164c5688e67c18c6d842d96a54b9e`.
   Dev-v42 remains unconstructed; no V46 training/checkpoint or restricted
   membership read has occurred.
+- The primary-only dev-v42 freezer is implemented and unexecuted. It pins the
+  V46 implementation/config/umbrella commits, validates the exclusive
+  `[10B,11B)` namespace without reading prior membership, and records a
+  value-free receipt. The embargo-safe suite now passes 339 tests. The freezer
+  must be committed before it may construct membership.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

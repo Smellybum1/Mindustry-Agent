@@ -127,3 +127,7 @@ SHA-256 is
 `ec3acb4c1056207a1f83729cb62e5c38042164c5688e67c18c6d842d96a54b9e`.
 Dev-v42 remains unconstructed; no V46 training/checkpoint, confirmation read,
 or held-out read occurred.
+
+The primary-only dev-v42 freezer is implemented on commit-bound atomic/no-read
+primitives and covered by the now-339-test embargo-safe suite. It has not
+executed and must be committed before membership construction.
