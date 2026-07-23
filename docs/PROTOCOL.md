@@ -101,6 +101,12 @@ scripted baseline.
 for that shared-driver baseline; it legally pre-spends copper before opening
 work and is ignored unless `shared_expert_policy=true`. The primary M7.3 expert
 leaves both options unset and uses external task actions.
+ADR-0089 adds `shared_expert_projection_diagnostic=true`, also requiring
+`shared_expert_policy=true`. Only in that opt-in mode, the simulation thread
+generates a candidate snapshot immediately before each expert update and emits
+bounded projection rows for new `SELECT_TASK` decisions. It delays the opening
+selection until the reset-time snapshot exists. Normal shared-expert and
+external-action behavior is unchanged.
 
 `ResetResponse` (`type = "reset_response"`)
 
@@ -113,6 +119,7 @@ leaves both options unset and uses external task actions.
 | `action_masks` | [obj] | one per agent |
 | `state_hash` | str | stable hash of initial state |
 | `metadata` | obj | scenario metadata, including dimensions/core, tick size and wave schedule, termination ticks, ore-patch/region geometry, objective targets, and authoritative schematic anchors/blocks |
+| `shared_expert_projection` | [obj] | ADR-0089 opt-in reset-time expert selection rows; empty otherwise |
 
 ### 2.3 Step
 
@@ -236,6 +243,7 @@ the winner starts a skill, so input bundle order cannot choose the owner.
 | `task_board` | [obj] | M5.2 bounded board snapshot (maximum 32, insertion order) |
 | `coordination_metrics` | obj | cumulative episode task/message/idle counters (M5.6) |
 | `game_events` | [obj] | step-scoped events; M4.6 emits `unit_damage`; M7.4 scheduled grants emit `scenario_event {event_type, tick, item, amount, reason}`; M7.6 emits `unit_destroy {tick, unit_id, team, agent_id}` for exact loss/recovery timing |
+| `shared_expert_projection` | [obj] | ADR-0089 opt-in rows binding new expert selections to the same pre-update candidate snapshot |
 | `decision_boundary` | obj | M7.4 `{requested_ticks, advanced_ticks, triggered, reasons[]}` for opt-in event-driven stepping |
 | `state_hash` | str | stable hash after advancing |
 | `timing` | obj | `{engine_ms, observation_ms, serialization_ms, io_ms}` |

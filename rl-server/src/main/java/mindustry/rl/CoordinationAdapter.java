@@ -33,6 +33,7 @@ public final class CoordinationAdapter{
     private final AnnouncementRenderer announcementRenderer = new AnnouncementRenderer();
     private boolean sharedExpertEnabled;
     private boolean sharedExpertBlockedVariant;
+    private boolean sharedExpertProjectionEnabled;
     private ExpertCoordinationDriver sharedExpert;
     private Assignment[] assignments = new Assignment[0];
     private String[] helperDeliveryTasks = new String[0];
@@ -88,6 +89,10 @@ public final class CoordinationAdapter{
         sharedExpertBlockedVariant = enabled;
     }
 
+    public void setSharedExpertProjectionEnabled(boolean enabled){
+        sharedExpertProjectionEnabled = enabled;
+    }
+
     public void reset(long episodeId, int agentCount){
         board.reset(episodeId);
         copperReservationCapacity = initialCopperBudget();
@@ -129,7 +134,7 @@ public final class CoordinationAdapter{
                 ExpertCoordinationPlans.fromScenario(scenario), new SharedExpertPort(),
                 sharedExpertBlockedVariant);
             sharedExpert.reset(episodeId);
-            sharedExpert.startOpening((long)state.tick);
+            if(!sharedExpertProjectionEnabled) sharedExpert.startOpening((long)state.tick);
         }else{
             sharedExpert = null;
         }
@@ -363,6 +368,73 @@ public final class CoordinationAdapter{
             }
             markDecision("task_expired");
         }
+    }
+
+    /** Start the opt-in expert projection after the reset-time candidate snapshot exists. */
+    public Jval startSharedExpertProjection(CandidateSet[] candidates){
+        if(sharedExpert == null || !sharedExpertProjectionEnabled) return Jval.newArray();
+        int cursor = sharedExpert.decisions().size();
+        sharedExpert.startOpening((long)state.tick);
+        return projectSharedExpertSelections(cursor, candidates);
+    }
+
+    /** Advance the expert and bind new selections to the same pre-update candidate snapshot. */
+    public Jval tickSharedExpertProjection(long tick, CandidateSet[] candidates){
+        if(sharedExpert == null || !sharedExpertProjectionEnabled){
+            tick(tick);
+            return Jval.newArray();
+        }
+        int cursor = sharedExpert.decisions().size();
+        tick(tick);
+        return projectSharedExpertSelections(cursor, candidates);
+    }
+
+    private Jval projectSharedExpertSelections(int cursor, CandidateSet[] candidates){
+        Jval rows = Jval.newArray();
+        List<ExpertCoordinationDriver.PolicyDecision> decisions = sharedExpert.decisions();
+        for(int i = cursor; i < decisions.size(); i++){
+            ExpertCoordinationDriver.PolicyDecision decision = decisions.get(i);
+            if(!decision.kind().equals("SELECT_TASK") || decision.agentIndex() < 0) continue;
+            TaskState source = sharedExpert.board().task(decision.taskId());
+            String sourceTarget = source == null || source.spec().target() == null
+                ? "" : source.spec().target().describe();
+            CandidateSet set = candidatesFor(candidates, decision.agentIndex());
+            int matches = 0;
+            int matchedIndex = -1;
+            String matchedTarget = "";
+            String matchedTaskId = "";
+            if(set != null){
+                for(int candidateIndex = 0;
+                    candidateIndex < set.candidates().size(); candidateIndex++){
+                    TaskCandidate candidate = set.candidates().get(candidateIndex);
+                    String target = candidate.task().target() == null
+                        ? "" : candidate.task().target().describe();
+                    if(candidate.valid()
+                        && candidate.task().type() == decision.taskType()
+                        && target.equals(sourceTarget)){
+                        matches++;
+                        matchedIndex = candidateIndex;
+                        matchedTarget = target;
+                        matchedTaskId = candidate.task().taskId();
+                    }
+                }
+            }
+            Jval row = Jval.newObject();
+            row.put("sequence", decision.sequence());
+            row.put("tick", decision.tick());
+            row.put("agent_id", decision.agentIndex());
+            row.put("source_task_id", decision.taskId());
+            row.put("task_type", decision.taskType() == null
+                ? "" : decision.taskType().name());
+            row.put("source_target", sourceTarget);
+            row.put("stage", decision.stage().name());
+            row.put("match_count", matches);
+            row.put("matched_candidate_index", matches == 1 ? matchedIndex : -1);
+            row.put("matched_candidate_task_id", matches == 1 ? matchedTaskId : "");
+            row.put("matched_candidate_target", matches == 1 ? matchedTarget : "");
+            rows.add(row);
+        }
+        return rows;
     }
 
     /** Record exactly one engine tick of assignment occupancy for episode metrics. */

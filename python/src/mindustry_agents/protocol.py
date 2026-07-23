@@ -114,6 +114,7 @@ class ResetResponse:
     # Scenario episode outcome: "running" at reset; "win"/"loss"/"truncated" once terminal.
     outcome: str = "running"
     metadata: dict[str, Any] = field(default_factory=dict)
+    shared_expert_projection: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -149,6 +150,7 @@ class StepResponse:
     task_board: list[dict[str, Any]] = field(default_factory=list)
     coordination_metrics: dict[str, Any] = field(default_factory=dict)
     game_events: list[dict[str, Any]] = field(default_factory=list)
+    shared_expert_projection: list[dict[str, Any]] = field(default_factory=list)
     decision_boundary: dict[str, Any] = field(default_factory=dict)
     state_hash: str = ""
     timing: dict[str, Any] = field(default_factory=lambda: asdict(Timing()))

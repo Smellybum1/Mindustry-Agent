@@ -77,6 +77,8 @@ public final class RlServer{
     private final AtomicBoolean stop = new AtomicBoolean(false);
     private Jval stepGameEvents = Jval.newArray();
     private CandidateSet[] boundaryCandidates = new CandidateSet[0];
+    private boolean sharedExpertProjectionDiagnostic;
+    private Jval resetSharedExpertProjection = Jval.newArray();
 
     private Method pathfinderStop;
     private Method controlPathStop;
@@ -351,8 +353,14 @@ public final class RlServer{
             && options.getBool("shared_expert_policy", false));
         coordination.setSharedExpertBlockedVariant(options != null && options.isObject()
             && options.getBool("shared_expert_blocked_variant", false));
+        sharedExpertProjectionDiagnostic = options != null && options.isObject()
+            && options.getBool("shared_expert_projection_diagnostic", false);
+        coordination.setSharedExpertProjectionEnabled(sharedExpertProjectionDiagnostic);
 
         doReset(rootSeed);
+        resetSharedExpertProjection = sharedExpertProjectionDiagnostic
+            ? coordination.startSharedExpertProjection(projectionCandidates())
+            : Jval.newArray();
         if(options != null && options.isObject()){
             coordination.configureFailureInjection(
                 options.getInt("lease_failure_agent_id", -1),
@@ -375,6 +383,7 @@ public final class RlServer{
             adaptiveState()));
         r.put("outcome", "running");
         r.add("metadata", scenario.metadata());
+        r.add("shared_expert_projection", resetSharedExpertProjection);
         return r;
     }
 
@@ -398,10 +407,14 @@ public final class RlServer{
 
         int previousTick = current;
         stepGameEvents = Jval.newArray();
+        Jval sharedExpertProjection = Jval.newArray();
 
         //M3 (D5): decode + apply the per-agent action bundle on the sim thread BEFORE
         //advancing; invalid actions are rejected into action_results, never crash.
-        coordination.tick((long)state.tick);
+        appendProjection(sharedExpertProjection, sharedExpertProjectionDiagnostic
+            ? coordination.tickSharedExpertProjection(
+                (long)state.tick, projectionCandidates())
+            : tickWithoutProjection((long)state.tick));
         long decisionRevision = coordination.decisionRevision();
         Jval actionResults = applyActions(req);
         int previousEnemies = waveEnemyCount();
@@ -424,7 +437,13 @@ public final class RlServer{
             int scenarioGrant = applyScenarioEvents((int)state.tick);
             adaptiveFacts.recordTick(scenarioGrant);
             coordination.recordMetricsTick();
-            coordination.tick((long)state.tick);
+            appendProjection(sharedExpertProjection, sharedExpertProjectionDiagnostic
+                ? coordination.tickSharedExpertProjection(
+                    (long)state.tick, projectionCandidates())
+                : tickWithoutProjection((long)state.tick));
+            if(sharedExpertProjection.asArray().size > 0){
+                decisionReasons.add("shared_expert_projection");
+            }
             advancedTicks++;
 
             if(coordination.decisionRevision() != decisionRevision){
@@ -490,6 +509,7 @@ public final class RlServer{
         r.add("task_board", coordination.boardSnapshot());
         r.add("coordination_metrics", coordination.metrics());
         r.add("game_events", stepGameEvents);
+        r.add("shared_expert_projection", sharedExpertProjection);
         Jval boundary = Jval.newObject();
         boundary.put("requested_ticks", ticks);
         boundary.put("advanced_ticks", advancedTicks);
@@ -669,6 +689,25 @@ public final class RlServer{
     /** Decode + apply the {@code agent_actions} bundle, returning {@code action_results[]}. */
     private Jval applyActions(Jval req){
         return coordination.applyActions(req.get("agent_actions"), boundaryCandidates);
+    }
+
+    private Jval tickWithoutProjection(long tick){
+        coordination.tick(tick);
+        return Jval.newArray();
+    }
+
+    private static void appendProjection(Jval destination, Jval rows){
+        if(rows == null || !rows.isArray()) return;
+        for(Jval row : rows.asArray()) destination.add(row);
+    }
+
+    private CandidateSet[] projectionCandidates(){
+        CandidateWorldSnapshot candidateWorld = engineCandidates.snapshot();
+        CandidateSet[] result = new CandidateSet[agentCount];
+        for(RlAgentRegistry.Agent agent : registry.agents()){
+            result[agent.index] = engineCandidates.generate(agent, candidateWorld);
+        }
+        return result;
     }
 
     // ------------------------------------------------------------ observation
