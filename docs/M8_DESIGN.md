@@ -1123,6 +1123,20 @@ membership. The value-free receipt is `ee51d681fa5127be...`; it records
 membership SHA `79dd2a1d0958bcf...`, `values_emitted=false`, and zero
 membership-document reads. Dev-v45 remains unconsumed and restricted.
 
+V48's two replicas are bit-exact and select update 23 with 10/10 public-dev
+wins. Checkpoint/model-state/replay/full-run/lineage digests are
+`ce7dc0e24b4eb322...` / `93698f0636f3dcf0...` /
+`e90e8735880be11b...` / `541c6948bcf68bc9...` /
+`1c6306841107ca0e...`. Reusable-v2 rejects V48 before confirmation. The
+candidate wins 127/160 versus permanent random/greedy 62/84 and matched
+random/greedy 48/22, eliminates V47's abandonment failure, and passes the
+matched-greedy and one-brain/history gates. It fails the DEFER cap
+(`0.273531 > 0.25`) and regresses permanent-greedy idle by `+0.011532`, CI
+`[+0.005381,+0.017928]`. The failure is not transfer-local: the 20 no-transfer
+episodes have mean DEFER `0.367418` and idle difference `+0.019146`. Result
+SHA is `ae0818783ef7ed41...`; dev-v45 remains unread/unconsumed and held-out-v6
+remains sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

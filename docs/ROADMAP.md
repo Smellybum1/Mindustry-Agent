@@ -2245,6 +2245,17 @@ dev-v45 without reading or rendering membership. Receipt SHA is
 brings the suite to 362. Dev-v45 remains unconsumed; this does not authorize
 confirmation or held-out access.
 
+V48's two replicas reproduce exactly and select update 23 with 10/10
+public-dev wins. Reusable-v2 rejects it before confirmation despite 127/160
+wins versus permanent random/greedy 62/84 and matched random/greedy 48/22.
+Abandonment, matched-greedy scorecard, and one-brain/history authority pass,
+but mean DEFER is `0.273531 > 0.25` and permanent-greedy idle regresses
+`+0.011532`, CI `[+0.005381,+0.017928]`. The no-transfer subset is worse
+(`0.367418` DEFER; `+0.019146` idle), so this is a global learned-policy shift,
+not merely transfer-time cache inference. Public result SHA is
+`ae0818783ef7ed41...`. Dev-v45 remains unread/unconsumed and held-out-v6
+remains sealed. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

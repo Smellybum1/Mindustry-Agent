@@ -1,0 +1,111 @@
+{
+  "schema": "m8_public_reusable_result_v1",
+  "candidate_version": "v48",
+  "data_classification": "public_reusable_only",
+  "repository_commit": "30dacbc83babf9020009e93970eda38888379990",
+  "checkpoint": {
+    "selected_update": 23,
+    "sha256": "ce7dc0e24b4eb322420613874399fe32866fa2b555471dc8c82c1989be2907c7",
+    "model_state_sha256": "93698f0636f3dcf0f0433aebf1ab0ce7cc8b46251270917913e8181dd95a9605",
+    "checkpoint_replay_sha256": "e90e8735880be11b4b06c7d16d198b7cccf2ce18ea869c2cf43a9347fb90e448",
+    "full_run_reproducibility_sha256": "541c6948bcf68bc9de8741cc64748366fd420c000b104a528f723efc42317fdb",
+    "direct_lineage_sha256": "1c6306841107ca0e0f8e2f788956ef013e5b013562008d460ae56ae070bddd82"
+  },
+  "construction": {
+    "replicas_bit_exact": true,
+    "dev_wins": 10,
+    "dev_episodes": 10,
+    "dev_mean_idle_fraction": 0.021467246693894965,
+    "dev_mean_expert_defer_fraction": 0.22090945366946477,
+    "dev_mean_learned_seat_transfer_count": 0.8,
+    "maximum_simultaneous_learned_seats": 1,
+    "seat_history_schema": "per_seat_scripted_prior_boundary_cache_v1"
+  },
+  "reusable_v2": {
+    "episodes_per_policy": 160,
+    "wins": {
+      "learned-selector-v2": 127,
+      "random-valid": 62,
+      "greedy-utility": 84,
+      "random-mixed-seat0": 48,
+      "greedy-mixed-seat0": 22
+    },
+    "expert_defer": {
+      "mean": 0.27353107366677176,
+      "maximum_inclusive": 0.25,
+      "passed": false
+    },
+    "single_brain": {
+      "candidate_transfers": 202,
+      "matched_transfers": 320,
+      "maximum_simultaneous_learned_seats": 1,
+      "maximum_model_evaluations_per_boundary": 1,
+      "maximum_learned_actions_per_boundary": 1,
+      "seat_history_schema": "per_seat_scripted_prior_boundary_cache_v1",
+      "passed": true
+    },
+    "permanent_greedy_failure": {
+      "idle_fraction": {
+        "mean_difference": 0.011531701921653582,
+        "ci95": [
+          0.005380880875915089,
+          0.01792836090432735
+        ]
+      }
+    },
+    "matched_greedy_scorecard_passed": true,
+    "task_abandonment_rate_passed_against_both_greedy_comparators": true,
+    "all_other_permanent_and_matched_scorecard_rows_pass": true,
+    "eligible_for_confirmation": false
+  },
+  "artifacts": {
+    "baseline_records_sha256": "6f89dab2cacf74e1e24d63f361eca52af18d27006b897ca1b8c5f186e0519202",
+    "baseline_aggregate_sha256": "a236ecafc9983b76abe2abc5b079694bc02f1abf1861f0bc6e7dc8e76e7e90b2",
+    "candidate_and_matched_records_sha256": "cae3821adb475d9a248fdb626f737d917c4fe429c08974d430c0f6cf6485cfee",
+    "aggregate_sha256": "5cd10e49f726d45f52fe8233a38a778990d6b19529fc41030e094f7b926b4baa",
+    "preflight_sha256": "3a644f7d649b41c9e4c8dacd2a9599cc30b289efee2f91bdc95b23b513b32bad",
+    "lineage_manifest_sha256": "e662aeebac8cda37e00444f41bf53aedde524c1d01f90c370e09eb693c3cc99c",
+    "reward_adversary_sha256": "8cfe56b3a000d4c8168dc36ee887bf82c216e2e4ea3f15813c29834e21e07986"
+  },
+  "public_diagnostics": {
+    "no_transfer": {
+      "episodes": 20,
+      "permanent_idle_mean_difference": 0.0191457007903582,
+      "mean_expert_defer_fraction": 0.367417958615025
+    },
+    "one_or_more_transfers": {
+      "episodes": 140,
+      "permanent_idle_mean_difference": 0.0104439877975529,
+      "mean_expert_defer_fraction": 0.260118661531307
+    },
+    "by_final_active_seat": {
+      "seat_0": {
+        "episodes": 20,
+        "wins": 15,
+        "permanent_idle_mean_difference": 0.0191457007903582,
+        "mean_expert_defer_fraction": 0.367417958615025
+      },
+      "seat_1": {
+        "episodes": 38,
+        "wins": 32,
+        "permanent_idle_mean_difference": 0.0214013897210436,
+        "mean_expert_defer_fraction": 0.25130185016141
+      },
+      "seat_2": {
+        "episodes": 102,
+        "wins": 80,
+        "permanent_idle_mean_difference": 0.00636181845350739,
+        "mean_expert_defer_fraction": 0.263403355963229
+      }
+    }
+  },
+  "restricted_state": {
+    "dev_v44": "retired_unopened_unconsumed",
+    "dev_v44_membership_read": false,
+    "dev_v45": "frozen_unconsumed",
+    "dev_v45_membership_read": false,
+    "held_out_v6": "sealed_unconsumed",
+    "held_out_v6_membership_read": false
+  },
+  "decision": "rejected_before_confirmation"
+}

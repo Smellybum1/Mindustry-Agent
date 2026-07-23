@@ -2128,6 +2128,20 @@ repository-evidence mapping used for the M6 audit is:
   zero membership-document reads. Its committed-receipt test brings the suite
   to 362. Dev-v45 is frozen unconsumed; confirmation and held-out-v6 remain
   forbidden.
+- V48's exact replicas select update 23 with 10/10 public-dev wins and
+  bit-identical checkpoint/model/replay/full-run/lineage digests
+  `ce7dc0e24b4eb322...` / `93698f0636f3dcf0...` /
+  `e90e8735880be11b...` / `541c6948bcf68bc9...` /
+  `1c6306841107ca0e...`.
+- Reusable-v2 rejects V48 before confirmation. It wins 127/160 versus
+  permanent random/greedy 62/84 and matched random/greedy 48/22. Abandonment,
+  matched-greedy scorecard, and one-brain/history authority all pass. Mean
+  DEFER is `0.273531` above the `0.25` cap, and permanent-greedy idle regresses
+  by `+0.011532`, CI `[+0.005381,+0.017928]`. No-transfer episodes are worse,
+  not better (`0.367418` DEFER; `+0.019146` idle), so the failure is a global
+  learned-policy shift rather than transfer-only inference. Public result SHA
+  is `ae0818783ef7ed41...`. Dev-v45 remains unread/unconsumed and held-out-v6
+  remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

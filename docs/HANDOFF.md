@@ -1170,6 +1170,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `values_emitted=false`, and zero membership reads. The receipt test brings
   the suite to 362. Do not read dev-v45 except through an authorized
   confirmation attempt after reusable-v2 passes.
+- **V48 rejected before confirmation**: exact replicas select update 23 with
+  10/10 public-dev wins; checkpoint/model/replay/full-run/lineage prefixes are
+  `ce7dc0e24b4eb322...` / `93698f0636f3dcf0...` /
+  `e90e8735880be11b...` / `541c6948bcf68bc9...` /
+  `1c6306841107ca0e...`. Reusable wins are 127/160 versus permanent
+  random/greedy 62/84 and matched random/greedy 48/22. Abandonment and matched
+  greedy pass, but DEFER is `0.273531 > 0.25` and permanent idle regresses
+  `+0.011532`, CI `[+0.005381,+0.017928]`. The no-transfer subset is worse
+  (`0.367418` DEFER; `+0.019146` idle), proving a global policy shift. Result
+  SHA is `ae0818783ef7ed41...`. Dev-v45 remains unread/unconsumed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1385,11 +1395,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit dev-v45 and its value-free receipt without reading membership.**
-   Never read or render retired dev-v44; exclude the four protected user files.
-2. **Train two exact V48 replicas and prove complete reproducibility.**
-3. **Run reusable-v2 with the unchanged dual scorecard.** Confirmation remains
-   forbidden unless the unchanged reusable gates all pass.
+1. **Commit the V48 public rejection.** Never read or render dev-v44/dev-v45;
+   exclude the four protected user files.
+2. **Diagnose only public V48 frontier/checkpoint evidence.** DEFER and idle
+   failures must both be explained before another precommit.
+3. **Precommit at most one causal V49 coordinate before implementation.**
+   Confirmation remains forbidden unless reusable-v2 passes unchanged.
 4. **Keep held-out-v6 sealed.** No reusable result authorizes final access.
 5. **Keep M9.1 gated on M8 promotion.** Do not bypass the accepted roadmap.
 
