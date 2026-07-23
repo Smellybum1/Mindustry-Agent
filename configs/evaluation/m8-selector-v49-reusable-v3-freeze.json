@@ -1,0 +1,36 @@
+{
+  "schema": "m8_reusable_scorecard_freeze_v3",
+  "status": "membership_frozen_unevaluated",
+  "candidate_version": "v49",
+  "repository_head_at_generation": "38cccc05da5b65aaec0749a59b1346101903fe9e",
+  "protocol": {
+    "path": "configs/evaluation/m8-selector-v49-noninferiority-protocol.json",
+    "sha256": "6711d6e43fab8f65b21d97f091767c963f85458147fc43e47b8fd96b67c3b965",
+    "commit": "d5b9dc4bd2b0ac9a540c3d55c257c1302735c916"
+  },
+  "generator": {
+    "path": "scripts/generate-m8-reusable-scorecard-v3.py",
+    "commit": "d5b9dc4bd2b0ac9a540c3d55c257c1302735c916",
+    "schema": "sha256_domain_counter_modulo_namespace_v1"
+  },
+  "membership": {
+    "path": "configs/evaluation/bootstrap-defense-v1-reusable-scorecard-v3.json",
+    "sha256": "8655fe3c785ba99e40fe8186643ddff731e1cfa36aa157594bb30f0ced9affe5",
+    "seed_set_id": "bootstrap-defense-v1-reusable-scorecard-v3",
+    "seed_set_version": 3,
+    "count": 160,
+    "namespace": {
+      "minimum_inclusive": 15000000000,
+      "maximum_exclusive": 16000000000
+    },
+    "evaluation_episodes_at_freeze": 0
+  },
+  "restricted_access": {
+    "dev_v45_membership_reads": 0,
+    "dev_v46_membership_reads": 0,
+    "held_out_v6_membership_reads_after_retirement": 0,
+    "held_out_v7_membership_reads": 0,
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0
+  }
+}
