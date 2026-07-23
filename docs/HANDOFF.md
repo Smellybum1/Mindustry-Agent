@@ -1208,6 +1208,18 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   atomic action bundle per authoritative boundary. Fresh public train/dev
   roots are frozen in `[18B,19B)` / `[19B,20B)`. No M9 model or training
   episode preceded the precommit; held-out-v7 remains sealed and M8-only.
+- **M9 all-seat architecture boundary is green**: one seeded shared recurrent
+  actor/local-critic now evaluates alive seats in deterministic `0,1,2` order
+  with explicit role embeddings and private death-reset state, then emits one
+  atomic ordinary-action bundle. The 375-test Python suite and pinned Java
+  checks pass. Five direct/traversed real-JVM pairs produce identical
+  action/result/state traces across 1,424 model evaluations and one model
+  digest `e82745a19729aa31...`; report SHA is `4773bf9b36b9972c...`.
+  The gate also repeats a terminal seed after intervening episodes. That check
+  found and fixed deferred generated-pool resets consuming IDs after the next
+  reset: `Groups.updatePooling()` now runs before `EntityGroup.lastId` is
+  reseeded. Smoke, determinism, the 664-checkpoint golden, and all 40 reward
+  adversaries pass. No M9 training episode exists.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1423,13 +1435,12 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit ADR-0069, M9 design, and fresh public train/dev documents before
-   model work.** Exclude the four protected user files.
-2. **Implement the all-seat parameter-sharing boundary.** Prove role
-   sensitivity, private recurrent state, alive-seat reset, deterministic
-   agent order, and atomic bundling.
-3. **Run the complete ADR-0069 public/pretraining gate.** Include a real-JVM
-   teacher-controlled parity probe before freezing an optimization recipe.
+1. **Review and commit the green M9 all-seat architecture boundary.** Exclude
+   the four protected user files.
+2. **Precommit the first immutable IPPO optimization recipe.** Audit the small
+   individual shaping component before it can influence training.
+3. **Run exact replica A/B only after that precommit.** Use the frozen public
+   M9 train/dev roots and preserve direct replay/manifest lineage.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 5. **Do not start MAPPO or the learned human-session block.** IPPO must first

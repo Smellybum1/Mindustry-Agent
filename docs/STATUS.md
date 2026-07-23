@@ -2168,7 +2168,7 @@ repository-evidence mapping used for the M6 audit is:
   The final 371-test Python suite, smoke, determinism, and
   664-checkpoint/16,200-tick golden replay pass.
 
-## Milestone 9.0 — entry decision and architecture precommit (IN PROGRESS)
+## Milestone 9.0 — entry decision and architecture precommit (DONE, verified 2026-07-23)
 
 - ADR-0069 records the project owner's 2026-07-23 direction change and
   explicitly supersedes only the M9 entry dependency from
@@ -2181,9 +2181,35 @@ repository-evidence mapping used for the M6 audit is:
 - Fresh public M9 train/dev documents reserve 64 roots in `[18B,19B)` and 40
   roots in `[19B,20B)`. They are not confirmation or held-out evidence.
   Held-out-v7 remains sealed and M8-only.
-- No M9 model implementation or training episode precedes this precommit.
-  The full architecture/parity gate in ADR-0069 item 9 must be committed
-  before an immutable IPPO training recipe or replica A.
+- No M9 model implementation or training episode preceded the committed
+  precommit.
+
+## Milestone 9.1 — all-seat shared recurrent boundary (IN PROGRESS)
+
+- `SharedRecurrentSelector` implements one parameter set with a three-entry
+  role embedding, private 64-value recurrent state per seat, ordinary
+  ten-action masks, a local shared critic, and deterministic seeded
+  construction. The all-seat adapter evaluates alive agents in `0,1,2` order
+  from one pre-step boundary and emits one atomic bundle.
+- Unit coverage proves seeded identity, role sensitivity, exact tensor/mask
+  shapes, deterministic ordering, teacher-bundle validation, and independent
+  death reset. The complete Python suite passes 375 tests.
+- The live gate compares direct scripted actions with the same actions
+  traversing all three learned seats in matched fresh JVM sequences. Five roots
+  pass with 1,424 model evaluations, exactly one shared model, and identical
+  action/result/state traces. It also repeats the first root after every
+  terminal episode and proves exact history-independent reset. Report/model
+  SHA-256 values are `4773bf9b36b9972c...` /
+  `e82745a19729aa31...`.
+- That terminal replay exposed and fixed a reset leak: generated
+  `Groups.clear()` leaves pooled dead entities queued until the next frame.
+  `RlServer` now flushes `Groups.updatePooling()` before reseeding
+  `EntityGroup.lastId`, preventing prior-episode deaths from shifting the next
+  episode's constructed-building IDs.
+- Pinned Java/custom-module checks, all 40 existing reward adversaries, smoke,
+  determinism, and the 664-checkpoint/16,200-tick golden replay pass. No M9
+  optimization config, training episode, confirmation, final, or MAPPO work
+  exists yet; the exact IPPO reward/optimizer/budget precommit is next.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

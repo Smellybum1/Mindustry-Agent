@@ -1,0 +1,56 @@
+{
+  "agent_count": 3,
+  "all_teacher_controlled_traces_equal": true,
+  "episodes": [
+    {
+      "decision_count": 127,
+      "direct_trace_sha256": "1c3ac533e93bedaa2dac9454bca09d8dfa46920d9efeac8bd7408b1b5ce26088",
+      "model_evaluations": 264,
+      "outcome": "loss",
+      "seed": 12345,
+      "tick": 3596,
+      "traversed_trace_sha256": "1c3ac533e93bedaa2dac9454bca09d8dfa46920d9efeac8bd7408b1b5ce26088"
+    },
+    {
+      "decision_count": 130,
+      "direct_trace_sha256": "423effa5c85423940171a2c101353945e444ff3aa65ba4cb4717f5b21c4ac72b",
+      "model_evaluations": 270,
+      "outcome": "loss",
+      "seed": 12346,
+      "tick": 3542,
+      "traversed_trace_sha256": "423effa5c85423940171a2c101353945e444ff3aa65ba4cb4717f5b21c4ac72b"
+    },
+    {
+      "decision_count": 112,
+      "direct_trace_sha256": "2218ce2ffb6d093598829b5546933aef116f6156b878fb88d29dd04f88b82336",
+      "model_evaluations": 234,
+      "outcome": "loss",
+      "seed": 12347,
+      "tick": 3758,
+      "traversed_trace_sha256": "2218ce2ffb6d093598829b5546933aef116f6156b878fb88d29dd04f88b82336"
+    },
+    {
+      "decision_count": 118,
+      "direct_trace_sha256": "fd0e2ba64df9e92a00de344c5678e675e6b073252c979ca81b16fe3948d58ebb",
+      "model_evaluations": 246,
+      "outcome": "loss",
+      "seed": 12348,
+      "tick": 3863,
+      "traversed_trace_sha256": "fd0e2ba64df9e92a00de344c5678e675e6b073252c979ca81b16fe3948d58ebb"
+    },
+    {
+      "decision_count": 234,
+      "direct_trace_sha256": "955e1739ca9fbf0de27ec429c00f15ee8d80964b913f77792f121d0256080e6c",
+      "model_evaluations": 410,
+      "outcome": "loss",
+      "seed": 12349,
+      "tick": 4891,
+      "traversed_trace_sha256": "955e1739ca9fbf0de27ec429c00f15ee8d80964b913f77792f121d0256080e6c"
+    }
+  ],
+  "maximum_shared_model_instances": 1,
+  "model_schema": "ippo_shared_recurrent_selector_v1",
+  "model_state_sha256": "e82745a19729aa3183df197cb91c5e2fa9ba17ee334748b979d6d623e402de21",
+  "schema": "m9_shared_policy_check_v1",
+  "terminal_reset_replay_equal": true
+}

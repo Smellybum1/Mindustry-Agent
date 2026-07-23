@@ -535,6 +535,11 @@ public final class RlServer{
     private void doReset(long seed){
         logic.reset();
 
+        //Groups.clear() queues pooled entities for end-of-frame reset. Flush that
+        //queue before reseeding EntityGroup.lastId; otherwise terminal-episode
+        //entities consume IDs on the next episode's first external update.
+        Groups.updatePooling();
+
         //Callbacks posted by the previous episode can allocate entities on the
         // next external tick. Drop them before resetting EntityGroup.lastId or
         // the same reset trace inherits the previous episode's ID history.

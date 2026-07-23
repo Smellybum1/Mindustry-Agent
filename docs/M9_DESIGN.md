@@ -1,7 +1,9 @@
 # M9 design: multi-agent learning and partner robustness
 
-Status: accepted initial boundary under ADR-0069. This document describes the
-target architecture and the staged evidence required before broader M9 claims.
+Status: initial architecture boundary implemented and verified under ADR-0069;
+the immutable IPPO optimization recipe is not yet frozen. This document
+describes the target architecture and the staged evidence required before
+broader M9 claims.
 
 ## Scope
 
@@ -75,7 +77,11 @@ pins, and dependency lock.
 
 1. Architecture boundary: unit tests and real-JVM teacher-controlled parity
    prove shared parameters, private state, deterministic action order, and
-   unchanged authoritative stepping.
+   unchanged authoritative stepping. **Complete 2026-07-23:** 375 Python tests,
+   pinned Java checks, five direct/traversed JVM pairs, 1,424 alive-seat model
+   evaluations, repeated terminal-reset replay, smoke, deterministic replay,
+   and 40 reward adversaries pass. The shared model digest is
+   `e82745a19729aa3183df197cb91c5e2fa9ba17ee334748b979d6d623e402de21`.
 2. Training precommit: exact reward, optimizer, budget, checkpoint selection,
    partner mix, and public comparison protocol are frozen.
 3. IPPO construction: two independent runs reproduce checkpoint and replay

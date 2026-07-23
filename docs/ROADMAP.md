@@ -2306,9 +2306,13 @@ clones. This is where "teammate" starts being trained for directly.
 
 **ENTRY AUTHORIZED (2026-07-23):** ADR-0069 supersedes the former M8-promotion
 prerequisite without relabeling M8 as successful. `docs/M9_DESIGN.md` defines
-the staged implementation. Fresh public M9 train/dev sets are frozen; the
-all-seat shared-parameter/recurrent-state boundary is next. No M9 training,
-confirmation, held-out access, or MAPPO work is authorized yet.
+the staged implementation. Fresh public M9 train/dev sets are frozen. The
+all-seat shared-parameter/recurrent-state boundary now passes unit, full-suite,
+five-seed direct/traversed JVM parity, terminal-reset replay, smoke,
+determinism/golden, and reward-adversary gates. The live report/model hashes are
+`4773bf9b36b9972c...` / `e82745a19729aa31...`. No M9 training, confirmation,
+held-out access, or MAPPO work is authorized yet; the immutable IPPO
+optimization/reward precommit is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
