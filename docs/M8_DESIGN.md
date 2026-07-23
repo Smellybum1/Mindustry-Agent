@@ -880,6 +880,12 @@ The primary-only dev-v40 freezer is now implemented with exact hash/path/
 namespace/sealed-binding validation and a value-free zero-read receipt. All 310
 Python tests pass. It has not executed; commit the freezer before construction.
 
+Committed freezer `6b7a6c5dca` created dev-v40 value-free in `[8B,9B)`.
+Membership/receipt hashes are `05ca1f48227581fc...` /
+`acffc919ab1c40e2...`; the receipt attests no values emitted, zero membership
+reads, and no retired or sealed-set access. Dev-v40 remains unconsumed. Commit
+the membership/receipt packet before replica A.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

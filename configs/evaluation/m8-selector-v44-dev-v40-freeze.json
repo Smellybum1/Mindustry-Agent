@@ -1,0 +1,51 @@
+{
+  "candidate_version": "v44",
+  "disjointness_method": "partitioned_numeric_namespace_without_reads",
+  "generated_membership_read_after_write": false,
+  "generator_commit": "6b7a6c5dcab41ae5d2a18e36730dc1620ba5f9cc",
+  "global_disjointness_verified": true,
+  "membership_documents_read": 0,
+  "namespace_proof": {
+    "held_out_v6_max_exclusive": 4000000000,
+    "held_out_v6_min_inclusive": 3000000000,
+    "legacy_max_exclusive": 1000000000,
+    "v38_sealed_max_exclusive": 2000000000,
+    "v39_confirmation_max_exclusive": 2147483648,
+    "v40_confirmation_max_exclusive": 5000000000,
+    "v40_confirmation_min_inclusive": 4000000000,
+    "v41_confirmation_max_exclusive": 6000000000,
+    "v41_confirmation_min_inclusive": 5000000000,
+    "v42_confirmation_max_exclusive": 7000000000,
+    "v42_confirmation_min_inclusive": 6000000000,
+    "v43_confirmation_max_exclusive": 8000000000,
+    "v43_confirmation_min_inclusive": 7000000000,
+    "v44_confirmation_max_exclusive": 9000000000,
+    "v44_confirmation_min_inclusive": 8000000000
+  },
+  "repository_head_before_generation": "6b7a6c5dcab41ae5d2a18e36730dc1620ba5f9cc",
+  "retired_confirmation_membership_read": false,
+  "schema": "m8_confirmation_seed_freeze_v1",
+  "sealed_final_membership_read": false,
+  "set": {
+    "count": 160,
+    "exclusive_namespace": {
+      "maximum_exclusive": 9000000000,
+      "minimum_inclusive": 8000000000
+    },
+    "exclusive_umbrella_attempt": "runs/m8-selector-v44-dev-v40-umbrella-attempt.json",
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v40.json",
+    "replaces": "bootstrap-defense-v1-dev-v39",
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v40",
+    "seed_set_version": 40,
+    "sha256": "05ca1f48227581fcbf29d3c60d96fa8bd06567737189c69528b45175f42d0515",
+    "split": "dev"
+  },
+  "status": "membership_frozen_unconsumed",
+  "umbrella": {
+    "commit": "039e17b1993e0fb511ad4cc9f28733060c1b4575",
+    "path": "configs/evaluation/m8-selector-v44-confirmation-umbrella.json",
+    "sha256": "4a526274d956872680cd16cb5fefb2b7f450931b9a9a83b7aa742034a45d09c8"
+  },
+  "values_emitted": false
+}

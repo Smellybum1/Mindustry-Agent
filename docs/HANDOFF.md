@@ -991,6 +991,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   namespace, and sealed-final binding, then atomically writes membership and a
   value-free zero-read receipt. All 310 Python tests pass. The tool must be
   committed before it can execute; dev-v40 remains unconstructed.
+- **Dev-v40 frozen value-free; packet not yet committed**: committed freezer
+  `6b7a6c5dca` created the 160-root set solely in `[8B,9B)`. Membership/receipt
+  hashes are `05ca1f48227581fc...` / `acffc919ab1c40e2...`; the value-free
+  receipt records zero document reads and no emitted values. Dev-v40 remains
+  unconsumed. Commit this packet before replica A.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1205,8 +1210,8 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit the completed primary-only dev-v40 freezer, then construct the
-   value-free membership and receipt.** Do not read or render membership.
+1. **Commit the dev-v40 membership/receipt packet without reading or rendering
+   membership.** Replica A is prohibited until that commit exists.
 2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
    dev-v39 membership; dev-v38 also remains retired unopened.
 3. **Keep held-out-v6 sealed and unconsumed.** V44 has not authorized access.

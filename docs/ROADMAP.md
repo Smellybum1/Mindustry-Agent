@@ -1962,6 +1962,12 @@ config/umbrella and creates membership plus a value-free receipt atomically.
 It has not executed. Commit the freezer before construction; dev-v39 remains
 unconstructed and replica A remains prohibited.
 
+The committed freezer at `6b7a6c5dca` has now created dev-v40 value-free in
+`[8B,9B)`. Membership SHA is `05ca1f48227581fc...`; receipt SHA is
+`acffc919ab1c40e2...` and attests no emitted values, zero membership-document
+reads, and no generated, retired-confirmation, or sealed-final read. Dev-v40
+remains unconsumed. Commit the membership and receipt packet before replica A.
+
 The committed freezer at `5007a7b9f3` has now created dev-v39 value-free.
 Membership SHA is `0b88fda1b37647aa...`; the receipt attests no emitted values,
 zero membership-document reads, and no generated, retired-confirmation, or

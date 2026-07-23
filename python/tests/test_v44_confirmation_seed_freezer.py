@@ -133,6 +133,24 @@ class V44ConfirmationSeedFreezerTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "outside the V44 namespace"):
                 FREEZER._generate(count)
 
+    def test_committed_receipt_is_value_free_without_membership_read(self):
+        receipt_path = ROOT / FREEZER.RECEIPT_PATH
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(receipt["candidate_version"], "v44")
+        self.assertEqual(receipt["status"], "membership_frozen_unconsumed")
+        self.assertFalse(receipt["values_emitted"])
+        self.assertEqual(receipt["membership_documents_read"], 0)
+        self.assertFalse(receipt["generated_membership_read_after_write"])
+        self.assertFalse(receipt["retired_confirmation_membership_read"])
+        self.assertFalse(receipt["sealed_final_membership_read"])
+        self.assertEqual(receipt["set"]["count"], 160)
+        self.assertEqual(
+            receipt["set"]["sha256"],
+            "05ca1f48227581fcbf29d3c60d96fa8bd06567737189c69528b45175f42d0515",
+        )
+        self.assertTrue((ROOT / receipt["set"]["path"]).exists())
+
 
 if __name__ == "__main__":
     unittest.main()
