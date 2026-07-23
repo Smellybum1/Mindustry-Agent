@@ -89,6 +89,55 @@ class TestPromotionFinal(unittest.TestCase):
         self.assertFalse(report["promoted"])
         self.assertEqual(report["status"], "not_promoted")
 
+    def test_final_applies_explicit_operational_margins(self):
+        from mindustry_agents.training.promotion import (
+            CANDIDATE_POLICY,
+            GREEDY_MIXED,
+        )
+        from mindustry_agents.training.promotion_final import (
+            held_out_final_decision,
+        )
+
+        records = []
+        for seed in range(10):
+            records.extend(
+                (
+                    _record(CANDIDATE_POLICY, seed, True, 0.005),
+                    _record("random-valid", seed, False, 0.0),
+                    _record("greedy-utility", seed, False, 0.0),
+                    _record(GREEDY_MIXED, seed, False, 0.0),
+                )
+            )
+        aggregates = aggregate_records(records)
+        zero_margin = held_out_final_decision(
+            records,
+            aggregates,
+            reward_adversaries_passed=True,
+        )
+        margins = {
+            metric: 0.01
+            for metric in (
+                "idle_fraction",
+                "duplicate_work_incidents",
+                "time_to_help_ticks",
+                "announcements_per_meaningful_transition",
+                "task_abandonment_rate",
+                "recovery_time_after_agent_loss_ticks",
+            )
+        }
+        operational = held_out_final_decision(
+            records,
+            aggregates,
+            reward_adversaries_passed=True,
+            scorecard_margins=margins,
+        )
+
+        self.assertFalse(zero_margin["promoted"])
+        self.assertTrue(operational["promoted"])
+        self.assertEqual(
+            operational["scorecard_non_regression"][0]["margins"], margins
+        )
+
     def test_attempt_marker_is_exclusive(self):
         from mindustry_agents.training.promotion_final import _create_attempt
 

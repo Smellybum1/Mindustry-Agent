@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import math
+from collections.abc import Mapping
 from typing import Any
 
 from mindustry_agents.evaluation.ladder import bootstrap_interval
@@ -15,6 +17,29 @@ SCORECARD_METRICS = (
     "task_abandonment_rate",
     "recovery_time_after_agent_loss_ticks",
 )
+
+
+def validate_scorecard_margins(
+    margins: Mapping[str, Any] | None,
+) -> dict[str, float]:
+    """Return exact, finite, nonnegative scorecard margins."""
+
+    if margins is None:
+        return {metric: 0.0 for metric in SCORECARD_METRICS}
+    if set(margins) != set(SCORECARD_METRICS):
+        raise ValueError("scorecard margins must cover the exact metric schema")
+    validated: dict[str, float] = {}
+    for metric in SCORECARD_METRICS:
+        value = margins[metric]
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(float(value))
+            or float(value) < 0.0
+        ):
+            raise ValueError(f"invalid scorecard margin: {metric}")
+        validated[metric] = float(value)
+    return validated
 
 
 def _stable_seed(*parts: str) -> int:
@@ -60,9 +85,12 @@ def paired_scorecard_non_regression(
     *,
     candidate_policy: str,
     baseline_policy: str,
+    margins: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Bootstrap matched-seed candidate-minus-baseline scorecard differences."""
 
+    validated_margins = validate_scorecard_margins(margins)
+    operational = any(value > 0.0 for value in validated_margins.values())
     by_policy: dict[str, dict[int, dict[str, Any]]] = {}
     for record in records:
         policy = str(record["manifest"]["policy"])
@@ -93,17 +121,37 @@ def paired_scorecard_non_regression(
             differences,
             seed=_stable_seed(candidate_policy, baseline_policy, metric),
         )
-        passed = interval["ci95"][1] <= 0.0
+        margin = validated_margins[metric]
+        passed = interval["ci95"][1] <= margin and (
+            not operational or interval["mean"] <= margin
+        )
         metrics[metric] = {
-            "status": "non_regressing" if passed else "regressing_or_uncertain",
+            "status": (
+                "operationally_noninferior"
+                if passed and operational
+                else "non_regressing"
+                if passed
+                else "regressing_or_uncertain"
+            ),
             "passed": passed,
             "paired_seeds": len(differences),
+            **({"noninferiority_margin": margin} if operational else {}),
             "difference": interval,
         }
     return {
         "candidate": candidate_policy,
         "baseline": baseline_policy,
         "direction": "candidate_minus_baseline; lower is better",
+        **(
+            {
+                "decision_rule": (
+                    "mean_and_ci95_upper_bound_at_or_below_metric_margin"
+                ),
+                "margins": validated_margins,
+            }
+            if operational
+            else {}
+        ),
         "metrics": metrics,
         "passed": all(item["passed"] is not False for item in metrics.values()),
     }
@@ -118,6 +166,7 @@ def promotion_preflight(
     scorecard_baseline: str | None = None,
     scorecard_baselines: tuple[str, ...] = (),
     reward_adversaries_passed: bool,
+    scorecard_margins: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Apply the dev-only qualification screen before freezing held-out inputs."""
 
@@ -149,6 +198,7 @@ def promotion_preflight(
             records,
             candidate_policy=candidate_policy,
             baseline_policy=baseline_policy,
+            margins=scorecard_margins,
         )
         for baseline_policy in active_scorecard_baselines
     ]

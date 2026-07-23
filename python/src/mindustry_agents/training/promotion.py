@@ -64,6 +64,7 @@ from mindustry_agents.training.selector import (
     expected_control_schema,
     expected_feature_schema,
 )
+from mindustry_agents.training.scorecard_protocol import load_scorecard_protocol
 
 CANDIDATE_POLICY = "learned-selector-v2"
 GREEDY_MIXED = "greedy-mixed-seat0"
@@ -793,6 +794,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--checkpoint", type=Path, required=True)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--lineage-manifest", type=Path, required=True)
+    parser.add_argument("--scorecard-protocol", type=Path)
     parser.add_argument(
         "--seed-set",
         type=Path,
@@ -852,6 +854,31 @@ def main(argv: list[str] | None = None) -> int:
     checkpoint_config_match = checkpoint_payload.get("config_sha256") == _sha256(
         args.config.resolve()
     )
+    scorecard_protocol = None
+    if args.scorecard_protocol is not None:
+        if seed_set["seed_set_id"] == (
+            "bootstrap-defense-v1-reusable-scorecard-v3"
+        ):
+            protocol_role = "reusable"
+        elif seed_set["seed_set_id"] == "bootstrap-defense-v1-dev-v46":
+            protocol_role = "confirmation"
+        else:
+            raise ValueError("V49 protocol does not govern this dev seed set")
+        scorecard_protocol = load_scorecard_protocol(
+            args.scorecard_protocol,
+            root=root,
+            config_path=args.config,
+            checkpoint_path=args.checkpoint,
+            seed_set_path=args.seed_set,
+            role=protocol_role,
+        )
+        expected_seed_set = scorecard_protocol["seed_set"]
+        if (
+            expected_seed_set["id"] != seed_set["seed_set_id"]
+            or expected_seed_set["version"] != int(seed_set["seed_set_version"])
+            or expected_seed_set["split"] != seed_set["split"]
+        ):
+            raise ValueError("V49 protocol seed-set identity drifted")
     policy_logit_adjustment = _policy_logit_adjustment(config)
     scripted_partner_opening = _scripted_partner_opening(config)
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
@@ -910,6 +937,11 @@ def main(argv: list[str] | None = None) -> int:
             "lineage_manifest_sha256": _sha256(args.lineage_manifest.resolve()),
             "seed_set_id": seed_set["seed_set_id"],
             "seed_set_version": int(seed_set["seed_set_version"]),
+            **(
+                {"scorecard_protocol_sha256": scorecard_protocol["sha256"]}
+                if scorecard_protocol is not None
+                else {}
+            ),
         }
         _create_exclusive_attempt(args.exclusive_attempt.resolve(), attempt)
 
@@ -977,6 +1009,11 @@ def main(argv: list[str] | None = None) -> int:
         win_rate_baselines=(*PERMANENT_BASELINES, RANDOM_MIXED, GREEDY_MIXED),
         scorecard_baselines=("greedy-utility", GREEDY_MIXED),
         reward_adversaries_passed=reward_passed,
+        scorecard_margins=(
+            scorecard_protocol["margins"]
+            if scorecard_protocol is not None
+            else None
+        ),
     )
     preflight.update(
         {
@@ -1000,7 +1037,22 @@ def main(argv: list[str] | None = None) -> int:
                 "baseline_records_sha256": _sha256(args.baseline_records.resolve()),
                 "reward_report": str(args.reward_report.resolve()),
                 "reward_report_sha256": _sha256(args.reward_report.resolve()),
+                **(
+                    {
+                        "scorecard_protocol": scorecard_protocol["path"],
+                        "scorecard_protocol_sha256": scorecard_protocol[
+                            "sha256"
+                        ],
+                    }
+                    if scorecard_protocol is not None
+                    else {}
+                ),
             },
+            **(
+                {"scorecard_protocol": scorecard_protocol}
+                if scorecard_protocol is not None
+                else {}
+            ),
         }
     )
     control_gate = _expert_defer_control_gate(records, config)

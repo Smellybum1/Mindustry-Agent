@@ -5,7 +5,9 @@ from pathlib import Path
 
 from mindustry_agents.evaluation.ladder import aggregate_records
 from mindustry_agents.evaluation.promotion import (
+    paired_scorecard_non_regression,
     promotion_preflight,
+    validate_scorecard_margins,
     win_rate_comparison,
 )
 
@@ -29,6 +31,59 @@ def _record(policy, seed, win, score):
 
 
 class TestPromotion(unittest.TestCase):
+    def test_operational_margins_are_explicit_and_default_to_zero(self):
+        records = []
+        for seed in range(10):
+            records.append(_record("learned", seed, True, 0.005))
+            records.append(_record("baseline", seed, False, 0.0))
+
+        zero_margin = paired_scorecard_non_regression(
+            records,
+            candidate_policy="learned",
+            baseline_policy="baseline",
+        )
+        self.assertFalse(zero_margin["passed"])
+        self.assertNotIn("margins", zero_margin)
+
+        margins = {
+            metric: 0.01
+            for metric in (
+                "idle_fraction",
+                "duplicate_work_incidents",
+                "time_to_help_ticks",
+                "announcements_per_meaningful_transition",
+                "task_abandonment_rate",
+                "recovery_time_after_agent_loss_ticks",
+            )
+        }
+        operational = paired_scorecard_non_regression(
+            records,
+            candidate_policy="learned",
+            baseline_policy="baseline",
+            margins=margins,
+        )
+        self.assertTrue(operational["passed"])
+        self.assertEqual(operational["margins"], margins)
+        self.assertEqual(
+            operational["metrics"]["idle_fraction"]["status"],
+            "operationally_noninferior",
+        )
+        self.assertEqual(
+            operational["metrics"]["idle_fraction"][
+                "noninferiority_margin"
+            ],
+            0.01,
+        )
+
+    def test_operational_margins_fail_closed_on_schema_or_value_drift(self):
+        with self.assertRaisesRegex(ValueError, "exact metric schema"):
+            validate_scorecard_margins({"idle_fraction": 0.01})
+
+        margins = validate_scorecard_margins(None)
+        margins["idle_fraction"] = float("nan")
+        with self.assertRaisesRegex(ValueError, "idle_fraction"):
+            validate_scorecard_margins(margins)
+
     def test_partner_intent_duplication_risk_uses_shared_validator(self):
         from mindustry_agents.training.promotion import (
             _partner_intent_duplication_risk,

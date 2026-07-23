@@ -60,6 +60,7 @@ from mindustry_agents.training.selector import (
     expected_control_schema,
     expected_feature_schema,
 )
+from mindustry_agents.training.scorecard_protocol import load_scorecard_protocol
 
 FINAL_SCHEMA = "selector_promotion_held_out_final_v1"
 ATTEMPT_SCHEMA = "selector_promotion_held_out_attempt_v1"
@@ -121,6 +122,7 @@ def held_out_final_decision(
     aggregates: list[dict[str, Any]],
     *,
     reward_adversaries_passed: bool,
+    scorecard_margins: dict[str, float] | None = None,
 ) -> dict[str, Any]:
     """Apply the frozen M8.5 held-out win and teammate-quality rules."""
 
@@ -146,6 +148,7 @@ def held_out_final_decision(
             records,
             candidate_policy=CANDIDATE_POLICY,
             baseline_policy=baseline,
+            margins=scorecard_margins,
         )
         for baseline in ("greedy-utility", GREEDY_MIXED)
     ]
@@ -175,6 +178,7 @@ def _validate_dev_preflight(
     config_path: Path,
     lineage: dict[str, Any],
     repository: dict[str, Any],
+    scorecard_protocol_sha256: str | None = None,
 ) -> dict[str, Any]:
     preflight = _load_json(preflight_path)
     if preflight.get("schema") != "selector_promotion_preflight_v1":
@@ -199,6 +203,14 @@ def _validate_dev_preflight(
         raise ValueError("dev preflight repository is not the active frozen commit")
     if not preflight.get("reward_adversaries_passed", False):
         raise ValueError("dev preflight reward adversaries did not pass")
+    if scorecard_protocol_sha256 is not None and (
+        preflight.get("scorecard_protocol", {}).get("role") != "confirmation"
+        or preflight.get("scorecard_protocol", {}).get("sha256")
+        != scorecard_protocol_sha256
+        or preflight.get("sources", {}).get("scorecard_protocol_sha256")
+        != scorecard_protocol_sha256
+    ):
+        raise ValueError("dev preflight scorecard protocol mismatch")
     config = _load_json(config_path)
     if expected_control_schema(config) == CONTROL_SCHEMA_V2:
         expected_limit = float(
@@ -309,6 +321,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--lineage-manifest", type=Path, required=True)
     parser.add_argument("--dev-preflight", type=Path, required=True)
+    parser.add_argument("--scorecard-protocol", type=Path)
     parser.add_argument(
         "--seed-set",
         type=Path,
@@ -365,12 +378,29 @@ def main(argv: list[str] | None = None) -> int:
         config_path=config_path,
         checkpoint_path=checkpoint_path,
     )
+    scorecard_protocol = (
+        load_scorecard_protocol(
+            args.scorecard_protocol,
+            root=root,
+            config_path=config_path,
+            checkpoint_path=checkpoint_path,
+            seed_set_path=args.seed_set,
+            role="final",
+        )
+        if args.scorecard_protocol is not None
+        else None
+    )
     preflight = _validate_dev_preflight(
         preflight_path=preflight_path,
         checkpoint_path=checkpoint_path,
         config_path=config_path,
         lineage=lineage,
         repository=repository,
+        scorecard_protocol_sha256=(
+            scorecard_protocol["sha256"]
+            if scorecard_protocol is not None
+            else None
+        ),
     )
     config = _load_json(config_path)
     _configure_torch(config)
@@ -399,6 +429,11 @@ def main(argv: list[str] | None = None) -> int:
         ],
         "dev_preflight_sha256": _sha256(preflight_path),
         "held_out_seed_set_path": str(args.seed_set.resolve()),
+        **(
+            {"scorecard_protocol_sha256": scorecard_protocol["sha256"]}
+            if scorecard_protocol is not None
+            else {}
+        ),
     }
     _create_attempt(args.attempt.resolve(), attempt)
 
@@ -407,10 +442,18 @@ def main(argv: list[str] | None = None) -> int:
     seed_set = load_seed_set(args.seed_set.resolve())
     if seed_set["split"] != "held-out":
         raise ValueError("final seed set is not held-out")
+    expected_final = (
+        scorecard_protocol["seed_set"]
+        if scorecard_protocol is not None
+        else {
+            "id": config["held_out_seed_set_id"],
+            "version": int(config["held_out_seed_set_version"]),
+            "split": "held-out",
+        }
+    )
     if (
-        seed_set["seed_set_id"] != config["held_out_seed_set_id"]
-        or int(seed_set["seed_set_version"])
-        != int(config["held_out_seed_set_version"])
+        seed_set["seed_set_id"] != expected_final["id"]
+        or int(seed_set["seed_set_version"]) != expected_final["version"]
     ):
         raise ValueError("held-out seed-set identity/version mismatch")
 
@@ -493,6 +536,11 @@ def main(argv: list[str] | None = None) -> int:
         records,
         aggregates,
         reward_adversaries_passed=bool(preflight["reward_adversaries_passed"]),
+        scorecard_margins=(
+            scorecard_protocol["margins"]
+            if scorecard_protocol is not None
+            else None
+        ),
     )
     control_gate = _expert_defer_control_gate(records, config)
     if control_gate is not None:
@@ -522,6 +570,11 @@ def main(argv: list[str] | None = None) -> int:
                 "version": int(seed_set["seed_set_version"]),
                 "sha256": _sha256(args.seed_set.resolve()),
             },
+            **(
+                {"scorecard_protocol": scorecard_protocol}
+                if scorecard_protocol is not None
+                else {}
+            ),
         }
     )
     _write_jsonl(args.output.resolve(), records)
