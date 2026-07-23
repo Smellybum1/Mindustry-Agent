@@ -1,0 +1,62 @@
+{
+  "schema": "m9_ippo_construction_result_v1",
+  "candidate_version": "m9-ippo-v6-success-margin",
+  "data_classification": "public_train_and_dev_only",
+  "implementation_commit": "f805e52842b1cd2d8abfc8475a479d0592f654d5",
+  "pretraining_gate": {
+    "passed": true,
+    "implementation_commit": "f805e52842b1cd2d8abfc8475a479d0592f654d5",
+    "sha256": "9ede2a301f1e6fce015f6b1126d9cf2974f8ac6a33d85c326864d7123eeeecb9"
+  },
+  "config_sha256": "bd8e84acd0e340b61933677608395da3b8d214469e89841ecfa1fd47fde8114b",
+  "protocol_sha256": "f0adddd4c8b2127af68a55dff80610363a8b7c5e629049b5caba5a3a311b55ac",
+  "replica_a": {
+    "manifest_sha256": "d6ecb9f820ec975f9313ce31ca4796895129a9136c231662a81855baad79e90c",
+    "full_run_reproducibility_digest": "bc74e4b2f88a0e6f4823493b8ce96f5d131b5f7363697c4334fd01ffe911fdfa",
+    "training": {
+      "episodes": 2048,
+      "updates": 32,
+      "wins": 600,
+      "losses": 1448,
+      "transitions": 192398,
+      "mean_team_return": -10.172695605468773,
+      "mean_team_idle_fraction": 0.1391724809599095
+    },
+    "success_margin": {
+      "coefficient": 0.02,
+      "target": 0.1,
+      "qualifying_episodes": 600,
+      "qualifying_transitions": 30412,
+      "active_minibatches": 6166,
+      "mean_update_active_minibatch_loss": 0.21148015526677352
+    },
+    "best_public_dev": {
+      "update": 29,
+      "wins": 2,
+      "episodes": 40,
+      "mean_team_return": -16.218994999999996,
+      "mean_core_health": 30.25,
+      "mean_team_idle_fraction": 0.1878284790404538,
+      "model_state_sha256": "9f47fc6789886a46d3af07231eb5c6aec0fde41c81bc631e636a9ca2b610bbcd",
+      "checkpoint_content_sha256": "767f6505c50399aae0d490761ba8032804f2e527395970725a27dd759654e3ad",
+      "checkpoint_file_sha256": "241c7413183348cf2a5700ce0b8044858b8980036c452e597c51242a244a4448"
+    },
+    "final_public_dev": {
+      "update": 32,
+      "wins": 0,
+      "episodes": 40,
+      "mean_team_return": -15.842624999999998,
+      "mean_core_health": 0.0,
+      "mean_team_idle_fraction": 0.16793466436116314,
+      "model_state_sha256": "61272c8732b6a01a7a2f7632b1fe9a5b042fc378e2a0523807df79cdff01201f",
+      "checkpoint_content_sha256": "302059e5dfb1561f08e132e47e083396b648f3c484aaf7097607b3f590e70767",
+      "checkpoint_file_sha256": "5263b0b8af6b6ab9a077f9948b41b65895f3520fc0cceef90a218c8c7a770781"
+    },
+    "construction_passed": false,
+    "selected_checkpoint": null
+  },
+  "replica_b_authorized": false,
+  "replica_b_ran": false,
+  "decision": "reject_before_replica_b",
+  "confirmation_or_held_out_access": false
+}

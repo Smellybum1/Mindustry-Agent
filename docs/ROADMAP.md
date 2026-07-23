@@ -2492,8 +2492,16 @@ V5's NLL is absent. Config/protocol SHA prefixes are `bd8e84acd0e340b6...` /
 and adds exact strongest-other loss/filter/telemetry, candidate-aware
 artifact/authority paths, and a fail-closed CPU runner. Nine focused tests
 pass; twin synthetic reports are byte-identical at SHA `4dc0463838756789...`
-and optimizer digest `c11f5ecf0de81d2f...`. The complete public gate is next;
-no v6 environment trajectory or restricted access exists.
+and optimizer digest `c11f5ecf0de81d2f...`. The complete public gate passed at
+exact commit `f805e52842`. Replica A completed 2,048 episodes and 32 updates;
+600 winning training episodes activated the margin on 30,412 transitions, but
+deterministic public dev peaked at 2/40 wins at update 29 and finished 0/40.
+ADR-0088 rejects v6 and prohibits Replica B. Manifest/full-run digests are
+`d6ecb9f820ec975...` / `bc74e4b2f88a0e6...`; compact result SHA is
+`37f3ecd470f7580a...`. No restricted data was accessed. Before any v7 model or
+trajectory, a public-only v1--v6 design synthesis must freeze a change in the
+source of action supervision rather than retune the rejected self-imitation
+scalars.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

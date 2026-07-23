@@ -260,8 +260,14 @@ pins, and dependency lock.
    `f0adddd4c8b2127a...`. Implementation commit `05e6b48772` adds the exact
    margin/filter/telemetry and preserves v1--v5. Nine focused tests and fresh
    byte-identical CPU probes pass; report SHA is `4dc0463838756789...` and
-   optimizer digest is `c11f5ecf0de81d2f...`. The full public gate remains
-   before Replica A; no v6 environment trajectory exists.
+   optimizer digest is `c11f5ecf0de81d2f...`. The full gate passed at
+   `f805e52842`, then Replica A completed all 2,048 episodes and 32 updates.
+   Its deterministic public best was only 2/40 at update 29 and its final was
+   0/40. ADR-0088 rejects v6 and prohibits Replica B. Compact result SHA is
+   `37f3ecd470f7580a...`; no restricted access occurred. V5 and v6 now bound
+   the failure of treating every actor-valid transition in a winning
+   stochastic episode as a desirable deterministic label. A public-only
+   v1--v6 design synthesis is required before any v7 precommit.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

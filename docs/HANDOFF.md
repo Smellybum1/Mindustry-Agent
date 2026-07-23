@@ -1360,8 +1360,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make train-m9-ippo-v5` | Reconstructs the pinned CPU runtime, requires exact-current-commit v5 authority, runs A first, and prohibits B unless A passes construction. A completed and failed at a best 1/40; B is prohibited by ADR-0084. |
 | `make m9-v5-mode-margin-diagnostic` | Runs ADR-0085's rejected-v5 update-7/32 argmax/categorical matrix twice in fresh JVMs and records actor-valid chosen-action probability/top-two logit margins. Exact result: 51/160 to 62/160 categorical despite 1/40 to 0/40 argmax; retained without deterministic consolidation. |
 | `make m9-success-margin-check` | Verifies ADR-0087's exact v4 inheritance, strongest-other hinge, winning actor filter, telemetry, and deterministic twin optimizer result. Committed report SHA is `4dc0463838756789...`. |
-| `make m9-v6-pretraining-check` | Runs every public-only gate required before v6 Replica A and writes exact-current-commit authority. Not yet run at the evidence commit. |
-| `make train-m9-ippo-v6` | Reconstructs the pinned CPU runtime, requires exact-current-commit v6 authority, runs A first, and prohibits B unless A passes construction. Not yet run. |
+| `make m9-v6-pretraining-check` | Runs every public-only gate required before v6 Replica A and writes exact-current-commit authority. Passed at `f805e52842`. |
+| `make train-m9-ippo-v6` | Reconstructs the pinned CPU runtime, requires exact-current-commit v6 authority, runs A first, and prohibits B unless A passes construction. A completed and failed at a best 2/40; B is prohibited by ADR-0088. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
 | `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
@@ -1529,19 +1529,15 @@ queue.
    rejected. Precommit the recommended v4 entropy-annealing successor before
    any new model work. ADR-0079 now freezes v4's sole change as the inclusive
    linear entropy schedule `0.02 * (32 - update) / 31`; implementation is next.
-5. **Precommit one strongest-alternative success-margin mechanism before v6.**
-   ADR-0086 accepts 51/160 to 62/160 categorical retention despite 1/40 to
-   0/40 argmax and keeps v5 rejected. Freeze one direct margin objective for
-   current-update winning actor transitions relative to the strongest other
-   legal action. Keep every v4 mechanism, root, reward, RNG, architecture, and
-   deterministic evaluation exact; do not add NLL, replay, teacher data, or
-   restricted authority. ADR-0087 and config/protocol SHA prefixes
-   `bd8e84acd0e340b6...` / `f0adddd4c8b2127a...` now bind coefficient `0.02`
-   and target margin `0.1`. Implementation commit `05e6b48772` and
-   byte-identical CPU evidence are bound by report SHA
-   `4dc0463838756789...`. Run the complete exact-current-commit public gate,
-   then only the full immutable v6 Replica A. Replica B remains fail-closed
-   unless A passes 30/40 and idle `<0.25`.
+5. **Complete a public-only v1--v6 design synthesis before v7.** ADR-0088
+   rejects v6 after its exact gate and full Replica A: best 2/40 at update 29,
+   final 0/40, manifest/full-run digests `d6ecb9f820ec975...` /
+   `bc74e4b2f88a0e6...`. Replica B is prohibited. V5 and v6 jointly reject
+   uniformly treating all actor-valid transitions from a winning stochastic
+   episode as deterministic labels. Do not retune NLL, margin, entropy, or the
+   success filter. Synthesize one different source of action supervision,
+   then freeze it in a separate prospective ADR before any v7 model,
+   trajectory, or optimizer update.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1549,7 +1545,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0079` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0088` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1589,6 +1585,10 @@ public fixed-role comparison before reward/trainer implementation or training.
 ADR-0071 records the public-only A0 pre-update validator abort, preserves
 forced control boundaries as actor-excluded critic samples, retires A0, and
 requires a new exact-commit full gate before the clean replica restart.
+ADR-0072 through ADR-0088 govern the completed M9 IPPO v1--v6 construction
+line, its public-only diagnostics, and the current requirement for design
+synthesis before any v7 precommit. Every candidate remains rejected; no M9
+checkpoint is selected and MAPPO remains unauthorized.
 
 ## Deviations from the brief in this scaffold
 
