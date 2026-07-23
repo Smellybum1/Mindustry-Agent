@@ -1,0 +1,58 @@
+{
+  "schema": "m8_confirmation_evaluation_umbrella_v1",
+  "candidate_version": "v47",
+  "status": "reserved_before_membership_creation",
+  "access_owner": "primary_agent_only",
+  "delegation_forbidden": true,
+  "training_config": {
+    "path": "configs/training/m8-selector-v47-single-brain-death-failover.json",
+    "sha256": "ff112f910c13603ccb8190a42dcf45027c65343233aae6d88894d7963704966f"
+  },
+  "reusable_screen": {
+    "seed_set_id": "bootstrap-defense-v1-reusable-scorecard-v2",
+    "seed_set_version": 2,
+    "split": "dev",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-reusable-scorecard-v2.json",
+    "sha256": "c529951782ec0426f94671ece39824d0057e303c2aa7edc11b3610a63c7f86f3",
+    "role": "public_reusable_only"
+  },
+  "replacement_set": {
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v44",
+    "seed_set_version": 44,
+    "split": "dev",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v44.json",
+    "exclusive_namespace": {
+      "minimum_inclusive": 13000000000,
+      "maximum_exclusive": 14000000000
+    },
+    "membership_state_at_reservation": "not_created",
+    "exclusive_umbrella_attempt": "runs/m8-selector-v47-dev-v44-umbrella-attempt.json",
+    "replaces": "unconstructed bootstrap-defense-v1-dev-v43 reservation"
+  },
+  "cancelled_unconstructed_reservation": {
+    "seed_set_id": "bootstrap-defense-v1-dev-v43",
+    "namespace": {
+      "minimum_inclusive": 12000000000,
+      "maximum_exclusive": 13000000000
+    },
+    "membership_created": false,
+    "membership_read": false,
+    "reason": "V46 failed reusable-scorecard-v2"
+  },
+  "retired_sets": {
+    "dev_v42": "retired_unopened_unconsumed"
+  },
+  "sealed_final_binding": {
+    "seed_set_id": "bootstrap-defense-v1-held-out-v6",
+    "seed_set_version": 6,
+    "split": "held-out",
+    "count": 160,
+    "path": "configs/evaluation/bootstrap-defense-v1-held-out-v6.json",
+    "sha256": "2bf4aa04ef54d873e961ff367db849c14c72b83bb4d280c4e31ba75bdeefa51c",
+    "consumption_state": "sealed_unconsumed",
+    "membership_read_for_v47_reservation": false
+  }
+}

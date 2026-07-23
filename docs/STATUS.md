@@ -2052,6 +2052,17 @@ repository-evidence mapping used for the M6 audit is:
   (`+0.00391218`, CI `[-0.00166438,+0.00971554]`). Report SHA is
   `d272edd51197166b...`. Dev-v43 is not constructed; dev-v42 stays retired and
   held-out-v6 stays sealed.
+- Public trace diagnosis supports V47's single-brain death failover. Early
+  seat-0 death (<tick 3000) occurs on 63/160 roots and carries mean permanent
+  idle/announcement gaps of `+0.02701331` / `+0.00769989`; late death occurs on
+  94 roots and flips both favorable. All 30 greedy-only wins contain a seat-0
+  death, while the fixed learned seat is forced to WAIT afterward. ADR-0065
+  precommits one sticky learned brain that transfers only on death to the
+  lowest-ID living agent, resets history, and never controls two seats.
+  Config/umbrella hashes are `ff112f910c13603c...` /
+  `8e6fccc9d07de4ef...`. Dev-v43 is cancelled unconstructed; dev-v44 is
+  reserved in `[13B,14B)` but unconstructed. No V47 code or model work has
+  occurred.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

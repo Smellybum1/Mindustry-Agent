@@ -1,0 +1,49 @@
+{
+  "schema": "m8_public_reusable_diagnostic_v1",
+  "candidate_version": "v46",
+  "purpose": "localize permanent-greedy idle and announcement failures",
+  "sources": {
+    "candidate_and_matched_records_sha256": "5f5f34d915afd3d0beced41d5a6dec4f9d2a593f0f7e672359608e738b58b7bf",
+    "permanent_records_sha256": "90d02b4b156222da1e8e73f1fd23d0f0788dd68927719c2f431b9c4249dd88b7",
+    "seed_count": 160,
+    "data_classification": "public_reusable_only"
+  },
+  "method": {
+    "seat0_death_tick": "first structured task event with agent_id=0 and reason_code=agent_death",
+    "early_threshold_tick_exclusive": 3000,
+    "differences": "candidate_minus_permanent_greedy; lower_is_better"
+  },
+  "groups": {
+    "seat0_death_before_tick_3000": {
+      "episodes": 63,
+      "candidate_wins": 24,
+      "mean_idle_fraction_difference": 0.027013312327411027,
+      "mean_announcement_difference": 0.007699888709977113
+    },
+    "seat0_death_at_or_after_tick_3000": {
+      "episodes": 94,
+      "candidate_wins": 69,
+      "mean_idle_fraction_difference": -0.013365570413778283,
+      "mean_announcement_difference": -0.005199670301704063
+    },
+    "no_observed_seat0_death": {
+      "episodes": 3,
+      "candidate_wins": 3,
+      "mean_idle_fraction_difference": 0.06015790547922271,
+      "mean_announcement_difference": -0.007758601887914722
+    }
+  },
+  "greedy_only_wins": {
+    "episodes": 30,
+    "seat0_death_observed": 30,
+    "seat0_death_before_tick_3000": 17,
+    "seat0_death_at_or_after_tick_3000": 13
+  },
+  "mechanism": {
+    "fixed_learned_agent_id": 0,
+    "dead_active_seat_policy_mask": "forced_wait",
+    "idle_difference_correlation_with_forced_wait_decisions": 0.29082616382247545,
+    "worst_trace_pattern": "early seat0 death followed by more than 100 forced WAIT boundaries while surviving scripted seats continue"
+  },
+  "conclusion": "precommit one learned brain with sticky death-only failover to the lowest-id alive seat"
+}

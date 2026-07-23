@@ -1111,6 +1111,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `[-0.00166438,+0.00971554]`). Preflight SHA is `d272edd51197166b...`.
   Dev-v43 remains unconstructed; held-out-v6 remains sealed. Diagnose any V47
   coordinate only from the public 160-root records.
+- **V47 single-brain death failover precommitted**: public traces show early
+  seat-0 death on 63 roots with idle/announcement gaps `+0.02701331` /
+  `+0.00769989`, versus favorable gaps after late death. All 30 greedy-only wins
+  contain a seat-0 death; the fixed learned seat is then forced to WAIT.
+  ADR-0065 keeps exactly one sticky learned controller and transfers it only
+  when dead to the lowest-ID living seat, with history reset and dynamic
+  nonactive partner intent. Config/umbrella hashes are
+  `ff112f910c13603c...` / `8e6fccc9d07de4ef...`. Dev-v43 is cancelled without
+  construction; dev-v44 is reserved in `[13B,14B)` but unconstructed. Commit
+  the design packet before implementation.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned

@@ -2159,6 +2159,18 @@ idle is unfavorable by `+0.00391218` (CI
 Dev-v43 remains unconstructed, held-out-v6 remains sealed, and M8.5 remains
 unmet.
 
+ADR-0065 precommits V47 from the public early-death mechanism. On 63 roots with
+seat-0 death before tick 3000, permanent idle/announcement gaps average
+`+0.02701331` / `+0.00769989`; on 94 later-death roots both are favorable, and
+all 30 greedy-only wins contain a seat-0 death. V47 retains exactly one learned
+brain but transfers it, only after active-unit death, to the lowest-ID living
+seat and resets its history. Feature/model/reward/control schemas and all
+training values remain V46-exact. Config/umbrella hashes are
+`ff112f910c13603c...` / `8e6fccc9d07de4ef...`. Dev-v43 is cancelled
+unconstructed; dev-v44 is reserved in `[13B,14B)` but unconstructed. The
+committed implementation and complete public/pretraining boundary are required
+before membership construction or training. M8.5 remains unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

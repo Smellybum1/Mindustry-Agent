@@ -1041,6 +1041,15 @@ unfavorable `+0.00391218` mean difference. Preflight SHA is
 `d272edd51197166b...`. Dev-v43 remains unconstructed and held-out-v6 remains
 sealed.
 
+Public reusable-v2 traces then isolate the fixed-seat authority defect. When
+seat 0 dies before tick 3000 (63 roots), the idle and announcement gaps are
+`+0.02701331` and `+0.00769989`; after later death (94 roots), both gaps are
+favorable. ADR-0065 precommits V47: exactly one learned brain remains sticky to
+its active unit, then transfers only on death to the lowest-ID living unit.
+History resets, partner intent becomes all living nonactive agents, and the
+feature/model/reward/control schemas stay exact. Dev-v43 is cancelled
+unconstructed; dev-v44 is reserved in `[13B,14B)` but unconstructed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one
