@@ -978,6 +978,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   in `[8B,9B)` but unconstructed; implementation and the complete public/
   pretraining boundary are next. Dev-v39 remains retired without a read and
   held-out-v6 remains sealed.
+- **V44 implementation boundary green**: config-selected v1/v2/v3 features and
+  models, immutable/reset-local lag snapshots, and feature+model identity across
+  checkpoints, manifests, lineage, preflight, and final evaluation are wired.
+  The boundary passes 305 Python tests, pinned Java, public 5/5 survival with ten
+  staging starts, both focused checks, smoke, deterministic golden/negative
+  replay, and 44/44 exact-config reward adversaries (SHA
+  `740aba578809911...`). Dev-v40 remains unconstructed; no V44 training episode
+  or restricted membership read has occurred.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1192,9 +1200,9 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement only the precommitted V44 temporal coordinate.** ADR-0061,
-   config `m8-selector-v44-lagged-boundary-context.json`, and its confirmation
-   umbrella freeze the exact 160-scalar lagged-boundary architecture.
+1. **Commit the completed V44 implementation boundary, then implement the
+   primary-only value-free dev-v40 freezer.** Do not construct membership until
+   the freezer itself is committed.
 2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
    dev-v39 membership; dev-v38 also remains retired unopened.
 3. **Keep held-out-v6 sealed and unconsumed.** V44 has not authorized access.

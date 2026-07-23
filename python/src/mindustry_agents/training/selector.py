@@ -1,4 +1,4 @@
-"""Framework-neutral ``selector_features_v1`` construction and action mapping."""
+"""Framework-neutral selector feature construction and action mapping."""
 
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from typing import Any
 
 FEATURE_SCHEMA = "selector_features_v1"
+FEATURE_SCHEMA_V2 = "selector_features_v2_lagged_boundary"
+FEATURE_SCHEMAS = (FEATURE_SCHEMA, FEATURE_SCHEMA_V2)
 MAX_CANDIDATES = 8
 ACTION_COUNT = 10
 TASK_TYPES = (
@@ -64,12 +66,69 @@ class SelectorHistory:
 
     previous_task_type: str | None = None
     selected_tick: int = 0
+    previous_scalars: tuple[float, ...] | None = None
+    previous_candidate_mean: tuple[float, ...] | None = None
+    previous_candidate_count_fraction: float = 0.0
+    previous_action_index: int | None = None
 
     def record_selection(self, task_type: str, tick: int) -> None:
         if task_type not in TASK_TYPES:
             raise SelectorFeatureError(f"unknown selected task type: {task_type}")
         self.previous_task_type = task_type
         self.selected_tick = int(tick)
+
+    def record_boundary(self, features: "SelectorFeatures", action_index: int) -> None:
+        """Snapshot one submitted authoritative boundary for the next decision."""
+
+        if action_index < 0 or action_index >= ACTION_COUNT:
+            raise SelectorFeatureError(
+                f"selector action index out of range: {action_index}"
+            )
+        if len(features.candidates) != MAX_CANDIDATES or len(
+            features.candidate_present
+        ) != MAX_CANDIDATES:
+            raise SelectorFeatureError("boundary snapshot candidate shape mismatch")
+        if len(features.scalars) not in (56, 160):
+            raise SelectorFeatureError("boundary snapshot scalar shape mismatch")
+        present_rows = [
+            row
+            for row, present in zip(
+                features.candidates, features.candidate_present, strict=True
+            )
+            if present
+        ]
+        if any(len(row) != 37 for row in present_rows):
+            raise SelectorFeatureError("boundary snapshot candidate width mismatch")
+        if present_rows:
+            candidate_mean = tuple(
+                sum(row[index] for row in present_rows) / len(present_rows)
+                for index in range(37)
+            )
+        else:
+            candidate_mean = (0.0,) * 37
+        self.previous_scalars = tuple(features.scalars[:56])
+        self.previous_candidate_mean = candidate_mean
+        self.previous_candidate_count_fraction = len(present_rows) / MAX_CANDIDATES
+        self.previous_action_index = int(action_index)
+
+    def lagged_context(self) -> list[float]:
+        """Return the exact zero-initialized 104-value lagged context."""
+
+        if self.previous_scalars is None:
+            return [0.0] * 104
+        if self.previous_candidate_mean is None or self.previous_action_index is None:
+            raise SelectorFeatureError("lagged boundary snapshot is incomplete")
+        action = [0.0] * ACTION_COUNT
+        action[self.previous_action_index] = 1.0
+        values = [
+            *self.previous_scalars,
+            *self.previous_candidate_mean,
+            self.previous_candidate_count_fraction,
+            *action,
+        ]
+        if len(values) != 104:
+            raise AssertionError(f"lagged schema drift: {len(values)} values")
+        return values
 
 
 @dataclass(frozen=True)
@@ -173,8 +232,12 @@ def build_selector_features(
     terminated: bool = False,
     truncated: bool = False,
     fixed_partner_intended_task_ids: Iterable[Any] | None = None,
+    feature_schema: str = FEATURE_SCHEMA,
 ) -> SelectorFeatures:
-    """Construct the exact 8x37 + 56 plain-number selector boundary."""
+    """Construct an exact governed plain-number selector boundary."""
+
+    if feature_schema not in FEATURE_SCHEMAS:
+        raise SelectorFeatureError(f"unknown selector feature schema: {feature_schema}")
 
     if agent_id < 0 or agent_id >= len(observations) or agent_id >= len(action_masks):
         raise SelectorFeatureError("learned agent observation/mask is missing")
@@ -292,6 +355,10 @@ def build_selector_features(
     scalars.extend(1.0 if reason in reason_set else 0.0 for reason in BOUNDARY_REASONS)
     if len(scalars) != 56:
         raise AssertionError(f"scalar schema drift: {len(scalars)} values")
+    if feature_schema == FEATURE_SCHEMA_V2:
+        scalars.extend(recent.lagged_context())
+        if len(scalars) != 160:
+            raise AssertionError(f"lagged scalar schema drift: {len(scalars)} values")
     if any(not math.isfinite(value) or value < 0.0 or value > 1.0 for value in scalars):
         raise SelectorFeatureError("scalar output contains an invalid value")
     return SelectorFeatures(
@@ -302,6 +369,20 @@ def build_selector_features(
         policy_loss_mask=forced is None and legal > 1,
         forced_task_action=forced,
     )
+
+
+def expected_feature_schema(config: Mapping[str, Any]) -> str:
+    """Validate and return the governed feature schema in a training config."""
+
+    normalizers = config.get("normalizers")
+    if normalizers is None:
+        return FEATURE_SCHEMA
+    if not isinstance(normalizers, Mapping):
+        raise ValueError("normalizers must be an object")
+    schema = normalizers.get("feature_schema")
+    if schema not in FEATURE_SCHEMAS:
+        raise ValueError(f"unknown selector feature schema: {schema!r}")
+    return str(schema)
 
 
 def selector_action(index: int, candidates: list[dict[str, Any]]) -> dict[str, Any]:

@@ -1897,6 +1897,15 @@ repository-evidence mapping used for the M6 audit is:
   are `9a23c90567754eb8...` / `4a526274d9568726...`. Dev-v40 is reserved in
   `[8B,9B)` but remains unconstructed; dev-v39 remains retired without a read,
   held-out-v6 remains sealed, and no V44 model work has occurred.
+- The V44 implementation boundary is green. Config-selected v1/v2/v3 feature
+  and model construction, immutable/reset-local lag snapshots, dynamic feature+
+  model checkpoint identity, and training/replay/lineage/preflight/final
+  compatibility are implemented. The boundary passes 305 Python tests, pinned
+  Java, public 5/5 survival with ten staging starts, both focused checks, smoke,
+  deterministic golden/negative replay, and all 44 exact-config reward
+  adversaries (report SHA `740aba578809911...`). Dev-v40 remains unconstructed,
+  dev-v39 remains retired without a membership read, held-out-v6 remains
+  sealed, and no V44 training episode has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

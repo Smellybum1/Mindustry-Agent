@@ -4,6 +4,7 @@ from copy import deepcopy
 
 from mindustry_agents.training.selector import (
     BOUNDARY_REASONS,
+    FEATURE_SCHEMA_V2,
     SelectorFeatureError,
     SelectorHistory,
     build_selector_features,
@@ -97,6 +98,48 @@ def boundary():
 
 
 class TestSelectorFeatures(unittest.TestCase):
+    def test_lagged_boundary_is_zero_initialized_bounded_and_reset_local(self):
+        observations, masks, metadata = boundary()
+        history = SelectorHistory()
+        first = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            history=history,
+            feature_schema=FEATURE_SCHEMA_V2,
+        )
+        self.assertEqual(len(first.scalars), 160)
+        self.assertEqual(first.scalars[56:], [0.0] * 104)
+
+        history.record_boundary(first, 9)
+        frozen_scalars = first.scalars[:56]
+        frozen_mean = [
+            (first.candidates[0][index] + first.candidates[1][index]) / 2
+            for index in range(37)
+        ]
+        first.scalars[0] = 999.0
+        first.candidates[0][0] = 999.0
+        second = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            history=history,
+            feature_schema=FEATURE_SCHEMA_V2,
+        )
+        self.assertEqual(second.scalars[56:112], frozen_scalars)
+        self.assertEqual(second.scalars[112:149], frozen_mean)
+        self.assertEqual(second.scalars[149], 0.25)
+        self.assertEqual(second.scalars[150:160], [0.0] * 9 + [1.0])
+
+        reset = build_selector_features(
+            observations,
+            masks,
+            metadata,
+            history=SelectorHistory(),
+            feature_schema=FEATURE_SCHEMA_V2,
+        )
+        self.assertEqual(reset.scalars[56:], [0.0] * 104)
+
     def test_exact_shapes_order_masks_and_history(self):
         observations, masks, metadata = boundary()
         history = SelectorHistory()

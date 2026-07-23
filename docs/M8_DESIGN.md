@@ -867,6 +867,15 @@ boundary pass. Dev-v39 remains retired without a membership read. Held-out-v6
 remains sealed and unconsumed. No V44 implementation, model construction, or
 restricted membership access preceded this precommit.
 
+The implementation now carries the lag through the framework-neutral selector
+history and config-selects v1/v2/v3 feature/model pairs. Immutable snapshots,
+reset isolation, padding exclusion, action encoding, set equivariance, masks,
+and cross-schema rejection are covered. The complete boundary passes 305 Python
+tests, pinned Java, public 5/5 survival with ten staging starts, both focused
+checks, smoke, deterministic golden/negative replay, and all 44 exact-config
+reward adversaries (`740aba578809911...`). Dev-v40 remains unconstructed and no
+V44 training episode has run.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

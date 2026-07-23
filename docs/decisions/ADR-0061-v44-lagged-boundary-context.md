@@ -104,3 +104,24 @@ temporal architecture after the feed-forward scorer fails the matched gate.
   this packet is committed. It does not authorize dev-v40 membership creation,
   replica A, confirmation consumption, or held-out-v6 access before their
   preceding committed gates pass.
+
+## Implementation status
+
+The config-selected v1/v2/v3 feature/model path is implemented. Lagged history
+uses immutable plain-number snapshots, is zero-initialized per episode, advances
+only after a returned step boundary, and is shared by training, evaluation, and
+matched lifecycle controls. Checkpoints, manifests, direct lineage, dev
+preflight, and final evaluation now bind both feature and model schemas;
+historical v1/v2 configs and checkpoints remain compatible.
+
+The complete 2026-07-23 pretraining boundary passes 305 Python tests and the
+pinned Java suites/classes. Public policy passes 5/5 with ten proactive staging
+starts; secondary-claim and owned-schematic checks pass; smoke passes; cross-
+process, reset, and alternate-seed determinism remain
+`20a97f36407167597981e77c`, `a2cf4a73ee901c844f30f486`, and
+`495ba05fa71697bdc8ff2951`. Golden replay passes 664 checkpoints / 16,200 ticks
+/ two wins and its negative mutation is detected. All 44 exact-config reward
+adversaries pass; the ignored report hashes to
+`740aba578809911829448076e76a430bbb9ed819f7d99037e44c95726934bf9c`.
+Dev-v40 remains unconstructed, dev-v39 remains retired without a membership
+read, held-out-v6 remains sealed, and no V44 training episode has run.

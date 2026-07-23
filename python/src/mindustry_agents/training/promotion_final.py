@@ -47,6 +47,7 @@ from mindustry_agents.training.promotion import (
     _record,
     rollout_control_episode,
 )
+from mindustry_agents.training.selector import expected_feature_schema
 
 FINAL_SCHEMA = "selector_promotion_held_out_final_v1"
 ATTEMPT_SCHEMA = "selector_promotion_held_out_attempt_v1"
@@ -289,8 +290,12 @@ def main(argv: list[str] | None = None) -> int:
     _configure_torch(config)
     model = build_selector_model(config)
     reward_schema = str(config.get("reward_schema", REWARD_SCHEMA))
+    feature_schema = expected_feature_schema(config)
     checkpoint = load_checkpoint(
-        checkpoint_path, model, reward_schema=reward_schema
+        checkpoint_path,
+        model,
+        reward_schema=reward_schema,
+        feature_schema=feature_schema,
     )
     if checkpoint.get("config_sha256") != _sha256(config_path):
         raise ValueError("held-out checkpoint config hash mismatch")
@@ -346,6 +351,7 @@ def main(argv: list[str] | None = None) -> int:
                         quality_reward=config.get("quality_reward"),
                         policy_logit_adjustment=policy_logit_adjustment,
                         scripted_partner_opening=scripted_partner_opening,
+                        feature_schema=feature_schema,
                     )
                     record = _record(
                         rollout,
@@ -361,6 +367,7 @@ def main(argv: list[str] | None = None) -> int:
                         scenario_version=int(seed_set["scenario_version"]),
                         control=policy,
                         scripted_partner_opening=scripted_partner_opening,
+                        feature_schema=feature_schema,
                     )
                     record = _record(
                         rollout,

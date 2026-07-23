@@ -24,6 +24,7 @@ from mindustry_agents.training.ppo_selector import (
     _validated_reproducibility_digest,
     load_checkpoint,
 )
+from mindustry_agents.training.selector import expected_feature_schema
 
 DIRECT_LINEAGE_SCHEMA = "selector_checkpoint_direct_lineage_v1"
 DIRECT_LINEAGE_REPRODUCIBILITY_SCHEMA = (
@@ -137,6 +138,14 @@ def build_direct_lineage(
     if len(set(source_paths)) != 1 or source_hashes != [config_sha256, config_sha256]:
         raise ValueError("training config lineage mismatch")
 
+    expected_schemas = {
+        "feature": expected_feature_schema(config),
+        "reward": str(config.get("reward_schema", REWARD_SCHEMA)),
+        "model": build_selector_model(config).model_schema,
+    }
+    if any(item.get("schemas") != expected_schemas for item in manifests):
+        raise ValueError("training manifest schema mismatch")
+
     training_commits = [item.get("repository", {}).get("commit") for item in manifests]
     if len(set(training_commits)) != 1 or not training_commits[0]:
         raise ValueError("training repository commits differ")
@@ -163,6 +172,7 @@ def build_direct_lineage(
             checkpoint_path,
             model,
             reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+            feature_schema=expected_feature_schema(config),
         )
         if checkpoint.get("config_sha256") != config_sha256:
             raise ValueError("selected checkpoint config hash mismatch")
@@ -287,6 +297,7 @@ def validate_lineage_manifest(
             checkpoint_path,
             model,
             reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+            feature_schema=expected_feature_schema(config),
         )
         if checkpoint.get("config_sha256") != config_sha256:
             raise ValueError("adjusted checkpoint config hash mismatch")
@@ -323,6 +334,7 @@ def validate_lineage_manifest(
         checkpoint_path,
         model,
         reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+        feature_schema=expected_feature_schema(config),
     )
     if checkpoint.get("config_sha256") != config_sha256:
         raise ValueError("direct checkpoint config hash mismatch")

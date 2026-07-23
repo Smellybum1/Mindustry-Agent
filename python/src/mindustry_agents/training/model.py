@@ -7,6 +7,7 @@ from torch import nn
 
 MODEL_SCHEMA_V1 = "selector_actor_critic_v1"
 MODEL_SCHEMA_V2 = "selector_actor_critic_v2_set_context"
+MODEL_SCHEMA_V3 = "selector_actor_critic_v3_lagged_set_context"
 MODEL_SCHEMA = MODEL_SCHEMA_V1
 
 MODEL_ARCHITECTURE_V1 = {
@@ -22,6 +23,25 @@ MODEL_ARCHITECTURE_V2 = {
     "schema": MODEL_SCHEMA_V2,
     "candidate_encoder": [37, 64, 64],
     "scalar_encoder": [56, 64, 64],
+    "candidate_context": "masked_mean_other_candidates",
+    "select_head": [192, 64, 1],
+    "special_context": "masked_mean_all_candidates",
+    "special_head": [128, 64, 2],
+    "critic": [128, 64, 1],
+    "activation": "Tanh",
+}
+MODEL_ARCHITECTURE_V3 = {
+    "schema": MODEL_SCHEMA_V3,
+    "candidate_encoder": [37, 64, 64],
+    "scalar_encoder": [160, 64, 64],
+    "lagged_context": {
+        "current_scalars": 56,
+        "previous_scalars": 56,
+        "previous_candidate_masked_mean": 37,
+        "previous_candidate_count_fraction": 1,
+        "previous_action_one_hot": 10,
+        "initial_value": "all_zero",
+    },
     "candidate_context": "masked_mean_other_candidates",
     "select_head": [192, 64, 1],
     "special_context": "masked_mean_all_candidates",
@@ -148,7 +168,37 @@ class SelectorSetContextActorCritic(nn.Module):
         return raw_logits, masked_logits, value
 
 
-SelectorModel = SelectorActorCritic | SelectorSetContextActorCritic
+class SelectorLaggedSetContextActorCritic(SelectorSetContextActorCritic):
+    """V3 set-context actor with an explicit lagged-boundary scalar input."""
+
+    model_schema = MODEL_SCHEMA_V3
+
+    def __init__(self, seed: int):
+        nn.Module.__init__(self)
+        with torch.random.fork_rng(devices=[]):
+            torch.manual_seed(seed)
+            self.candidate_encoder = nn.Sequential(
+                nn.Linear(37, 64), nn.Tanh(), nn.Linear(64, 64), nn.Tanh()
+            )
+            self.scalar_encoder = nn.Sequential(
+                nn.Linear(160, 64), nn.Tanh(), nn.Linear(64, 64), nn.Tanh()
+            )
+            self.select_head = nn.Sequential(
+                nn.Linear(192, 64), nn.Tanh(), nn.Linear(64, 1)
+            )
+            self.special_head = nn.Sequential(
+                nn.Linear(128, 64), nn.Tanh(), nn.Linear(64, 2)
+            )
+            self.critic = nn.Sequential(
+                nn.Linear(128, 64), nn.Tanh(), nn.Linear(64, 1)
+            )
+
+
+SelectorModel = (
+    SelectorActorCritic
+    | SelectorSetContextActorCritic
+    | SelectorLaggedSetContextActorCritic
+)
 
 
 def expected_model_schema(config: dict[str, object]) -> str:
@@ -165,6 +215,7 @@ def expected_model_schema(config: dict[str, object]) -> str:
     expected = {
         MODEL_SCHEMA_V1: MODEL_ARCHITECTURE_V1,
         MODEL_SCHEMA_V2: MODEL_ARCHITECTURE_V2,
+        MODEL_SCHEMA_V3: MODEL_ARCHITECTURE_V3,
     }.get(schema)
     if expected is None:
         raise ValueError(f"unknown model architecture schema: {schema!r}")
@@ -177,17 +228,32 @@ def build_selector_model(config: dict[str, object]) -> SelectorModel:
     """Construct exactly the model declared by a governed training config."""
 
     schema = expected_model_schema(config)
+    normalizers = config.get("normalizers")
+    if isinstance(normalizers, dict):
+        feature_schema = normalizers.get("feature_schema")
+        required_feature_schema = (
+            "selector_features_v2_lagged_boundary"
+            if schema == MODEL_SCHEMA_V3
+            else "selector_features_v1"
+        )
+        if feature_schema != required_feature_schema:
+            raise ValueError(
+                "model/feature schema mismatch: "
+                f"{schema} requires {required_feature_schema!r}"
+            )
     seed = int(config["model_init_seed"])
     if schema == MODEL_SCHEMA_V1:
         return SelectorActorCritic(seed)
-    return SelectorSetContextActorCritic(seed)
+    if schema == MODEL_SCHEMA_V2:
+        return SelectorSetContextActorCritic(seed)
+    return SelectorLaggedSetContextActorCritic(seed)
 
 
 def model_schema(model: nn.Module) -> str:
     """Return a model instance's pinned checkpoint schema, failing closed."""
 
     schema = getattr(model, "model_schema", None)
-    if schema not in (MODEL_SCHEMA_V1, MODEL_SCHEMA_V2):
+    if schema not in (MODEL_SCHEMA_V1, MODEL_SCHEMA_V2, MODEL_SCHEMA_V3):
         raise ValueError("selector model has no recognized schema")
     return str(schema)
 

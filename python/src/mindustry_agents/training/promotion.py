@@ -47,8 +47,10 @@ from mindustry_agents.training.ppo_selector import (
     rollout_episode,
 )
 from mindustry_agents.training.selector import (
+    FEATURE_SCHEMA,
     SelectorHistory,
     build_selector_features,
+    expected_feature_schema,
 )
 
 CANDIDATE_POLICY = "learned-selector-v2"
@@ -91,6 +93,7 @@ def rollout_control_episode(
     scenario_version: int,
     control: str,
     scripted_partner_opening: dict[str, Any] | None = None,
+    feature_schema: str = FEATURE_SCHEMA,
 ) -> EpisodeRollout:
     """Run one matched seat-0 control with the learned seat's scripted lifecycle."""
 
@@ -147,6 +150,7 @@ def rollout_control_episode(
             boundary_reasons=boundary_reasons,
             history=history,
             agent_id=LEARNED_SEAT,
+            feature_schema=feature_schema,
         )
         forced = (
             features.forced_task_action is not None
@@ -201,6 +205,7 @@ def rollout_control_episode(
                 for item in response.action_results
             ):
                 history.record_selection(selected_task_type, tick)
+        history.record_boundary(features, selected_index)
 
         reasons = list(response.decision_boundary.get("reasons", []))
         trace.append(
@@ -427,8 +432,12 @@ def main(argv: list[str] | None = None) -> int:
     _configure_torch(config)
     model = build_selector_model(config)
     reward_schema = str(config.get("reward_schema", REWARD_SCHEMA))
+    feature_schema = expected_feature_schema(config)
     checkpoint_payload = load_checkpoint(
-        args.checkpoint.resolve(), model, reward_schema=reward_schema
+        args.checkpoint.resolve(),
+        model,
+        reward_schema=reward_schema,
+        feature_schema=feature_schema,
     )
     checkpoint_sha256 = _sha256(args.checkpoint.resolve())
     checkpoint_config_match = checkpoint_payload.get("config_sha256") == _sha256(
@@ -517,6 +526,7 @@ def main(argv: list[str] | None = None) -> int:
                         partner_intent_duplication_risk=(
                             partner_intent_duplication_risk
                         ),
+                        feature_schema=feature_schema,
                     )
                 else:
                     rollout = rollout_control_episode(
@@ -526,6 +536,7 @@ def main(argv: list[str] | None = None) -> int:
                         scenario_version=int(seed_set["scenario_version"]),
                         control=policy,
                         scripted_partner_opening=scripted_partner_opening,
+                        feature_schema=feature_schema,
                     )
                 records.append(
                     _record(

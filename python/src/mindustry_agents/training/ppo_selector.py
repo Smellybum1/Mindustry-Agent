@@ -45,6 +45,7 @@ from mindustry_agents.training.selector import (
     SelectorFeatures,
     SelectorHistory,
     build_selector_features,
+    expected_feature_schema,
     selector_action,
 )
 
@@ -790,6 +791,7 @@ def rollout_episode(
     scripted_partner_opening: dict[str, Any] | None = None,
     partner_intent_duplication_risk: dict[str, Any] | None = None,
     partner_intent_teacher_conflict_relabel: dict[str, Any] | None = None,
+    feature_schema: str = FEATURE_SCHEMA,
 ) -> EpisodeRollout:
     policy_logit_adjustment = _policy_logit_adjustment(
         {"policy_logit_adjustment": policy_logit_adjustment}
@@ -867,6 +869,7 @@ def rollout_episode(
             "boundary_reasons": boundary_reasons,
             "history": history,
             "agent_id": LEARNED_SEAT,
+            "feature_schema": feature_schema,
         }
         if partner_intent_duplication_risk is None:
             features = build_selector_features(
@@ -1012,6 +1015,7 @@ def rollout_episode(
                 reward.record_learned_selection(str(result.get("task_id", "")))
                 if selected_task_type is not None:
                     history.record_selection(selected_task_type, tick)
+        history.record_boundary(features, selected_index if raw_action_valid else 9)
 
         current_team = dict(response.observations[0]["team"])
         reasons = list(response.decision_boundary.get("reasons", []))
@@ -1799,6 +1803,7 @@ def _evaluate(
     partner_intent_duplication_risk = _partner_intent_duplication_risk(config)
     _partner_intent_teacher_conflict_filter(config)
     _partner_intent_teacher_conflict_relabel(config)
+    feature_schema = expected_feature_schema(config)
     generator = torch.Generator().manual_seed(int(config["action_sampling_seed"]))
     with RlServerProcess(
         LaunchConfig(port=port, java=java, build_if_missing=False)
@@ -1818,6 +1823,7 @@ def _evaluate(
                 policy_logit_adjustment=policy_logit_adjustment,
                 scripted_partner_opening=scripted_partner_opening,
                 partner_intent_duplication_risk=partner_intent_duplication_risk,
+                feature_schema=feature_schema,
             )
             for seed in seeds
         ]
@@ -1832,9 +1838,10 @@ def save_checkpoint(
     parent_checkpoint: str,
     update: int,
     reward_schema: str = REWARD_SCHEMA,
+    feature_schema: str = FEATURE_SCHEMA,
 ) -> str:
     payload = {
-        "feature_schema": FEATURE_SCHEMA,
+        "feature_schema": feature_schema,
         "reward_schema": reward_schema,
         "model_schema": model_schema(model),
         "config_sha256": config_sha256,
@@ -1854,9 +1861,10 @@ def load_checkpoint(
     model: SelectorModel,
     *,
     reward_schema: str = REWARD_SCHEMA,
+    feature_schema: str = FEATURE_SCHEMA,
 ) -> dict[str, Any]:
     payload = torch.load(path, map_location="cpu", weights_only=False)
-    expected = (FEATURE_SCHEMA, reward_schema, model_schema(model))
+    expected = (feature_schema, reward_schema, model_schema(model))
     actual = (
         payload.get("feature_schema"),
         payload.get("reward_schema"),
@@ -2050,13 +2058,14 @@ def _manifest(
     partner_intent_teacher_conflict_relabel = (
         _partner_intent_teacher_conflict_relabel(config)
     )
+    feature_schema = expected_feature_schema(config)
     manifest = {
         "schema": "selector_training_run_v1",
         "engine": {"tag": ENGINE_TAG, "commit": ENGINE_COMMIT, "arc": ARC_HASH},
         "protocol_version": PROTOCOL_VERSION,
         "scenario": {"id": config["scenario_id"], "version": config["scenario_version"]},
         "schemas": {
-            "feature": FEATURE_SCHEMA,
+            "feature": feature_schema,
             "reward": str(config.get("reward_schema", REWARD_SCHEMA)),
             "model": expected_model_schema(config),
         },
@@ -2283,6 +2292,7 @@ def compare_run_manifests(first: Path, second: Path) -> str:
 def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[str, Any]:
     root = repo_root()
     config = _load_json(config_path)
+    feature_schema = expected_feature_schema(config)
     selection_policy = _dev_checkpoint_selection_policy(config)
     teacher_warmup_policy = _teacher_warmup_policy(config)
     teacher_rehearsal_policy = _teacher_rehearsal_policy(config)
@@ -2383,6 +2393,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     partner_intent_teacher_conflict_relabel=(
                         partner_intent_teacher_conflict_relabel
                     ),
+                    feature_schema=feature_schema,
                 )
                 for seed in teacher_warmup_seeds
             ]
@@ -2443,6 +2454,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                     partner_intent_teacher_conflict_relabel=(
                         partner_intent_teacher_conflict_relabel
                     ),
+                    feature_schema=feature_schema,
                 )
                 for seed in seeds[start : start + episodes_per_update]
             ]
@@ -2487,6 +2499,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
                 parent_checkpoint=parent_checkpoint,
                 update=len(optimizer_updates),
                 reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+                feature_schema=feature_schema,
             )
             produced_checkpoints.append(checkpoint)
             parent_checkpoint = checkpoint_sha
@@ -2508,6 +2521,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
         checkpoint_path,
         model,
         reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+        feature_schema=feature_schema,
     )
     selected_model_state_sha256 = _model_state_digest(model.state_dict())
     dev_episodes = dev_candidates[best_index]
@@ -2520,6 +2534,7 @@ def train(config_path: Path, output_dir: Path, *, java: str, port: int) -> dict[
             checkpoint_path,
             replay_model,
             reward_schema=str(config.get("reward_schema", REWARD_SCHEMA)),
+            feature_schema=feature_schema,
         )
         replay = _evaluate(
             replay_model, [verify_seed], config, java=java, port=port + offset

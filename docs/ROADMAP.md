@@ -1996,6 +1996,16 @@ membership read and held-out-v6 remains sealed/unconsumed. The committed
 implementation and full public/pretraining boundary are required before
 value-free dev-v40 construction or model work. M8.5 remains unmet.
 
+The V44 implementation and full pretraining boundary are green. Feature/model
+selection is config-driven; prior-boundary snapshots are immutable and reset-
+local; checkpoint, manifest, lineage, preflight, and final gates bind both
+schemas while v1/v2 remain compatible. The boundary passes 305 Python tests,
+pinned Java, public policy 5/5 with ten staging starts, both focused checks,
+smoke, deterministic golden and negative replay, and all 44 exact-config reward
+adversaries (report SHA `740aba578809911...`). Dev-v40 remains unconstructed and
+no V44 training episode has run. Commit this boundary before implementing and
+committing the primary-only value-free freezer.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)
