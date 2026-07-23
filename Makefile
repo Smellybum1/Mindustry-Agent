@@ -18,6 +18,7 @@ SCRIPTS := scripts
         m9-shared-policy-check m9-reward-check m9-rollout-check \
         m9-artifact-check m9-sequence-check m9-pretraining-check \
         m9-v2-pretraining-check m9-diverse-roots-check m9-v3-pretraining-check \
+        m9-policy-mode-diagnostic \
         m9-baseline train-m9-ippo train-m9-ippo-v2 train-m9-ippo-v3 \
         secondary-claim-wake-check \
         owned-schematic-staging-check coordination-parity \
@@ -54,6 +55,7 @@ help: ## List available targets
 	@echo "  train-m9-ippo exact M9 IPPO replicas + direct comparison"
 	@echo "  train-m9-ippo-v2 governed sequence-IPPO construction"
 	@echo "  train-m9-ippo-v3 governed diverse-root IPPO construction"
+	@echo "  m9-policy-mode-diagnostic rejected-v3 stochastic/argmax diagnostic"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -151,6 +153,9 @@ m9-v3-pretraining-check: ## Run all gates required before M9 v3 training
 
 train-m9-ippo-v3: ## Run governed M9 v3 diverse-root construction
 	@bash $(SCRIPTS)/train-m9-ippo-v3.sh
+
+m9-policy-mode-diagnostic: ## Diagnose rejected-v3 stochastic/argmax behavior
+	@bash $(SCRIPTS)/m9-policy-mode-diagnostic.sh
 
 secondary-claim-wake-check: ## Verify V35's fixed-seat claim-loss boundary
 	@bash $(SCRIPTS)/secondary-claim-wake-check.sh

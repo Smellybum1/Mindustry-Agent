@@ -2356,7 +2356,10 @@ repository-evidence mapping used for the M6 audit is:
   9602/19602/29602/39602, and two fresh JVMs. A total of at least 32/160
   stochastic wins denotes a diagnostic sampling signal only; v3 remains
   rejected and cannot be selected or promoted. Protocol SHA is
-  `89fecf69b76cd0fb...`. No diagnostic episode has run.
+  `89fecf69b76cd0fb...`. The fail-closed source/checkpoint/root validator,
+  immutable-model runner, exact fresh-JVM comparison, result classification,
+  command surface, and focused tests are implemented locally. No diagnostic
+  episode has run; commit the implementation before execution.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

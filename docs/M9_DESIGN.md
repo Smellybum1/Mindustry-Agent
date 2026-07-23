@@ -189,7 +189,9 @@ pins, and dependency lock.
    four categorical streams with seeds 9602/19602/29602/39602, and two
    exact fresh-JVM runs. At least 32/160 stochastic wins denotes a diagnostic
    sampling signal but cannot repair or promote v3. No diagnostic episode has
-   run yet.
+   run yet. Fail-closed source/checkpoint/root validation, immutable-model
+   execution, exact twin-JVM comparison, and focused tests are implemented
+   locally and must be committed before execution.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 
