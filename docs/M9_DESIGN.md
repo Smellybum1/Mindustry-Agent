@@ -226,6 +226,14 @@ pins, and dependency lock.
    a separately precommitted success-conditioned self-imitation mechanism.
    Compact result SHA is `7273098097889601...`; no restricted data was
    accessed.
+   **V5 precommitted 2026-07-24:** ADR-0083 freezes
+   `m9-ippo-v5-success-imitation`. V5 inherits v4 and changes only one learning
+   mechanism: add coefficient `0.02` times sampled-action NLL for actor-valid
+   transitions from winning episodes in the current 64-episode update. Losses,
+   forced controls, prior updates, replay, teachers, extra passes/RNGs, and
+   restricted data are excluded. Config/protocol SHA prefixes are
+   `056a6ee24363b55a...` and `205508d8cfaba910...`. No v5 implementation,
+   trajectory, optimizer update, or changed model exists.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

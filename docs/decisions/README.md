@@ -87,6 +87,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0080](ADR-0080-m9-ippo-v4-entropy-anneal-rejection.md) | Reject M9 IPPO v4 at public construction |
 | [0081](ADR-0081-m9-v4-late-checkpoint-diagnostic-precommit.md) | Freeze the immutable-v4 late-checkpoint diagnostic |
 | [0082](ADR-0082-m9-v4-late-checkpoint-diagnostic-result.md) | Accept the v4 deterministic-mode instability signal |
+| [0083](ADR-0083-m9-ippo-v5-success-imitation-precommit.md) | Freeze M9 IPPO v5 success-conditioned self-imitation |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

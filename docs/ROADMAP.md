@@ -2451,7 +2451,12 @@ categorical, while update 32 is 0/40 argmax but retains 60/160 categorical
 wins. ADR-0082 accepts deterministic mode instability, keeps v4 rejected, and
 requires a separate precommit before one success-conditioned self-imitation
 mechanism. Compact result SHA is `7273098097889601...`; no restricted data was
-accessed.
+accessed. ADR-0083 now freezes `m9-ippo-v5-success-imitation`: v4 plus one
+constant `0.02` sampled-action NLL over actor-valid transitions from winning
+episodes in the current update only. It adds no replay, teacher, pass, RNG,
+episode, root, reward, or restricted data. Config/protocol SHA prefixes are
+`056a6ee24363b55a...` and `205508d8cfaba910...`. No v5 implementation or
+trajectory exists.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

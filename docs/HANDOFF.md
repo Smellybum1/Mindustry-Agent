@@ -1522,12 +1522,13 @@ queue.
    rejected. Precommit the recommended v4 entropy-annealing successor before
    any new model work. ADR-0079 now freezes v4's sole change as the inclusive
    linear entropy schedule `0.02 * (32 - update) / 31`; implementation is next.
-5. **Precommit ADR-0082's v5 successful-mode consolidation mechanism.** V4
+5. **Implement ADR-0083's v5 success-imitation boundary before training.** V4
    remains rejected; do not rerun, retune, select update 31, or execute Replica
-   B. Freeze one success-conditioned self-imitation loss over the candidate's
-   own unforced actor-valid transitions from winning public training episodes.
-   Pin its coefficient, PPO/entropy interaction, telemetry, data flow, budget,
-   roots, RNGs, and gates before implementation or training.
+   B. Add only the frozen `0.02` sampled-action NLL over actor-valid transitions
+   from winning episodes in the current update. Prove exact filtering,
+   empty-filter zero, minibatch application, telemetry, v4 inheritance,
+   v1--v4 compatibility, candidate-aware artifacts/authority/runner paths, and
+   the complete public gate before Replica A.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

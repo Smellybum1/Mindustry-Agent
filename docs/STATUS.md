@@ -2402,6 +2402,13 @@ repository-evidence mapping used for the M6 audit is:
   `7273098097889601...`. V4 remains rejected; no checkpoint selection,
   training, promotion, or restricted access occurred. A separately
   precommitted success-conditioned self-imitation mechanism is next.
+- ADR-0083 now precommits `m9-ippo-v5-success-imitation` before implementation
+  or training. V5 inherits v4 exactly and adds one `0.02` sampled-action NLL
+  over only actor-valid transitions from winning episodes in the current
+  64-episode update. It adds no replay, pass, teacher, RNG, episode, root,
+  reward, or restricted data. Config/protocol SHA prefixes are
+  `056a6ee24363b55a...` and `205508d8cfaba910...`. No v5 trajectory or model
+  update exists.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
