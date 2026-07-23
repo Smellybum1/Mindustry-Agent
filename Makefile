@@ -16,7 +16,7 @@ SCRIPTS := scripts
         candidate-policy-check single-brain-failover-check \
         per-seat-history-check \
         m9-shared-policy-check m9-reward-check m9-rollout-check \
-        m9-artifact-check m9-pretraining-check m9-baseline \
+        m9-artifact-check m9-pretraining-check m9-baseline train-m9-ippo \
         secondary-claim-wake-check \
         owned-schematic-staging-check coordination-parity \
         public-demo-parity \
@@ -47,6 +47,7 @@ help: ## List available targets
 	@echo "  m9-artifact-check M9 checkpoint/manifest exact replay gate"
 	@echo "  m9-pretraining-check complete M9 gate before replica A"
 	@echo "  m9-baseline M9 public fixed-role shared-expert baseline"
+	@echo "  train-m9-ippo exact M9 IPPO replicas + direct comparison"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -123,6 +124,9 @@ m9-pretraining-check: ## Run the complete M9 pretraining gate
 
 m9-baseline: ## Freeze M9 public fixed-role shared-expert evidence
 	@bash $(SCRIPTS)/m9-baseline.sh
+
+train-m9-ippo: ## Run exact M9 IPPO replicas and direct comparison
+	@bash $(SCRIPTS)/train-m9-ippo.sh
 
 secondary-claim-wake-check: ## Verify V35's fixed-seat claim-loss boundary
 	@bash $(SCRIPTS)/secondary-claim-wake-check.sh

@@ -213,6 +213,16 @@ def reproducibility_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
         "deterministic_checkpoint_verification",
     )
     evidence = {key: copy.deepcopy(manifest[key]) for key in keys}
+    for key in (
+        "pretraining_gate",
+        "public_comparison",
+        "construction_passed",
+        "mappo_statistical_thresholds_passed",
+        "failure",
+        "selected_checkpoint_payload_update",
+    ):
+        if key in manifest:
+            evidence[key] = copy.deepcopy(manifest[key])
     checkpoint = manifest["selected_checkpoint"]
     evidence["selected_checkpoint"] = (
         {

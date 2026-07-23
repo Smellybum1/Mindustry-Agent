@@ -2,8 +2,11 @@
 
 Status: initial architecture boundary implemented and verified under ADR-0069;
 the immutable IPPO optimization/reward/public-comparison recipe is frozen by
-ADR-0070. No M9 training episode has run. This document describes the target
-architecture and the staged evidence required before broader M9 claims.
+ADR-0070. The complete pretraining gate has passed and the governed exact-
+replica runner is implemented. No M9 training episode has run; the runner must
+be committed and the complete gate rerun from that exact commit first. This
+document describes the target architecture and the staged evidence required
+before broader M9 claims.
 
 ## Scope
 
@@ -94,7 +97,12 @@ pins, and dependency lock.
    terminal combat reset. Run/checkpoint manifest orchestration and exact
    checkpoint replay are now implemented: canonical model/optimizer/content
    lineage and path-independent manifest evidence reproduce across processes
-   and fresh JVMs. Two independent training runs remain pending.
+   and fresh JVMs. The full runner now enforces exact-commit preflight
+   authority, 32 deterministic all-root cycles, per-update public dev frontier,
+   eligible-only selection, progress telemetry, paired bootstrap comparison,
+   two fresh-JVM selected-checkpoint replays, per-file serializer integrity, and
+   canonical semantic replica identity. Two independent training runs remain
+   pending.
    The fixed server-expert baseline is frozen from implementation commit
    `dea79c487a`: 36/40 public wins, mean core `967.95`, mean team return
    `-1.641725`, exact terminal-reset replay, report `ba4c9182f346a6ee...`.

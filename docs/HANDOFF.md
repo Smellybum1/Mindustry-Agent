@@ -1259,8 +1259,16 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   gate inventory. Its Java phase is CRLF-safe in a shared Windows/WSL checkout
   without editing upstream `gradlew`. The full gate passed from commit
   `2b62f7e5d7`; the versioned public-only result SHA is `e0281b195eb87be...`,
-  records no sealed-data access, and authorizes replica A. No training episode
-  has run yet.
+  records no sealed-data access, and authorized the pre-run boundary then
+  present. No training episode has run yet.
+- **M9 exact replica runner implemented, not yet authorized to execute**:
+  `train-m9-ippo` enforces the 32-cycle/64-root recipe, exact-current-commit
+  gate authority, every-update 40-root dev frontier, eligible-only selection,
+  atomic progress/manifests, paired bootstrap comparison, two fresh-JVM
+  selected-checkpoint replays, per-file serializer integrity, and canonical
+  semantic replica identity. Six focused governance tests and all 388 Python
+  tests pass. Commit it and rerun the complete gate from that exact commit
+  before the first training episode.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1328,8 +1336,10 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 |---|---|
 | `make bootstrap` | Prints ENGINE_VERSION, Java/Python/Git versions, Gradle wrapper presence, pytest presence; resolves `python` on Windows or `python3` on stock Ubuntu; ends `bootstrap: OK`, exit 0. Clean Ubuntu verification passed at `43d3b17db6`. |
 | `make build` | Builds `rl-server:dist` + the loadable `agent-plugin:dist`, then validates the Python package import; ends `build: OK`, exit 0. |
-| `make test` | Runs the complete Python suite (287 with the locked runtime, or the 33-test stdlib core boundary without it), then the `agent-core` / `rl-server` JUnit suites and `agent-plugin` compile check. Literal clean-checkout Ubuntu execution passed at `43d3b17db6`; hosted Ubuntu run `29972868046` passed the locked install, full tests, and distribution build at `6b4afc4d3f`. |
-| `make test-python` | With the locked dev/RL runtime, `pytest python/tests -q` runs all 287 tests. Without pytest, the script runs the governed 33-test stdlib-only core boundary under `python -S`; both paths pass. |
+| `make test` | Runs the complete Python suite (388 with the locked runtime, or the governed stdlib core boundary without it), then the `agent-core` / `rl-server` JUnit suites and `agent-plugin` compile check. |
+| `make test-python` | With the locked dev/RL runtime, `pytest python/tests -q` runs all 388 tests. Without pytest, the script runs the governed stdlib-only core boundary under `python -S`; both paths pass. |
+| `make m9-pretraining-check` | Runs all Python/Java tests, M9 reward/parity/rollout/artifact checks, smoke, determinism, and golden replay, then writes an exact-commit public-only result. Last passing implementation commit before the runner was `2b62f7e5d7`. |
+| `make train-m9-ippo` | On WSL2 with pinned `UV`/`JAVA`, requires an exact-current-commit complete-gate result, reconstructs the locked CPU runtime, runs independent 2,048-episode replicas A/B, then verifies canonical checkpoint and full-run identity. Not yet executed. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
 | `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
@@ -1476,9 +1486,9 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Implement and review the governed exact M9 replica runner.** Preserve the
-   accepted 32-cycle/64-episode recipe and checkpoint lineage.
-2. **Gate and commit the runner before its first training episode.**
+1. **Review, commit, and push the governed exact M9 replica runner.** Exclude
+   the four protected user files.
+2. **Rerun the complete gate from the exact runner commit.**
 3. **Run exact replica A/B.** Use frozen M9 train/dev roots and preserve direct
    replay/manifest lineage.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final

@@ -2249,12 +2249,21 @@ repository-evidence mapping used for the M6 audit is:
   wrapper view when a shared Windows checkout exposes `gradlew` with CRLF; it
   does not modify the upstream wrapper or machine Git settings. The whole
   command must pass before replica A.
-- Current Python regression passes 382 tests. Prior pinned Java/custom-module
+- Current Python regression passes 388 tests. Prior pinned Java/custom-module
   tests, smoke, five-seed direct/traversed M9 parity, stochastic terminal-reset
   replay, cross-process/reset determinism, and the 664-checkpoint golden pass.
   The complete gate passed from exact commit `2b62f7e5d7`; its versioned
   public-only result has SHA `e0281b195eb87be...`, records no sealed-data
-  access, and authorizes replica A. No M9 training episode has run yet.
+  access, and authorized the pre-run boundary then present. No M9 training
+  episode has run yet.
+- The governed `train-m9-ippo` runner now constructs the frozen 2,048-episode
+  schedule, requires an exact-current-commit complete-gate result, evaluates
+  every update on all 40 public dev roots, selects only an eligible checkpoint,
+  writes atomic progress/manifests, performs paired public comparison and two
+  fresh-JVM replays, validates each serializer file independently, and compares
+  replicas by canonical checkpoint content. Its six focused tests pass; the
+  full Python count is now 388. The runner still requires commit plus a new
+  exact-commit complete gate before replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

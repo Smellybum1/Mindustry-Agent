@@ -2336,8 +2336,13 @@ digests are `0d391dea0287ea28...`, `f85b6d34835594b0...`, and
 implementation commit `2b62f7e5d7`: Python/Java, focused M9 checks, smoke,
 cross-process/reset determinism, and the 664-checkpoint golden replay are green.
 The versioned public-only preflight result has SHA `e0281b195eb87be...` and
-records no confirmation or held-out access. Replica A is now authorized, but no
-training episode has run yet.
+records no confirmation or held-out access. The governed full-run runner is
+implemented with exact-commit authority, 32 deterministic all-root cycles,
+per-update 40-root dev selection, progress telemetry, fresh-JVM replay, paired
+comparison, per-file serializer integrity, and canonical direct replica
+identity. Its six focused governance tests and the 388-test Python suite pass.
+It must be committed and the complete gate rerun from that exact commit before
+replica A; no training episode has run yet.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
