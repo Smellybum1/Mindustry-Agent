@@ -2382,6 +2382,13 @@ smoke, cross-process/reset determinism, and the M6 golden replay are green. The
 versioned pretraining result SHA is `70cbefcc779bea60...` and records no
 confirmation or held-out access. Because committing that result changes HEAD,
 one final exact-commit gate rerun is required before replica A.
+That rerun passed at exact commit `e6a29fb351`. Replica A completed the full
+2,048-episode/32-update budget but failed construction: update 2 was best at
+11/40 public dev wins, return `-14.70004`, core `260.425`, and idle
+`0.29205803`; update 32 was 0/40. Training won 513/2,048, below v1's 598.
+ADR-0074 rejects v2, prohibits replica B, leaves MAPPO blocked, and records
+compact result SHA `42b4a2c4ee6eb542...`. No confirmation or held-out data was
+accessed. A separately precommitted public IPPO successor is required.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

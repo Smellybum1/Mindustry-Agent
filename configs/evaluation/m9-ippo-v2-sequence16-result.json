@@ -1,0 +1,87 @@
+{
+  "schema": "m9_ippo_construction_result_v1",
+  "candidate_version": "m9-ippo-v2-sequence16",
+  "data_classification": "public_train_and_dev_only",
+  "implementation_commit": "e6a29fb35142fa2686625d3267824e07cffbc284",
+  "pretraining_gate": {
+    "passed": true,
+    "implementation_commit": "e6a29fb35142fa2686625d3267824e07cffbc284",
+    "sha256": "71c6b30d7d7a46acba376e38380b25934440607a9ed6436197eb9a4eafa734bd"
+  },
+  "recipe": {
+    "config_sha256": "266e50429902de0d97049eaeb80558b22bb20fffedda926e92091102489a76da",
+    "protocol_sha256": "ec9a69612b709290a339b1e44f202b65d6dabc5d47b513021ab474dee54934b0",
+    "episodes": 2048,
+    "updates": 32,
+    "dev_episodes_per_update": 40,
+    "sole_change_from_v1": "deterministic_same_seat_sequence16_recurrent_backpropagation"
+  },
+  "replica_a1": {
+    "manifest_sha256": "ff69df0d29ee1d017a9e849d687ac58b22c6868f1d9262f059b2fdd5f0c1b22c",
+    "full_run_reproducibility_digest": "ba57726bd57a7286e030fd9910928ea11854bcc3151e1bef054b182cc02755ef",
+    "bit_exact": true,
+    "training_episodes": 2048,
+    "optimizer_updates": 32,
+    "construction_passed": false
+  },
+  "replica_b": {
+    "executed": false,
+    "reason": "ADR-0073 prohibits replica B after replica A fails construction"
+  },
+  "public_frontier": {
+    "eligible_checkpoints": 0,
+    "required_minimum_wins": 30,
+    "required_maximum_mean_team_idle_fraction_exclusive": 0.25,
+    "best_observed": {
+      "update": 2,
+      "wins": 11,
+      "episodes": 40,
+      "mean_team_return": -14.700039999999996,
+      "mean_core_health": 260.425,
+      "mean_team_idle_fraction": 0.2920580322090025,
+      "checkpoint_content_sha256": "2f077998d4570c1676a7346f3885afdd3b92c817a8ba28a8fa03b437eaf991ee",
+      "model_state_sha256": "f9f70512f6f5a77cca0350242b89267796b633787a24d4da0483420c6c3796d9"
+    },
+    "final_update": {
+      "update": 32,
+      "wins": 0,
+      "episodes": 40,
+      "mean_team_return": -12.34555,
+      "mean_core_health": 0.0,
+      "mean_team_idle_fraction": 0.025270604403655594
+    }
+  },
+  "public_training_summary": {
+    "episodes": 2048,
+    "wins": 513,
+    "losses": 1535,
+    "transitions": 201286,
+    "mean_team_return": -10.831361816406211,
+    "mean_team_idle_fraction": 0.13496585554021584,
+    "v1_train_wins": 598,
+    "interpretation": "Sequence backpropagation changed the deterministic optimization trajectory but regressed both public construction and repeated-root training; it did not resolve the train/dev generalization failure."
+  },
+  "public_baseline": {
+    "policy": "shared-expert-v1",
+    "wins": 36,
+    "episodes": 40,
+    "mean_team_return": -1.641725,
+    "mean_core_health": 967.95
+  },
+  "decision": {
+    "construction_passed": false,
+    "failure": "no checkpoint passed the public quality gate",
+    "selected_checkpoint": null,
+    "replica_b_authorized": false,
+    "mappo_authorized": false,
+    "candidate_status": "rejected"
+  },
+  "restricted_state": {
+    "confirmation_namespace_exists": false,
+    "m9_held_out_namespace_exists": false,
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0,
+    "confirmation_or_held_out_access": false,
+    "m8_held_out_v7": "sealed_unconsumed"
+  }
+}

@@ -12,9 +12,10 @@ and no confirmation or held-out data was accessed. ADR-0073 prospectively
 freezes `m9-ippo-v2-sequence16`: the sole learning change is deterministic
 16-boundary truncated recurrent backpropagation within one seat and reset
 segment. Its implementation and complete public-only pretraining gate now pass;
-no v2 training trajectory or governed optimizer update has begun. This document
-describes the target architecture and the staged evidence required before
-broader M9 claims.
+Replica A completed and ADR-0074 rejects v2 after an 11/40 best public result.
+Replica B did not run, no checkpoint was selected, and MAPPO remains blocked.
+This document describes the target architecture and the staged evidence
+required before broader M9 claims.
 
 ## Scope
 
@@ -152,6 +153,13 @@ pins, and dependency lock.
    `70cbefcc779bea60...`; it records no confirmation or held-out access. Because
    the evidence commit changes HEAD, the same complete gate must pass once more
    at that exact commit before replica A starts.
+   **V2 rejected 2026-07-24:** the final exact-commit gate passed at
+   `e6a29fb351`. Replica A completed 2,048 episodes and 32 updates, but its best
+   public result was update 2 at 11/40 wins, return `-14.70004`, core `260.425`,
+   and idle `0.29205803`; final performance was 0/40. Training won 513/2,048,
+   below v1's 598. ADR-0074 rejects v2, blocks replica B and MAPPO, and records
+   compact result SHA `42b4a2c4ee6eb542...`. No confirmation or held-out data
+   was accessed.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 
