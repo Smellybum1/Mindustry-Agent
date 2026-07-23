@@ -350,7 +350,11 @@ def base_run_manifest(
         **(
             {"training_root_schedule": config["training_root_schedule"]}
             if config.get("candidate_version")
-            in ("m9-ippo-v3-diverse2048", "m9-ippo-v4-entropy-anneal")
+            in (
+                "m9-ippo-v3-diverse2048",
+                "m9-ippo-v4-entropy-anneal",
+                "m9-ippo-v5-success-imitation",
+            )
             else {}
         ),
         "initial_model_state_sha256": initial_model_state_sha256,

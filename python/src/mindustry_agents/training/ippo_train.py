@@ -40,12 +40,14 @@ from mindustry_agents.training.ippo_preflight import (
     V2_GATES,
     V3_GATES,
     V4_GATES,
+    V5_GATES,
 )
 from mindustry_agents.training.ippo_ppo import (
     IPPO_V1_CONFIG_SHA256,
     IPPO_V2_CONFIG_SHA256,
     IPPO_V3_CONFIG_SHA256,
     IPPO_V4_CONFIG_SHA256,
+    IPPO_V5_CONFIG_SHA256,
     config_sha256,
     ippo_update,
     load_ippo_config,
@@ -92,6 +94,13 @@ def _candidate_contract(config: dict[str, Any]) -> dict[str, Any]:
             "preflight_schema": "m9_ippo_v4_preflight_v1",
             "gates": V4_GATES,
             "prefix": "ippo-v4-entropy-anneal",
+            "baseline": "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json",
+        }
+    if candidate == "m9-ippo-v5-success-imitation":
+        return {
+            "preflight_schema": "m9_ippo_v5_preflight_v1",
+            "gates": V5_GATES,
+            "prefix": "ippo-v5-success-imitation",
             "baseline": "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json",
         }
     raise ValueError("M9 IPPO candidate identity is unsupported")
@@ -204,6 +213,7 @@ def training_seed_schedule(
     if config.get("candidate_version") in (
         "m9-ippo-v3-diverse2048",
         "m9-ippo-v4-entropy-anneal",
+        "m9-ippo-v5-success-imitation",
     ):
         if (
             cycles != 32
@@ -501,7 +511,11 @@ def train(
         expected_count=(
             2048
             if config["candidate_version"]
-            in ("m9-ippo-v3-diverse2048", "m9-ippo-v4-entropy-anneal")
+            in (
+                "m9-ippo-v3-diverse2048",
+                "m9-ippo-v4-entropy-anneal",
+                "m9-ippo-v5-success-imitation",
+            )
             else 64
         ),
         lower=TRAIN_MINIMUM,
@@ -533,6 +547,7 @@ def train(
                 "m9-ippo-v2-sequence16",
                 "m9-ippo-v3-diverse2048",
                 "m9-ippo-v4-entropy-anneal",
+                "m9-ippo-v5-success-imitation",
             )
             and protocol.get("baseline", {}).get("evidence")
             != contract["baseline"]
@@ -618,7 +633,10 @@ def train(
                     )
             model.train()
             update = cycle + 1
-            if config["candidate_version"] == "m9-ippo-v4-entropy-anneal":
+            if config["candidate_version"] in (
+                "m9-ippo-v4-entropy-anneal",
+                "m9-ippo-v5-success-imitation",
+            ):
                 metrics = ippo_update(
                     model,
                     optimizer,
@@ -842,6 +860,7 @@ def compare_replicas(
             IPPO_V2_CONFIG_SHA256,
             IPPO_V3_CONFIG_SHA256,
             IPPO_V4_CONFIG_SHA256,
+            IPPO_V5_CONFIG_SHA256,
         )
     ):
         raise ValueError("M9 replica config identity is invalid")

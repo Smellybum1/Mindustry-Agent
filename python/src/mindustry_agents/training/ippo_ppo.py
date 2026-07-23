@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 from dataclasses import dataclass
@@ -42,6 +43,12 @@ IPPO_V4_CONFIG_SHA256 = (
 )
 IPPO_V4_PROTOCOL_SHA256 = (
     "db9b5647f249d30889b911a075905a78f4ba9ccef5613bc25d09126e1d1e7ace"
+)
+IPPO_V5_CONFIG_SHA256 = (
+    "056a6ee24363b55aac62762c3854ff0aa5bb190df8c05fad7ab5fcf5be332002"
+)
+IPPO_V5_PROTOCOL_SHA256 = (
+    "205508d8cfaba9109825d1b31fb13dc295e0d988296aef89379980f5b559b460"
 )
 
 
@@ -267,6 +274,77 @@ def load_ippo_v4_config(path: Path) -> dict[str, Any]:
     return config
 
 
+def load_ippo_v5_config(path: Path) -> dict[str, Any]:
+    """Load and fail closed on ADR-0083's self-imitation recipe."""
+
+    if sha256_path(path) != IPPO_V5_CONFIG_SHA256:
+        raise ValueError("M9 IPPO v5 config hash does not match ADR-0083")
+    config = json.loads(path.read_text(encoding="utf-8"))
+    if (
+        config.get("schema") != "ippo_training_config_v5"
+        or config.get("candidate_version")
+        != "m9-ippo-v5-success-imitation"
+        or config.get("parent_candidate_version")
+        != "m9-ippo-v4-entropy-anneal"
+        or config.get("sole_learning_change")
+        != "add_within_update_winning_episode_action_nll_coefficient_0.02"
+    ):
+        raise ValueError("M9 IPPO v5 successor identity drifted")
+    parent = load_ippo_v4_config(
+        path.with_name("m9-ippo-v4-entropy-anneal.json")
+    )
+    inherited = copy.deepcopy(config)
+    baseline = copy.deepcopy(parent)
+    for document in (inherited, baseline):
+        for key in (
+            "schema",
+            "candidate_version",
+            "parent_candidate_version",
+            "sole_learning_change",
+            "public_evaluation_protocol",
+        ):
+            document.pop(key)
+    self_imitation = inherited.pop(
+        "success_conditioned_self_imitation", None
+    )
+    optimizer_self_imitation = inherited["optimizer_ppo"].pop(
+        "success_conditioned_self_imitation", None
+    )
+    if inherited != baseline:
+        raise ValueError("M9 IPPO v5 inheritance from v4 drifted")
+    if self_imitation != {
+        "schema": "within_update_winning_episode_action_nll_v1",
+        "coefficient": 0.02,
+        "source": "current_64_episode_public_training_batch_only",
+        "episode_filter": "authoritative_terminal_outcome_equals_win",
+        "transition_filter": "policy_loss_mask_true",
+        "target": "sampled_action_after_authoritative_mask",
+        "loss": (
+            "negative_log_probability_mean_over_qualifying_"
+            "transitions_per_minibatch"
+        ),
+        "empty_minibatch": "exact_zero_with_no_gradient",
+        "application": "every_ppo_minibatch_in_each_of_8_epochs",
+        "cross_update_replay": False,
+        "external_teacher": False,
+        "extra_rng": False,
+        "telemetry": [
+            "coefficient",
+            "qualifying_episodes",
+            "qualifying_transitions",
+            "active_minibatches",
+            "mean_active_minibatch_loss",
+        ],
+    }:
+        raise ValueError("M9 IPPO v5 self-imitation contract drifted")
+    if optimizer_self_imitation != {
+        "schema": "within_update_winning_episode_action_nll_v1",
+        "coefficient": 0.02,
+    }:
+        raise ValueError("M9 IPPO v5 optimizer loss contract drifted")
+    return config
+
+
 def load_ippo_config(path: Path) -> dict[str, Any]:
     """Load one accepted immutable M9 IPPO recipe by its exact hash."""
 
@@ -279,6 +357,8 @@ def load_ippo_config(path: Path) -> dict[str, Any]:
         return load_ippo_v3_config(path)
     if digest == IPPO_V4_CONFIG_SHA256:
         return load_ippo_v4_config(path)
+    if digest == IPPO_V5_CONFIG_SHA256:
+        return load_ippo_v5_config(path)
     raise ValueError("M9 IPPO config hash is not an accepted recipe")
 
 
@@ -292,6 +372,8 @@ def config_sha256(config: dict[str, Any]) -> str:
         return IPPO_V3_CONFIG_SHA256
     if candidate == "m9-ippo-v4-entropy-anneal":
         return IPPO_V4_CONFIG_SHA256
+    if candidate == "m9-ippo-v5-success-imitation":
+        return IPPO_V5_CONFIG_SHA256
     raise ValueError("M9 IPPO candidate identity is unsupported")
 
 
@@ -305,6 +387,8 @@ def protocol_sha256(config: dict[str, Any]) -> str:
         return IPPO_V3_PROTOCOL_SHA256
     if candidate == "m9-ippo-v4-entropy-anneal":
         return IPPO_V4_PROTOCOL_SHA256
+    if candidate == "m9-ippo-v5-success-imitation":
+        return IPPO_V5_PROTOCOL_SHA256
     raise ValueError("M9 IPPO candidate identity is unsupported")
 
 
@@ -314,7 +398,10 @@ def entropy_coefficient_for_update(
 ) -> float:
     """Return one candidate's immutable per-update entropy coefficient."""
 
-    if config.get("candidate_version") != "m9-ippo-v4-entropy-anneal":
+    if config.get("candidate_version") not in (
+        "m9-ippo-v4-entropy-anneal",
+        "m9-ippo-v5-success-imitation",
+    ):
         return float(config["entropy_coefficient"])
     if update is None:
         raise ValueError("M9 IPPO v4 optimizer update number is required")
@@ -513,6 +600,151 @@ def _ippo_one_boundary_update(
     return {
         key: value if key == "batches" else value / divisor
         for key, value in totals.items()
+    }
+
+
+def _ippo_success_imitation_update(
+    model: SharedRecurrentSelector,
+    optimizer: torch.optim.Optimizer,
+    episodes: Sequence[IPPOEpisodeRollout],
+    config: dict[str, Any],
+    shuffle_generator: torch.Generator,
+) -> dict[str, float]:
+    """Apply v4 PPO plus ADR-0083's current-update winning-action NLL."""
+
+    transitions, advantages, returns = ippo_advantages(
+        episodes,
+        gamma_per_second=float(config["gamma_per_second"]),
+        gae_lambda=float(config["gae_lambda"]),
+    )
+    candidates = torch.stack([item.candidates for item in transitions])
+    scalars = torch.stack([item.scalars for item in transitions])
+    present = torch.stack([item.candidate_present for item in transitions])
+    masks = torch.stack([item.action_mask for item in transitions])
+    hidden = torch.stack([item.hidden_input for item in transitions]).detach()
+    agent_ids = torch.tensor(
+        [item.agent_id for item in transitions], dtype=torch.long
+    )
+    actions = torch.tensor(
+        [item.action for item in transitions], dtype=torch.long
+    )
+    old_log_probs = torch.tensor(
+        [item.old_log_prob for item in transitions], dtype=torch.float32
+    )
+    actor_mask = torch.tensor(
+        [item.policy_loss_mask for item in transitions], dtype=torch.bool
+    )
+    success_mask = torch.tensor(
+        [
+            episode.outcome == "win" and item.policy_loss_mask
+            for episode in episodes
+            for item in episode.transitions
+        ],
+        dtype=torch.bool,
+    )
+    if len(success_mask) != len(transitions):
+        raise AssertionError("M9 self-imitation transition alignment drifted")
+    imitation = config["success_conditioned_self_imitation"]
+    coefficient = float(imitation["coefficient"])
+    if coefficient != 0.02:
+        raise ValueError("M9 self-imitation coefficient drifted")
+    batch_size = int(config["minibatch_size"])
+    if batch_size < 1:
+        raise ValueError("IPPO minibatch size must be positive")
+    qualifying_episodes = sum(
+        episode.outcome == "win" for episode in episodes
+    )
+    qualifying_transitions = int(success_mask.sum().item())
+    totals = {
+        "policy_loss": 0.0,
+        "value_loss": 0.0,
+        "entropy": 0.0,
+        "batches": 0.0,
+        "success_imitation_loss": 0.0,
+        "success_imitation_active_minibatches": 0.0,
+    }
+    for _ in range(int(config["ppo_epochs"])):
+        order = torch.randperm(len(transitions), generator=shuffle_generator)
+        for start in range(0, len(transitions), batch_size):
+            index = order[start : start + batch_size]
+            _, masked_logits, values, _ = model(
+                candidates[index],
+                scalars[index],
+                present[index],
+                masks[index],
+                agent_ids[index],
+                hidden[index],
+            )
+            log_probabilities = torch.log_softmax(masked_logits, dim=-1)
+            log_probs = log_probabilities.gather(
+                1, actions[index, None]
+            ).squeeze(1)
+            probabilities = torch.softmax(masked_logits, dim=-1)
+            entropy = -(probabilities * log_probabilities).sum(dim=-1)
+            active = actor_mask[index]
+            if active.any():
+                ratio = torch.exp(
+                    log_probs[active] - old_log_probs[index][active]
+                )
+                unclipped = ratio * advantages[index][active]
+                clipped = torch.clamp(
+                    ratio,
+                    1.0 - float(config["clip_ratio"]),
+                    1.0 + float(config["clip_ratio"]),
+                ) * advantages[index][active]
+                policy_loss = -torch.minimum(unclipped, clipped).mean()
+                entropy_loss = entropy[active].mean()
+            else:
+                policy_loss = values.sum() * 0.0
+                entropy_loss = values.sum() * 0.0
+            successful = success_mask[index]
+            if successful.any():
+                success_imitation_loss = -log_probs[successful].mean()
+                totals["success_imitation_loss"] += float(
+                    success_imitation_loss.item()
+                )
+                totals["success_imitation_active_minibatches"] += 1.0
+            else:
+                success_imitation_loss = values.sum() * 0.0
+            value_loss = functional.mse_loss(values, returns[index])
+            loss = (
+                policy_loss
+                + float(config["value_coefficient"]) * value_loss
+                - float(config["entropy_coefficient"]) * entropy_loss
+                + coefficient * success_imitation_loss
+            )
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(
+                model.parameters(), float(config["max_grad_norm"])
+            )
+            optimizer.step()
+            totals["policy_loss"] += float(policy_loss.item())
+            totals["value_loss"] += float(value_loss.item())
+            totals["entropy"] += float(entropy_loss.item())
+            totals["batches"] += 1.0
+    divisor = max(1.0, totals["batches"])
+    active_divisor = max(
+        1.0, totals["success_imitation_active_minibatches"]
+    )
+    return {
+        "policy_loss": totals["policy_loss"] / divisor,
+        "value_loss": totals["value_loss"] / divisor,
+        "entropy": totals["entropy"] / divisor,
+        "batches": totals["batches"],
+        "success_imitation_coefficient": coefficient,
+        "success_imitation_qualifying_episodes": float(
+            qualifying_episodes
+        ),
+        "success_imitation_qualifying_transitions": float(
+            qualifying_transitions
+        ),
+        "success_imitation_active_minibatches": totals[
+            "success_imitation_active_minibatches"
+        ],
+        "success_imitation_mean_active_minibatch_loss": (
+            totals["success_imitation_loss"] / active_divisor
+        ),
     }
 
 
@@ -779,7 +1011,11 @@ def ippo_update(
             shuffle_generator,
         )
     if schema in (None, "one_boundary_truncation_v1"):
-        if config.get("candidate_version") != "m9-ippo-v4-entropy-anneal":
+        candidate = config.get("candidate_version")
+        if candidate not in (
+            "m9-ippo-v4-entropy-anneal",
+            "m9-ippo-v5-success-imitation",
+        ):
             return _ippo_one_boundary_update(
                 model,
                 optimizer,
@@ -789,12 +1025,21 @@ def ippo_update(
             )
         coefficient = entropy_coefficient_for_update(config, update_number)
         scheduled_config = {**config, "entropy_coefficient": coefficient}
-        metrics = _ippo_one_boundary_update(
-            model,
-            optimizer,
-            episodes,
-            scheduled_config,
-            shuffle_generator,
-        )
+        if candidate == "m9-ippo-v5-success-imitation":
+            metrics = _ippo_success_imitation_update(
+                model,
+                optimizer,
+                episodes,
+                scheduled_config,
+                shuffle_generator,
+            )
+        else:
+            metrics = _ippo_one_boundary_update(
+                model,
+                optimizer,
+                episodes,
+                scheduled_config,
+                shuffle_generator,
+            )
         return {**metrics, "entropy_coefficient": coefficient}
     raise ValueError("unsupported M9 IPPO recurrent optimization contract")
