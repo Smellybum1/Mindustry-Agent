@@ -226,6 +226,24 @@ def test_v46_control_declaration_is_exact() -> None:
     importlib.util.find_spec("torch") is None,
     reason="RL extra is not installed",
 )
+def test_v46_direct_lineage_schema_includes_control_coordinate() -> None:
+    from mindustry_agents.training.checkpoint_lineage import (
+        _expected_lineage_schemas,
+    )
+
+    config = json.loads(CONFIG.read_text(encoding="utf-8"))
+    assert _expected_lineage_schemas(config) == {
+        "feature": FEATURE_SCHEMA_V3,
+        "reward": "selector_reward_v2",
+        "model": "selector_actor_critic_v5_expert_defer_control",
+        "control": CONTROL_SCHEMA_V2,
+    }
+
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("torch") is None,
+    reason="RL extra is not installed",
+)
 def test_v46_control_translation_and_teacher_space_are_bounded() -> None:
     import torch
 

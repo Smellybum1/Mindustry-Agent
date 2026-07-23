@@ -1074,6 +1074,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   implementation `173cd5c2a11f3237...`, with zero membership reads. Do not
   consume dev-v42 until exact replicas and all reusable scorecard/control gates
   pass. The receipt-aware embargo-safe suite passes 340 tests.
+- **V46 exact replicas complete**: both pinned runs select update 32 at 10/10
+  public-dev wins, return `7.22016`, core `639.2`, idle `0.01033305`, and DEFER
+  `0.18420177`. Checkpoint/model/replay/full-run prefixes are
+  `93694e4d70ec56e4...` / `70c762f358ae8cce...` /
+  `493ab925a384ccec...` / `8d61abfa4ce4fe10...`, and complete manifests compare
+  exactly. Direct lineage correctly failed closed on a missing expected control
+  coordinate; the validator now binds control v2 and all 341 tests pass.
+  Reusable gates are next; dev-v42 remains unconsumed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned

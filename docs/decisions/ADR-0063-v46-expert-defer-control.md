@@ -137,3 +137,9 @@ Its receipt binds membership
 `8f518384f19c193fa793034a141c0a89c6973dbe788de87520a6b86b16bed865`
 and implementation `173cd5c2a11f3237...`, and records zero membership reads.
 Dev-v42 is frozen and unconsumed; the receipt-aware suite passes 340 tests.
+
+Two pinned replicas select update 32 exactly at 10/10 public-dev wins, idle
+`0.01033305`, and mean DEFER `0.18420177`. Checkpoint and full-run prefixes are
+`93694e4d70ec56e4...` and `8d61abfa4ce4fe10...`. Direct-lineage validation now
+binds the explicit control-v2 coordinate after failing closed on its initial
+omission; all 341 tests pass. No reusable or restricted episode has run.

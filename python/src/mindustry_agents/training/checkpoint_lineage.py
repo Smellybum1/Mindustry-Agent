@@ -24,7 +24,11 @@ from mindustry_agents.training.ppo_selector import (
     _validated_reproducibility_digest,
     load_checkpoint,
 )
-from mindustry_agents.training.selector import expected_feature_schema
+from mindustry_agents.training.selector import (
+    CONTROL_SCHEMA_V2,
+    expected_control_schema,
+    expected_feature_schema,
+)
 
 DIRECT_LINEAGE_SCHEMA = "selector_checkpoint_direct_lineage_v1"
 DIRECT_LINEAGE_REPRODUCIBILITY_SCHEMA = (
@@ -55,6 +59,22 @@ def _run_reproducibility_digest(manifest: dict[str, Any]) -> str:
         return _validated_reproducibility_digest(manifest)
     except ValueError as error:
         raise ValueError("training manifest reproducibility digest mismatch") from error
+
+
+def _expected_lineage_schemas(config: dict[str, Any]) -> dict[str, str]:
+    """Return the exact schema coordinate recorded by a governed training run."""
+
+    control_schema = expected_control_schema(config)
+    return {
+        "feature": expected_feature_schema(config),
+        "reward": str(config.get("reward_schema", REWARD_SCHEMA)),
+        "model": build_selector_model(config).model_schema,
+        **(
+            {"control": control_schema}
+            if control_schema == CONTROL_SCHEMA_V2
+            else {}
+        ),
+    }
 
 
 def _direct_lineage_evidence(manifest: dict[str, Any]) -> dict[str, Any]:
@@ -138,11 +158,7 @@ def build_direct_lineage(
     if len(set(source_paths)) != 1 or source_hashes != [config_sha256, config_sha256]:
         raise ValueError("training config lineage mismatch")
 
-    expected_schemas = {
-        "feature": expected_feature_schema(config),
-        "reward": str(config.get("reward_schema", REWARD_SCHEMA)),
-        "model": build_selector_model(config).model_schema,
-    }
+    expected_schemas = _expected_lineage_schemas(config)
     if any(item.get("schemas") != expected_schemas for item in manifests):
         raise ValueError("training manifest schema mismatch")
 

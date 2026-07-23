@@ -998,6 +998,15 @@ and records zero membership-document reads. Dev-v42 is frozen and unconsumed;
 do not access it until exact replicas and every reusable scorecard/control gate
 pass. The receipt-aware embargo-safe suite now passes 340 tests.
 
+Two pinned V46 replicas select update 32 at 10/10 public-dev wins, return
+`7.22016`, core `639.2`, idle `0.01033305`, and mean DEFER `0.18420177`.
+Checkpoint/model/replay/full-run prefixes are `93694e4d70ec56e4...` /
+`70c762f358ae8cce...` / `493ab925a384ccec...` /
+`8d61abfa4ce4fe10...`, and the complete manifests compare exactly. Direct
+lineage initially failed closed because its expected schema omitted V46's
+control coordinate; that validator now binds control v2 explicitly and the
+341-test suite passes. No reusable or restricted episode has run.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

@@ -2010,6 +2010,15 @@ repository-evidence mapping used for the M6 audit is:
   frozen and unconsumed pending both exact replicas and all reusable
   scorecard/control gates. The receipt-aware embargo-safe suite passes 340
   tests.
+- Two pinned V46 replicas reproduce update 32 exactly at 10/10 public-dev wins,
+  mean return `7.22016`, core `639.2`, idle `0.01033305`, and mean DEFER
+  `0.18420177`. Checkpoint/model/replay/full-run prefixes are
+  `93694e4d70ec56e4...` / `70c762f358ae8cce...` /
+  `493ab925a384ccec...` / `8d61abfa4ce4fe10...`.
+- Direct-lineage construction failed closed before output because its expected
+  schema omitted the new control coordinate. The validator now explicitly
+  binds control v2; focused and full suites pass 341 tests. No reusable,
+  confirmation, or held-out episode has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

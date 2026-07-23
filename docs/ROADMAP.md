@@ -2022,6 +2022,13 @@ implementation `173cd5c2a11f3237...`, and zero membership reads. Dev-v42 is
 frozen and unconsumed pending exact replicas plus reusable scorecard/control
 gates; the receipt-aware suite passes 340 tests.
 
+Two exact V46 replicas select update 32 at 10/10 public-dev wins, return
+`7.22016`, core `639.2`, idle `0.01033305`, and DEFER `0.18420177`; checkpoint
+and full-run prefixes are `93694e4d70ec56e4...` and
+`8d61abfa4ce4fe10...`. Direct lineage now validates V46's explicit control
+schema after correctly failing closed on its omission. The 341-test suite
+passes. Reusable gates are next; dev-v42 remains unconsumed.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:
