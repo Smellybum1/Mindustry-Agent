@@ -347,6 +347,11 @@ def base_run_manifest(
                 config["training_cycles"] * config["episodes_per_update"]
             ),
         },
+        **(
+            {"training_root_schedule": config["training_root_schedule"]}
+            if config.get("candidate_version") == "m9-ippo-v3-diverse2048"
+            else {}
+        ),
         "initial_model_state_sha256": initial_model_state_sha256,
         "optimizer_updates": [],
         "checkpoint_selection": [],

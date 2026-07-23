@@ -31,6 +31,12 @@ IPPO_V2_CONFIG_SHA256 = (
 IPPO_V2_PROTOCOL_SHA256 = (
     "ec9a69612b709290a339b1e44f202b65d6dabc5d47b513021ab474dee54934b0"
 )
+IPPO_V3_CONFIG_SHA256 = (
+    "5d437c390fc54423ac1be1f27b47395e68bd42e5f85a74e8abd13275c5f9b458"
+)
+IPPO_V3_PROTOCOL_SHA256 = (
+    "29085f124d958f563965a682adb029bdff24bf3a03df2148dd19c41c36e2a82f"
+)
 
 
 @dataclass(frozen=True)
@@ -148,6 +154,48 @@ def load_ippo_v2_config(path: Path) -> dict[str, Any]:
     return config
 
 
+def load_ippo_v3_config(path: Path) -> dict[str, Any]:
+    """Load and fail closed on ADR-0075's diverse-root recipe."""
+
+    if sha256_path(path) != IPPO_V3_CONFIG_SHA256:
+        raise ValueError("M9 IPPO v3 config hash does not match ADR-0075")
+    config = json.loads(path.read_text(encoding="utf-8"))
+    if config.get("schema") != "ippo_training_config_v3":
+        raise ValueError("M9 IPPO v3 config schema is invalid")
+    if config.get("candidate_version") != "m9-ippo-v3-diverse2048":
+        raise ValueError("M9 IPPO v3 candidate identity is invalid")
+    if config.get("model_architecture") != IPPO_MODEL_ARCHITECTURE:
+        raise ValueError("M9 IPPO v3 model architecture drifted")
+    if config.get("teacher") is not None:
+        raise ValueError("M9 IPPO v3 does not authorize a teacher")
+    if config.get("confirmation_seed_set") is not None:
+        raise ValueError("M9 IPPO confirmation access is not authorized")
+    if config.get("held_out_seed_set") is not None:
+        raise ValueError("M9 IPPO held-out access is not authorized")
+    if int(config.get("torch_threads", 0)) != 1:
+        raise ValueError("M9 IPPO v3 requires one torch CPU thread")
+    if int(config["training_cycles"]) * int(config["episodes_per_update"]) != 2048:
+        raise ValueError("M9 IPPO v3 episode budget drifted")
+    if config.get("training_root_schedule") != {
+        "schema": "unique_root_per_episode_v1",
+        "root_count": 2048,
+        "reuse_count": 1,
+        "shuffle": "single_deterministic_full_schedule",
+        "shuffle_seed": 9603,
+        "updates": 32,
+        "episodes_per_update": 64,
+    }:
+        raise ValueError("M9 IPPO v3 diverse-root schedule contract drifted")
+    if config.get("recurrent_backpropagation") != {
+        "schema": "one_boundary_truncation_v1",
+        "hidden_input": "stored_rollout_state",
+        "hidden_output": "private_next_boundary_state",
+        "cross_agent_state": False,
+    }:
+        raise ValueError("M9 IPPO v3 one-boundary optimizer contract drifted")
+    return config
+
+
 def load_ippo_config(path: Path) -> dict[str, Any]:
     """Load one accepted immutable M9 IPPO recipe by its exact hash."""
 
@@ -156,6 +204,8 @@ def load_ippo_config(path: Path) -> dict[str, Any]:
         return load_ippo_v1_config(path)
     if digest == IPPO_V2_CONFIG_SHA256:
         return load_ippo_v2_config(path)
+    if digest == IPPO_V3_CONFIG_SHA256:
+        return load_ippo_v3_config(path)
     raise ValueError("M9 IPPO config hash is not an accepted recipe")
 
 
@@ -165,6 +215,8 @@ def config_sha256(config: dict[str, Any]) -> str:
         return IPPO_V1_CONFIG_SHA256
     if candidate == "m9-ippo-v2-sequence16":
         return IPPO_V2_CONFIG_SHA256
+    if candidate == "m9-ippo-v3-diverse2048":
+        return IPPO_V3_CONFIG_SHA256
     raise ValueError("M9 IPPO candidate identity is unsupported")
 
 
@@ -174,6 +226,8 @@ def protocol_sha256(config: dict[str, Any]) -> str:
         return IPPO_V1_PROTOCOL_SHA256
     if candidate == "m9-ippo-v2-sequence16":
         return IPPO_V2_PROTOCOL_SHA256
+    if candidate == "m9-ippo-v3-diverse2048":
+        return IPPO_V3_PROTOCOL_SHA256
     raise ValueError("M9 IPPO candidate identity is unsupported")
 
 

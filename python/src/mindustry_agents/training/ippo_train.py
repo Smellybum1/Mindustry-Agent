@@ -32,10 +32,14 @@ from mindustry_agents.training.ippo_artifacts import (
     load_ippo_checkpoint,
     save_ippo_checkpoint,
 )
-from mindustry_agents.training.ippo_preflight import GATES, V2_GATES
+from mindustry_agents.training.ippo_diverse_roots import (
+    diverse_training_seed_schedule,
+)
+from mindustry_agents.training.ippo_preflight import GATES, V2_GATES, V3_GATES
 from mindustry_agents.training.ippo_ppo import (
     IPPO_V1_CONFIG_SHA256,
     IPPO_V2_CONFIG_SHA256,
+    IPPO_V3_CONFIG_SHA256,
     config_sha256,
     ippo_update,
     load_ippo_config,
@@ -68,6 +72,13 @@ def _candidate_contract(config: dict[str, Any]) -> dict[str, Any]:
             "preflight_schema": "m9_ippo_v2_preflight_v1",
             "gates": V2_GATES,
             "prefix": "ippo-v2-sequence16",
+            "baseline": "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json",
+        }
+    if candidate == "m9-ippo-v3-diverse2048":
+        return {
+            "preflight_schema": "m9_ippo_v3_preflight_v1",
+            "gates": V3_GATES,
+            "prefix": "ippo-v3-diverse2048",
             "baseline": "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json",
         }
     raise ValueError("M9 IPPO candidate identity is unsupported")
@@ -172,11 +183,22 @@ def _seed_identity(root: Path, document: dict[str, Any], path: Path) -> dict:
 def training_seed_schedule(
     train_seeds: Sequence[int], config: dict[str, Any]
 ) -> list[int]:
-    """Repeat all governed roots with the frozen per-cycle shuffle stream."""
+    """Construct one candidate's immutable public training schedule."""
 
     seeds = [int(seed) for seed in train_seeds]
     cycles = int(config["training_cycles"])
     episodes_per_update = int(config["episodes_per_update"])
+    if config.get("candidate_version") == "m9-ippo-v3-diverse2048":
+        if (
+            cycles != 32
+            or episodes_per_update != 64
+            or cycles * episodes_per_update != len(seeds)
+        ):
+            raise ValueError("M9 IPPO v3 training schedule drifted")
+        return diverse_training_seed_schedule(
+            seeds,
+            shuffle_seed=int(config["shuffle_seed"]),
+        )
     if (
         cycles < 1
         or episodes_per_update != len(seeds)
@@ -460,7 +482,11 @@ def train(
         root,
         str(config["train_seed_set"]),
         split="train",
-        expected_count=64,
+        expected_count=(
+            2048
+            if config["candidate_version"] == "m9-ippo-v3-diverse2048"
+            else 64
+        ),
         lower=TRAIN_MINIMUM,
         upper=TRAIN_MAXIMUM,
         config=config,
@@ -485,7 +511,8 @@ def train(
         or protocol.get("held_out_access_authorized") is not False
         or protocol.get("confirmation_or_final_claim_authorized") is not False
         or (
-            config["candidate_version"] == "m9-ippo-v2-sequence16"
+            config["candidate_version"]
+            in ("m9-ippo-v2-sequence16", "m9-ippo-v3-diverse2048")
             and protocol.get("baseline", {}).get("evidence")
             != contract["baseline"]
         )
@@ -779,7 +806,11 @@ def compare_replicas(
     if (
         config_hashes[0] != config_hashes[1]
         or config_hashes[0]
-        not in (IPPO_V1_CONFIG_SHA256, IPPO_V2_CONFIG_SHA256)
+        not in (
+            IPPO_V1_CONFIG_SHA256,
+            IPPO_V2_CONFIG_SHA256,
+            IPPO_V3_CONFIG_SHA256,
+        )
     ):
         raise ValueError("M9 replica config identity is invalid")
     result = {

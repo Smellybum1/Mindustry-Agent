@@ -10,13 +10,17 @@ from pathlib import Path
 from typing import Any
 
 from mindustry_agents.process.launcher import repo_root
+from mindustry_agents.training.ippo_diverse_roots_check import build_report
 from mindustry_agents.training.ippo_ppo import (
     IPPO_V1_CONFIG_SHA256,
     IPPO_V1_PROTOCOL_SHA256,
     IPPO_V2_CONFIG_SHA256,
     IPPO_V2_PROTOCOL_SHA256,
+    IPPO_V3_CONFIG_SHA256,
+    IPPO_V3_PROTOCOL_SHA256,
     load_ippo_v1_config,
     load_ippo_v2_config,
+    load_ippo_v3_config,
     sha256_path,
 )
 
@@ -58,6 +62,17 @@ V2_GATES = (
     "m9-shared-policy-check",
     "m9-rollout-check",
     "m9-sequence-check",
+    "m9-artifact-check",
+    "smoke",
+    "determinism",
+)
+V3_GATES = (
+    "test-python",
+    "test-java",
+    "m9-reward-check",
+    "m9-shared-policy-check",
+    "m9-rollout-check",
+    "m9-diverse-roots-check",
     "m9-artifact-check",
     "smoke",
     "determinism",
@@ -224,17 +239,67 @@ def validate_v2_preflight(root: Path | None = None) -> dict[str, Any]:
     }
 
 
+def validate_v3_preflight(root: Path | None = None) -> dict[str, Any]:
+    """Validate ADR-0075's public diverse-root boundary."""
+
+    root = root or repo_root()
+    config_path = root / "configs/training/m9-ippo-v3-diverse2048.json"
+    config = load_ippo_v3_config(config_path)
+    protocol_path = root / config["public_evaluation_protocol"]
+    if sha256_path(protocol_path) != IPPO_V3_PROTOCOL_SHA256:
+        raise ValueError("M9 v3 public protocol hash drifted")
+    if sha256_path(config_path) != IPPO_V3_CONFIG_SHA256:
+        raise ValueError("M9 v3 config hash drifted")
+    if (
+        config["confirmation_seed_set"] is not None
+        or config["held_out_seed_set"] is not None
+    ):
+        raise ValueError("M9 v3 pretraining config gained sealed-data authority")
+
+    inherited = validate_preflight(root)
+    baseline = _load(
+        root, "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json"
+    )
+    current_path = root / "runs/m9-ippo-v3-diverse-roots-check.json"
+    current = json.loads(current_path.read_text(encoding="utf-8"))
+    expected = build_report(root)
+    if (
+        inherited.get("passed") is not True
+        or inherited.get("confirmation_or_held_out_access") is not False
+        or current != expected
+        or current.get("all_passed") is not True
+        or current.get("confirmation_or_held_out_access") is not False
+    ):
+        raise ValueError("M9 v3 diverse-root evidence is incomplete or divergent")
+    return {
+        "schema": "m9_ippo_v3_preflight_v1",
+        "implementation_commit": _project_commit(root),
+        "config_sha256": IPPO_V3_CONFIG_SHA256,
+        "protocol_sha256": IPPO_V3_PROTOCOL_SHA256,
+        "artifacts": EXPECTED,
+        "gates": list(V3_GATES),
+        "public_baseline_wins": baseline["aggregate"]["wins"],
+        "train_seed_sha256": current["train_seed_sha256"],
+        "training_schedule_sha256": current["schedule_sha256"],
+        "training_root_count": current["root_count"],
+        "training_root_reuse_count": current["root_reuse_count"],
+        "confirmation_or_held_out_access": False,
+        "passed": True,
+    }
+
+
 def write_preflight(
     path: Path,
     root: Path | None = None,
     *,
     candidate: str = "v1",
 ) -> dict[str, Any]:
-    result = (
-        validate_v2_preflight(root)
-        if candidate == "v2"
-        else validate_preflight(root)
-    )
+    if candidate == "v2":
+        result = validate_v2_preflight(root)
+    elif candidate == "v3":
+        result = validate_v3_preflight(root)
+    else:
+        result = validate_preflight(root)
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
     temporary.write_text(
@@ -254,7 +319,7 @@ def main() -> int:
         type=Path,
         help="atomically write the deterministic preflight result",
     )
-    parser.add_argument("--candidate", choices=("v1", "v2"), default="v1")
+    parser.add_argument("--candidate", choices=("v1", "v2", "v3"), default="v1")
     args = parser.parse_args()
     result = (
         write_preflight(args.output, candidate=args.candidate)
@@ -262,7 +327,11 @@ def main() -> int:
         else (
             validate_v2_preflight()
             if args.candidate == "v2"
-            else validate_preflight()
+            else (
+                validate_v3_preflight()
+                if args.candidate == "v3"
+                else validate_preflight()
+            )
         )
     )
     print(json.dumps(result, sort_keys=True))

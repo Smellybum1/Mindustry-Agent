@@ -167,7 +167,12 @@ pins, and dependency lock.
    reward, PPO values, dev roots, thresholds, and comparator remain exact.
    Config/protocol/train-root hashes are `5d437c390fc54423...`,
    `29085f124d958f56...`, and `2e4d5b853ba9c8a6...`. No v3 trajectory or
-   optimizer update exists; implementation and the exact-commit gate are next.
+   optimizer update exists. Candidate-aware config/checkpoint/manifest/training
+   authority is now implemented locally. The shared schedule validator proves
+   exact membership, zero v1-train/dev overlap, one-use coverage, deterministic
+   32-by-64 slicing, and schedule digest `a58244f31f21c24b...`; focused tests
+   prove v1 optimizer dispatch and fail-closed v3 authority. The complete
+   404-test Python suite passes. Commit and the exact-commit gate are next.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 
