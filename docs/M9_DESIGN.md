@@ -93,6 +93,9 @@ pins, and dependency lock.
    individual-reward adversaries pass. The rollout repeats exactly after
    terminal combat reset. Run/checkpoint manifest orchestration, two
    independent training runs, and checkpoint replay evidence remain pending.
+   The fixed server-expert baseline is frozen from implementation commit
+   `dea79c487a`: 36/40 public wins, mean core `967.95`, mean team return
+   `-1.641725`, exact terminal-reset replay, report `ba4c9182f346a6ee...`.
 4. Public development evaluation: the learned all-seat team must beat the
    fixed-role scripted baseline on at least one randomized scenario family
    before MAPPO work is authorized.

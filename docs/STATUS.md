@@ -2231,9 +2231,12 @@ repository-evidence mapping used for the M6 audit is:
   task events, ticks, outcomes, and the 16,200-tick budget have zero changes.
   The new fixture hash is `c753376fbe6db2ec...`.
 - Exact training replicas have not started. The fixed public baseline has been
-  diagnostically run but must be rebound to the committed implementation
-  before replica A. Run/checkpoint manifest orchestration and exact checkpoint
-  replay still need implementation before training.
+  frozen from exact implementation commit `dea79c487a` and runnable JAR
+  `fdbd1d5482b556137...`: 36/40 wins, mean core `967.95`, mean shared team
+  return `-1.641725`, task-board idle `1.0`, and exact terminal-reset replay.
+  Report SHA-256 is `ba4c9182f346a6ee...`. Run/checkpoint manifest
+  orchestration and exact checkpoint replay still need implementation before
+  training.
 - Final implementation gates pass: 379 Python tests, pinned Java/custom-module
   tests, smoke, five-seed direct/traversed M9 parity, stochastic terminal-reset
   replay, cross-process/reset determinism, and the 664-checkpoint golden.

@@ -2325,7 +2325,10 @@ and stochastic terminal-reset replay pass. The reward/rollout report hashes are
 `f6b87fb96ccf206c...` / `70284030cb0cc2b4...`. A prior-combat Arc free-pool
 reset leak was fixed; the regenerated 664-checkpoint golden changes only 128
 state hashes, with zero action/event/tick/outcome changes. Exact replicas have
-not started.
+not started. The fixed server expert is now frozen from implementation commit
+`dea79c487a` on all 40 public dev roots: 36 wins, mean core `967.95`, mean team
+return `-1.641725`, idle `1.0`, and exact terminal-reset replay. Evidence SHA is
+`ba4c9182f346a6ee...`. Run/checkpoint manifests and checkpoint replay are next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

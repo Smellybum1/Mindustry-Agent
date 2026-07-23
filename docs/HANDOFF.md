@@ -1242,6 +1242,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   The 379-test Python suite, pinned Java checks, smoke, five-seed parity,
   determinism, and 664-checkpoint golden pass. Exact training replicas have
   not started.
+- **M9 fixed baseline frozen before training**: from exact implementation
+  commit `dea79c487a` and JAR `fdbd1d5482b556137...`, the server shared expert
+  wins 36/40 public dev-v1 roots, with mean core `967.95`, mean shared return
+  `-1.641725`, and task-board idle `1.0`. The legacy driver acts outside board
+  assignment accounting, so the idle value is retained honestly. Terminal
+  reset repeats exactly; report SHA is `ba4c9182f346a6ee...`.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1457,13 +1463,11 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Review, commit, and push the green M9 reward/rollout/optimizer boundary.**
-   Exclude the four protected user files.
-2. **Re-run and freeze the fixed-role server-expert result from that exact
-   commit on the public M9 dev document.** Bind its hashes before replica A.
-3. **Implement and commit run/checkpoint manifests plus exact checkpoint
-   replay, then run the final pretraining gate.** Only after that run exact
-   replica A/B on the frozen M9 train/dev roots.
+1. **Implement and commit run/checkpoint manifests plus exact checkpoint
+   replay.** Preserve the frozen `m9-ippo-v1` recipe and baseline identities.
+2. **Run the final pretraining gate before any training episode.**
+3. **Run exact replica A/B only after that gate.** Use the frozen M9 train/dev
+   roots and preserve direct replay/manifest lineage.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 5. **Do not start MAPPO or the learned human-session block.** IPPO must first

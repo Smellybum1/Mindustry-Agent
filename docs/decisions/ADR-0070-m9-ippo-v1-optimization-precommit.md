@@ -96,3 +96,16 @@ fixed-role server expert remains the public construction baseline.
 Supersede this ADR only prospectively, before the replacement candidate runs,
 with a new exact recipe, data namespace, exploit audit, and comparison
 protocol. Do not mutate or rerun `m9-ippo-v1` after observing its public result.
+
+## Implementation and baseline evidence
+
+The reward/rollout/optimizer boundary was committed at `dea79c487a` before any
+training episode. From that exact commit and runnable JAR
+`fdbd1d5482b556137...`, the fixed server expert was evaluated on all 40 public
+dev-v1 roots and repeated the first episode exactly after terminal reset. It
+wins 36/40, with mean team return `-1.641725`, mean core health `967.95`, and
+mean authoritative task-board idle fraction `1.0`. The legacy expert drives
+skills outside task-board assignment accounting, so its survival is strong but
+its idle ledger is intentionally not repaired post hoc. The immutable evidence
+SHA-256 is `ba4c9182f346a6eefc8c904d3e7825ee23933aede535b7c516ec63800f6a2d70`.
+No M9 training episode preceded this baseline freeze.
