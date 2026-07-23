@@ -1877,6 +1877,11 @@ repository-evidence mapping used for the M6 audit is:
   It atomically creates membership plus a value-free zero-read receipt. All 298
   Python tests pass. The freezer has not executed and dev-v39 is unconstructed;
   it must first be committed.
+- Committed freezer `5007a7b9f3` created dev-v39 value-free in `[7B,8B)`.
+  Membership SHA is `0b88fda1b37647aa...`; its receipt records no emitted values
+  and zero membership-document reads. Dev-v39 is frozen unconsumed. The
+  membership/receipt packet is not yet committed and replica A remains
+  prohibited until it is.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

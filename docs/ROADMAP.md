@@ -1962,6 +1962,12 @@ config/umbrella and creates membership plus a value-free receipt atomically.
 It has not executed. Commit the freezer before construction; dev-v39 remains
 unconstructed and replica A remains prohibited.
 
+The committed freezer at `5007a7b9f3` has now created dev-v39 value-free.
+Membership SHA is `0b88fda1b37647aa...`; the receipt attests no emitted values,
+zero membership-document reads, and no generated, retired-confirmation, or
+sealed-final read. Dev-v39 remains unconsumed. Commit the membership and receipt
+packet before replica A.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

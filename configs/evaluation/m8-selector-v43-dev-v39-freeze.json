@@ -1,0 +1,49 @@
+{
+  "candidate_version": "v43",
+  "disjointness_method": "partitioned_numeric_namespace_without_reads",
+  "generated_membership_read_after_write": false,
+  "generator_commit": "5007a7b9f335c325fcc63f674705329bc35e5552",
+  "global_disjointness_verified": true,
+  "membership_documents_read": 0,
+  "namespace_proof": {
+    "held_out_v6_max_exclusive": 4000000000,
+    "held_out_v6_min_inclusive": 3000000000,
+    "legacy_max_exclusive": 1000000000,
+    "v38_sealed_max_exclusive": 2000000000,
+    "v39_confirmation_max_exclusive": 2147483648,
+    "v40_confirmation_max_exclusive": 5000000000,
+    "v40_confirmation_min_inclusive": 4000000000,
+    "v41_confirmation_max_exclusive": 6000000000,
+    "v41_confirmation_min_inclusive": 5000000000,
+    "v42_confirmation_max_exclusive": 7000000000,
+    "v42_confirmation_min_inclusive": 6000000000,
+    "v43_confirmation_max_exclusive": 8000000000,
+    "v43_confirmation_min_inclusive": 7000000000
+  },
+  "repository_head_before_generation": "5007a7b9f335c325fcc63f674705329bc35e5552",
+  "retired_confirmation_membership_read": false,
+  "schema": "m8_confirmation_seed_freeze_v1",
+  "sealed_final_membership_read": false,
+  "set": {
+    "count": 160,
+    "exclusive_namespace": {
+      "maximum_exclusive": 8000000000,
+      "minimum_inclusive": 7000000000
+    },
+    "exclusive_umbrella_attempt": "runs/m8-selector-v43-dev-v39-umbrella-attempt.json",
+    "path": "configs/evaluation/bootstrap-defense-v1-dev-v39.json",
+    "replaces": "bootstrap-defense-v1-dev-v38",
+    "role": "confirmation",
+    "seed_set_id": "bootstrap-defense-v1-dev-v39",
+    "seed_set_version": 39,
+    "sha256": "0b88fda1b37647aa8ee8bb6225ac20a2ebf64d0154195461b5cf0ed804d69bb3",
+    "split": "dev"
+  },
+  "status": "membership_frozen_unconsumed",
+  "umbrella": {
+    "commit": "9c7d571e874a7a72e1b25eafb4ad90ed24f9aa58",
+    "path": "configs/evaluation/m8-selector-v43-confirmation-umbrella.json",
+    "sha256": "99851aa2cdbfb469ac32ded36fa0b932a5149e29aa8b94ccb3bbc7f0000e1d1b"
+  },
+  "values_emitted": false
+}

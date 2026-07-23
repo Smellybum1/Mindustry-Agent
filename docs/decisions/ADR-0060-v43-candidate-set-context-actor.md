@@ -132,3 +132,12 @@ count, `[7B,8B)` namespace, and sealed-final binding. It atomically creates the
 membership and a value-free receipt without reading any membership document.
 All 298 Python tests pass. The freezer has not yet executed; dev-v39 remains
 unconstructed until this tool commit becomes an ancestor of `HEAD`.
+
+The committed freezer at `5007a7b9f3` then created dev-v39 value-free in the
+reserved namespace. The membership and receipt hashes are
+`0b88fda1b37647aa8ee8bb6225ac20a2ebf64d0154195461b5cf0ed804d69bb3`
+and `6a736be55774a7002dbacbe33d7400cdb6947500f930ad3d48c376cc44e1ae66`;
+the receipt reports
+`values_emitted=false`, zero membership-document reads, and no generated,
+retired-confirmation, or sealed-final read. Dev-v39 is frozen unconsumed. Replica
+A remains prohibited until this membership/receipt packet is committed.
