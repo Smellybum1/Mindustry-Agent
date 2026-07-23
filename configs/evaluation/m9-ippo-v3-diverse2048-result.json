@@ -1,0 +1,92 @@
+{
+  "schema": "m9_ippo_construction_result_v1",
+  "candidate_version": "m9-ippo-v3-diverse2048",
+  "data_classification": "public_train_and_dev_only",
+  "implementation_commit": "89de310520a5407de7912345ddf8462b7b87c65c",
+  "pretraining_gate": {
+    "passed": true,
+    "implementation_commit": "89de310520a5407de7912345ddf8462b7b87c65c",
+    "sha256": "15847133e8d31c4f5df35b2a0cdb63ff35bd8d76a9882bb19ecb6229cf487dfa"
+  },
+  "recipe": {
+    "config_sha256": "5d437c390fc54423ac1be1f27b47395e68bd42e5f85a74e8abd13275c5f9b458",
+    "protocol_sha256": "29085f124d958f563965a682adb029bdff24bf3a03df2148dd19c41c36e2a82f",
+    "train_seed_sha256": "2e4d5b853ba9c8a6b568b107537756e257d3c19205af71c0445ea5ea730088c4",
+    "training_schedule_sha256": "a58244f31f21c24bbd96adb77953d231982fb799e61777993f9fb2b438833ec1",
+    "episodes": 2048,
+    "unique_training_roots": 2048,
+    "root_reuse_count": 1,
+    "updates": 32,
+    "dev_episodes_per_update": 40,
+    "sole_change_from_v1": "replace_32_repeats_of_64_roots_with_2048_unique_one_use_roots"
+  },
+  "replica_a1": {
+    "manifest_sha256": "41746ef5b4fc863de555c90e4bf3eed71e73d0c678cf39598af2d89679d1973f",
+    "full_run_reproducibility_digest": "b0830c2b7d1b9cdca352c2d02c9b262a9364949949a940e320e2a5d16c90357f",
+    "bit_exact": true,
+    "training_episodes": 2048,
+    "optimizer_updates": 32,
+    "construction_passed": false
+  },
+  "replica_b": {
+    "executed": false,
+    "reason": "ADR-0075 prohibits replica B after replica A fails construction"
+  },
+  "public_frontier": {
+    "eligible_checkpoints": 0,
+    "required_minimum_wins": 30,
+    "required_maximum_mean_team_idle_fraction_exclusive": 0.25,
+    "best_observed": {
+      "update": 29,
+      "wins": 0,
+      "episodes": 40,
+      "mean_team_return": -14.022124999999999,
+      "mean_core_health": 0.0,
+      "mean_team_idle_fraction": 0.12201736248016386,
+      "checkpoint_content_sha256": "849d9f97f9ed0b9c23a3b20d23471fbdb423062f81b342d580a522398de4b7e2",
+      "model_state_sha256": "87d85c4c78ae4c2d40e6c7f4bc67154bdd7ad94aa582baf4450048bd7826186e"
+    },
+    "final_update": {
+      "update": 32,
+      "wins": 0,
+      "episodes": 40,
+      "mean_team_return": -20.0059,
+      "mean_core_health": 0.0,
+      "mean_team_idle_fraction": 0.49370649532064614
+    }
+  },
+  "public_training_summary": {
+    "episodes": 2048,
+    "wins": 585,
+    "losses": 1463,
+    "transitions": 194019,
+    "mean_team_return": -10.223096874999996,
+    "mean_team_idle_fraction": 0.13717377907501427,
+    "v1_train_wins": 598,
+    "v2_train_wins": 513,
+    "interpretation": "Unique one-use roots nearly matched v1 stochastic training survival but every deterministic public-dev checkpoint lost; root repetition alone did not explain the train/dev failure."
+  },
+  "public_baseline": {
+    "policy": "shared-expert-v1",
+    "wins": 36,
+    "episodes": 40,
+    "mean_team_return": -1.641725,
+    "mean_core_health": 967.95
+  },
+  "decision": {
+    "construction_passed": false,
+    "failure": "no checkpoint passed the public quality gate",
+    "selected_checkpoint": null,
+    "replica_b_authorized": false,
+    "mappo_authorized": false,
+    "candidate_status": "rejected"
+  },
+  "restricted_state": {
+    "confirmation_namespace_exists": false,
+    "m9_held_out_namespace_exists": false,
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0,
+    "confirmation_or_held_out_access": false,
+    "m8_held_out_v7": "sealed_unconsumed"
+  }
+}

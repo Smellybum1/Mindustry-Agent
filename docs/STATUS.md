@@ -2333,16 +2333,23 @@ repository-evidence mapping used for the M6 audit is:
   optimizer, model, rewards, PPO values, dev roots, construction threshold,
   and expert comparator remain exact. Config/protocol/train-root hashes are
   `5d437c390fc54423...`, `29085f124d958f56...`, and
-  `2e4d5b853ba9c8a6...`. No v3 trajectory or optimizer update exists;
-  candidate-aware implementation is committed at `f32cba6f72`. One shared validator supplies
+  `2e4d5b853ba9c8a6...`. Candidate-aware implementation is committed at
+  `f32cba6f72`. One shared validator supplies
   preflight and training with schedule digest `a58244f31f21c24b...`, proves all
   2,048 roots occur once across exact 32-by-64 slices, and records zero
   v1-train/dev overlap and no restricted access. Config/checkpoint/manifest
   binding, v1 optimizer dispatch, exact-current-commit authority, runner
   failure paths, focused tests, and the complete 404-test Python suite pass.
   The implementation-bound root report reproduced byte-identically twice and
-  is committed with SHA `e8334ee662e718b7...`. The complete exact-commit gate
-  must pass before replica A.
+  is committed with SHA `e8334ee662e718b7...`. The complete gate passed at
+  exact commit `89de310520`. Replica A completed all 2,048 unique-root episodes
+  and 32 updates, but every deterministic public-dev checkpoint was 0/40.
+  Update 29 was best by return at `-14.022125`, core `0.0`, and idle
+  `0.12201736`; update 32 ended at 0/40 and idle `0.49370650`. Stochastic
+  training won 585/2,048, close to v1's 598. ADR-0076 rejects v3, prohibits
+  replica B and MAPPO, and records compact result SHA `2e3ed1c113bcd1c0...`.
+  No confirmation or held-out data was accessed. A precommitted public-only
+  stochastic-versus-argmax diagnostic is next.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

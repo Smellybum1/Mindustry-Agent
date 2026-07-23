@@ -14,6 +14,9 @@ freezes `m9-ippo-v2-sequence16`: the sole learning change is deterministic
 segment. Its implementation and complete public-only pretraining gate now pass;
 Replica A completed and ADR-0074 rejects v2 after an 11/40 best public result.
 Replica B did not run, no checkpoint was selected, and MAPPO remains blocked.
+ADR-0075 then froze the unique-root v3 test. Its exact gate passed and Replica
+A completed, but every deterministic public-dev checkpoint was 0/40; ADR-0076
+rejects v3 and prohibits Replica B.
 This document describes the target architecture and the staged evidence
 required before broader M9 claims.
 
@@ -166,14 +169,22 @@ pins, and dependency lock.
    once by the existing seed 9603 and sliced into 32 updates of 64. Model,
    reward, PPO values, dev roots, thresholds, and comparator remain exact.
    Config/protocol/train-root hashes are `5d437c390fc54423...`,
-   `29085f124d958f56...`, and `2e4d5b853ba9c8a6...`. No v3 trajectory or
-   optimizer update exists. Candidate-aware config/checkpoint/manifest/training
+   `29085f124d958f56...`, and `2e4d5b853ba9c8a6...`. Candidate-aware
+   config/checkpoint/manifest/training
    authority is committed at `f32cba6f72`. The shared schedule validator proves
    exact membership, zero v1-train/dev overlap, one-use coverage, deterministic
    32-by-64 slicing, and schedule digest `a58244f31f21c24b...`; focused tests
    prove v1 optimizer dispatch and fail-closed v3 authority. Its twice-identical
    implementation-bound report is committed with SHA `e8334ee662e718b7...`.
-   The complete 404-test Python suite passes. The full exact-commit gate is next.
+   The complete 404-test Python suite and full gate passed at exact commit
+   `89de310520`. Replica A then completed 2,048 unique-root episodes and 32
+   updates. Every deterministic public-dev checkpoint was 0/40; update 29 was
+   best by return at `-14.022125`, core `0.0`, and idle `0.12201736`.
+   Stochastic training won 585/2,048, close to v1's 598. ADR-0076 rejects v3,
+   prohibits replica B and MAPPO, and records compact result SHA
+   `2e3ed1c113bcd1c0...`. No restricted data was accessed. A bounded
+   precommitted public diagnostic of stochastic-policy survival versus
+   deterministic argmax collapse is next.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

@@ -1348,8 +1348,8 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make m9-pretraining-check` | Runs all Python/Java tests, M9 reward/parity/rollout/artifact checks, smoke, determinism, and golden replay, then writes an exact-commit public-only result. Last passing implementation commit before the runner was `2b62f7e5d7`. |
 | `make train-m9-ippo` | On WSL2 with pinned `UV`/`JAVA`, requires an exact-current-commit complete-gate result, reconstructs the locked CPU runtime, runs independent 2,048-episode replicas A/B, then verifies canonical checkpoint and full-run identity. Not yet executed. |
 | `make m9-diverse-roots-check` | Verifies ADR-0075's 2,048 unique public roots, zero v1-train/dev overlap, exact one-use schedule, 32-by-64 slicing, and digest `a58244f31f21c24b...`. |
-| `make m9-v3-pretraining-check` | Runs the full public-only v3 gate, verifies the committed implementation-bound root report, and writes exact-commit training authority. The final exact gate remains pending. |
-| `make train-m9-ippo-v3` | Reconstructs the pinned CPU runtime, requires exact-current-commit v3 authority, runs full-budget replica A, and permits B only after A passes construction. No v3 trajectory exists yet. |
+| `make m9-v3-pretraining-check` | Runs the full public-only v3 gate, verifies the committed implementation-bound root report, and writes exact-commit training authority. Passed at `89de310520`. |
+| `make train-m9-ippo-v3` | Reconstructs the pinned CPU runtime, requires exact-current-commit v3 authority, runs full-budget replica A, and permits B only after A passes construction. A completed and failed 0/40 throughout; B is prohibited by ADR-0076. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
 | `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
@@ -1499,27 +1499,26 @@ queue.
 1. **Preserve ADR-0072's exact public rejection of `m9-ippo-v1`.** A1/B1
    completed and reproduce at full-run digest `186b7745c079f85a...`; neither
    selected a checkpoint.
-2. **Implement ADR-0073's `m9-ippo-v2-sequence16` boundary.** Prove sequence
-   order, episode/seat/reset isolation, padding invariance, length-one v1
-   equivalence, and cross-boundary recurrent gradient flow. The implementation,
-   397-test Python suite, and exact commit-bound CPU worker evidence are green.
-3. **Implement ADR-0075's `m9-ippo-v3-diverse2048` boundary.** V3 returns to
-   v1's accepted one-boundary optimizer and changes only the repeated training
-   distribution: 2,048 unique public roots, one deterministic shuffle, one use
-   each. Schedule coverage, candidate-aware lineage/preflight, runner failure
-   paths, focused tests, and all 404 Python tests are green. Implementation
-   commit `f32cba6f72` is pushed; the twice-identical implementation-bound root
-   report is committed with SHA `e8334ee662e718b7...`. Pass the complete
-   exact-commit gate before replica A.
-   MAPPO remains blocked.
-4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
+2. **Preserve ADR-0074's exact public rejection of
+   `m9-ippo-v2-sequence16`.** A completed the full budget and peaked at 11/40;
+   B did not run and no checkpoint was selected.
+3. **Preserve ADR-0076's exact public rejection of
+   `m9-ippo-v3-diverse2048`.** The full gate passed at `89de310520`; A completed
+   2,048 unique-root episodes and 32 updates. Every deterministic dev result
+   was 0/40, although stochastic training won 585/2,048. Compact result SHA is
+   `2e3ed1c113bcd1c0...`. B and MAPPO are prohibited.
+4. **Precommit the bounded public policy-mode diagnostic.** Use immutable v3
+   checkpoints, fixed public roots, and fixed RNG seeds to distinguish
+   stochastic-policy survival from deterministic argmax collapse. It cannot
+   select, promote, or repair v3.
+5. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
-5. **Do not start the learned human-session block.** No M9 learned checkpoint
+6. **Do not start the learned human-session block.** No M9 learned checkpoint
    has passed construction or public comparison.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0073` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0076` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
