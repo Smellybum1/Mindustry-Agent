@@ -2439,7 +2439,12 @@ at update 30 and 18/40 at update 31 with idle `0.09766800`, then update 32
 collapsed to 0/40. ADR-0080 rejects v4 and prohibits Replica B. Compact result
 SHA is `e85eb1d267412db4...`; no restricted data was accessed. A precommitted
 public-only immutable-v4 late-checkpoint diagnostic is next, before any v5
-recipe.
+recipe. ADR-0081 now freezes that diagnostic before implementation or
+execution: updates 31 and 32, the same 40 public roots, one argmax and four
+fixed categorical streams, two fresh JVMs, and exact 80%-retention versus
+50%-collapse classification. Protocol SHA is `d68fee034d3b90e7...`. It cannot
+select, repair, train, promote, or access restricted data; no diagnostic
+episode has run.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

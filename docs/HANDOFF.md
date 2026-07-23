@@ -1521,13 +1521,13 @@ queue.
    rejected. Precommit the recommended v4 entropy-annealing successor before
    any new model work. ADR-0079 now freezes v4's sole change as the inclusive
    linear entropy schedule `0.02 * (32 - update) / 31`; implementation is next.
-5. **Precommit ADR-0080's public-only late-checkpoint diagnostic before v5.**
+5. **Implement and run ADR-0081's public-only late-checkpoint diagnostic.**
    V4 completed at a best 18/40 and is rejected; do not rerun, retune, select
-   update 31, or execute Replica B. The diagnostic must use immutable v4
-   checkpoints, fixed public roots/RNGs, fresh JVMs, exact provenance, and no
-   promotion authority. Use it to distinguish destructive optimizer movement
-   from unstable deterministic mode selection before freezing one v5
-   mechanism.
+   update 31, or execute Replica B. Validate immutable updates 31/32, run each
+   with argmax and four fixed categorical streams on the 40 public roots,
+   reproduce the complete matrix in two fresh JVMs, and apply only the frozen
+   80%-retention/50%-collapse classification. Bind exact compact evidence
+   before separately precommitting one v5 mechanism.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

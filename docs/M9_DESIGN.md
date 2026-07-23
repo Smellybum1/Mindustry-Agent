@@ -211,6 +211,13 @@ pins, and dependency lock.
    prohibits Replica B. Compact result SHA is `e85eb1d267412db4...`; no
    restricted data was accessed. A prospectively frozen immutable-v4
    late-checkpoint diagnostic is required before any v5 recipe.
+   **Late-checkpoint diagnostic precommitted 2026-07-24:** ADR-0081 freezes
+   immutable updates 31 and 32 across one argmax plus four fixed categorical
+   streams on the 40 public roots, twice in fresh JVMs. Frozen 80%-retention and
+   50%-collapse rules distinguish mode instability from optimizer-distribution
+   collapse. Protocol SHA is `d68fee034d3b90e7...`; the diagnostic has no
+   candidate repair, selection, training, promotion, or restricted-data
+   authority. No diagnostic episode has run.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

@@ -2385,6 +2385,13 @@ repository-evidence mapping used for the M6 audit is:
   full-run, and compact-result SHA prefixes are `2e2f63b412629fcd...`,
   `69ee6d687d95eaff...`, and `e85eb1d267412db4...`. No restricted data was
   accessed; held-out-v7 remains sealed.
+- ADR-0081 prospectively freezes the required immutable-v4 diagnostic before
+  implementation or execution. Updates 31 and 32 each run on the same 40
+  public roots under one argmax and four fixed categorical streams, twice in
+  fresh JVMs. Exact retention rules distinguish deterministic mode instability
+  from whole-distribution optimizer collapse; the protocol SHA is
+  `d68fee034d3b90e7...`. It has no training, selection, promotion, confirmation,
+  or held-out authority. No diagnostic episode has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

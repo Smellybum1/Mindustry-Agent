@@ -1,0 +1,81 @@
+{
+  "schema": "m9_ippo_v4_late_checkpoint_diagnostic_protocol_v1",
+  "status": "precommitted",
+  "data_classification": "public_dev_only",
+  "source_candidate": {
+    "candidate_version": "m9-ippo-v4-entropy-anneal",
+    "status": "rejected",
+    "result_path": "configs/evaluation/m9-ippo-v4-entropy-anneal-result.json",
+    "result_sha256": "e85eb1d267412db47fd81dc0bc0ad9f935ac8c08c42f1d9ee929ed57d2698258",
+    "training_commit": "fbca0c6bbc5b4f00ada903f17301211b59fd5b3c",
+    "manifest_path": "runs/m9-ippo-v4-entropy-anneal-a1/ippo-v4-entropy-anneal-run.manifest.json",
+    "manifest_sha256": "2e2f63b412629fcd96304e4117866541bd87c74fd7fb64f9767359ed712fdde8"
+  },
+  "source_checkpoints": [
+    {
+      "update": 31,
+      "path": "runs/m9-ippo-v4-entropy-anneal-a1/ippo-v4-entropy-anneal-update-31.pt",
+      "file_sha256": "08e402155a21f0d86eba9600d14c837e2a8f45c8a454f1ca71fcf9e8bcb67728",
+      "checkpoint_content_sha256": "bf27acd77cede591b9c71dbacbe5b7bff06dce070ae7fb8b4406707fe2d6ac20",
+      "model_state_sha256": "3050904cd04e2131d31387897d3a400cea615d99a7263a96aa21bc42df510b3c",
+      "expected_immutable_manifest_wins": 18,
+      "role": "strongest_rejected_public_frontier"
+    },
+    {
+      "update": 32,
+      "path": "runs/m9-ippo-v4-entropy-anneal-a1/ippo-v4-entropy-anneal-update-32.pt",
+      "file_sha256": "369fe5d11d130ea70416e61d598158dab03c938c954d0490f3f5030701c12196",
+      "checkpoint_content_sha256": "0558663ef9fe1b076c621b5110d0bbca94f1ccf0420df63a144e1e41a42771c4",
+      "model_state_sha256": "07d4126f161c4290b0fb8cf57d1a54ef22f95e7cde7772c4907c28e5feb08f78",
+      "expected_immutable_manifest_wins": 0,
+      "role": "zero_entropy_collapsed_final_update"
+    }
+  ],
+  "public_roots": {
+    "path": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+    "sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+    "count": 40,
+    "reuse": "diagnostic_only_not_training_selection_or_promotion"
+  },
+  "modes": {
+    "deterministic_argmax": {
+      "streams_per_checkpoint": 1,
+      "episodes_per_stream": 40,
+      "require_exact_immutable_manifest_replay": true
+    },
+    "stochastic_categorical": {
+      "streams_per_checkpoint": 4,
+      "episodes_per_stream": 40,
+      "action_sampling_seeds": [9602, 19602, 29602, 39602],
+      "temperature": 1.0,
+      "sampling": "torch_multinomial_over_authoritatively_masked_softmax"
+    }
+  },
+  "execution": {
+    "fresh_jvms": 2,
+    "expected_total_episodes_per_jvm": 400,
+    "require_exact_report_identity": true,
+    "torch_threads": 1,
+    "no_optimizer_or_model_mutation": true,
+    "checkpoint_execution_order": [31, 32]
+  },
+  "classification": {
+    "required_argmax_win_drop": 10,
+    "minimum_update_32_stochastic_wins_for_retention": 32,
+    "mode_instability_retention_ratio_numerator": 4,
+    "mode_instability_retention_ratio_denominator": 5,
+    "optimizer_collapse_ratio_numerator": 1,
+    "optimizer_collapse_ratio_denominator": 2,
+    "mode_instability_signal": "argmax_drop_at_least_10_and_update_32_stochastic_wins_at_least_32_and_at_least_80_percent_of_update_31_stochastic_wins",
+    "optimizer_distribution_collapse_signal": "argmax_drop_at_least_10_and_update_31_stochastic_wins_at_least_32_and_update_32_stochastic_wins_at_most_50_percent_of_update_31",
+    "otherwise": "inconclusive",
+    "deterministic_policy_remains_authoritative_for_construction": true
+  },
+  "authority": {
+    "checkpoint_selection_authorized": false,
+    "candidate_repair_authorized": false,
+    "promotion_authorized": false,
+    "training_authorized": false,
+    "confirmation_or_held_out_access": false
+  }
+}

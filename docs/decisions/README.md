@@ -85,6 +85,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0078](ADR-0078-m9-v3-policy-mode-diagnostic-result.md) | Accept the v3 categorical-sampling diagnostic signal |
 | [0079](ADR-0079-m9-ippo-v4-entropy-anneal-precommit.md) | Freeze M9 IPPO v4 entropy annealing |
 | [0080](ADR-0080-m9-ippo-v4-entropy-anneal-rejection.md) | Reject M9 IPPO v4 at public construction |
+| [0081](ADR-0081-m9-v4-late-checkpoint-diagnostic-precommit.md) | Freeze the immutable-v4 late-checkpoint diagnostic |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.
