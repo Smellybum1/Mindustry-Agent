@@ -2455,8 +2455,13 @@ accessed. ADR-0083 now freezes `m9-ippo-v5-success-imitation`: v4 plus one
 constant `0.02` sampled-action NLL over actor-valid transitions from winning
 episodes in the current update only. It adds no replay, teacher, pass, RNG,
 episode, root, reward, or restricted data. Config/protocol SHA prefixes are
-`056a6ee24363b55a...` and `205508d8cfaba910...`. No v5 implementation or
-trajectory exists.
+`056a6ee24363b55a...` and `205508d8cfaba910...`. Implementation commit
+`d6969679ad` preserves v1--v4 and adds exact filter/loss/telemetry,
+candidate-aware artifact and authority paths, and a fail-closed CPU runner.
+Ten focused tests pass. Two fresh synthetic runs reproduce byte-identically;
+committed report SHA is `c8676245cee741f0...` and optimizer digest is
+`27bd5804b512ccf1...`. The complete exact-current-commit public gate is next.
+No v5 environment trajectory or restricted access exists.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

@@ -45,6 +45,8 @@ class TestIPPOSuccessImitation(unittest.TestCase):
         self.assertIsNone(self.config["held_out_seed_set"])
 
     def test_v5_inherits_v4_except_success_imitation(self):
+        from mindustry_agents.training.ippo_preflight import EXPECTED_V5
+        from mindustry_agents.training.ippo_ppo import sha256_path
         from mindustry_agents.training.ippo_success_imitation_check import (
             build_report,
         )
@@ -65,6 +67,23 @@ class TestIPPOSuccessImitation(unittest.TestCase):
             1.0,
         )
         self.assertFalse(report["confirmation_or_held_out_access"])
+        evidence = (
+            self.root
+            / "configs/evaluation/"
+            "m9-ippo-v5-success-imitation-optimizer-check.json"
+        )
+        self.assertEqual(
+            sha256_path(evidence),
+            EXPECTED_V5[
+                "configs/evaluation/"
+                "m9-ippo-v5-success-imitation-optimizer-check.json"
+            ],
+        )
+        committed = json.loads(evidence.read_text(encoding="utf-8"))
+        self.assertEqual(
+            committed["implementation_commit"],
+            "d6969679ad7e500756660f2a820815b1998a51f9",
+        )
 
     def test_v5_dispatches_scheduled_success_imitation_optimizer(self):
         import torch

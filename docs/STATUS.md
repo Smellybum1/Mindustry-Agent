@@ -2407,8 +2407,14 @@ repository-evidence mapping used for the M6 audit is:
   over only actor-valid transitions from winning episodes in the current
   64-episode update. It adds no replay, pass, teacher, RNG, episode, root,
   reward, or restricted data. Config/protocol SHA prefixes are
-  `056a6ee24363b55a...` and `205508d8cfaba910...`. No v5 trajectory or model
-  update exists.
+  `056a6ee24363b55a...` and `205508d8cfaba910...`. The implementation is
+  committed at `d6969679ad`; 10 focused tests prove exact filtering, sampled
+  NLL, empty-filter zero, eight-epoch application, telemetry, no extra RNG,
+  v4 compatibility, and candidate-aware artifacts/authority. Two fresh CPU
+  probes reproduce byte-identically at report SHA `c8676245cee741f0...` and
+  optimizer digest `27bd5804b512ccf1...`. The exact-current-commit full public
+  gate remains before Replica A. No v5 environment trajectory or restricted
+  data access exists.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

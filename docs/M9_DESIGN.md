@@ -232,8 +232,12 @@ pins, and dependency lock.
    transitions from winning episodes in the current 64-episode update. Losses,
    forced controls, prior updates, replay, teachers, extra passes/RNGs, and
    restricted data are excluded. Config/protocol SHA prefixes are
-   `056a6ee24363b55a...` and `205508d8cfaba910...`. No v5 implementation,
-   trajectory, optimizer update, or changed model exists.
+   `056a6ee24363b55a...` and `205508d8cfaba910...`. Implementation commit
+   `d6969679ad` adds only that optimizer term and its authoritative telemetry.
+   Ten focused tests pass; fresh twin CPU probes are byte-identical at report
+   SHA `c8676245cee741f0...` and optimizer digest `27bd5804b512ccf1...`. The
+   complete public gate remains before Replica A. No v5 environment trajectory
+   or restricted access exists.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

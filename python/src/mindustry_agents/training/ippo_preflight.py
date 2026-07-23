@@ -14,6 +14,9 @@ from mindustry_agents.training.ippo_diverse_roots_check import build_report
 from mindustry_agents.training.ippo_entropy_check import (
     build_report as build_entropy_report,
 )
+from mindustry_agents.training.ippo_success_imitation_check import (
+    build_report as build_success_imitation_report,
+)
 from mindustry_agents.training.ippo_ppo import (
     IPPO_V1_CONFIG_SHA256,
     IPPO_V1_PROTOCOL_SHA256,
@@ -23,10 +26,13 @@ from mindustry_agents.training.ippo_ppo import (
     IPPO_V3_PROTOCOL_SHA256,
     IPPO_V4_CONFIG_SHA256,
     IPPO_V4_PROTOCOL_SHA256,
+    IPPO_V5_CONFIG_SHA256,
+    IPPO_V5_PROTOCOL_SHA256,
     load_ippo_v1_config,
     load_ippo_v2_config,
     load_ippo_v3_config,
     load_ippo_v4_config,
+    load_ippo_v5_config,
     sha256_path,
 )
 
@@ -60,6 +66,12 @@ EXPECTED_V4 = {
     **EXPECTED_V3,
     "configs/evaluation/m9-ippo-v4-entropy-optimizer-check.json": (
         "44a33c55693686d347ad21fbca3874dc61222c07a8e9bdd55b131f8c4e2dcc49"
+    ),
+}
+EXPECTED_V5 = {
+    **EXPECTED_V4,
+    "configs/evaluation/m9-ippo-v5-success-imitation-optimizer-check.json": (
+        "c8676245cee741f0d2971543f3f4789522f8d8f25de8e34d54b6114ad150dd00"
     ),
 }
 
@@ -214,6 +226,14 @@ def _diverse_identity(report: dict[str, Any]) -> dict[str, Any]:
 
 
 def _entropy_identity(report: dict[str, Any]) -> dict[str, Any]:
+    result = copy.deepcopy(report)
+    result.pop("implementation_commit", None)
+    return result
+
+
+def _success_imitation_identity(
+    report: dict[str, Any],
+) -> dict[str, Any]:
     result = copy.deepcopy(report)
     result.pop("implementation_commit", None)
     return result
@@ -430,6 +450,91 @@ def validate_v4_preflight(root: Path | None = None) -> dict[str, Any]:
     }
 
 
+def validate_v5_preflight(root: Path | None = None) -> dict[str, Any]:
+    """Validate ADR-0083's public success-imitation boundary."""
+
+    root = root or repo_root()
+    config_path = (
+        root / "configs/training/m9-ippo-v5-success-imitation.json"
+    )
+    config = load_ippo_v5_config(config_path)
+    protocol_path = root / config["public_evaluation_protocol"]
+    if sha256_path(protocol_path) != IPPO_V5_PROTOCOL_SHA256:
+        raise ValueError("M9 v5 public protocol hash drifted")
+    if sha256_path(config_path) != IPPO_V5_CONFIG_SHA256:
+        raise ValueError("M9 v5 config hash drifted")
+    if (
+        config["confirmation_seed_set"] is not None
+        or config["held_out_seed_set"] is not None
+    ):
+        raise ValueError("M9 v5 pretraining config gained sealed-data authority")
+
+    inherited = validate_v4_preflight(root)
+    baseline = _load(
+        root, "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json"
+    )
+    relative = (
+        "configs/evaluation/"
+        "m9-ippo-v5-success-imitation-optimizer-check.json"
+    )
+    committed_path = root / relative
+    if sha256_path(committed_path) != EXPECTED_V5[relative]:
+        raise ValueError(
+            "M9 v5 committed success-imitation evidence hash drifted"
+        )
+    committed = json.loads(committed_path.read_text(encoding="utf-8"))
+    current_path = (
+        root / "runs/m9-ippo-v5-success-imitation-check.json"
+    )
+    current = json.loads(current_path.read_text(encoding="utf-8"))
+    expected = build_success_imitation_report(root)
+    commit = _project_commit(root)
+    metrics = committed.get("optimizer", {}).get("metrics", {})
+    if (
+        inherited.get("passed") is not True
+        or inherited.get("confirmation_or_held_out_access") is not False
+        or current != expected
+        or committed.get("schema")
+        != "m9_ippo_v5_success_imitation_check_v1"
+        or committed.get("implementation_commit")
+        != "d6969679ad7e500756660f2a820815b1998a51f9"
+        or committed.get("config_sha256") != IPPO_V5_CONFIG_SHA256
+        or committed.get("protocol_sha256") != IPPO_V5_PROTOCOL_SHA256
+        or committed.get("semantic_inheritance_exact") is not True
+        or committed.get("optimizer", {}).get("independent_runs_exact")
+        is not True
+        or metrics.get("success_imitation_coefficient") != 0.02
+        or metrics.get("success_imitation_qualifying_episodes") != 1.0
+        or metrics.get("success_imitation_qualifying_transitions") != 1.0
+        or metrics.get("success_imitation_active_minibatches") != 8.0
+        or committed.get("all_passed") is not True
+        or committed.get("confirmation_or_held_out_access") is not False
+        or current.get("implementation_commit") != commit
+        or _success_imitation_identity(current)
+        != _success_imitation_identity(committed)
+    ):
+        raise ValueError(
+            "M9 v5 success-imitation evidence is incomplete or divergent"
+        )
+    return {
+        "schema": "m9_ippo_v5_preflight_v1",
+        "implementation_commit": commit,
+        "success_imitation_implementation_commit": committed[
+            "implementation_commit"
+        ],
+        "config_sha256": IPPO_V5_CONFIG_SHA256,
+        "protocol_sha256": IPPO_V5_PROTOCOL_SHA256,
+        "artifacts": EXPECTED_V5,
+        "gates": list(V5_GATES),
+        "public_baseline_wins": baseline["aggregate"]["wins"],
+        "success_imitation_probe_sha256": current["optimizer"][
+            "probe_sha256"
+        ],
+        "confirmation_or_held_out_access": False,
+        "passed": True,
+    }
+
+
 def write_preflight(
     path: Path,
     root: Path | None = None,
@@ -442,6 +547,8 @@ def write_preflight(
         result = validate_v3_preflight(root)
     elif candidate == "v4":
         result = validate_v4_preflight(root)
+    elif candidate == "v5":
+        result = validate_v5_preflight(root)
     else:
         result = validate_preflight(root)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -465,7 +572,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--candidate",
-        choices=("v1", "v2", "v3", "v4"),
+        choices=("v1", "v2", "v3", "v4", "v5"),
         default="v1",
     )
     args = parser.parse_args()
@@ -473,15 +580,19 @@ def main() -> int:
         write_preflight(args.output, candidate=args.candidate)
         if args.output is not None
         else (
-            validate_v4_preflight()
-            if args.candidate == "v4"
+            validate_v5_preflight()
+            if args.candidate == "v5"
             else (
-                validate_v2_preflight()
-                if args.candidate == "v2"
+                validate_v4_preflight()
+                if args.candidate == "v4"
                 else (
-                    validate_v3_preflight()
-                    if args.candidate == "v3"
-                    else validate_preflight()
+                    validate_v2_preflight()
+                    if args.candidate == "v2"
+                    else (
+                        validate_v3_preflight()
+                        if args.candidate == "v3"
+                        else validate_preflight()
+                    )
                 )
             )
         )

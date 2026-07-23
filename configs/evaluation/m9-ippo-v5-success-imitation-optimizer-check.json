@@ -1,0 +1,29 @@
+{
+  "all_passed": true,
+  "candidate_version": "m9-ippo-v5-success-imitation",
+  "config_sha256": "056a6ee24363b55aac62762c3854ff0aa5bb190df8c05fad7ab5fcf5be332002",
+  "confirmation_or_held_out_access": false,
+  "implementation_commit": "d6969679ad7e500756660f2a820815b1998a51f9",
+  "optimizer": {
+    "independent_runs_exact": true,
+    "metrics": {
+      "batches": 8.0,
+      "entropy": 2.3015977442264557,
+      "entropy_coefficient": 0.01032258064516129,
+      "policy_loss": -0.0033875927329063416,
+      "success_imitation_active_minibatches": 8.0,
+      "success_imitation_coefficient": 0.02,
+      "success_imitation_mean_active_minibatch_loss": 2.277868092060089,
+      "success_imitation_qualifying_episodes": 1.0,
+      "success_imitation_qualifying_transitions": 1.0,
+      "value_loss": 0.8873213678598404
+    },
+    "model_state_sha256": "607190aea79be9dee003273b3b1aa7205e028133e0cbb48a316b61676f2fd99d",
+    "probe_sha256": "27bd5804b512ccf1e23ffd6d19d056313807405604814cd12590fd2c6032289b"
+  },
+  "parent_config_sha256": "9b9495e03b11e0fdae744fefd64f65de513b85093cf96e2a088ac4235766d215",
+  "parent_protocol_sha256": "db9b5647f249d30889b911a075905a78f4ba9ccef5613bc25d09126e1d1e7ace",
+  "protocol_sha256": "205508d8cfaba9109825d1b31fb13dc295e0d988296aef89379980f5b559b460",
+  "schema": "m9_ippo_v5_success_imitation_check_v1",
+  "semantic_inheritance_exact": true
+}

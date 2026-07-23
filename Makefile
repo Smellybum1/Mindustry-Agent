@@ -19,9 +19,10 @@ SCRIPTS := scripts
         m9-artifact-check m9-sequence-check m9-pretraining-check \
         m9-v2-pretraining-check m9-diverse-roots-check m9-v3-pretraining-check \
         m9-policy-mode-diagnostic m9-entropy-check m9-v4-pretraining-check \
-        m9-late-checkpoint-diagnostic \
+        m9-late-checkpoint-diagnostic m9-success-imitation-check \
+        m9-v5-pretraining-check \
         m9-baseline train-m9-ippo train-m9-ippo-v2 train-m9-ippo-v3 \
-        train-m9-ippo-v4 \
+        train-m9-ippo-v4 train-m9-ippo-v5 \
         secondary-claim-wake-check \
         owned-schematic-staging-check coordination-parity \
         public-demo-parity \
@@ -62,6 +63,9 @@ help: ## List available targets
 	@echo "  m9-v4-pretraining-check complete entropy-IPPO gate before replica A"
 	@echo "  train-m9-ippo-v4 governed entropy-annealed IPPO construction"
 	@echo "  m9-late-checkpoint-diagnostic rejected-v4 update-31/32 mode diagnostic"
+	@echo "  m9-success-imitation-check M9 v5 inheritance/optimizer check"
+	@echo "  m9-v5-pretraining-check complete success-imitation gate before A"
+	@echo "  train-m9-ippo-v5 governed success-imitation IPPO construction"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -174,6 +178,15 @@ train-m9-ippo-v4: ## Run governed M9 v4 entropy-annealed construction
 
 m9-late-checkpoint-diagnostic: ## Diagnose rejected-v4 update-31/32 modes
 	@bash $(SCRIPTS)/m9-late-checkpoint-diagnostic.sh
+
+m9-success-imitation-check: ## Verify M9 v5 inheritance and optimizer
+	@bash $(SCRIPTS)/m9-success-imitation-check.sh
+
+m9-v5-pretraining-check: ## Run all gates required before M9 v5 training
+	@bash $(SCRIPTS)/m9-v5-pretraining-check.sh
+
+train-m9-ippo-v5: ## Run governed M9 v5 success-imitation construction
+	@bash $(SCRIPTS)/train-m9-ippo-v5.sh
 
 secondary-claim-wake-check: ## Verify V35's fixed-seat claim-loss boundary
 	@bash $(SCRIPTS)/secondary-claim-wake-check.sh
