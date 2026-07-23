@@ -1500,12 +1500,11 @@ queue.
    order, episode/seat/reset isolation, padding invariance, length-one v1
    equivalence, and cross-boundary recurrent gradient flow. The implementation,
    397-test Python suite, and exact commit-bound CPU worker evidence are green.
-3. **Preserve ADR-0074's rejection of v2 and precommit the next public IPPO
-   successor.** The exact gate passed at `e6a29fb351`, but replica A peaked at
-   11/40 and ended at 0/40. Replica B did not run. Compact result SHA is
-   `42b4a2c4ee6eb542...`. Public evidence favors testing broader non-repeated
-   training roots while returning to v1's accepted one-boundary optimizer.
-   MAPPO remains blocked.
+3. **Implement ADR-0075's `m9-ippo-v3-diverse2048` boundary.** V3 returns to
+   v1's accepted one-boundary optimizer and changes only the repeated training
+   distribution: 2,048 unique public roots, one deterministic shuffle, one use
+   each. Prove schedule coverage and candidate-aware lineage/preflight, then
+   pass the complete exact-commit gate before replica A. MAPPO remains blocked.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 5. **Do not start the learned human-session block.** No M9 learned checkpoint

@@ -2326,6 +2326,15 @@ repository-evidence mapping used for the M6 audit is:
   Training won 513/2,048 versus v1's 598. ADR-0074 therefore rejects v2,
   prohibits replica B, leaves MAPPO blocked, and records compact result SHA
   `42b4a2c4ee6eb542...`. No confirmation or held-out data was accessed.
+- ADR-0075 prospectively freezes `m9-ippo-v3-diverse2048` from the public
+  repeated-root failure. V3 derives from v1 and changes only root diversity:
+  2,048 unique public train roots are shuffled once with seed 9603 and used
+  exactly once across the unchanged 32-by-64 budget. V1's one-boundary
+  optimizer, model, rewards, PPO values, dev roots, construction threshold,
+  and expert comparator remain exact. Config/protocol/train-root hashes are
+  `5d437c390fc54423...`, `29085f124d958f56...`, and
+  `2e4d5b853ba9c8a6...`. No v3 trajectory or optimizer update exists;
+  candidate-aware implementation and the complete gate are next.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

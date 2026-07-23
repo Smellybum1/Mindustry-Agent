@@ -1,0 +1,38 @@
+{
+  "schema": "m9_ippo_public_protocol_v3",
+  "candidate_version": "m9-ippo-v3-diverse2048",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "split": "dev",
+  "baseline": {
+    "policy": "shared-expert-v1",
+    "implementation": "agentcore.coordination.ExpertCoordinationDriver",
+    "control_path": "server_shared_expert_policy",
+    "evidence": "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json",
+    "frozen_before_candidate_training": true
+  },
+  "paired_bootstrap": {
+    "iterations": 20000,
+    "seed": 9701,
+    "interval": 0.95
+  },
+  "construction_continuation": {
+    "minimum_candidate_wins": 30,
+    "maximum_mean_team_idle_fraction_exclusive": 0.25
+  },
+  "replica_policy": {
+    "replica_a_always_runs_full_budget": true,
+    "replica_b_authorized_only_after_replica_a_construction_passes": true,
+    "full_run_and_checkpoint_identity_required_for_comparison": true
+  },
+  "mappo_authorization": {
+    "win_rate_difference_lower_bound_minimum": 0.0,
+    "team_return_difference_lower_bound_exclusive": 0.0,
+    "team_idle_fraction_difference_upper_bound_maximum": 0.0,
+    "requires_exact_replica": true,
+    "requires_direct_checkpoint_lineage": true
+  },
+  "confirmation_or_final_claim_authorized": false,
+  "held_out_access_authorized": false
+}

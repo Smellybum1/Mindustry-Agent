@@ -160,6 +160,14 @@ pins, and dependency lock.
    below v1's 598. ADR-0074 rejects v2, blocks replica B and MAPPO, and records
    compact result SHA `42b4a2c4ee6eb542...`. No confirmation or held-out data
    was accessed.
+   **V3 precommitted 2026-07-24:** ADR-0075 returns to v1's accepted
+   one-boundary optimizer and changes only train-root diversity. The exact
+   2,048-episode budget now contains 2,048 unique public train roots shuffled
+   once by the existing seed 9603 and sliced into 32 updates of 64. Model,
+   reward, PPO values, dev roots, thresholds, and comparator remain exact.
+   Config/protocol/train-root hashes are `5d437c390fc54423...`,
+   `29085f124d958f56...`, and `2e4d5b853ba9c8a6...`. No v3 trajectory or
+   optimizer update exists; implementation and the exact-commit gate are next.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 
