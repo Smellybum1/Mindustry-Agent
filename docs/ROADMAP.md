@@ -2443,8 +2443,9 @@ recipe. ADR-0081 now freezes that diagnostic before implementation or
 execution: updates 31 and 32, the same 40 public roots, one argmax and four
 fixed categorical streams, two fresh JVMs, and exact 80%-retention versus
 50%-collapse classification. Protocol SHA is `d68fee034d3b90e7...`. It cannot
-select, repair, train, promote, or access restricted data; no diagnostic
-episode has run.
+select, repair, train, promote, or access restricted data. The fail-closed
+runner, exact twin-JVM comparison, command surface, and focused tests are
+implemented locally; all 420 Python tests pass. No diagnostic episode has run.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

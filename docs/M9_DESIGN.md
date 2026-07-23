@@ -217,7 +217,9 @@ pins, and dependency lock.
    50%-collapse rules distinguish mode instability from optimizer-distribution
    collapse. Protocol SHA is `d68fee034d3b90e7...`; the diagnostic has no
    candidate repair, selection, training, promotion, or restricted-data
-   authority. No diagnostic episode has run.
+   authority. Fail-closed source validation, immutable-model execution, exact
+   twin-JVM comparison, and classification are implemented locally; all 420
+   Python tests pass. No diagnostic episode has run.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

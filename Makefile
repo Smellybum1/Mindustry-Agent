@@ -19,6 +19,7 @@ SCRIPTS := scripts
         m9-artifact-check m9-sequence-check m9-pretraining-check \
         m9-v2-pretraining-check m9-diverse-roots-check m9-v3-pretraining-check \
         m9-policy-mode-diagnostic m9-entropy-check m9-v4-pretraining-check \
+        m9-late-checkpoint-diagnostic \
         m9-baseline train-m9-ippo train-m9-ippo-v2 train-m9-ippo-v3 \
         train-m9-ippo-v4 \
         secondary-claim-wake-check \
@@ -60,6 +61,7 @@ help: ## List available targets
 	@echo "  m9-entropy-check M9 v4 entropy-schedule inheritance check"
 	@echo "  m9-v4-pretraining-check complete entropy-IPPO gate before replica A"
 	@echo "  train-m9-ippo-v4 governed entropy-annealed IPPO construction"
+	@echo "  m9-late-checkpoint-diagnostic rejected-v4 update-31/32 mode diagnostic"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -169,6 +171,9 @@ m9-v4-pretraining-check: ## Run all gates required before M9 v4 training
 
 train-m9-ippo-v4: ## Run governed M9 v4 entropy-annealed construction
 	@bash $(SCRIPTS)/train-m9-ippo-v4.sh
+
+m9-late-checkpoint-diagnostic: ## Diagnose rejected-v4 update-31/32 modes
+	@bash $(SCRIPTS)/m9-late-checkpoint-diagnostic.sh
 
 secondary-claim-wake-check: ## Verify V35's fixed-seat claim-loss boundary
 	@bash $(SCRIPTS)/secondary-claim-wake-check.sh

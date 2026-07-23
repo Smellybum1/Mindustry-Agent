@@ -2391,7 +2391,10 @@ repository-evidence mapping used for the M6 audit is:
   fresh JVMs. Exact retention rules distinguish deterministic mode instability
   from whole-distribution optimizer collapse; the protocol SHA is
   `d68fee034d3b90e7...`. It has no training, selection, promotion, confirmation,
-  or held-out authority. No diagnostic episode has run.
+  or held-out authority. Fail-closed multi-checkpoint validation, exact
+  argmax/categorical execution, fresh-JVM comparison, classification, command
+  surface, and focused tests are implemented locally. All 420 Python tests
+  pass. No diagnostic episode has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1354,6 +1354,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make m9-entropy-check` | Verifies ADR-0079's exact v3 inheritance, 32-update entropy schedule, and unchanged diverse-root schedule. Committed report SHA is `44a33c55693686d3...`. |
 | `make m9-v4-pretraining-check` | Runs every public-only gate required before v4 Replica A and writes exact-commit authority. Passed at `fbca0c6bbc`. |
 | `make train-m9-ippo-v4` | Reconstructs the pinned CPU runtime, requires exact-current-commit v4 authority, runs A first, and prohibits B unless A passes construction. A completed and failed at a best 18/40; B is prohibited by ADR-0080. |
+| `make m9-late-checkpoint-diagnostic` | Runs ADR-0081's immutable v4 update-31/32 argmax/categorical matrix twice in fresh JVMs and applies only the frozen public-only classification. Implemented locally; no episode has run. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
 | `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
 | `make verify-rl-boundary` | On Linux/WSL2 with uv 0.11.16 and Python 3.12, runs 33 core tests under `python -S`, reconstructs the 15-package hashed CPU environment in a temporary directory, and ends `RL-BOUNDARY OK`. Verified 2026-07-21. |
