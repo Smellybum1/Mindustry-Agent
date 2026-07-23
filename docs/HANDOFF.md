@@ -1030,6 +1030,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `591513526bdd0bce...` / `d2d14a281d37a046...`; the receipt records zero
   membership-document reads. Do not consume it before both reusable scorecards
   pass.
+- **V45 rejected before confirmation**: exact replicas select update 32 at
+  10/10 wins, core `730.1`, idle `0.00873637`, checkpoint
+  `cdc526403cd1fe27...`, and full-run `f253cd6dbb1c0f5c...`. All four win gates
+  pass, but permanent announcements/idle and matched recovery remain favorable
+  yet uncertain; report SHA is `ea7466a45d91d415...`. Root 2004's 65 WAITs are
+  all forced after the only legal teacher-agreed defense action, so another
+  selector-memory coordinate is not supported. Dev-v41 is retired unopened/
+  unconsumed and held-out-v6 remains sealed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1249,8 +1257,10 @@ queue.
 2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
    dev-v39 membership; dev-v38 also remains retired unopened.
 3. **Keep held-out-v6 sealed and unconsumed.** V44 did not authorize access.
-4. **Commit the frozen dev-v41 membership/receipt mechanically without reading
-   or rendering membership, then train the two exact V45 reusable replicas.**
+4. **Preserve rejected V45 and retired dev-v41 evidence.** Never read or render
+   dev-v41 membership. Do not invent V46 or relax the frozen scorecard from
+   outcome-driven evidence; a successor requires a new public/train/reusable
+   hypothesis that can act inside the selector's authority.
 5. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
    authorize V43 or any runtime prior and still fails two scorecard rows.
 6. **M9.1 remains gated.** The roadmap says to begin only after the single

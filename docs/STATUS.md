@@ -1949,6 +1949,20 @@ repository-evidence mapping used for the M6 audit is:
   values. Membership/receipt hashes are `591513526bdd0bce...` /
   `d2d14a281d37a046...`; the receipt records zero membership-document reads.
   Dev-v41 is frozen and unconsumed.
+- Two exact V45 replicas select update 32 at 10/10 reusable wins, mean return
+  `7.67784`, core `730.1`, and idle `0.00873637`. Checkpoint/full-run/lineage
+  prefixes are `cdc526403cd1fe27...` / `f253cd6dbb1c0f5c...` /
+  `5c1ca3fc7ab9c49f...`. Fresh permanent random/greedy are 4/10 and 8/10;
+  matched random/greedy are 5/10 and 6/10. Every observed win gate passes.
+- Both reusable scorecards reject V45 on uncertainty: permanent announcements
+  mean `-0.00986813`, CI `[-0.02822874,+0.00206376]`; permanent idle mean
+  `-0.00698418`, CI `[-0.02004098,+0.01159603]`; matched recovery mean `-31.9`,
+  CI `[-89.70125,+18.10125]`. Report SHA is `ea7466a45d91d415...`.
+  Root 2004's 65 WAIT actions are all forced after the only legal defense
+  action, which agrees with the teacher; the selector cannot act at those
+  boundaries. V45 is rejected before confirmation. Dev-v41 is retired
+  unopened/unconsumed without a read; held-out-v6 remains sealed/unconsumed.
+  No evidence-backed V46 coordinate is authorized.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1963,6 +1963,21 @@ membership. Membership/receipt hashes are `591513526bdd0bce...` /
 `d2d14a281d37a046...`; the receipt records zero membership-document reads.
 Dev-v41 is frozen and unconsumed pending both reusable scorecards.
 
+Two exact V45 replicas select update 32 at 10/10 reusable wins, return
+`7.67784`, core `730.1`, and idle `0.00873637`; checkpoint/full-run/lineage
+prefixes are `cdc526403cd1fe27...` / `f253cd6dbb1c0f5c...` /
+`5c1ca3fc7ab9c49f...`. Fresh permanent random/greedy are 4/10 and 8/10;
+matched random/greedy are 5/10 and 6/10. All win comparisons pass. Both frozen
+scorecards fail on uncertainty: permanent announcements and idle, and matched
+recovery. Report SHA is `ea7466a45d91d415...`.
+
+The remaining reusable idle outlier on root 2004 contains 65 forced WAITs after
+the only legal defense action, which agrees with the scripted teacher. The
+selector cannot act at those boundaries, so this evidence does not authorize a
+new memory coordinate or an outcome-driven relaxation. V45 is rejected before
+confirmation; dev-v41 is retired unopened/unconsumed, held-out-v6 remains
+sealed/unconsumed, and M8.5 remains unmet.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:

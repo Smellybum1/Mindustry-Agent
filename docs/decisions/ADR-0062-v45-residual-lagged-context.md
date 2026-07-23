@@ -107,3 +107,32 @@ membership. Membership/receipt hashes are
 `d2d14a281d37a046dfacbeeea5961d0ae154f156d16220b293f8f93d9a180905`.
 The receipt attests zero membership-document reads; dev-v41 is frozen and
 unconsumed.
+
+## Outcome
+
+The membership packet was committed at `f5cd3b932e` before training. Two
+independent pinned WSL Torch 2.12.1 runs reproduce exactly and select update 32
+at 10/10 reusable wins, mean return `7.67784`, mean core health `730.1`, and
+mean idle `0.008736369484555088`. Checkpoint, model-state, replay, and full-run
+hashes are `cdc526403cd1fe27...`, `41454f2cafc56062...`,
+`711dff92b9510386...`, and `f253cd6dbb1c0f5c...`. Direct-lineage digest and
+artifact hashes are `5c1ca3fc7ab9c49f...` / `f50a6f237dea4dac...`.
+
+Fresh permanent random/greedy baselines are 4/10 and 8/10. V45 is 10/10
+versus matched random/greedy 5/10 and 6/10, so all observed win comparisons
+pass. Both frozen reusable scorecards still fail on uncertainty. Against
+permanent greedy, announcements have mean difference `-0.00986813` with 95% CI
+`[-0.02822874,+0.00206376]` and idle has mean `-0.00698418` with CI
+`[-0.02004098,+0.01159603]`. Against matched greedy, recovery has mean `-31.9`
+ticks with CI `[-89.70125,+18.10125]`. Records/aggregate/report hashes are
+`ac6c8ca2ccb7ecdf...` / `38aac84811c8277d...` /
+`ea7466a45d91d415...`.
+
+The residual architecture improves every failing metric mean but cannot clear
+the frozen intervals. The reusable seed-2004 outlier contains 65 WAIT actions,
+all forced (`policy_loss_mask=false`), after the only legal defense action also
+selected by the scripted teacher. Changing selector memory cannot directly
+act at those boundaries. V45 is rejected before confirmation; dev-v41 is
+retired unopened and unconsumed without a membership read. Held-out-v6 remains
+sealed and unconsumed. No evidence-backed V46 coordinate is authorized by this
+outcome.

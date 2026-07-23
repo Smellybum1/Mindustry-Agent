@@ -929,6 +929,21 @@ values. Membership/receipt hashes are `591513526bdd0bce...` /
 `d2d14a281d37a046...`; the receipt records zero membership-document reads.
 Dev-v41 is frozen and unconsumed.
 
+Two exact V45 replicas select update 32 at 10/10 reusable wins, return
+`7.67784`, core `730.1`, and idle `0.00873637`; checkpoint/full-run/lineage
+prefixes are `cdc526403cd1fe27...` / `f253cd6dbb1c0f5c...` /
+`5c1ca3fc7ab9c49f...`. Fresh permanent random/greedy are 4/10 and 8/10 and
+matched random/greedy are 5/10 and 6/10. Every win gate passes, but permanent
+announcements and idle and matched recovery remain favorable yet uncertain, so
+both reusable scorecards fail. Report SHA is `ea7466a45d91d415...`.
+
+Reusable root 2004 explains the remaining idle interval: all 65 WAIT actions
+are forced and excluded from policy loss after the only legal defense action,
+which agrees with the scripted teacher. The selector cannot choose at those
+boundaries. V45 is rejected before confirmation; dev-v41 is retired unopened/
+unconsumed, held-out-v6 remains sealed, and no evidence-backed V46 coordinate
+is authorized.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one
