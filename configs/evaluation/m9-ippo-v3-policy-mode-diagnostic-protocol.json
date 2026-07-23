@@ -1,0 +1,62 @@
+{
+  "schema": "m9_ippo_v3_policy_mode_diagnostic_protocol_v1",
+  "status": "precommitted",
+  "data_classification": "public_dev_only",
+  "source_candidate": {
+    "candidate_version": "m9-ippo-v3-diverse2048",
+    "status": "rejected",
+    "result_path": "configs/evaluation/m9-ippo-v3-diverse2048-result.json",
+    "result_sha256": "2e3ed1c113bcd1c0d5de5956d8ff7ea7b413d97be58faf1848b5ce98ee7eafe9",
+    "training_commit": "89de310520a5407de7912345ddf8462b7b87c65c",
+    "manifest_path": "runs/m9-ippo-v3-diverse2048-a1/ippo-v3-diverse2048-run.manifest.json",
+    "manifest_sha256": "41746ef5b4fc863de555c90e4bf3eed71e73d0c678cf39598af2d89679d1973f"
+  },
+  "source_checkpoint": {
+    "update": 29,
+    "path": "runs/m9-ippo-v3-diverse2048-a1/ippo-v3-diverse2048-update-29.pt",
+    "file_sha256": "22cf7cb1ed08f9a1c5544ce5169f200d3f7ea9ddc71b7f487e80f7285eea791b",
+    "checkpoint_content_sha256": "849d9f97f9ed0b9c23a3b20d23471fbdb423062f81b342d580a522398de4b7e2",
+    "model_state_sha256": "87d85c4c78ae4c2d40e6c7f4bc67154bdd7ad94aa582baf4450048bd7826186e",
+    "selection_reason": "highest deterministic public-dev return in the immutable rejected run"
+  },
+  "public_roots": {
+    "path": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+    "sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+    "count": 40,
+    "reuse": "diagnostic_only_not_training_or_promotion"
+  },
+  "modes": {
+    "deterministic_argmax": {
+      "streams": 1,
+      "episodes_per_stream": 40,
+      "expected_immutable_manifest_wins": 0
+    },
+    "stochastic_categorical": {
+      "streams": 4,
+      "episodes_per_stream": 40,
+      "action_sampling_seeds": [9602, 19602, 29602, 39602],
+      "temperature": 1.0,
+      "sampling": "torch_multinomial_over_authoritatively_masked_softmax"
+    }
+  },
+  "execution": {
+    "fresh_jvms": 2,
+    "expected_total_episodes_per_jvm": 200,
+    "require_exact_report_identity": true,
+    "torch_threads": 1,
+    "no_optimizer_or_model_mutation": true
+  },
+  "classification": {
+    "minimum_stochastic_wins_total_for_sampling_signal": 32,
+    "stochastic_episode_total": 160,
+    "sampling_signal_meaning": "at_least_20_percent_public_dev_survival_under_fixed_categorical_sampling",
+    "deterministic_policy_remains_authoritative_for_construction": true
+  },
+  "authority": {
+    "checkpoint_selection_authorized": false,
+    "candidate_repair_authorized": false,
+    "promotion_authorized": false,
+    "training_authorized": false,
+    "confirmation_or_held_out_access": false
+  }
+}

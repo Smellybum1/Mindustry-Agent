@@ -184,7 +184,12 @@ pins, and dependency lock.
    prohibits replica B and MAPPO, and records compact result SHA
    `2e3ed1c113bcd1c0...`. No restricted data was accessed. A bounded
    precommitted public diagnostic of stochastic-policy survival versus
-   deterministic argmax collapse is next.
+   deterministic argmax collapse is next. ADR-0077 freezes that diagnostic:
+   immutable v3 update 29, the same 40 public dev roots, one argmax stream,
+   four categorical streams with seeds 9602/19602/29602/39602, and two
+   exact fresh-JVM runs. At least 32/160 stochastic wins denotes a diagnostic
+   sampling signal but cannot repair or promote v3. No diagnostic episode has
+   run yet.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

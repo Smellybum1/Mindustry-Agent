@@ -1510,7 +1510,9 @@ queue.
 4. **Precommit the bounded public policy-mode diagnostic.** Use immutable v3
    checkpoints, fixed public roots, and fixed RNG seeds to distinguish
    stochastic-policy survival from deterministic argmax collapse. It cannot
-   select, promote, or repair v3.
+   select, promote, or repair v3. ADR-0077 and protocol SHA
+   `89fecf69b76cd0fb...` freeze update 29, one argmax stream, four categorical
+   streams, and two exact fresh-JVM runs. Implement it before any episode.
 5. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 6. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1518,7 +1520,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0076` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0077` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

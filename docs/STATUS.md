@@ -2350,6 +2350,13 @@ repository-evidence mapping used for the M6 audit is:
   replica B and MAPPO, and records compact result SHA `2e3ed1c113bcd1c0...`.
   No confirmation or held-out data was accessed. A precommitted public-only
   stochastic-versus-argmax diagnostic is next.
+- ADR-0077 now freezes that bounded diagnostic before implementation or
+  execution. It binds immutable v3 update 29, the existing 40 public dev roots,
+  one deterministic argmax stream, four categorical streams with fixed seeds
+  9602/19602/29602/39602, and two fresh JVMs. A total of at least 32/160
+  stochastic wins denotes a diagnostic sampling signal only; v3 remains
+  rejected and cannot be selected or promoted. Protocol SHA is
+  `89fecf69b76cd0fb...`. No diagnostic episode has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

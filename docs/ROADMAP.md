@@ -2412,6 +2412,11 @@ prohibits replica B and MAPPO, and records compact result SHA
 `2e3ed1c113bcd1c0...`. No confirmation or held-out data was accessed. Before
 another recipe, a bounded public-only stochastic-policy versus deterministic
 argmax diagnostic must be precommitted and cannot repair or promote v3.
+ADR-0077 now freezes that diagnostic before implementation: immutable v3
+update 29, the same 40 public dev roots, one argmax stream, four categorical
+streams at seeds 9602/19602/29602/39602, and two fresh-JVM exact repetitions.
+At least 32/160 categorical wins denotes a diagnostic sampling signal only.
+Protocol SHA is `89fecf69b76cd0fb...`; no diagnostic episode has run.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
