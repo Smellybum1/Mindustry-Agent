@@ -1012,6 +1012,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `a7d0c8029acebe79...` / `e4fe0b56a95fa64c...`. Dev-v41 is reserved in
   `[9B,10B)` but unconstructed; implementation and the public/pretraining gate
   are next. Dev-v40 remains retired without a read and held-out-v6 stays sealed.
+- **V45 implementation boundary green**: the v4 actor is V43-exact at
+  construction, adds separately encoded zero-output residual heads, and retains
+  the current-state critic. The embargo-safe 273-test suite, pinned Java,
+  public 5/5 gate, focused checks, smoke, golden/negative determinism, and 44/44
+  reward adversaries pass (`84cd359cf9cbd401...`). The 43 scenario-variation
+  tests remain last green before dev-v40 freeze and are not rerun because they
+  glob-read retired membership. Dev-v41 remains unconstructed; no V45 training
+  or restricted read has occurred.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1231,8 +1239,8 @@ queue.
 2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
    dev-v39 membership; dev-v38 also remains retired unopened.
 3. **Keep held-out-v6 sealed and unconsumed.** V44 did not authorize access.
-4. **Implement only the precommitted V45 residual temporal actor.** Preserve
-   V43's base path and the exact zero-initialized residual contract.
+4. **Commit the completed V45 implementation boundary, then implement and
+   commit the primary-only dev-v41 freezer before constructing membership.**
 5. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
    authorize V43 or any runtime prior and still fails two scorecard rows.
 6. **M9.1 remains gated.** The roadmap says to begin only after the single

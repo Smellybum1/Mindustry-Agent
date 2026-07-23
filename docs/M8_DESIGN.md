@@ -911,6 +911,14 @@ remains unconstructed. Dev-v40 remains retired without a membership read and
 held-out-v6 remains sealed. No V45 implementation or model work preceded this
 precommit.
 
+The residual actor is now implemented and construction-time identical to V43
+until its exact-zero temporal heads learn. The 273-test embargo-safe suite,
+pinned Java, public 5/5 gate, focused checks, smoke, golden/negative determinism,
+and all 44 exact-config reward adversaries (`84cd359cf9cbd401...`) pass. The 43
+legacy scenario-variation tests remain last green before dev-v40 freeze and are
+not rerun because they glob-read retired membership. Dev-v41 is unconstructed
+and no V45 training episode has run.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

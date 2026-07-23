@@ -1942,6 +1942,16 @@ bottleneck. Everything else remains exact. Config/umbrella hashes are
 held-out-v6 remains sealed. Implementation and the complete pretraining boundary
 must be committed before value-free dev-v41 construction. M8.5 remains unmet.
 
+The V45 implementation/pretraining boundary is green: exact V43 base-path
+equality, zero residual initialization, learnable lag sensitivity, masks,
+schema failure, and compatibility are covered. The embargo-safe 273-test suite,
+pinned Java, public 5/5 gate with ten staging starts, both focused checks,
+smoke, golden/negative determinism, and 44 reward adversaries (SHA
+`84cd359cf9cbd401...`) pass. The 43 scenario-variation tests remain last green
+before dev-v40 freeze and are not rerun because they glob-read retired
+membership. Dev-v41 remains unconstructed; commit this boundary before the
+primary-only freezer.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:

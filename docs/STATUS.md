@@ -1933,6 +1933,14 @@ repository-evidence mapping used for the M6 audit is:
   `e4fe0b56a95fa64c...`. Dev-v41 is reserved in `[9B,10B)` but unconstructed;
   dev-v40 remains retired without a read, held-out-v6 remains sealed, and no
   V45 model work has occurred.
+- The V45 residual actor and pretraining boundary are green. Tests prove exact
+  V43 base-path initialization, zero temporal outputs, controlled lag
+  sensitivity, masks, shapes, and compatibility. The embargo-safe 273-test
+  suite, pinned Java, public 5/5 with ten staging starts, both focused checks,
+  smoke, deterministic golden/negative replay, and all 44 reward adversaries
+  pass (SHA `84cd359cf9cbd401...`). The 43 legacy scenario-variation tests remain
+  last green before dev-v40 freeze and are not rerun because they glob-read
+  retired membership. Dev-v41 is unconstructed and no V45 training has run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

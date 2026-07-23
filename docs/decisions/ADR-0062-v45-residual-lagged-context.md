@@ -74,3 +74,23 @@ context helps. The residual-lag hypothesis remains untested.
   `e4fe0b56a95fa64cb59e5ea853c878b4d678f86c629bba72b393a68b5eb7b8f2`.
 - This packet authorizes implementation only after commit. It does not authorize
   dev-v41 construction, replica A, confirmation, or held-out-v6 access.
+
+## Implementation status
+
+The config-selected v4 actor is implemented with V2-exact base module order and
+weights, a separate lag encoder, exact-zero temporal output layers, residual
+logit combination, unchanged critic, and dynamic checkpoint/model identity.
+Focused tests prove construction-time equality with V43, exact lag independence,
+learnable lag sensitivity after a controlled residual change, masks, set
+symmetry, scalar-width failure, and v1-v3 compatibility.
+
+The embargo-safe Python suite passes 273 tests. The 43 scenario-variation tests
+last passed in the complete 310-test pre-dev-v40-freeze suite; they are not
+rerun because that legacy module glob-reads every seed manifest, which would
+violate retired dev-v40's no-read rule. Pinned Java, public 5/5 survival with
+ten staging starts, both focused checks, smoke, determinism, 664-checkpoint/
+16,200-tick golden and negative replay all pass. All 44 V45 reward adversaries
+pass; report SHA is
+`84cd359cf9cbd4014cf4cdb13cadf7b19c6f96c402fb66b22b1500696a06f660`.
+Dev-v41 remains unconstructed; dev-v40 is retired unopened; held-out-v6 remains
+sealed; no V45 training episode has run.

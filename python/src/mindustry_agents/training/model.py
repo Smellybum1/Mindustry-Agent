@@ -8,6 +8,7 @@ from torch import nn
 MODEL_SCHEMA_V1 = "selector_actor_critic_v1"
 MODEL_SCHEMA_V2 = "selector_actor_critic_v2_set_context"
 MODEL_SCHEMA_V3 = "selector_actor_critic_v3_lagged_set_context"
+MODEL_SCHEMA_V4 = "selector_actor_critic_v4_residual_lagged_set_context"
 MODEL_SCHEMA = MODEL_SCHEMA_V1
 
 MODEL_ARCHITECTURE_V1 = {
@@ -46,6 +47,28 @@ MODEL_ARCHITECTURE_V3 = {
     "select_head": [192, 64, 1],
     "special_context": "masked_mean_all_candidates",
     "special_head": [128, 64, 2],
+    "critic": [128, 64, 1],
+    "activation": "Tanh",
+}
+MODEL_ARCHITECTURE_V4 = {
+    "schema": MODEL_SCHEMA_V4,
+    "candidate_encoder": [37, 64, 64],
+    "current_scalar_encoder": [56, 64, 64],
+    "lagged_context_encoder": [104, 64, 64],
+    "lagged_context": {
+        "previous_scalars": 56,
+        "previous_candidate_masked_mean": 37,
+        "previous_candidate_count_fraction": 1,
+        "previous_action_one_hot": 10,
+        "initial_value": "all_zero",
+    },
+    "candidate_context": "masked_mean_other_candidates",
+    "base_select_head": [192, 64, 1],
+    "temporal_select_head": [256, 64, 1],
+    "base_special_head": [128, 64, 2],
+    "temporal_special_head": [192, 64, 2],
+    "temporal_output_initialization": "zero_weight_zero_bias",
+    "actor_combination": "base_logits_plus_temporal_residual",
     "critic": [128, 64, 1],
     "activation": "Tanh",
 }
@@ -194,10 +217,104 @@ class SelectorLaggedSetContextActorCritic(SelectorSetContextActorCritic):
             )
 
 
+class SelectorResidualLaggedSetContextActorCritic(SelectorSetContextActorCritic):
+    """V4 actor that adds zero-initialized temporal residual logits to V2."""
+
+    model_schema = MODEL_SCHEMA_V4
+
+    def __init__(self, seed: int):
+        nn.Module.__init__(self)
+        with torch.random.fork_rng(devices=[]):
+            torch.manual_seed(seed)
+            # Preserve V2 module construction order and initialization exactly.
+            self.candidate_encoder = nn.Sequential(
+                nn.Linear(37, 64), nn.Tanh(), nn.Linear(64, 64), nn.Tanh()
+            )
+            self.scalar_encoder = nn.Sequential(
+                nn.Linear(56, 64), nn.Tanh(), nn.Linear(64, 64), nn.Tanh()
+            )
+            self.select_head = nn.Sequential(
+                nn.Linear(192, 64), nn.Tanh(), nn.Linear(64, 1)
+            )
+            self.special_head = nn.Sequential(
+                nn.Linear(128, 64), nn.Tanh(), nn.Linear(64, 2)
+            )
+            self.critic = nn.Sequential(
+                nn.Linear(128, 64), nn.Tanh(), nn.Linear(64, 1)
+            )
+            self.lagged_context_encoder = nn.Sequential(
+                nn.Linear(104, 64), nn.Tanh(), nn.Linear(64, 64), nn.Tanh()
+            )
+            self.temporal_select_head = nn.Sequential(
+                nn.Linear(256, 64), nn.Tanh(), nn.Linear(64, 1)
+            )
+            self.temporal_special_head = nn.Sequential(
+                nn.Linear(192, 64), nn.Tanh(), nn.Linear(64, 2)
+            )
+            nn.init.zeros_(self.temporal_select_head[-1].weight)
+            nn.init.zeros_(self.temporal_select_head[-1].bias)
+            nn.init.zeros_(self.temporal_special_head[-1].weight)
+            nn.init.zeros_(self.temporal_special_head[-1].bias)
+
+    def forward(
+        self,
+        candidates: torch.Tensor,
+        scalars: torch.Tensor,
+        candidate_present: torch.Tensor,
+        action_mask: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        if scalars.shape[-1] != 160:
+            raise ValueError("V4 scalar input must contain 56 current + 104 lag values")
+        current_scalars = scalars[:, :56]
+        lagged_context = scalars[:, 56:]
+        encoded_candidates = self.candidate_encoder(candidates)
+        encoded_scalars = self.scalar_encoder(current_scalars)
+        encoded_lag = self.lagged_context_encoder(lagged_context)
+        weights = candidate_present.to(encoded_candidates.dtype).unsqueeze(-1)
+        candidate_sum = (encoded_candidates * weights).sum(dim=1)
+        candidate_count = weights.sum(dim=1)
+        pooled = candidate_sum / candidate_count.clamp_min(1.0)
+
+        other_sum = candidate_sum[:, None, :] - encoded_candidates * weights
+        other_count = candidate_count[:, None, :] - weights
+        other_pooled = other_sum / other_count.clamp_min(1.0)
+        other_pooled = other_pooled * (other_count > 0).to(other_pooled.dtype)
+
+        repeated_scalars = encoded_scalars[:, None, :].expand(-1, 8, -1)
+        repeated_lag = encoded_lag[:, None, :].expand(-1, 8, -1)
+        base_select = self.select_head(
+            torch.cat((encoded_candidates, repeated_scalars, other_pooled), dim=-1)
+        ).squeeze(-1)
+        temporal_select = self.temporal_select_head(
+            torch.cat(
+                (
+                    encoded_candidates,
+                    repeated_scalars,
+                    other_pooled,
+                    repeated_lag,
+                ),
+                dim=-1,
+            )
+        ).squeeze(-1)
+        base_special = self.special_head(torch.cat((encoded_scalars, pooled), dim=-1))
+        temporal_special = self.temporal_special_head(
+            torch.cat((encoded_scalars, pooled, encoded_lag), dim=-1)
+        )
+        raw_logits = torch.cat(
+            (base_select + temporal_select, base_special + temporal_special), dim=-1
+        )
+        masked_logits = raw_logits.masked_fill(
+            ~action_mask, torch.finfo(raw_logits.dtype).min
+        )
+        value = self.critic(torch.cat((encoded_scalars, pooled), dim=-1)).squeeze(-1)
+        return raw_logits, masked_logits, value
+
+
 SelectorModel = (
     SelectorActorCritic
     | SelectorSetContextActorCritic
     | SelectorLaggedSetContextActorCritic
+    | SelectorResidualLaggedSetContextActorCritic
 )
 
 
@@ -216,6 +333,7 @@ def expected_model_schema(config: dict[str, object]) -> str:
         MODEL_SCHEMA_V1: MODEL_ARCHITECTURE_V1,
         MODEL_SCHEMA_V2: MODEL_ARCHITECTURE_V2,
         MODEL_SCHEMA_V3: MODEL_ARCHITECTURE_V3,
+        MODEL_SCHEMA_V4: MODEL_ARCHITECTURE_V4,
     }.get(schema)
     if expected is None:
         raise ValueError(f"unknown model architecture schema: {schema!r}")
@@ -233,7 +351,7 @@ def build_selector_model(config: dict[str, object]) -> SelectorModel:
         feature_schema = normalizers.get("feature_schema")
         required_feature_schema = (
             "selector_features_v2_lagged_boundary"
-            if schema == MODEL_SCHEMA_V3
+            if schema in (MODEL_SCHEMA_V3, MODEL_SCHEMA_V4)
             else "selector_features_v1"
         )
         if feature_schema != required_feature_schema:
@@ -246,14 +364,21 @@ def build_selector_model(config: dict[str, object]) -> SelectorModel:
         return SelectorActorCritic(seed)
     if schema == MODEL_SCHEMA_V2:
         return SelectorSetContextActorCritic(seed)
-    return SelectorLaggedSetContextActorCritic(seed)
+    if schema == MODEL_SCHEMA_V3:
+        return SelectorLaggedSetContextActorCritic(seed)
+    return SelectorResidualLaggedSetContextActorCritic(seed)
 
 
 def model_schema(model: nn.Module) -> str:
     """Return a model instance's pinned checkpoint schema, failing closed."""
 
     schema = getattr(model, "model_schema", None)
-    if schema not in (MODEL_SCHEMA_V1, MODEL_SCHEMA_V2, MODEL_SCHEMA_V3):
+    if schema not in (
+        MODEL_SCHEMA_V1,
+        MODEL_SCHEMA_V2,
+        MODEL_SCHEMA_V3,
+        MODEL_SCHEMA_V4,
+    ):
         raise ValueError("selector model has no recognized schema")
     return str(schema)
 
