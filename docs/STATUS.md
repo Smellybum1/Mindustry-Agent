@@ -1926,6 +1926,13 @@ repository-evidence mapping used for the M6 audit is:
   frontier checkpoint and later updates collapse. V44 is rejected before
   confirmation; dev-v40 is retired unopened/unconsumed and held-out-v6 remains
   sealed. M8.5 is unmet.
+- ADR-0062 precommits V45's residual-temporal actor. It preserves V43's exact
+  current-state set path, separately encodes V44's 104 lag values, and adds
+  zero-initialized temporal residual logits while leaving the critic unchanged.
+  Config/umbrella hashes are `a7d0c8029acebe79...` /
+  `e4fe0b56a95fa64c...`. Dev-v41 is reserved in `[9B,10B)` but unconstructed;
+  dev-v40 remains retired without a read, held-out-v6 remains sealed, and no
+  V45 model work has occurred.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

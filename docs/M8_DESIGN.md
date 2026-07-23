@@ -897,6 +897,20 @@ uncertain. Report SHA is `260625f302f3e268...`. Update 1 is the frontier's only
 160->64 replacement of V43's current-state scalar path. Dev-v40 is retired
 unopened/unconsumed and held-out-v6 remains sealed.
 
+## V45 governed residual-temporal successor
+
+ADR-0062 preserves V43's complete current-state set actor and encodes V44's
+104-value lag separately. Zero-initialized temporal SELECT and CONTINUE/WAIT
+output layers add residual logits to the unchanged base actor; the critic stays
+current-state-only. Thus construction begins lag-independent without V44's
+160->64 bottleneck, while training can learn bounded temporal corrections.
+
+The immutable config/umbrella hashes are `a7d0c8029acebe79...` /
+`e4fe0b56a95fa64c...`. Dev-v41 is reserved primary-only in `[9B,10B)` and
+remains unconstructed. Dev-v40 remains retired without a membership read and
+held-out-v6 remains sealed. No V45 implementation or model work preceded this
+precommit.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

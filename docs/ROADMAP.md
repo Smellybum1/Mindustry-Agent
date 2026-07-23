@@ -1933,6 +1933,15 @@ promotion authority and closes the runtime-prior reopening. No V43 is
 authorized. Dev-v38 is retired unopened/unconsumed, held-out-v6 remains
 sealed/unconsumed, and M8.5 remains unmet.
 
+ADR-0062 now precommits V45 from V44's full-frontier collapse. V45 preserves
+V43's current-state set actor and adds V44's lag through separate encoders and
+zero-initialized residual actor heads; it does not repeat the 160->64
+bottleneck. Everything else remains exact. Config/umbrella hashes are
+`a7d0c8029acebe79...` / `e4fe0b56a95fa64c...`. Dev-v41 is reserved in
+`[9B,10B)` but unconstructed; dev-v40 remains retired without a read and
+held-out-v6 remains sealed. Implementation and the complete pretraining boundary
+must be committed before value-free dev-v41 construction. M8.5 remains unmet.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:

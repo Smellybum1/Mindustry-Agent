@@ -1006,6 +1006,12 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   plus matched duplicates/idle/recovery remain uncertain. Report SHA is
   `260625f302f3e268...`. V44 is rejected; dev-v40 is retired unopened/unconsumed
   and held-out-v6 stays sealed.
+- **V45 residual-temporal successor precommitted**: ADR-0062 preserves V43's
+  current-state set actor and adds V44's lag only through separately encoded,
+  zero-initialized residual logits. Config/umbrella hashes are
+  `a7d0c8029acebe79...` / `e4fe0b56a95fa64c...`. Dev-v41 is reserved in
+  `[9B,10B)` but unconstructed; implementation and the public/pretraining gate
+  are next. Dev-v40 remains retired without a read and held-out-v6 stays sealed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1225,9 +1231,8 @@ queue.
 2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
    dev-v39 membership; dev-v38 also remains retired unopened.
 3. **Keep held-out-v6 sealed and unconsumed.** V44 did not authorize access.
-4. **Precommit V45 as a residual temporal actor before model work.** Preserve
-   V43's dedicated current-state path and add lagged context only as a zero-
-   initialized residual; do not repeat V44's 160->64 replacement.
+4. **Implement only the precommitted V45 residual temporal actor.** Preserve
+   V43's base path and the exact zero-initialized residual contract.
 5. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
    authorize V43 or any runtime prior and still fails two scorecard rows.
 6. **M9.1 remains gated.** The roadmap says to begin only after the single
