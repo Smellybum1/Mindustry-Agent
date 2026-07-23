@@ -92,3 +92,12 @@ episode. Membership SHA-256 is
 `c529951782ec0426f94671ece39824d0057e303c2aa7edc11b3610a63c7f86f3`;
 the receipt records zero dev-v42 or held-out-v6 reads and zero confirmation or
 final episodes. Reusable-v2 is frozen and unevaluated.
+
+Fresh permanent baselines won 62/160 random-valid and 84/160 greedy-utility.
+The frozen V46 checkpoint won 96/160; matched random/greedy won 69/160 and
+67/160. V46 passed the DEFER cap at `0.22788814` and every matched-greedy
+scorecard row. It failed permanent greedy on announcements (mean
+`-0.00016845`, CI `[-0.00413065,+0.00377476]`) and idle (mean `+0.00391218`,
+CI `[-0.00166438,+0.00971554]`). Preflight SHA-256 is
+`d272edd51197166b44f29e297ce713a3c66a46b7dc6ddb0f13bd8df9d11c4928`.
+V46 remains rejected; dev-v43 is unconstructed and held-out-v6 stays sealed.

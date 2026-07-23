@@ -2043,6 +2043,15 @@ repository-evidence mapping used for the M6 audit is:
   membership SHA `c529951782ec0426...`; its receipt records zero restricted
   membership reads and zero evaluation episodes. The set is frozen and
   unevaluated pending this data/evidence commit.
+- Reusable-v2 rejects V46 with substantially higher power. Permanent
+  random/greedy win 62/160 and 84/160; V46 wins 96/160 and matched
+  random/greedy win 69/160 and 67/160. V46's mean DEFER `0.22788814` passes,
+  and every matched scorecard passes. Permanent announcements remain
+  indistinguishable (`-0.00016845`, CI
+  `[-0.00413065,+0.00377476]`) while idle is unfavorable
+  (`+0.00391218`, CI `[-0.00166438,+0.00971554]`). Report SHA is
+  `d272edd51197166b...`. Dev-v43 is not constructed; dev-v42 stays retired and
+  held-out-v6 stays sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1103,6 +1103,14 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   `c529951782ec0426...`; the receipt records zero restricted membership reads
   and zero episodes. Commit membership/receipt/tests/docs before baseline or
   candidate evaluation.
+- **V46 rejected on reusable-v2**: fresh permanent random/greedy win 62/160 and
+  84/160; V46 wins 96/160 and matched random/greedy win 69/160 and 67/160.
+  DEFER passes at `0.22788814` and all matched scorecards pass. Permanent
+  announcements remain uncertain (`-0.00016845`, CI
+  `[-0.00413065,+0.00377476]`) and idle is unfavorable (`+0.00391218`, CI
+  `[-0.00166438,+0.00971554]`). Preflight SHA is `d272edd51197166b...`.
+  Dev-v43 remains unconstructed; held-out-v6 remains sealed. Diagnose any V47
+  coordinate only from the public 160-root records.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned

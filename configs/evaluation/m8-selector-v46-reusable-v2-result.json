@@ -1,0 +1,59 @@
+{
+  "schema": "m8_reusable_scorecard_result_v2",
+  "candidate_version": "v46",
+  "protocol_revision": "reusable-scorecard-v2",
+  "status": "rejected_before_confirmation",
+  "runtime_repository_commit": "ce55604f625747fd5c57542572c542280df7fa7b",
+  "seed_set": {
+    "seed_set_id": "bootstrap-defense-v1-reusable-scorecard-v2",
+    "seed_set_version": 2,
+    "count": 160,
+    "membership_sha256": "c529951782ec0426f94671ece39824d0057e303c2aa7edc11b3610a63c7f86f3"
+  },
+  "artifacts": {
+    "permanent_records_sha256": "90d02b4b156222da1e8e73f1fd23d0f0788dd68927719c2f431b9c4249dd88b7",
+    "permanent_aggregate_sha256": "a06124e9a999c19a868ac25a96cbcbb70963d0ab44adcb7211b57337f0cd53f3",
+    "candidate_and_matched_records_sha256": "5f5f34d915afd3d0beced41d5a6dec4f9d2a593f0f7e672359608e738b58b7bf",
+    "combined_aggregate_sha256": "f18f0b18a68819c555ed8fa2b7ecd2e15040c34ec9efd5547e1dcba735c6d10d",
+    "preflight_sha256": "d272edd51197166b44f29e297ce713a3c66a46b7dc6ddb0f13bd8df9d11c4928"
+  },
+  "wins": {
+    "random_valid": 62,
+    "greedy_utility": 84,
+    "learned_selector_v46": 96,
+    "random_mixed_seat0": 69,
+    "greedy_mixed_seat0": 67
+  },
+  "control": {
+    "mean_expert_defer_fraction": 0.22788813901007407,
+    "maximum_mean_expert_defer_fraction_inclusive": 0.25,
+    "passed": true
+  },
+  "scorecards": {
+    "permanent_greedy": {
+      "passed": false,
+      "failed": {
+        "announcements_per_meaningful_transition": {
+          "mean_difference": -0.00016844890809604953,
+          "ci95": [-0.004130651243543894, 0.003774756572197001]
+        },
+        "idle_fraction": {
+          "mean_difference": 0.003912179838558777,
+          "ci95": [-0.0016643763277313082, 0.009715541600923956]
+        }
+      }
+    },
+    "matched_greedy": {
+      "passed": true
+    }
+  },
+  "reward_adversaries_passed": true,
+  "eligible_for_confirmation": false,
+  "restricted_access": {
+    "dev_v42_membership_reads": 0,
+    "dev_v43_constructed": false,
+    "held_out_v6_membership_reads": 0,
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0
+  }
+}

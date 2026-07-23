@@ -26,6 +26,12 @@ RECEIPT = (
     / "evaluation"
     / "m8-selector-v46-reusable-v2-freeze.json"
 )
+RESULT = (
+    ROOT
+    / "configs"
+    / "evaluation"
+    / "m8-selector-v46-reusable-v2-result.json"
+)
 DOMAIN = "mindustry-agent:m8:reusable-scorecard-v2"
 
 
@@ -78,3 +84,22 @@ def test_reusable_scorecard_v2_is_public_deterministic_and_precommitted() -> Non
     assert receipt["membership"]["sha256"] == _sha256(MEMBERSHIP)
     assert receipt["membership"]["evaluation_episodes_at_freeze"] == 0
     assert set(receipt["restricted_access"].values()) == {0}
+
+
+def test_reusable_scorecard_v2_rejection_preserves_restricted_sets() -> None:
+    result = json.loads(RESULT.read_text(encoding="utf-8"))
+
+    assert result["status"] == "rejected_before_confirmation"
+    assert result["wins"]["learned_selector_v46"] == 96
+    assert result["wins"]["greedy_utility"] == 84
+    assert result["control"]["passed"] is True
+    assert result["scorecards"]["permanent_greedy"]["passed"] is False
+    assert result["scorecards"]["matched_greedy"]["passed"] is True
+    assert result["eligible_for_confirmation"] is False
+    assert result["restricted_access"] == {
+        "dev_v42_membership_reads": 0,
+        "dev_v43_constructed": False,
+        "held_out_v6_membership_reads": 0,
+        "confirmation_episodes": 0,
+        "held_out_episodes": 0,
+    }

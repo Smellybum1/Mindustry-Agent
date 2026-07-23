@@ -2151,6 +2151,14 @@ The precommit was committed at `26d25acd64`; its pinned generator then froze
 restricted membership reads and zero episodes. Commit this data/evidence packet
 before refreshing baselines or evaluating V46. M8.5 remains unmet.
 
+Reusable-v2 gives a decisive V46 rejection without restricted access. V46 wins
+96/160 versus permanent greedy's 84/160, passes the `0.25` DEFER cap and every
+matched scorecard, but permanent announcements remain uncertain and permanent
+idle is unfavorable by `+0.00391218` (CI
+`[-0.00166438,+0.00971554]`). Preflight SHA is `d272edd51197166b...`.
+Dev-v43 remains unconstructed, held-out-v6 remains sealed, and M8.5 remains
+unmet.
+
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete
 - [x] Training runs reproducible (manifest + seeds + lockfile)

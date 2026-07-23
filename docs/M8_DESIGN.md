@@ -1034,6 +1034,13 @@ froze the 160 public reusable-v2 roots at membership SHA
 membership. Reusable-v2 is frozen and unevaluated pending its separate
 membership/evidence commit.
 
+The canonical 160-root screen rejects V46. It wins 96/160 versus permanent
+greedy's 84/160 and passes every matched-greedy scorecard plus the DEFER cap,
+but permanent announcements remain uncertain and permanent idle has an
+unfavorable `+0.00391218` mean difference. Preflight SHA is
+`d272edd51197166b...`. Dev-v43 remains unconstructed and held-out-v6 remains
+sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one
