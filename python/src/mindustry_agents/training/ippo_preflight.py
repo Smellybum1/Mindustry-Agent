@@ -44,6 +44,12 @@ EXPECTED_V2 = {
         "580493699e7c342b1932afd272c43353fed20180b1fa6511fb2ad76809f6ea63"
     ),
 }
+EXPECTED_V3 = {
+    **EXPECTED,
+    "configs/evaluation/m9-ippo-v3-diverse2048-roots-check.json": (
+        "e8334ee662e718b7d6e4f53aadaff0d58b51f2afeba18113c06393e399dfbcdd"
+    ),
+}
 
 GATES = (
     "test-python",
@@ -164,6 +170,12 @@ def _sequence_identity(report: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
+def _diverse_identity(report: dict[str, Any]) -> dict[str, Any]:
+    result = copy.deepcopy(report)
+    result.pop("implementation_commit", None)
+    return result
+
+
 def validate_v2_preflight(root: Path | None = None) -> dict[str, Any]:
     """Validate ADR-0073's committed and freshly rerun sequence boundary."""
 
@@ -260,23 +272,44 @@ def validate_v3_preflight(root: Path | None = None) -> dict[str, Any]:
     baseline = _load(
         root, "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json"
     )
+    committed_path = (
+        root
+        / "configs/evaluation/m9-ippo-v3-diverse2048-roots-check.json"
+    )
+    if sha256_path(committed_path) != EXPECTED_V3[
+        "configs/evaluation/m9-ippo-v3-diverse2048-roots-check.json"
+    ]:
+        raise ValueError("M9 v3 committed diverse-root evidence hash drifted")
+    committed = json.loads(committed_path.read_text(encoding="utf-8"))
     current_path = root / "runs/m9-ippo-v3-diverse-roots-check.json"
     current = json.loads(current_path.read_text(encoding="utf-8"))
     expected = build_report(root)
+    commit = _project_commit(root)
     if (
         inherited.get("passed") is not True
         or inherited.get("confirmation_or_held_out_access") is not False
         or current != expected
-        or current.get("all_passed") is not True
-        or current.get("confirmation_or_held_out_access") is not False
+        or committed.get("schema")
+        != "m9_ippo_v3_diverse_roots_check_v1"
+        or committed.get("implementation_commit")
+        != "f32cba6f7258a83d6f5b125ce95b76d8c9ecffb5"
+        or committed.get("config_sha256") != IPPO_V3_CONFIG_SHA256
+        or committed.get("protocol_sha256") != IPPO_V3_PROTOCOL_SHA256
+        or committed.get("all_passed") is not True
+        or committed.get("confirmation_or_held_out_access") is not False
+        or current.get("implementation_commit") != commit
+        or _diverse_identity(current) != _diverse_identity(committed)
     ):
         raise ValueError("M9 v3 diverse-root evidence is incomplete or divergent")
     return {
         "schema": "m9_ippo_v3_preflight_v1",
-        "implementation_commit": _project_commit(root),
+        "implementation_commit": commit,
+        "diverse_roots_implementation_commit": committed[
+            "implementation_commit"
+        ],
         "config_sha256": IPPO_V3_CONFIG_SHA256,
         "protocol_sha256": IPPO_V3_PROTOCOL_SHA256,
-        "artifacts": EXPECTED,
+        "artifacts": EXPECTED_V3,
         "gates": list(V3_GATES),
         "public_baseline_wins": baseline["aggregate"]["wins"],
         "train_seed_sha256": current["train_seed_sha256"],

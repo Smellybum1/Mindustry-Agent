@@ -1348,7 +1348,7 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
 | `make m9-pretraining-check` | Runs all Python/Java tests, M9 reward/parity/rollout/artifact checks, smoke, determinism, and golden replay, then writes an exact-commit public-only result. Last passing implementation commit before the runner was `2b62f7e5d7`. |
 | `make train-m9-ippo` | On WSL2 with pinned `UV`/`JAVA`, requires an exact-current-commit complete-gate result, reconstructs the locked CPU runtime, runs independent 2,048-episode replicas A/B, then verifies canonical checkpoint and full-run identity. Not yet executed. |
 | `make m9-diverse-roots-check` | Verifies ADR-0075's 2,048 unique public roots, zero v1-train/dev overlap, exact one-use schedule, 32-by-64 slicing, and digest `a58244f31f21c24b...`. |
-| `make m9-v3-pretraining-check` | Runs the full public-only v3 gate and writes exact-commit training authority. The local preliminary gate is green; the committed exact gate remains pending. |
+| `make m9-v3-pretraining-check` | Runs the full public-only v3 gate, verifies the committed implementation-bound root report, and writes exact-commit training authority. The final exact gate remains pending. |
 | `make train-m9-ippo-v3` | Reconstructs the pinned CPU runtime, requires exact-current-commit v3 authority, runs full-budget replica A, and permits B only after A passes construction. No v3 trajectory exists yet. |
 | `make human-session-check` | Runs the real server/plugin no-port capture-v4, control replay, style/profile, and objective-scorecard gate with three controlled agents. |
 | `make human-absent-check` | Runs the real server/plugin no-port human-only condition, requires zero controlled units, validates a five-boundary capture-v4 and objective scorecard, and opens no network port. |
@@ -1507,8 +1507,10 @@ queue.
    v1's accepted one-boundary optimizer and changes only the repeated training
    distribution: 2,048 unique public roots, one deterministic shuffle, one use
    each. Schedule coverage, candidate-aware lineage/preflight, runner failure
-   paths, focused tests, and all 404 Python tests are green locally. Commit the
-   implementation and pass the complete exact-commit gate before replica A.
+   paths, focused tests, and all 404 Python tests are green. Implementation
+   commit `f32cba6f72` is pushed; the twice-identical implementation-bound root
+   report is committed with SHA `e8334ee662e718b7...`. Pass the complete
+   exact-commit gate before replica A.
    MAPPO remains blocked.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.

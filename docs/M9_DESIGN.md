@@ -168,11 +168,12 @@ pins, and dependency lock.
    Config/protocol/train-root hashes are `5d437c390fc54423...`,
    `29085f124d958f56...`, and `2e4d5b853ba9c8a6...`. No v3 trajectory or
    optimizer update exists. Candidate-aware config/checkpoint/manifest/training
-   authority is now implemented locally. The shared schedule validator proves
+   authority is committed at `f32cba6f72`. The shared schedule validator proves
    exact membership, zero v1-train/dev overlap, one-use coverage, deterministic
    32-by-64 slicing, and schedule digest `a58244f31f21c24b...`; focused tests
-   prove v1 optimizer dispatch and fail-closed v3 authority. The complete
-   404-test Python suite passes. Commit and the exact-commit gate are next.
+   prove v1 optimizer dispatch and fail-closed v3 authority. Its twice-identical
+   implementation-bound report is committed with SHA `e8334ee662e718b7...`.
+   The complete 404-test Python suite passes. The full exact-commit gate is next.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

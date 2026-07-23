@@ -2398,11 +2398,12 @@ reward, PPO values, dev roots, construction threshold, and expert comparator
 remain exact. Config/protocol/train-root hashes are `5d437c390fc54423...`,
 `29085f124d958f56...`, and `2e4d5b853ba9c8a6...`. No v3 trajectory or
 optimizer update exists. Candidate-aware config/checkpoint/manifest/preflight/
-runner support is implemented locally. The common schedule validator proves
+runner support is committed at `f32cba6f72`. The common schedule validator proves
 all 2,048 roots appear once across exact 32-by-64 slices, zero v1-train/dev
 overlap, and deterministic digest `a58244f31f21c24b...`. Focused governance
-tests and the complete 404-test Python suite pass. Commit and the complete
-exact-commit gate are next.
+tests and the complete 404-test Python suite pass. Its implementation-bound
+report reproduced byte-identically twice and is committed with SHA
+`e8334ee662e718b7...`. The complete exact-commit gate is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

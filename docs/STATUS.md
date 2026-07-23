@@ -2334,14 +2334,15 @@ repository-evidence mapping used for the M6 audit is:
   and expert comparator remain exact. Config/protocol/train-root hashes are
   `5d437c390fc54423...`, `29085f124d958f56...`, and
   `2e4d5b853ba9c8a6...`. No v3 trajectory or optimizer update exists;
-  candidate-aware implementation is now local. One shared validator supplies
+  candidate-aware implementation is committed at `f32cba6f72`. One shared validator supplies
   preflight and training with schedule digest `a58244f31f21c24b...`, proves all
   2,048 roots occur once across exact 32-by-64 slices, and records zero
   v1-train/dev overlap and no restricted access. Config/checkpoint/manifest
   binding, v1 optimizer dispatch, exact-current-commit authority, runner
   failure paths, focused tests, and the complete 404-test Python suite pass.
-  The implementation packet must be committed and pass the complete
-  exact-commit gate before replica A.
+  The implementation-bound root report reproduced byte-identically twice and
+  is committed with SHA `e8334ee662e718b7...`. The complete exact-commit gate
+  must pass before replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

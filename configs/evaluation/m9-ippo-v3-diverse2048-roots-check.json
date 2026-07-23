@@ -1,0 +1,21 @@
+{
+  "all_passed": true,
+  "candidate_version": "m9-ippo-v3-diverse2048",
+  "config_sha256": "5d437c390fc54423ac1be1f27b47395e68bd42e5f85a74e8abd13275c5f9b458",
+  "confirmation_or_held_out_access": false,
+  "episodes_per_update": 64,
+  "implementation_commit": "f32cba6f7258a83d6f5b125ce95b76d8c9ecffb5",
+  "maximum_seed": 18000102048,
+  "minimum_seed": 18000100001,
+  "protocol_sha256": "29085f124d958f563965a682adb029bdff24bf3a03df2148dd19c41c36e2a82f",
+  "public_dev_overlap": 0,
+  "root_count": 2048,
+  "root_reuse_count": 1,
+  "schedule_sha256": "a58244f31f21c24bbd96adb77953d231982fb799e61777993f9fb2b438833ec1",
+  "schema": "m9_ippo_v3_diverse_roots_check_v1",
+  "shuffle_seed": 9603,
+  "train_seed_sha256": "2e4d5b853ba9c8a6b568b107537756e257d3c19205af71c0445ea5ea730088c4",
+  "unique_root_count": 2048,
+  "updates": 32,
+  "v1_train_overlap": 0
+}

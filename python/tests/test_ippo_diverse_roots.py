@@ -47,6 +47,8 @@ class TestIPPODiverseRoots(unittest.TestCase):
             V3_TRAIN_SEED_SHA256,
             validate_diverse_root_packet,
         )
+        from mindustry_agents.training.ippo_preflight import EXPECTED_V3
+        from mindustry_agents.training.ippo_ppo import sha256_path
 
         report = validate_diverse_root_packet(self.root)
         self.assertEqual(report["train_seed_sha256"], V3_TRAIN_SEED_SHA256)
@@ -56,6 +58,23 @@ class TestIPPODiverseRoots(unittest.TestCase):
         self.assertEqual(report["v1_train_overlap"], 0)
         self.assertEqual(report["public_dev_overlap"], 0)
         self.assertFalse(report["confirmation_or_held_out_access"])
+        evidence = (
+            self.root
+            / "configs/evaluation/m9-ippo-v3-diverse2048-roots-check.json"
+        )
+        self.assertEqual(
+            sha256_path(evidence),
+            EXPECTED_V3[
+                "configs/evaluation/m9-ippo-v3-diverse2048-roots-check.json"
+            ],
+        )
+        committed = json.loads(evidence.read_text(encoding="utf-8"))
+        self.assertTrue(committed["all_passed"])
+        self.assertFalse(committed["confirmation_or_held_out_access"])
+        self.assertEqual(
+            committed["implementation_commit"],
+            "f32cba6f7258a83d6f5b125ce95b76d8c9ecffb5",
+        )
 
     def test_schedule_is_deterministic_complete_and_sliced_32_by_64(self):
         from mindustry_agents.training.ippo_train import training_seed_schedule
