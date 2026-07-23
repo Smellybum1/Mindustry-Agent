@@ -1107,11 +1107,18 @@ lineage, traces, reusable/final gates, and live telemetry bind
 `per_seat_scripted_prior_boundary_cache_v1`; the candidate performs exactly
 one model evaluation and submits at most one learned action per boundary.
 The focused live gate repeats the public `0->1->2` death sequence twice in one
-JVM and wins at tick 9000 with transfers at ticks 2738 and 4462. All 357 Python
+JVM and wins at tick 9000 with transfers at ticks 2738 and 4462. All 361 Python
 tests, custom Java modules, public 5/5 survival, focused coordination checks,
 smoke, deterministic golden/negative replay, and 44/44 exact-config reward
 adversaries pass (report SHA `8cfe56b3a000d4c...`). Dev-v45 remains
 unconstructed and no V48 training episode has run.
+
+The V48 value-free freezer is implemented separately from the runtime. It pins
+implementation `07c6951a7ffe8da...`, the immutable config/umbrella, V47's
+public reusable evidence, the `[14B,15B)` namespace, retired dev-v44, and
+sealed held-out-v6 without reading any restricted membership. Its pure tests
+prove range, exact reservation, and value-free receipt behavior. The freezer
+must be committed before it may atomically construct dev-v45.
 
 ## M8.1 acceptance review
 

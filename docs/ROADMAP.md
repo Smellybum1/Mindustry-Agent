@@ -2230,10 +2230,16 @@ canonical/effective action; dead caches retain their last boundary, and death
 transfer adopts the target cache. Manifests, lineage, traces, reusable/final
 gates, and telemetry bind the cache schema and one-model/one-action authority.
 The live public `0->1->2` gate wins twice in one JVM at tick 9000 with exact
-transfers at 2738/4462. All 357 Python tests, custom Java modules, public 5/5
+transfers at 2738/4462. All 361 Python tests, custom Java modules, public 5/5
 survival, focused checks, smoke, deterministic golden/negative replay, and
 44/44 exact-config reward adversaries pass (`8cfe56b3a000d4c...`). Dev-v45 is
 still unconstructed and no V48 training has run. M8.5 remains unmet.
+
+A separate primary-only V48 freezer now binds implementation
+`07c6951a7ffe8da...`, the exact config/umbrella/public evidence,
+`[14B,15B)`, retired dev-v44, and sealed held-out-v6 without membership reads.
+Its four pure tests pass. It must be committed before atomically constructing
+dev-v45; this does not authorize confirmation or held-out access.
 
 Exit criteria:
 - [x] M8_DESIGN.md + ADR-0011/0012 accepted; reward audit rows complete

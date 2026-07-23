@@ -1160,6 +1160,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   tests, custom Java modules, public 5/5 survival, focused checks, smoke,
   golden/negative determinism, and 44/44 reward adversaries pass (report SHA
   `8cfe56b3a000d4c...`). Dev-v45 remains unconstructed; no training has run.
+- **V48 value-free freezer ready**: the primary-only freezer binds
+  implementation `07c6951a7ffe8da...`, exact config/umbrella/public evidence,
+  `[14B,15B)`, retired dev-v44, and sealed held-out-v6. Four pure tests bring
+  the full suite to 361. The freezer has not run; commit it before atomically
+  constructing dev-v45, and never read or render the resulting membership.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1375,10 +1380,10 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Commit the green V48 implementation boundary.** Never read or render
-   retired dev-v44 membership; exclude the four protected user files.
-2. **Add and commit a V48 value-free freezer.** It must bind the exact
-   implementation/config/umbrella before constructing dev-v45 atomically.
+1. **Commit the V48 value-free freezer.** Never read or render retired dev-v44
+   membership; exclude the four protected user files.
+2. **Construct dev-v45 atomically with the committed freezer.** Commit only its
+   value-free receipt and membership file without reading or rendering values.
 3. **Train two exact V48 replicas, then run reusable-v2.** Confirmation remains
    forbidden unless the unchanged reusable gates all pass.
 4. **Keep held-out-v6 sealed.** No reusable result authorizes final access.

@@ -2117,6 +2117,12 @@ repository-evidence mapping used for the M6 audit is:
   smoke, deterministic golden/negative replay, and 44/44 reward adversaries
   pass; adversary report SHA is `8cfe56b3a000d4c...`. Dev-v45 remains
   unconstructed and no V48 training has run.
+- The V48 value-free freezer is implemented and pins implementation
+  `07c6951a7ffe8da...`, exact config/umbrella/public evidence, the
+  `[14B,15B)` namespace, retired dev-v44, and sealed held-out-v6. Its four pure
+  tests bring the full suite to 361. It has not run: dev-v45 is still
+  unconstructed, no restricted membership was read, and the freezer must be
+  committed before construction.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
