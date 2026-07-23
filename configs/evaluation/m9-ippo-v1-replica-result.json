@@ -1,0 +1,88 @@
+{
+  "schema": "m9_ippo_replica_result_v1",
+  "candidate_version": "m9-ippo-v1",
+  "data_classification": "public_train_and_dev_only",
+  "implementation_commit": "eabd0ce978f860e9bf8d4d1d2341d34c3ea65123",
+  "pretraining_gate": {
+    "passed": true,
+    "implementation_commit": "eabd0ce978f860e9bf8d4d1d2341d34c3ea65123",
+    "sha256": "dbffd0479059ac140d038ab7c192c9f6d838c3378760a8dec1aa0ddf8bb01635"
+  },
+  "recipe": {
+    "config_sha256": "5d349b4a93f1334292d09a4f4af6acd4764328836e6d6dbab309443e318c9861",
+    "protocol_sha256": "1f53ad0dde01a5433f609e8e0772d4576f6e5b600f0efb456242ee7333c6f554",
+    "episodes_per_replica": 2048,
+    "updates_per_replica": 32,
+    "dev_episodes_per_update": 40
+  },
+  "replicas": {
+    "a1": {
+      "manifest_sha256": "53dd0b29a29cfe85a77308e96ea0fd4a12cfcbb5815936e3f0cca147e5ecf443",
+      "training_episodes": 2048,
+      "optimizer_updates": 32,
+      "construction_passed": false
+    },
+    "b1": {
+      "manifest_sha256": "53dd0b29a29cfe85a77308e96ea0fd4a12cfcbb5815936e3f0cca147e5ecf443",
+      "training_episodes": 2048,
+      "optimizer_updates": 32,
+      "construction_passed": false
+    },
+    "exact_replica": true,
+    "full_run_reproducibility_digest": "186b7745c079f85a5af7a551fcf597c3ac3b1ef18b4898d9754da9d1a379c2e9",
+    "comparison_sha256": "babfda857130fa2cf0dbe0dca71f4a839817526364b37d3bff6a6315d7146f4b"
+  },
+  "public_frontier": {
+    "eligible_checkpoints": 0,
+    "required_minimum_wins": 30,
+    "required_maximum_mean_team_idle_fraction_exclusive": 0.25,
+    "best_observed": {
+      "update": 11,
+      "wins": 16,
+      "episodes": 40,
+      "mean_team_return": -7.878244999999998,
+      "mean_core_health": 390.05,
+      "mean_team_idle_fraction": 0.14656396070370448,
+      "checkpoint_content_sha256": "9a78814da2beac2ff1915bbf8fd0325dd5c228b1c0e4b7603a26e410f453bf7a",
+      "model_state_sha256": "c88dcd8c42d6971381978f65ceff123884b28b9f311efb3c86426c8f2adb7ff9"
+    },
+    "final_update": {
+      "update": 32,
+      "wins": 0,
+      "episodes": 40,
+      "mean_team_return": -14.7049,
+      "mean_core_health": 0.0,
+      "mean_team_idle_fraction": 0.1451318631693445
+    }
+  },
+  "public_training_summary": {
+    "episodes": 2048,
+    "wins": 598,
+    "losses": 1450,
+    "transitions": 196768,
+    "interpretation": "Training-root survival improved while development survival peaked below the frozen construction threshold and then collapsed to zero; this is reproducible public generalization failure, not a runtime or determinism failure."
+  },
+  "public_baseline": {
+    "policy": "shared-expert-v1",
+    "wins": 36,
+    "episodes": 40,
+    "mean_team_return": -1.641725,
+    "mean_core_health": 967.95
+  },
+  "decision": {
+    "construction_passed": false,
+    "failure": "no checkpoint passed the public quality gate",
+    "selected_checkpoint": null,
+    "direct_checkpoint_lineage": false,
+    "mappo_authorized": false,
+    "candidate_status": "rejected"
+  },
+  "restricted_state": {
+    "confirmation_namespace_exists": false,
+    "m9_held_out_namespace_exists": false,
+    "confirmation_episodes": 0,
+    "held_out_episodes": 0,
+    "confirmation_or_held_out_access": false,
+    "m8_held_out_v7": "sealed_unconsumed"
+  }
+}

@@ -2348,7 +2348,16 @@ roots, budget, optimizer, RNG, architecture, or selection. The new focused
 regression, 12-test IPPO module, and full 389-test suite pass. Commit the
 correction and incident record, then rerun the complete gate from that exact
 commit before restarting replica A in a clean output directory. Incident
-evidence SHA is `c533018ee7f61885...`.
+evidence SHA is `c533018ee7f61885...`. That correction was committed as
+`eabd0ce978`; the complete exact-commit gate passed. Clean A1/B1 replicas then
+completed 2,048 episodes and 32 updates each with byte-identical manifests and
+canonical full-run digest `186b7745c079f85a...`. No checkpoint reached the
+frozen 30/40 public construction bar. Update 11 was best at 16/40 wins, mean
+return `-7.878245`, mean core `390.05`, and idle `0.14656396`; the fixed expert
+is 36/40. ADR-0072 therefore rejects `m9-ippo-v1` as an exact, public
+generalization failure. No checkpoint is selected, MAPPO remains unauthorized,
+and no confirmation or held-out data was accessed. A separately named
+prospective IPPO successor is required.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

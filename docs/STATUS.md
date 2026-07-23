@@ -2277,6 +2277,20 @@ repository-evidence mapping used for the M6 audit is:
   shape GAE/optimizer regression, all 12 IPPO tests, and the full 389-test
   suite pass. A0 is retired; commit and exact-commit full gate are required
   before a clean restart. Incident evidence SHA is `c533018ee7f61885...`.
+- The validator correction was committed as `eabd0ce978` and the complete gate
+  passed from that exact commit. Clean replicas A1 and B1 each completed the
+  frozen 2,048 public training episodes and 32 optimizer updates. Their raw
+  manifests are byte-identical at `53dd0b29a29cfe85...`; canonical full-run
+  digest `186b7745c079f85a...` also matches. No checkpoint reached the required
+  30/40 dev wins. Update 11 was best at 16/40, mean team return `-7.878245`,
+  mean core `390.05`, and mean idle `0.14656396`, versus the fixed expert's
+  36/40 wins and `-1.641725` return. Training-root survival continued improving
+  while dev survival fell to zero after update 11, establishing a deterministic
+  public generalization failure. ADR-0072 rejects `m9-ippo-v1`; no checkpoint
+  is selected, MAPPO is unauthorized, no confirmation/final namespace exists,
+  and no held-out data was accessed. Compact result evidence is
+  `configs/evaluation/m9-ippo-v1-replica-result.json`, SHA
+  `7ea61a5bc3a62440...`.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

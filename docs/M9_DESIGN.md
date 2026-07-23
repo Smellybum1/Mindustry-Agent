@@ -1,16 +1,15 @@
 # M9 design: multi-agent learning and partner robustness
 
 Status: initial architecture boundary implemented and verified under ADR-0069;
-the immutable IPPO optimization/reward/public-comparison recipe is frozen by
-ADR-0070. The complete pretraining gate has passed and the governed exact-
-replica runner is implemented. The first authorized A0 attempt collected 64
-public train episodes, then aborted before any optimizer update because its
-validator rejected an intentional forced critic-only ABANDON boundary.
-ADR-0071 records the correction and retires A0. The correction must be
-committed and the complete gate rerun from that exact commit before a clean
-replica restart. The incident evidence SHA is `c533018ee7f61885...`. This
-document describes the target architecture and the staged evidence required
-before broader M9 claims.
+the immutable IPPO optimization/reward/public-comparison recipe was frozen by
+ADR-0070. ADR-0071 corrected a pre-update forced-control validator incident and
+retired A0. The exact correction-commit gate then passed, and clean 2,048-
+episode replicas A1/B1 completed with byte-identical manifests and canonical
+full-run digest `186b7745c079f85a...`. ADR-0072 rejects `m9-ippo-v1`: its best
+public checkpoint reached only 16/40 dev wins versus the required 30/40 and
+the fixed expert's 36/40. No checkpoint was selected, MAPPO is unauthorized,
+and no confirmation or held-out data was accessed. This document describes the
+target architecture and the staged evidence required before broader M9 claims.
 
 ## Scope
 
@@ -105,18 +104,26 @@ pins, and dependency lock.
    authority, 32 deterministic all-root cycles, per-update public dev frontier,
    eligible-only selection, progress telemetry, paired bootstrap comparison,
    two fresh-JVM selected-checkpoint replays, per-file serializer integrity, and
-   canonical semantic replica identity. Two independent training runs remain
-   pending.
+   canonical semantic replica identity. Clean replicas A1 and B1 completed all
+   2,048 public training episodes and 32 updates each. Their raw manifests are
+   byte-identical and their canonical full-run digest is
+   `186b7745c079f85a...`.
    The fixed server-expert baseline is frozen from implementation commit
    `dea79c487a`: 36/40 public wins, mean core `967.95`, mean team return
    `-1.641725`, exact terminal-reset replay, report `ba4c9182f346a6ee...`.
    The first authorized A0 attempt stopped after 64 collected train episodes
    and before GAE/optimizer execution. ADR-0071 preserves forced ABANDON as a
    policy-loss-masked critic boundary, retains strict mask validation for actor
-   samples, retires A0, and requires a new exact-commit gate before restart.
+   samples, and retires A0. The replacement exact-commit gate passed before the
+   clean runs.
 4. Public development evaluation: the learned all-seat team must beat the
    fixed-role scripted baseline on at least one randomized scenario family
-   before MAPPO work is authorized.
+   before MAPPO work is authorized. **V1 rejected 2026-07-23:** no checkpoint
+   reached the frozen 30/40 construction floor. Update 11 was best at 16/40,
+   mean return `-7.878245`, and idle `0.14656396`; later development survival
+   collapsed to zero while repeated-root training survival continued. ADR-0072
+   records the reproducible public generalization failure. A separately
+   governed IPPO successor is required; MAPPO remains blocked.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

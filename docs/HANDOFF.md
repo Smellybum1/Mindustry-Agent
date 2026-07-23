@@ -1493,19 +1493,22 @@ Handoff prompt for the next agent:
 `docs/CODEX_HANDOFF_PROMPT.md`.** The summary below mirrors the head of that
 queue.
 
-1. **Review, commit, and push ADR-0071 plus the A0 incident/validator fix.**
-   Exclude the four protected user files.
-2. **Rerun the complete gate from the exact correction commit.**
-3. **Restart exact replica A in a clean output directory, then B.** Use frozen
-   M9 train/dev roots and preserve direct replay/manifest lineage.
+1. **Preserve ADR-0072's exact public rejection of `m9-ippo-v1`.** A1/B1
+   completed and reproduce at full-run digest `186b7745c079f85a...`; neither
+   selected a checkpoint.
+2. **Synthesize and prospectively precommit a separately named IPPO
+   successor.** The public evidence is train improvement with dev peaking at
+   16/40 on update 11 and then collapsing to zero.
+3. **Keep MAPPO blocked.** A qualifying public IPPO result is still required by
+   ADR-0008/0069/0070.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
-5. **Do not start MAPPO or the learned human-session block.** IPPO must first
-   beat the fixed-role scripted baseline on public randomized evidence.
+5. **Do not start the learned human-session block.** No M9 learned checkpoint
+   has passed construction or public comparison.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0071` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0072` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
