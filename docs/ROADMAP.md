@@ -2029,6 +2029,13 @@ and full-run prefixes are `93694e4d70ec56e4...` and
 schema after correctly failing closed on its omission. The 341-test suite
 passes. Reusable gates are next; dev-v42 remains unconsumed.
 
+Canonical lineage `b6322349e4d14b31...` and fresh reusable evaluation reject
+V46 before confirmation. Candidate/permanent random/permanent greedy/matched
+random/matched greedy wins are 10/4/8/5/6, and mean DEFER `0.18420177` passes
+its cap. Permanent announcements and idle plus matched recovery remain
+favorable but uncertain; report SHA is `2af00337138b9939...`. Dev-v42 is retired
+unopened/unconsumed, held-out-v6 remains sealed, and M8.5 remains unmet.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:

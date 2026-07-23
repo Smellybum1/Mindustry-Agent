@@ -1082,6 +1082,13 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   exactly. Direct lineage correctly failed closed on a missing expected control
   coordinate; the validator now binds control v2 and all 341 tests pass.
   Reusable gates are next; dev-v42 remains unconsumed.
+- **V46 rejected before confirmation**: canonical lineage is
+  `b6322349e4d14b31...`. Fresh permanent random/greedy are 4/10 and 8/10;
+  matched random/greedy are 5/10 and 6/10; V46 is 10/10 and its mean DEFER
+  `0.18420177` passes. Both scorecards still fail uncertainty: permanent
+  announcements and idle, plus matched recovery. Report SHA is
+  `2af00337138b9939...`. Dev-v42 is retired unopened/unconsumed and held-out-v6
+  remains sealed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned

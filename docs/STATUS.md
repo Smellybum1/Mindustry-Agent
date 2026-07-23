@@ -2019,6 +2019,16 @@ repository-evidence mapping used for the M6 audit is:
   schema omitted the new control coordinate. The validator now explicitly
   binds control v2; focused and full suites pass 341 tests. No reusable,
   confirmation, or held-out episode has run.
+- Direct lineage is canonical at `b6322349e4d14b31...`. Fresh reusable
+  permanent random/greedy baselines are 4/10 and 8/10, matched random/greedy
+  are 5/10 and 6/10, and V46 wins 10/10. Its mean DEFER `0.18420177` passes the
+  25% cap.
+- Both reusable scorecards reject V46 on uncertainty. Permanent announcements
+  mean `-0.00135566`, CI `[-0.00779035,+0.00535807]`; permanent idle mean
+  `-0.00538749`, CI `[-0.01753561,+0.01213167]`; matched recovery mean `-18.0`,
+  CI `[-82.11,+39.75125]`. Report SHA is `2af00337138b9939...`. V46 is rejected
+  before confirmation; dev-v42 is retired unopened/unconsumed and held-out-v6
+  remains sealed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

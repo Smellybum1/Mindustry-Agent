@@ -143,3 +143,9 @@ Two pinned replicas select update 32 exactly at 10/10 public-dev wins, idle
 `93694e4d70ec56e4...` and `8d61abfa4ce4fe10...`. Direct-lineage validation now
 binds the explicit control-v2 coordinate after failing closed on its initial
 omission; all 341 tests pass. No reusable or restricted episode has run.
+
+Canonical direct lineage is `b6322349e4d14b31...`. Reusable evaluation gives
+V46 10/10 wins and mean DEFER `0.18420177`, but permanent announcements/idle and
+matched recovery confidence intervals still cross zero. Report SHA is
+`2af00337138b9939...`. V46 is rejected before confirmation; dev-v42 is retired
+unopened/unconsumed and held-out-v6 remains sealed.

@@ -1007,6 +1007,17 @@ lineage initially failed closed because its expected schema omitted V46's
 control coordinate; that validator now binds control v2 explicitly and the
 341-test suite passes. No reusable or restricted episode has run.
 
+Direct lineage is now canonical at `b6322349e4d14b31...`. Fresh permanent
+random/greedy baselines are 4/10 and 8/10; matched random/greedy are 5/10 and
+6/10. V46 wins 10/10 and passes the mean-DEFER gate at `0.18420177`, but both
+frozen scorecards reject it. Against permanent greedy, announcements have mean
+difference `-0.00135566`, CI `[-0.00779035,+0.00535807]`, and idle has
+`-0.00538749`, CI `[-0.01753561,+0.01213167]`. Against matched greedy, recovery
+has `-18.0`, CI `[-82.11,+39.75125]`. Report SHA-256 is
+`2af00337138b99394b4b95994c072bffa2ae01a1d9bf9354f635044cfbf22b23`.
+V46 is rejected before confirmation; dev-v42 is retired unopened/unconsumed and
+held-out-v6 remains sealed.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one
