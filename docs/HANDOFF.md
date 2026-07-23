@@ -1020,6 +1020,11 @@ Codex-ready handoff per brief §27. Kept truthful; `TODO` marks pending info.
   tests remain last green before dev-v40 freeze and are not rerun because they
   glob-read retired membership. Dev-v41 remains unconstructed; no V45 training
   or restricted read has occurred.
+- **V45 freezer implemented, not executed**: the primary-only wrapper binds the
+  reviewed atomic helper commit, validates exact V45 hashes/paths/identity/
+  `[9B,10B)` namespace/sealed binding, and writes membership plus a value-free
+  receipt. The embargo-safe suite passes 277 tests. Commit the freezer before
+  execution; dev-v41 remains unconstructed.
 - **Current branch**: `coop-agent/v159.7`
 - **Agent workflow**: project work is primary-agent-only. Do not spawn, fork,
   create, or use subagents for any task; see the protected user-owned
@@ -1239,8 +1244,8 @@ queue.
 2. **Preserve rejected V43 and retired dev-v39 evidence.** Never read or render
    dev-v39 membership; dev-v38 also remains retired unopened.
 3. **Keep held-out-v6 sealed and unconsumed.** V44 did not authorize access.
-4. **Commit the completed V45 implementation boundary, then implement and
-   commit the primary-only dev-v41 freezer before constructing membership.**
+4. **Commit the primary-only dev-v41 freezer, then construct and commit its
+   value-free membership/receipt without reading or rendering membership.**
 5. **Keep the rejected build-line-prior diagnostic off-contract.** It does not
    authorize V43 or any runtime prior and still fails two scorecard rows.
 6. **M9.1 remains gated.** The roadmap says to begin only after the single

@@ -94,3 +94,9 @@ pass; report SHA is
 `84cd359cf9cbd4014cf4cdb13cadf7b19c6f96c402fb66b22b1500696a06f660`.
 Dev-v41 remains unconstructed; dev-v40 is retired unopened; held-out-v6 remains
 sealed; no V45 training episode has run.
+
+The primary-only dev-v41 freezer is implemented on the committed V44 atomic/
+no-read primitives plus an exact V45 reservation and namespace proof. Both the
+wrapper and helper commits are bound into the receipt. The embargo-safe suite
+now passes 277 tests. The freezer has not executed and dev-v41 remains
+unconstructed until this tool commit is an ancestor of `HEAD`.

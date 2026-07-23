@@ -1952,6 +1952,12 @@ before dev-v40 freeze and are not rerun because they glob-read retired
 membership. Dev-v41 remains unconstructed; commit this boundary before the
 primary-only freezer.
 
+The primary-only dev-v41 freezer is now implemented on the commit-bound V44
+atomic/no-read primitives with exact V45 reservation, namespace, and sealed-set
+validation. Its receipt binds both the wrapper and helper commits and contains
+no seed values. The embargo-safe suite passes 277 tests. The freezer has not
+executed; dev-v41 remains unconstructed until the tool is committed.
+
 ADR-0060 now precommits V43 from public/train/reusable architecture evidence.
 The v1 actor scores each SELECT candidate independently and its CONTINUE/WAIT
 head cannot see the candidate catalog. V43 changes only the model architecture:

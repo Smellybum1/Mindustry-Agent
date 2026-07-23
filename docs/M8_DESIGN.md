@@ -919,6 +919,11 @@ legacy scenario-variation tests remain last green before dev-v40 freeze and are
 not rerun because they glob-read retired membership. Dev-v41 is unconstructed
 and no V45 training episode has run.
 
+The primary-only dev-v41 freezer is implemented with commit-bound reusable
+atomic primitives, exact V45 validation, and a value-free receipt; the embargo-
+safe suite now passes 277 tests. It has not executed. Commit it before
+membership construction.
+
 ## M8.1 acceptance review
 
 - The learned surface is the existing typed board protocol and exactly one

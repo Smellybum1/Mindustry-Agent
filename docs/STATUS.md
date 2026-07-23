@@ -1941,6 +1941,10 @@ repository-evidence mapping used for the M6 audit is:
   pass (SHA `84cd359cf9cbd401...`). The 43 legacy scenario-variation tests remain
   last green before dev-v40 freeze and are not rerun because they glob-read
   retired membership. Dev-v41 is unconstructed and no V45 training has run.
+- The primary-only dev-v41 freezer is implemented using commit-bound reviewed
+  atomic/no-read primitives plus exact V45 validation and namespace proof. The
+  embargo-safe suite passes 277 tests. It has not executed and dev-v41 remains
+  unconstructed; the freezer must first be committed.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
