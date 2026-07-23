@@ -160,6 +160,7 @@ class TestSharedRecurrentIPPO(unittest.TestCase):
         )
         self.assertEqual(decision.agent_actions, teacher)
         self.assertEqual(decision.evaluation_order, (0, 1, 2))
+        self.assertEqual(decision.recurrent_resets, {0: True, 1: True, 2: True})
         self.assertEqual([row["agent_id"] for row in decision.agent_actions], [0, 1, 2])
         self.assertEqual(len({decision.model_state_sha256}), 1)
         self.assertTrue(all(state.hidden[index].abs().sum() > 0 for index in range(3)))
@@ -172,6 +173,7 @@ class TestSharedRecurrentIPPO(unittest.TestCase):
         observations, _, _ = _boundary()
         state = SharedSeatState.fresh()
         state.hidden[:] = 1.0
+        state.sequence_start[:] = [False, False, False]
         state.histories[0].previous_task_type = "BUILD_LINE"
         state.histories[1].previous_task_type = "DEFEND_REGION"
         state.histories[2].previous_task_type = "HARVEST_RESOURCE"
@@ -183,6 +185,9 @@ class TestSharedRecurrentIPPO(unittest.TestCase):
         self.assertEqual(state.histories[0].previous_task_type, "BUILD_LINE")
         self.assertIsNone(state.histories[1].previous_task_type)
         self.assertEqual(state.histories[2].previous_task_type, "HARVEST_RESOURCE")
+        self.assertFalse(state.sequence_start[0])
+        self.assertTrue(state.sequence_start[1])
+        self.assertFalse(state.sequence_start[2])
 
     def test_teacher_bundle_must_be_agent_ordered(self):
         from mindustry_agents.training.ippo import (

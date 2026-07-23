@@ -32,12 +32,15 @@ from mindustry_agents.training.ippo_artifacts import (
     load_ippo_checkpoint,
     save_ippo_checkpoint,
 )
-from mindustry_agents.training.ippo_preflight import GATES
+from mindustry_agents.training.ippo_preflight import GATES, V2_GATES
 from mindustry_agents.training.ippo_ppo import (
     IPPO_V1_CONFIG_SHA256,
-    IPPO_V1_PROTOCOL_SHA256,
+    IPPO_V2_CONFIG_SHA256,
+    config_sha256,
     ippo_update,
+    load_ippo_config,
     load_ippo_v1_config,
+    protocol_sha256,
     sha256_path,
 )
 from mindustry_agents.training.ippo_rollout import (
@@ -49,6 +52,25 @@ TRAIN_MINIMUM = 18_000_000_000
 TRAIN_MAXIMUM = 19_000_000_000
 DEV_MINIMUM = 19_000_000_000
 DEV_MAXIMUM = 20_000_000_000
+
+
+def _candidate_contract(config: dict[str, Any]) -> dict[str, Any]:
+    candidate = config.get("candidate_version")
+    if candidate == "m9-ippo-v1":
+        return {
+            "preflight_schema": "m9_ippo_preflight_v1",
+            "gates": GATES,
+            "prefix": "ippo-v1",
+            "baseline": "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json",
+        }
+    if candidate == "m9-ippo-v2-sequence16":
+        return {
+            "preflight_schema": "m9_ippo_v2_preflight_v1",
+            "gates": V2_GATES,
+            "prefix": "ippo-v2-sequence16",
+            "baseline": "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json",
+        }
+    raise ValueError("M9 IPPO candidate identity is unsupported")
 
 
 def _git_commit(root: Path) -> str:
@@ -70,19 +92,27 @@ def _write_json(path: Path, value: dict[str, Any]) -> None:
 
 
 def validate_training_authority(
-    path: Path, root: Path | None = None
+    path: Path,
+    root: Path | None = None,
+    config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Require a passing complete-gate result bound to the current commit."""
 
     root = root or repo_root()
+    config = config or load_ippo_v1_config(
+        root / "configs/training/m9-ippo-v1.json"
+    )
+    contract = _candidate_contract(config)
+    expected_config_sha256 = config_sha256(config)
+    expected_protocol_sha256 = protocol_sha256(config)
     result = json.loads(path.read_text(encoding="utf-8"))
     if (
-        result.get("schema") != "m9_ippo_preflight_v1"
+        result.get("schema") != contract["preflight_schema"]
         or result.get("passed") is not True
         or result.get("confirmation_or_held_out_access") is not False
-        or result.get("config_sha256") != IPPO_V1_CONFIG_SHA256
-        or result.get("protocol_sha256") != IPPO_V1_PROTOCOL_SHA256
-        or result.get("gates") != list(GATES)
+        or result.get("config_sha256") != expected_config_sha256
+        or result.get("protocol_sha256") != expected_protocol_sha256
+        or result.get("gates") != list(contract["gates"])
     ):
         raise ValueError("M9 training authority is incomplete or invalid")
     commit = _git_commit(root)
@@ -363,6 +393,7 @@ def _fresh_checkpoint_replay(
     java: str,
     port: int,
     model_seed: int,
+    expected_config_sha256: str,
 ) -> IPPOEpisodeEvidence:
     model = SharedRecurrentSelector(model_seed)
     optimizer = torch.optim.Adam(
@@ -370,7 +401,12 @@ def _fresh_checkpoint_replay(
         lr=float(config["learning_rate"]),
         eps=float(config["adam_epsilon"]),
     )
-    load_ippo_checkpoint(checkpoint_path, model, optimizer)
+    load_ippo_checkpoint(
+        checkpoint_path,
+        model,
+        optimizer,
+        expected_config_sha256=expected_config_sha256,
+    )
     with RlServerProcess(
         LaunchConfig(
             port=port,
@@ -378,7 +414,7 @@ def _fresh_checkpoint_replay(
             build_if_missing=False,
         )
     ) as env:
-        env.handshake("m9-ippo-v1-checkpoint-replay")
+        env.handshake(f"{config['candidate_version']}-checkpoint-replay")
         return _evaluate(env, model, config, [seed])[0]
 
 
@@ -414,8 +450,11 @@ def train(
     """Execute one full, non-resumable exact M9 IPPO replica."""
 
     root = repo_root()
-    config = load_ippo_v1_config(config_path)
-    authority = validate_training_authority(preflight_path, root)
+    config = load_ippo_config(config_path)
+    contract = _candidate_contract(config)
+    expected_config_sha256 = config_sha256(config)
+    expected_protocol_sha256 = protocol_sha256(config)
+    authority = validate_training_authority(preflight_path, root, config)
     _configure_torch(config)
     train_set, train_path = _load_seed_set(
         root,
@@ -435,18 +474,21 @@ def train(
         upper=DEV_MAXIMUM,
         config=config,
     )
-    baseline_path = (
-        root / "configs/evaluation/m9-ippo-v1-shared-expert-baseline.json"
-    )
+    baseline_path = root / contract["baseline"]
     baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
     protocol_path = root / str(config["public_evaluation_protocol"])
-    if sha256_path(protocol_path) != IPPO_V1_PROTOCOL_SHA256:
+    if sha256_path(protocol_path) != expected_protocol_sha256:
         raise ValueError("M9 IPPO public protocol hash drifted")
     protocol = json.loads(protocol_path.read_text(encoding="utf-8"))
     if (
         protocol.get("seed_set") != config["dev_seed_set"]
         or protocol.get("held_out_access_authorized") is not False
         or protocol.get("confirmation_or_final_claim_authorized") is not False
+        or (
+            config["candidate_version"] == "m9-ippo-v2-sequence16"
+            and protocol.get("baseline", {}).get("evidence")
+            != contract["baseline"]
+        )
     ):
         raise ValueError("M9 IPPO public protocol authority drifted")
 
@@ -498,7 +540,7 @@ def train(
             log_name="rl-server",
         )
     ) as env:
-        env.handshake("m9-ippo-v1-training")
+        env.handshake(f"{config['candidate_version']}-training")
         for cycle in range(int(config["training_cycles"])):
             first = cycle * episodes_per_update
             seeds = schedule[first : first + episodes_per_update]
@@ -536,13 +578,16 @@ def train(
                 minibatch_generator,
             )
             optimizer_updates.append({"update": update, **metrics})
-            checkpoint_path = output_dir / f"ippo-v1-update-{update}.pt"
+            checkpoint_path = (
+                output_dir / f"{contract['prefix']}-update-{update}.pt"
+            )
             checkpoint = save_ippo_checkpoint(
                 checkpoint_path,
                 model,
                 optimizer,
                 update=update,
                 parent_checkpoint_content_sha256=parent,
+                config_sha256_value=expected_config_sha256,
             )
             checkpoints.append(checkpoint)
             parent = str(checkpoint["checkpoint_content_sha256"])
@@ -602,7 +647,10 @@ def train(
         manifest["construction_passed"] = False
         manifest["failure"] = "no checkpoint passed the public quality gate"
         manifest = finalize_run_manifest(manifest)
-        atomic_write_manifest(output_dir / "ippo-v1-run.manifest.json", manifest)
+        atomic_write_manifest(
+            output_dir / f"{contract['prefix']}-run.manifest.json",
+            manifest,
+        )
         _write_json(
             output_dir / "progress.json",
             {
@@ -617,7 +665,12 @@ def train(
 
     selected = checkpoints[selected_index]
     selected_path = Path(selected["path"])
-    payload = load_ippo_checkpoint(selected_path, model, optimizer)
+    payload = load_ippo_checkpoint(
+        selected_path,
+        model,
+        optimizer,
+        expected_config_sha256=expected_config_sha256,
+    )
     selected_summary = {
         key: selected[key]
         for key in (
@@ -645,6 +698,7 @@ def train(
             java=java,
             port=port,
             model_seed=model_seed,
+            expected_config_sha256=expected_config_sha256,
         )
         for model_seed in (1, 2)
     ]
@@ -669,7 +723,9 @@ def train(
     ]["mappo_statistical_thresholds_passed"]
     manifest["selected_checkpoint_payload_update"] = int(payload["update"])
     manifest = finalize_run_manifest(manifest)
-    manifest_path = output_dir / "ippo-v1-run.manifest.json"
+    manifest_path = (
+        output_dir / f"{contract['prefix']}-run.manifest.json"
+    )
     atomic_write_manifest(manifest_path, manifest)
     atomic_write_manifest(
         selected_path.with_suffix(".manifest.json"), manifest
@@ -716,6 +772,16 @@ def compare_replicas(
         selected[0] is not None
     ):
         raise ValueError("M9 replica construction/selection state is invalid")
+    config_hashes = [
+        manifest.get("source_config", {}).get("sha256")
+        for manifest in manifests
+    ]
+    if (
+        config_hashes[0] != config_hashes[1]
+        or config_hashes[0]
+        not in (IPPO_V1_CONFIG_SHA256, IPPO_V2_CONFIG_SHA256)
+    ):
+        raise ValueError("M9 replica config identity is invalid")
     result = {
         "schema": "m9_ippo_replica_comparison_v1",
         "full_run_reproducibility_digest": digest,
@@ -733,7 +799,13 @@ def compare_replicas(
         payloads = []
         for index, path in enumerate(paths):
             model = SharedRecurrentSelector(index + 100)
-            payloads.append(load_ippo_checkpoint(path, model))
+            payloads.append(
+                load_ippo_checkpoint(
+                    path,
+                    model,
+                    expected_config_sha256=str(config_hashes[0]),
+                )
+            )
         content_hashes = [
             payload["checkpoint_content_sha256"] for payload in payloads
         ]
@@ -811,11 +883,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"M9 IPPO FAIL: {error}", file=sys.stderr)
         return 1
     selected = manifest.get("selected_checkpoint")
+    prefix = _candidate_contract(
+        load_ippo_config(args.config.resolve())
+    )["prefix"]
+    manifest_path = args.output_dir / f"{prefix}-run.manifest.json"
     print(
         "M9 IPPO COMPLETE "
         f"construction={manifest['construction_passed']} "
         f"selected_update={selected['update'] if selected else 'none'} "
-        f"manifest={args.output_dir / 'ippo-v1-run.manifest.json'}"
+        f"manifest={manifest_path}"
     )
     return 0 if manifest["construction_passed"] else 2
 

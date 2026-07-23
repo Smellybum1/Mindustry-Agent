@@ -152,30 +152,32 @@ def rollout_ippo_episode(
                     advanced_ticks=advanced_ticks,
                     done=done,
                     policy_loss_mask=decision.policy_loss_masks[agent_id],
+                    recurrent_reset=decision.recurrent_resets[agent_id],
                 )
             )
             boundary_transition_indices.append(len(transitions) - 1)
-        trace.append(
-            {
-                "tick": tick,
-                "next_tick": response.tick,
-                "advanced_ticks": advanced_ticks,
-                "agent_actions": decision.agent_actions,
-                "action_results": response.action_results,
-                "action_indices": decision.action_indices,
-                "evaluation_order": list(decision.evaluation_order),
-                "transition_indices": boundary_transition_indices,
-                "shared_reward_components": breakdown.team.components,
-                "individual_reward_components": list(
-                    breakdown.individual_components
-                ),
-                "individual_reward_totals": list(
-                    breakdown.own_idle_penalty_totals
-                ),
-                "state_hash": response.state_hash,
-                "outcome": response.outcome,
-            }
-        )
+        trace_row = {
+            "tick": tick,
+            "next_tick": response.tick,
+            "advanced_ticks": advanced_ticks,
+            "agent_actions": decision.agent_actions,
+            "action_results": response.action_results,
+            "action_indices": decision.action_indices,
+            "evaluation_order": list(decision.evaluation_order),
+            "transition_indices": boundary_transition_indices,
+            "shared_reward_components": breakdown.team.components,
+            "individual_reward_components": list(
+                breakdown.individual_components
+            ),
+            "individual_reward_totals": list(
+                breakdown.own_idle_penalty_totals
+            ),
+            "state_hash": response.state_hash,
+            "outcome": response.outcome,
+        }
+        if config.get("candidate_version") == "m9-ippo-v2-sequence16":
+            trace_row["recurrent_resets"] = decision.recurrent_resets
+        trace.append(trace_row)
         observations = response.observations
         masks = response.action_masks
         board = response.task_board

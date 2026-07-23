@@ -25,6 +25,12 @@ IPPO_V1_CONFIG_SHA256 = (
 IPPO_V1_PROTOCOL_SHA256 = (
     "1f53ad0dde01a5433f609e8e0772d4576f6e5b600f0efb456242ee7333c6f554"
 )
+IPPO_V2_CONFIG_SHA256 = (
+    "266e50429902de0d97049eaeb80558b22bb20fffedda926e92091102489a76da"
+)
+IPPO_V2_PROTOCOL_SHA256 = (
+    "ec9a69612b709290a339b1e44f202b65d6dabc5d47b513021ab474dee54934b0"
+)
 
 
 @dataclass(frozen=True)
@@ -45,6 +51,7 @@ class IPPOTransition:
     advanced_ticks: int
     done: bool
     policy_loss_mask: bool = True
+    recurrent_reset: bool = False
 
     @property
     def reward(self) -> float:
@@ -89,6 +96,87 @@ def load_ippo_v1_config(path: Path) -> dict[str, Any]:
     return config
 
 
+def load_ippo_v2_config(path: Path) -> dict[str, Any]:
+    """Load and fail closed on ADR-0073's immutable sequence recipe."""
+
+    if sha256_path(path) != IPPO_V2_CONFIG_SHA256:
+        raise ValueError("M9 IPPO v2 config hash does not match ADR-0073")
+    config = json.loads(path.read_text(encoding="utf-8"))
+    if config.get("schema") != "ippo_training_config_v2":
+        raise ValueError("M9 IPPO v2 config schema is invalid")
+    if config.get("candidate_version") != "m9-ippo-v2-sequence16":
+        raise ValueError("M9 IPPO v2 candidate identity is invalid")
+    if config.get("model_architecture") != IPPO_MODEL_ARCHITECTURE:
+        raise ValueError("M9 IPPO v2 model architecture drifted")
+    if config.get("teacher") is not None:
+        raise ValueError("M9 IPPO v2 does not authorize a teacher")
+    if config.get("confirmation_seed_set") is not None:
+        raise ValueError("M9 IPPO v2 confirmation access is not authorized")
+    if config.get("held_out_seed_set") is not None:
+        raise ValueError("M9 IPPO v2 held-out access is not authorized")
+    if int(config.get("torch_threads", 0)) != 1:
+        raise ValueError("M9 IPPO v2 requires one torch CPU thread")
+    if int(config["training_cycles"]) * int(config["episodes_per_update"]) != 2048:
+        raise ValueError("M9 IPPO v2 episode budget drifted")
+    recurrent = config.get("recurrent_backpropagation")
+    if recurrent != {
+        "schema": "truncated_seat_sequence_v1",
+        "sequence_length": 16,
+        "sequences_per_minibatch": 16,
+        "initial_hidden": "stored_rollout_state_at_window_start_detached",
+        "hidden_output": "recomputed_private_next_boundary_state_within_window",
+        "window_order": "episode_order_then_agent_id_then_boundary_order",
+        "window_split": "episode_or_authoritative_seat_reset_or_16_transitions",
+        "padding": "right_padded_and_loss_masked",
+        "cross_agent_state": False,
+    }:
+        raise ValueError("M9 IPPO v2 recurrent sequence contract drifted")
+    if config.get("optimizer_ppo", {}).get(
+        "recurrent_backpropagation"
+    ) != {
+        "schema": "truncated_seat_sequence_v1",
+        "sequence_length": 16,
+        "sequences_per_minibatch": 16,
+    }:
+        raise ValueError("M9 IPPO v2 optimizer sequence contract drifted")
+    if (
+        int(config["minibatch_size"])
+        != int(recurrent["sequence_length"])
+        * int(recurrent["sequences_per_minibatch"])
+    ):
+        raise ValueError("M9 IPPO v2 sequence minibatch budget drifted")
+    return config
+
+
+def load_ippo_config(path: Path) -> dict[str, Any]:
+    """Load one accepted immutable M9 IPPO recipe by its exact hash."""
+
+    digest = sha256_path(path)
+    if digest == IPPO_V1_CONFIG_SHA256:
+        return load_ippo_v1_config(path)
+    if digest == IPPO_V2_CONFIG_SHA256:
+        return load_ippo_v2_config(path)
+    raise ValueError("M9 IPPO config hash is not an accepted recipe")
+
+
+def config_sha256(config: dict[str, Any]) -> str:
+    candidate = config.get("candidate_version")
+    if candidate == "m9-ippo-v1":
+        return IPPO_V1_CONFIG_SHA256
+    if candidate == "m9-ippo-v2-sequence16":
+        return IPPO_V2_CONFIG_SHA256
+    raise ValueError("M9 IPPO candidate identity is unsupported")
+
+
+def protocol_sha256(config: dict[str, Any]) -> str:
+    candidate = config.get("candidate_version")
+    if candidate == "m9-ippo-v1":
+        return IPPO_V1_PROTOCOL_SHA256
+    if candidate == "m9-ippo-v2-sequence16":
+        return IPPO_V2_PROTOCOL_SHA256
+    raise ValueError("M9 IPPO candidate identity is unsupported")
+
+
 def _validate_transition(item: IPPOTransition) -> None:
     if item.agent_id < 0 or item.agent_id >= AGENT_COUNT:
         raise ValueError("IPPO transition agent id is invalid")
@@ -110,6 +198,8 @@ def _validate_transition(item: IPPOTransition) -> None:
         raise ValueError("IPPO actor transition action is outside its mask")
     if item.advanced_ticks < 0:
         raise ValueError("IPPO transition advanced ticks cannot be negative")
+    if not isinstance(item.recurrent_reset, bool):
+        raise ValueError("IPPO transition recurrent reset flag is invalid")
 
 
 def ippo_advantages(
@@ -177,14 +267,14 @@ def ippo_advantages(
     return flat, tensor, torch.tensor(returns, dtype=torch.float32)
 
 
-def ippo_update(
+def _ippo_one_boundary_update(
     model: SharedRecurrentSelector,
     optimizer: torch.optim.Optimizer,
     episodes: Sequence[IPPOEpisodeRollout],
     config: dict[str, Any],
     shuffle_generator: torch.Generator,
 ) -> dict[str, float]:
-    """Apply ADR-0070's teacher-free clipped PPO update."""
+    """Apply ADR-0070's detached one-boundary clipped PPO update."""
 
     transitions, advantages, returns = ippo_advantages(
         episodes,
@@ -272,3 +362,274 @@ def ippo_update(
         key: value if key == "batches" else value / divisor
         for key, value in totals.items()
     }
+
+
+def ippo_sequence_windows(
+    episodes: Sequence[IPPOEpisodeRollout],
+    *,
+    sequence_length: int,
+) -> tuple[tuple[int, ...], ...]:
+    """Return deterministic flat-index windows without crossing seat resets."""
+
+    if sequence_length < 1:
+        raise ValueError("IPPO sequence length must be positive")
+    windows: list[tuple[int, ...]] = []
+    offset = 0
+    for episode in episodes:
+        if not episode.transitions:
+            raise ValueError("IPPO episode has no transitions")
+        for item in episode.transitions:
+            _validate_transition(item)
+        for agent_id in range(AGENT_COUNT):
+            indices = [
+                offset + index
+                for index, item in enumerate(episode.transitions)
+                if item.agent_id == agent_id
+            ]
+            if not indices:
+                continue
+            first = episode.transitions[indices[0] - offset]
+            if not first.recurrent_reset:
+                raise ValueError(
+                    "IPPO sequence does not start at an authoritative seat reset"
+                )
+            current: list[int] = []
+            for index in indices:
+                item = episode.transitions[index - offset]
+                if current and (
+                    item.recurrent_reset or len(current) == sequence_length
+                ):
+                    windows.append(tuple(current))
+                    current = []
+                current.append(index)
+            if current:
+                windows.append(tuple(current))
+        offset += len(episode.transitions)
+    covered = [index for window in windows for index in window]
+    expected = list(range(offset))
+    if sorted(covered) != expected or len(covered) != len(set(covered)):
+        raise AssertionError("IPPO sequence windows do not partition transitions")
+    return tuple(windows)
+
+
+def _sequence_minibatch_loss(
+    model: SharedRecurrentSelector,
+    transitions: Sequence[IPPOTransition],
+    advantages: torch.Tensor,
+    returns: torch.Tensor,
+    windows: Sequence[tuple[int, ...]],
+    *,
+    sequence_length: int,
+    clip_ratio: float,
+    value_coefficient: float,
+    entropy_coefficient: float,
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, int]:
+    """Recompute private hidden state through one padded sequence minibatch."""
+
+    if not windows:
+        raise ValueError("IPPO sequence minibatch is empty")
+    batch = len(windows)
+    candidates = torch.zeros((batch, sequence_length, 8, 37))
+    scalars = torch.zeros((batch, sequence_length, 160))
+    present = torch.zeros(
+        (batch, sequence_length, 8), dtype=torch.bool
+    )
+    masks = torch.zeros(
+        (batch, sequence_length, 10), dtype=torch.bool
+    )
+    masks[:, :, 9] = True
+    agent_ids = torch.zeros((batch, sequence_length), dtype=torch.long)
+    actions = torch.full((batch, sequence_length), 9, dtype=torch.long)
+    old_log_probs = torch.zeros((batch, sequence_length))
+    actor = torch.zeros((batch, sequence_length), dtype=torch.bool)
+    valid = torch.zeros((batch, sequence_length), dtype=torch.bool)
+    advantage_batch = torch.zeros((batch, sequence_length))
+    return_batch = torch.zeros((batch, sequence_length))
+    initial_hidden = []
+
+    for row, window in enumerate(windows):
+        if not window or len(window) > sequence_length:
+            raise ValueError("IPPO sequence window length is invalid")
+        first = transitions[window[0]]
+        initial_hidden.append(first.hidden_input)
+        expected_agent = first.agent_id
+        for step, index in enumerate(window):
+            item = transitions[index]
+            if item.agent_id != expected_agent:
+                raise AssertionError("IPPO sequence window crossed agent ids")
+            if step and item.recurrent_reset:
+                raise AssertionError("IPPO sequence window crossed a seat reset")
+            candidates[row, step] = item.candidates
+            scalars[row, step] = item.scalars
+            present[row, step] = item.candidate_present
+            masks[row, step] = item.action_mask
+            agent_ids[row, step] = item.agent_id
+            actions[row, step] = item.action
+            old_log_probs[row, step] = item.old_log_prob
+            actor[row, step] = item.policy_loss_mask
+            valid[row, step] = True
+            advantage_batch[row, step] = advantages[index]
+            return_batch[row, step] = returns[index]
+
+    hidden = torch.stack(initial_hidden).detach()
+    log_probabilities = []
+    values = []
+    entropies = []
+    for step in range(sequence_length):
+        _, masked_logits, value, hidden = model(
+            candidates[:, step],
+            scalars[:, step],
+            present[:, step],
+            masks[:, step],
+            agent_ids[:, step],
+            hidden,
+        )
+        all_log_probabilities = torch.log_softmax(masked_logits, dim=-1)
+        log_probabilities.append(
+            all_log_probabilities.gather(
+                1, actions[:, step, None]
+            ).squeeze(1)
+        )
+        probabilities = torch.softmax(masked_logits, dim=-1)
+        entropies.append(
+            -(probabilities * all_log_probabilities).sum(dim=-1)
+        )
+        values.append(value)
+
+    log_probs = torch.stack(log_probabilities, dim=1)
+    value_tensor = torch.stack(values, dim=1)
+    entropy_tensor = torch.stack(entropies, dim=1)
+    active = valid & actor
+    if active.any():
+        ratio = torch.exp(log_probs[active] - old_log_probs[active])
+        unclipped = ratio * advantage_batch[active]
+        clipped = torch.clamp(
+            ratio,
+            1.0 - clip_ratio,
+            1.0 + clip_ratio,
+        ) * advantage_batch[active]
+        policy_loss = -torch.minimum(unclipped, clipped).mean()
+        entropy = entropy_tensor[active].mean()
+    else:
+        policy_loss = value_tensor.sum() * 0.0
+        entropy = value_tensor.sum() * 0.0
+    value_loss = functional.mse_loss(
+        value_tensor[valid], return_batch[valid]
+    )
+    loss = (
+        policy_loss
+        + value_coefficient * value_loss
+        - entropy_coefficient * entropy
+    )
+    return (
+        loss,
+        policy_loss,
+        value_loss,
+        entropy,
+        int(valid.sum().item()),
+    )
+
+
+def ippo_sequence_update(
+    model: SharedRecurrentSelector,
+    optimizer: torch.optim.Optimizer,
+    episodes: Sequence[IPPOEpisodeRollout],
+    config: dict[str, Any],
+    shuffle_generator: torch.Generator,
+) -> dict[str, float]:
+    """Apply ADR-0073's deterministic truncated-sequence PPO update."""
+
+    transitions, advantages, returns = ippo_advantages(
+        episodes,
+        gamma_per_second=float(config["gamma_per_second"]),
+        gae_lambda=float(config["gae_lambda"]),
+    )
+    recurrent = config["recurrent_backpropagation"]
+    sequence_length = int(recurrent["sequence_length"])
+    sequences_per_minibatch = int(recurrent["sequences_per_minibatch"])
+    if sequence_length * sequences_per_minibatch != int(
+        config["minibatch_size"]
+    ):
+        raise ValueError("IPPO sequence minibatch budget is invalid")
+    windows = ippo_sequence_windows(
+        episodes, sequence_length=sequence_length
+    )
+    totals = {
+        "policy_loss": 0.0,
+        "value_loss": 0.0,
+        "entropy": 0.0,
+        "batches": 0.0,
+    }
+    padded_slots = 0
+    real_presentations = 0
+    for _ in range(int(config["ppo_epochs"])):
+        order = torch.randperm(len(windows), generator=shuffle_generator)
+        for start in range(0, len(windows), sequences_per_minibatch):
+            selected = [
+                windows[int(index)]
+                for index in order[start : start + sequences_per_minibatch]
+            ]
+            loss, policy_loss, value_loss, entropy, real = (
+                _sequence_minibatch_loss(
+                    model,
+                    transitions,
+                    advantages,
+                    returns,
+                    selected,
+                    sequence_length=sequence_length,
+                    clip_ratio=float(config["clip_ratio"]),
+                    value_coefficient=float(config["value_coefficient"]),
+                    entropy_coefficient=float(config["entropy_coefficient"]),
+                )
+            )
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(
+                model.parameters(), float(config["max_grad_norm"])
+            )
+            optimizer.step()
+            totals["policy_loss"] += float(policy_loss.item())
+            totals["value_loss"] += float(value_loss.item())
+            totals["entropy"] += float(entropy.item())
+            totals["batches"] += 1.0
+            real_presentations += real
+            padded_slots += len(selected) * sequence_length - real
+    divisor = max(1.0, totals["batches"])
+    return {
+        **{
+            key: value if key == "batches" else value / divisor
+            for key, value in totals.items()
+        },
+        "sequence_windows": float(len(windows)),
+        "real_transition_presentations": float(real_presentations),
+        "padded_transition_slots": float(padded_slots),
+    }
+
+
+def ippo_update(
+    model: SharedRecurrentSelector,
+    optimizer: torch.optim.Optimizer,
+    episodes: Sequence[IPPOEpisodeRollout],
+    config: dict[str, Any],
+    shuffle_generator: torch.Generator,
+) -> dict[str, float]:
+    """Dispatch one accepted M9 IPPO recurrent optimization contract."""
+
+    schema = config.get("recurrent_backpropagation", {}).get("schema")
+    if schema == "truncated_seat_sequence_v1":
+        return ippo_sequence_update(
+            model,
+            optimizer,
+            episodes,
+            config,
+            shuffle_generator,
+        )
+    if schema in (None, "one_boundary_truncation_v1"):
+        return _ippo_one_boundary_update(
+            model,
+            optimizer,
+            episodes,
+            config,
+            shuffle_generator,
+        )
+    raise ValueError("unsupported M9 IPPO recurrent optimization contract")

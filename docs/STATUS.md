@@ -2299,7 +2299,19 @@ repository-evidence mapping used for the M6 audit is:
   action boundary, rewards, roots, 2,048-episode budget, optimizer, RNGs,
   construction bar, and public expert comparator remain exact. Config/protocol
   hashes are `266e50429902de0d...` / `ec9a69612b709290...`. No v2 trajectory,
-  model update, checkpoint, confirmation, or held-out access exists.
+  model update, checkpoint, confirmation, or held-out access existed at
+  precommit time.
+- The v2 sequence optimizer and candidate-aware checkpoint/runner boundary are
+  implemented locally. Private seat state now marks authoritative recurrent
+  starts; deterministic windows cover every transition without crossing
+  episodes, seats, or resets; right padding affects neither actor nor critic
+  loss. Focused tests prove length-one bit-exact v1 optimizer equivalence,
+  later-to-earlier recurrent gradient flow, padding invariance, v2
+  config/checkpoint lineage, and exact CPU twins. The complete Python suite
+  passes 397 tests. A preliminary public-free synthetic pair also matches model,
+  optimizer, and canonical checkpoint content across two CPU processes. The
+  implementation still requires a commit-bound rerun of that evidence and the
+  complete exact-commit pretraining gate before any v2 training episode.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

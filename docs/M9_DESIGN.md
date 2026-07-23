@@ -12,8 +12,9 @@ and no confirmation or held-out data was accessed. ADR-0073 prospectively
 freezes `m9-ippo-v2-sequence16`: the sole learning change is deterministic
 16-boundary truncated recurrent backpropagation within one seat and reset
 segment. Implementation and its exact-commit pretraining gate are next; no v2
-trajectory or model update exists. This document describes the target
-architecture and the staged evidence required before broader M9 claims.
+trajectory or model update existed at precommit time. This document describes
+the target architecture and the staged evidence required before broader M9
+claims.
 
 ## Scope
 
@@ -134,6 +135,17 @@ pins, and dependency lock.
    windows. Windows cannot cross seats, episodes, or authoritative seat resets;
    padding is loss-masked. Implementation, focused gradient/isolation tests,
    and the complete exact-commit gate must pass before replica A.
+   The sequence optimizer and candidate-aware checkpoint/runner boundary are
+   now implemented locally. Authoritative reset markers are emitted by private
+   seat state, windows partition every transition without crossing a reset,
+   and right padding is excluded from both losses. Focused tests prove
+   length-one v1 equivalence, cross-boundary gradient flow, padding invariance,
+   v2 checkpoint/config binding, and deterministic twin updates; the full
+   Python suite passes 397 tests. Commit-bound worker evidence and the complete
+   gate remain pending, so no v2 training is authorized yet. A preliminary
+   public-free synthetic check produces exact model, optimizer, and canonical
+   checkpoint content across two CPU processes; it must be rerun from the
+   committed implementation before becoming evidence.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

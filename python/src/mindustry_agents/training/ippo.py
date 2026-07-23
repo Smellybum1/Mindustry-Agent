@@ -178,6 +178,7 @@ class SharedSeatState:
     histories: list[SelectorHistory]
     hidden: torch.Tensor
     dead: list[bool]
+    sequence_start: list[bool]
 
     @classmethod
     def fresh(cls) -> "SharedSeatState":
@@ -185,6 +186,7 @@ class SharedSeatState:
             histories=[SelectorHistory() for _ in range(AGENT_COUNT)],
             hidden=torch.zeros((AGENT_COUNT, HIDDEN_WIDTH), dtype=torch.float32),
             dead=[False] * AGENT_COUNT,
+            sequence_start=[True] * AGENT_COUNT,
         )
 
     def reset_seat(self, agent_id: int) -> None:
@@ -192,6 +194,7 @@ class SharedSeatState:
             raise ValueError("agent id is out of range")
         self.histories[agent_id] = SelectorHistory()
         self.hidden[agent_id].zero_()
+        self.sequence_start[agent_id] = True
 
     def observe_lifecycle(self, observations: list[dict[str, Any]]) -> None:
         if len(observations) != AGENT_COUNT:
@@ -215,6 +218,7 @@ class AllSeatDecision:
     old_log_probabilities: dict[int, float]
     old_values: dict[int, float]
     policy_loss_masks: dict[int, bool]
+    recurrent_resets: dict[int, bool]
     evaluation_order: tuple[int, ...]
     model_state_sha256: str
 
@@ -320,6 +324,7 @@ def decide_all_seats(
     old_log_probabilities: dict[int, float] = {}
     old_values: dict[int, float] = {}
     policy_loss_masks: dict[int, bool] = {}
+    recurrent_resets: dict[int, bool] = {}
     evaluation_order: list[int] = []
 
     for agent_id in range(AGENT_COUNT):
@@ -348,6 +353,7 @@ def decide_all_seats(
         )
         tensors = _feature_tensors(features)
         hidden_input = state.hidden[agent_id : agent_id + 1].detach().clone()
+        recurrent_resets[agent_id] = state.sequence_start[agent_id]
         with torch.no_grad():
             _, masked_logits, value, next_hidden = model(
                 *tensors,
@@ -355,6 +361,7 @@ def decide_all_seats(
                 hidden_input,
             )
         state.hidden[agent_id] = next_hidden[0].detach()
+        state.sequence_start[agent_id] = False
         evaluation_order.append(agent_id)
         features_by_agent[agent_id] = features
 
@@ -415,6 +422,7 @@ def decide_all_seats(
         old_log_probabilities=old_log_probabilities,
         old_values=old_values,
         policy_loss_masks=policy_loss_masks,
+        recurrent_resets=recurrent_resets,
         evaluation_order=tuple(evaluation_order),
         model_state_sha256=model_state_digest(model),
     )

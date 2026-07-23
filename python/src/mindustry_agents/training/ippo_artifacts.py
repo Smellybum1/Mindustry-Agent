@@ -21,8 +21,9 @@ from mindustry_agents.training.ippo import (
 )
 from mindustry_agents.training.ippo_ppo import (
     IPPO_V1_CONFIG_SHA256,
-    IPPO_V1_PROTOCOL_SHA256,
-    load_ippo_v1_config,
+    config_sha256,
+    load_ippo_config,
+    protocol_sha256,
     sha256_path,
 )
 
@@ -81,13 +82,14 @@ def save_ippo_checkpoint(
     *,
     update: int,
     parent_checkpoint_content_sha256: str | None,
+    config_sha256_value: str = IPPO_V1_CONFIG_SHA256,
 ) -> dict[str, Any]:
     if update < 0:
         raise ValueError("M9 IPPO checkpoint update cannot be negative")
     optimizer_state = optimizer.state_dict()
     identity = {
         "schema": CHECKPOINT_SCHEMA,
-        "config_sha256": IPPO_V1_CONFIG_SHA256,
+        "config_sha256": config_sha256_value,
         "reward_schema": "ippo_reward_v1",
         "model_schema": model.model_schema,
         "model_architecture": IPPO_MODEL_ARCHITECTURE,
@@ -125,11 +127,13 @@ def load_ippo_checkpoint(
     path: Path,
     model: SharedRecurrentSelector,
     optimizer: torch.optim.Optimizer | None = None,
+    *,
+    expected_config_sha256: str = IPPO_V1_CONFIG_SHA256,
 ) -> dict[str, Any]:
     payload = torch.load(path, map_location="cpu", weights_only=False)
     expected = (
         CHECKPOINT_SCHEMA,
-        IPPO_V1_CONFIG_SHA256,
+        expected_config_sha256,
         "ippo_reward_v1",
         model.model_schema,
         IPPO_MODEL_ARCHITECTURE,
@@ -277,9 +281,11 @@ def base_run_manifest(
     baseline_path: Path,
 ) -> dict[str, Any]:
     root = repo_root()
-    config = load_ippo_v1_config(config_path)
+    config = load_ippo_config(config_path)
+    expected_config_sha256 = config_sha256(config)
+    expected_protocol_sha256 = protocol_sha256(config)
     protocol_path = root / config["public_evaluation_protocol"]
-    if sha256_path(protocol_path) != IPPO_V1_PROTOCOL_SHA256:
+    if sha256_path(protocol_path) != expected_protocol_sha256:
         raise ValueError("M9 IPPO public protocol hash drifted")
     lock_path = root / "python/requirements-rl-linux-py312.lock"
     jar_path = root / "rl-server/build/libs/rl-server.jar"
@@ -306,11 +312,11 @@ def base_run_manifest(
         },
         "source_config": {
             "path": str(config_path.relative_to(root).as_posix()),
-            "sha256": IPPO_V1_CONFIG_SHA256,
+            "sha256": expected_config_sha256,
         },
         "public_protocol": {
             "path": str(protocol_path.relative_to(root).as_posix()),
-            "sha256": IPPO_V1_PROTOCOL_SHA256,
+            "sha256": expected_protocol_sha256,
         },
         "public_baseline": {
             "path": str(baseline_path.relative_to(root).as_posix()),

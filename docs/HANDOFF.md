@@ -1498,8 +1498,11 @@ queue.
    selected a checkpoint.
 2. **Implement ADR-0073's `m9-ippo-v2-sequence16` boundary.** Prove sequence
    order, episode/seat/reset isolation, padding invariance, length-one v1
-   equivalence, and cross-boundary recurrent gradient flow.
-3. **Commit and pass the complete exact-commit v2 gate before replica A.**
+   equivalence, and cross-boundary recurrent gradient flow. The local
+   implementation and 397-test Python suite are green; commit-bound evidence
+   remains.
+3. **Commit the implementation, freeze its cross-process optimizer/checkpoint
+   report, then pass the complete exact-commit v2 gate before replica A.**
    Replica B runs only if A reaches 30/40 with idle `<0.25`; MAPPO remains
    blocked until exact twins and paired public gates pass.
 4. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final

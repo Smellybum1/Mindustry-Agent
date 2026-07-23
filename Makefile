@@ -16,7 +16,7 @@ SCRIPTS := scripts
         candidate-policy-check single-brain-failover-check \
         per-seat-history-check \
         m9-shared-policy-check m9-reward-check m9-rollout-check \
-        m9-artifact-check m9-pretraining-check m9-baseline train-m9-ippo \
+        m9-artifact-check m9-sequence-check m9-pretraining-check m9-baseline train-m9-ippo \
         secondary-claim-wake-check \
         owned-schematic-staging-check coordination-parity \
         public-demo-parity \
@@ -45,6 +45,7 @@ help: ## List available targets
 	@echo "  m9-reward-check M9 per-seat reward adversary gate"
 	@echo "  m9-rollout-check M9 stochastic all-seat rollout/reset gate"
 	@echo "  m9-artifact-check M9 checkpoint/manifest exact replay gate"
+	@echo "  m9-sequence-check M9 v2 recurrent optimizer determinism gate"
 	@echo "  m9-pretraining-check complete M9 gate before replica A"
 	@echo "  m9-baseline M9 public fixed-role shared-expert baseline"
 	@echo "  train-m9-ippo exact M9 IPPO replicas + direct comparison"
@@ -118,6 +119,9 @@ m9-rollout-check: ## Verify M9 stochastic all-seat rollout/reset
 
 m9-artifact-check: ## Verify M9 checkpoint and manifest replay lineage
 	@bash $(SCRIPTS)/m9-artifact-check.sh
+
+m9-sequence-check: ## Verify M9 v2 recurrent optimizer determinism
+	@bash $(SCRIPTS)/m9-sequence-check.sh
 
 m9-pretraining-check: ## Run the complete M9 pretraining gate
 	@bash $(SCRIPTS)/m9-pretraining-check.sh

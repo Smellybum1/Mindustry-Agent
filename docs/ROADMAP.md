@@ -2363,9 +2363,18 @@ prospective IPPO successor is required. ADR-0073 now precommits
 episode/seat/reset windows; v1's model, runtime actions, reward, roots, budget,
 optimizer, RNGs, selection, and public comparator remain fixed. Config/protocol
 hashes are `266e50429902de0d...` / `ec9a69612b709290...`. No v2 trajectory,
-optimizer update, checkpoint, or changed model state exists. Implementation,
-focused sequence/reset/gradient/padding evidence, and the complete exact-commit
-gate are next.
+optimizer update, checkpoint, or changed model state existed at precommit
+time. Implementation, focused sequence/reset/gradient/padding evidence, and the
+complete exact-commit gate are next. The sequence optimizer and
+candidate-aware checkpoint/runner
+boundary are now implemented locally. Focused tests prove length-one v1
+equivalence, deterministic episode/seat/reset partitioning, padding invariance,
+cross-boundary gradient flow, successor config/checkpoint binding, and exact
+twin CPU updates; all 397 Python tests pass. Commit-bound worker evidence and
+the complete gate are still required before replica A. A preliminary
+public-free synthetic worker pair matches model, optimizer, and canonical
+checkpoint content exactly; it must be rerun from the committed implementation
+before it is versioned.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
