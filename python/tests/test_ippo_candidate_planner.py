@@ -84,6 +84,21 @@ def test_v6_protocol_binds_completed_fortification_coordinate():
     ] == "BUILD_LINE"
 
 
+def test_v7_protocol_binds_active_fortification_coordinate():
+    protocol, seeds = _load_protocol(
+        DEFAULT_PROTOCOL.with_name(
+            "m9-candidate-native-planner-v7-protocol.json"
+        )
+    )
+    assert len(seeds) == 40
+    assert protocol["planner"]["fortification_constraint"]["board_statuses"] == [
+        "CLAIMED",
+        "RUNNING",
+        "BLOCKED",
+        "COMPLETED",
+    ]
+
+
 def test_protocol_rejects_digest_drift(tmp_path: Path):
     document = json.loads(DEFAULT_PROTOCOL.read_text(encoding="utf-8"))
     document["authority"]["may_train"] = True

@@ -17,6 +17,7 @@ from mindustry_agents.policies import (
     CandidateNativePlannerV4,
     CandidateNativePlannerV5,
     CandidateNativePlannerV6,
+    CandidateNativePlannerV7,
 )
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
 
@@ -43,6 +44,9 @@ PROTOCOL_SCHEMAS = {
     ),
     "748032f71739c878b0634042999148433fee0758c0a011f01ff9f984b01210ea": (
         "m9_candidate_native_planner_protocol_v6"
+    ),
+    "df0427db128c8543b3f45c6f9cbd16eea81afe3bc4e3be9be73f6003af902d75": (
+        "m9_candidate_native_planner_protocol_v7"
     ),
 }
 
@@ -215,6 +219,24 @@ def _load_protocol(path: Path) -> tuple[dict[str, Any], list[int]]:
             }
         ):
             raise ValueError("planner v6 inheritance contract drift")
+    if expected_schema == "m9_candidate_native_planner_protocol_v7":
+        if (
+            protocol.get("parent_protocol_sha256")
+            != (
+                "748032f71739c878b0634042999148433fee0758c0a011f01f"
+                "f9f984b01210ea"
+            )
+            or protocol.get("sole_behavior_change")
+            != (
+                "suppress_build_line_while_expert_fortification_"
+                "active_or_completed"
+            )
+            or protocol.get("planner", {}).get("fortification_constraint", {}).get(
+                "board_statuses"
+            )
+            != ["CLAIMED", "RUNNING", "BLOCKED", "COMPLETED"]
+        ):
+            raise ValueError("planner v7 inheritance contract drift")
 
     seed_spec = protocol["seed_set"]
     seed_path = ROOT / seed_spec["path"]
@@ -298,6 +320,7 @@ def _episode(
         4: CandidateNativePlannerV4,
         5: CandidateNativePlannerV5,
         6: CandidateNativePlannerV6,
+        7: CandidateNativePlannerV7,
     }[planner_version]()
     observations = reset.initial_observations
     masks = reset.action_masks
@@ -489,6 +512,7 @@ def main(argv: list[str] | None = None) -> int:
             "m9_candidate_native_planner_protocol_v4": 4,
             "m9_candidate_native_planner_protocol_v5": 5,
             "m9_candidate_native_planner_protocol_v6": 6,
+            "m9_candidate_native_planner_protocol_v7": 7,
         }[protocol["schema"]]
         values = {
             "java": args.java,

@@ -1563,7 +1563,8 @@ queue.
    RUNNING. ADR-0102 rejects it at compact SHA `930b617186248ea3...`.
    ADR-0103 and protocol SHA `df0427db128c8543...` precommit planner v7's sole
    change: suppress lines while that board task is active or completed.
-   Implement and commit before the same public gate.
+   The lifecycle predicate, inheritance checks, focused tests, and command are
+   local; all 468 Python tests pass. Commit before the same public gate.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

@@ -7,6 +7,7 @@ from mindustry_agents.policies import (
     CandidateNativePlannerV4,
     CandidateNativePlannerV5,
     CandidateNativePlannerV6,
+    CandidateNativePlannerV7,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -212,7 +213,7 @@ class TestScriptedPolicies(unittest.TestCase):
             "tick": 1950,
             "enemy_count": 0,
             "line_operational": False,
-            "defense_ammo_coverage": 0.5,
+            "defense_ammo_coverage": 1.0,
         }
         board = [
             {
@@ -227,6 +228,31 @@ class TestScriptedPolicies(unittest.TestCase):
         v6 = CandidateNativePlannerV6().actions([row], [mask], board)
         self.assertEqual(v5[0]["task_action"]["candidate_index"], 0)
         self.assertEqual(v6[0]["task_action"]["candidate_index"], 1)
+
+    def test_candidate_native_planner_v7_suppresses_line_during_fortification(self):
+        candidates = [
+            self.planner_candidate(0, "BUILD_LINE", utility=5.0),
+            self.planner_candidate(1, "SUPPLY_TURRET", utility=2.0),
+        ]
+        team = {
+            "tick": 1985,
+            "enemy_count": 0,
+            "line_operational": False,
+            "defense_ammo_coverage": 1.0,
+        }
+        board = [
+            {
+                "task_type": "BUILD_SCHEMATIC",
+                "target": "region expert_fortification_v1",
+                "status": "RUNNING",
+            }
+        ]
+        row = observation(candidates=candidates, team=team)
+        mask = {"candidate_task": [True, True]}
+        v6 = CandidateNativePlannerV6().actions([row], [mask], board)
+        v7 = CandidateNativePlannerV7().actions([row], [mask], board)
+        self.assertEqual(v6[0]["task_action"]["candidate_index"], 0)
+        self.assertEqual(v7[0]["task_action"]["candidate_index"], 1)
 
     def test_candidate_native_planner_preserves_continue_and_preempts_for_wave(self):
         planner = CandidateNativePlanner()

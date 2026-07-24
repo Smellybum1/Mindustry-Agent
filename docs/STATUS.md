@@ -2521,7 +2521,8 @@ repository-evidence mapping used for the M6 audit is:
   fortification is RUNNING. ADR-0102 rejects it at compact SHA
   `930b617186248ea3...`. ADR-0103 precommits v7's active-or-completed
   fortification predicate at protocol SHA `df0427db128c8543...`; it is
-  unimplemented.
+  implemented locally with exact inheritance/focused coverage; all 468 Python
+  tests pass. Commit before evaluation.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

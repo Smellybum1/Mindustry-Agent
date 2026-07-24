@@ -2583,6 +2583,8 @@ ADR-0102 rejects v6 at compact SHA `930b617186248ea3...`. ADR-0103 precommits
 v7's sole change as widening that board predicate to
 CLAIMED/RUNNING/BLOCKED/COMPLETED. Protocol SHA is `df0427db128c8543...`;
 implementation is next.
+The lifecycle predicate, exact protocol/inheritance checks, focused v1--v7
+tests, and command are local; all 468 Python tests pass. Commit before the gate.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
