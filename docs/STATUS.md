@@ -2546,7 +2546,11 @@ repository-evidence mapping used for the M6 audit is:
   wave-increment preemption coordinate at protocol SHA `e10833fd3d862239...`;
   the exact wave-history rule, reset behavior, exemptions, inheritance
   validation, and command are implemented locally; all 478 Python tests pass.
-  Commit before evaluation.
+  An initial public invocation exposed a rule-order conformance bug: an exempt
+  DEFEND task fell through to safe-interwave demobilization on the same wave
+  increment. That 22/40 diagnostic is invalid for classification. The explicit
+  exemption and its real-timer regression are corrected locally; all 478 Python
+  tests pass. Commit before rerunning the unchanged protocol.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

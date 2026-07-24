@@ -1588,7 +1588,11 @@ queue.
    precommit v10's sole reset-local wave-increment preemption coordinate.
    The exact wave-history rule, reset behavior, exemptions, inheritance
    validation, and command are local; all 478 Python tests pass. Commit before
-   the same public gate.
+   the same public gate. An initial invocation exposed a rule-order conformance
+   bug: an exempt DEFEND task fell through to safe-interwave demobilization on
+   the wave increment. The 22/40 diagnostic is invalid for classification.
+   The explicit exemption and real-timer regression are corrected locally; all
+   478 Python tests pass. Commit, then rerun the unchanged protocol.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

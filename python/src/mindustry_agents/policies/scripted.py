@@ -517,6 +517,7 @@ class CandidateNativePlanner:
             self._demobilize_defend_during_safe_interwave
             and action_mask.get("abandon", False)
             and enemy_count == 0
+            and not wave_advanced
             and time_to_wave > defend_lead
             and skill.get("type") == "DEFEND"
         ):

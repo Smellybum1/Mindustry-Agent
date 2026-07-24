@@ -2609,7 +2609,11 @@ v10's sole change: preempt noncombat work on an observed wave increment using
 reset-local prior-wave state. Protocol SHA is `e10833fd3d862239...`;
 the exact wave-history rule, reset behavior, exemptions, inheritance
 validation, and command are implemented locally; all 478 Python tests pass.
-Commit before the gate.
+An initial invocation exposed a rule-order conformance bug: an exempt DEFEND
+task fell through to safe-interwave demobilization on the same wave increment.
+The 22/40 diagnostic is invalid for classification. Correct the explicit
+exemption and real-timer regression are local; all 478 Python tests pass.
+Commit, then rerun the unchanged gate.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

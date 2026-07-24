@@ -369,7 +369,13 @@ class TestScriptedPolicies(unittest.TestCase):
                 [
                     observation(
                         skill={"type": skill_type, "status": "RUNNING"},
-                        team={"tick": 100, "wave": 2, "enemy_count": 0},
+                        team={
+                            "tick": 100,
+                            "wave": 2,
+                            "enemy_count": 0,
+                            "time_to_next_wave": 1163,
+                            "defend_lead_ticks": 311,
+                        },
                     )
                 ],
                 [mask],
@@ -378,7 +384,13 @@ class TestScriptedPolicies(unittest.TestCase):
                 [
                     observation(
                         skill={"type": skill_type, "status": "RUNNING"},
-                        team={"tick": 200, "wave": 3, "enemy_count": 0},
+                        team={
+                            "tick": 200,
+                            "wave": 3,
+                            "enemy_count": 0,
+                            "time_to_next_wave": 1838,
+                            "defend_lead_ticks": 311,
+                        },
                     )
                 ],
                 [mask],
