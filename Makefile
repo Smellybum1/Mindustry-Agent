@@ -33,6 +33,7 @@ SCRIPTS := scripts
         m9-candidate-native-planner-v9-check \
         m9-candidate-native-planner-v10-check \
         m9-candidate-native-planner-v11-check \
+        m9-candidate-distill-check train-m9-candidate-distill \
         m9-baseline train-m9-ippo train-m9-ippo-v2 train-m9-ippo-v3 \
         train-m9-ippo-v4 train-m9-ippo-v5 train-m9-ippo-v6 \
         secondary-claim-wake-check \
@@ -94,6 +95,8 @@ help: ## List available targets
 	@echo "  m9-candidate-native-planner-v9-check active-defend-cap gate"
 	@echo "  m9-candidate-native-planner-v10-check wave-spawn-preemption gate"
 	@echo "  m9-candidate-native-planner-v11-check single-defender gate"
+	@echo "  m9-candidate-distill-check candidate-native distillation preflight"
+	@echo "  train-m9-candidate-distill governed candidate-native warm start"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -191,6 +194,12 @@ m9-candidate-native-planner-v10-check: ## Validate wave-spawn preemption planner
 
 m9-candidate-native-planner-v11-check: ## Validate single-defender planner
 	@bash $(SCRIPTS)/m9-candidate-native-planner-v11-check.sh
+
+m9-candidate-distill-check: ## Validate candidate-native distillation
+	@bash $(SCRIPTS)/m9-candidate-distill-check.sh
+
+train-m9-candidate-distill: ## Train candidate-native warm-start replica
+	@bash $(SCRIPTS)/train-m9-candidate-distill.sh
 
 m9-reward-check: ## Verify M9 audited per-seat shaping adversaries
 	@bash $(SCRIPTS)/m9-reward-check.sh

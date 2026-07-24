@@ -1604,8 +1604,12 @@ queue.
    `81ea8df1d7dcf21e...`; it does not accept a learned policy or complete M9.
    ADR-0113 freezes the first learned consumer as a separate 2,048-unique-root
    behavioral-cloning warm start, config/protocol SHA prefixes
-   `9fc15d1a0dd25645...` / `72ced8386fdbdb8b...`. Implement and pass its exact
-   public-only gate before any resumed PPO.
+   `9fc15d1a0dd25645...` / `72ced8386fdbdb8b...`. Its fail-closed loaders,
+   teacher collector, forced-control exclusion, deterministic NLL optimizer,
+   checkpoint/replay/replica path, exact-commit preflight, commands, and tests
+   are local. All 486 Python tests pass and a live teacher episode repeats
+   after terminal reset. Commit, run the complete exact-commit gate, then
+   Replica A before any resumed PPO.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

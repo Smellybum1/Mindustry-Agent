@@ -2626,7 +2626,12 @@ ADR-0113 prospectively freezes its first learned consumer as a separate
 2,048-unique-root behavioral-cloning warm start, with config/protocol SHA
 prefixes `9fc15d1a0dd25645...` / `72ced8386fdbdb8b...`. It must pass 30/40
 public wins and exact replicas before it can initialize a later precommitted
-IPPO successor; implementation is next.
+IPPO successor. The fail-closed loaders, teacher-controlled recurrent
+collector, forced-control exclusion, deterministic NLL optimizer, checkpoint
+selection/replay, replica comparison, exact-commit preflight, commands, and
+focused tests are implemented locally. All 486 Python tests pass; a live JVM
+teacher episode repeats after terminal reset. Commit before the complete
+exact-commit gate and Replica A.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

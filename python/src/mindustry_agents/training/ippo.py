@@ -394,8 +394,19 @@ def decide_all_seats(
                     index, observations[agent_id].get("task_candidates", [])
                 ),
             }
-        if features.forced_task_action is None and not bool(
-            features.action_mask[index]
+        teacher_control = (
+            teacher_actions is not None
+            and action.get("task_action", {}).get("type")
+            not in {
+                "SELECT_CANDIDATE_TASK",
+                "CONTINUE_CURRENT_TASK",
+                "WAIT",
+            }
+        )
+        if (
+            features.forced_task_action is None
+            and not teacher_control
+            and not bool(features.action_mask[index])
         ):
             raise RuntimeError("IPPO selected an action outside the authoritative mask")
         hidden_inputs[agent_id] = hidden_input[0]

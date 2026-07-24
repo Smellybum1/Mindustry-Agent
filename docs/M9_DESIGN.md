@@ -284,8 +284,10 @@ pins, and dependency lock.
    and 96.5548% coverage. It is a supervision source only. ADR-0113 freezes a
    separate 2,048-root candidate-native behavioral-cloning warm start before
    any resumed PPO. Configuration/public-protocol SHA prefixes are
-   `9fc15d1a0dd25645...` / `72ced8386fdbdb8b...`; implementation and the exact
-   public gate are next.
+   `9fc15d1a0dd25645...` / `72ced8386fdbdb8b...`. Its deterministic teacher
+   collector/optimizer/checkpoint/replica path and exact-commit preflight are
+   implemented locally; all 486 Python tests and a live terminal-reset teacher
+   probe pass. Commit before the complete exact-commit gate and Replica A.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 
