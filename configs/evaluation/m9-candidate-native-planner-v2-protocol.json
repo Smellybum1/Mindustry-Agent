@@ -1,0 +1,93 @@
+{
+  "schema": "m9_candidate_native_planner_protocol_v2",
+  "data_classification": "public_dev_only",
+  "candidate_version": "candidate-native-planner-v2-build-serialization",
+  "parent_candidate_version": "candidate-native-planner-v1",
+  "sole_behavior_change": "at_most_one_build_schematic_selection_per_atomic_bundle",
+  "parent_protocol_sha256": "4c1981c4ced305a2966153b6279acd8745e10bd59db7e365e1a91ba763cccedc",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": {
+    "path": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+    "sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+    "episodes": 40
+  },
+  "planner": {
+    "name": "candidate-native-planner-v2-build-serialization",
+    "authority": "ordinary_external_candidate_task_actions",
+    "inputs": [
+      "authoritative_per-seat_observation",
+      "authoritative_per-seat_action_mask",
+      "structured_task_board",
+      "prior_accepted_action_results",
+      "bounded_reset_local_planner_state"
+    ],
+    "forbidden_inputs": [
+      "mutable_engine_state",
+      "shared_expert_state",
+      "shared_expert_decisions",
+      "future_outcome",
+      "confirmation_membership",
+      "held_out_membership"
+    ],
+    "inherited_bundle_order": [
+      "forced_dead_wait",
+      "blocked_replan",
+      "enemy_wave_preemption",
+      "continue_accepted_work",
+      "combat_defense_and_logistics_allocation",
+      "opening_distinct_line_schematic_harvest_allocation",
+      "readiness_priority_allocation",
+      "deterministic_nonconflicting_utility_fallback",
+      "wait"
+    ],
+    "conflict_key": [
+      "exclusive_task_id",
+      "task_type_and_semantic_target"
+    ],
+    "additional_bundle_constraint": {
+      "task_type": "BUILD_SCHEMATIC",
+      "maximum_simultaneous_selections": 1,
+      "evidence": "v1_emitted_one_reservation_overlap_rejection_at_tick_250_on_each_public_root"
+    },
+    "tie_break": [
+      "phase_priority",
+      "candidate_utility_descending",
+      "candidate_index_ascending",
+      "agent_id_ascending"
+    ],
+    "ordinary_action_types": [
+      "SELECT_CANDIDATE_TASK",
+      "CONTINUE_CURRENT_TASK",
+      "ABANDON",
+      "WAIT"
+    ]
+  },
+  "replay": {
+    "fresh_jvm_runs": 2,
+    "require_byte_identical_reports": true,
+    "require_terminal_reset_replay": true,
+    "require_all_actions_accepted": true,
+    "require_zero_nonordinary_fallbacks": true,
+    "require_zero_cross_seat_exclusive_conflicts": true,
+    "require_simulation_thread_observation_boundaries": true
+  },
+  "classification": {
+    "minimum_wins": 30,
+    "minimum_win_fraction": 0.75,
+    "minimum_source_expert_win_retention_fraction": 0.8,
+    "source_expert_wins": 36,
+    "minimum_non_wait_selection_coverage": 0.95,
+    "pass": "candidate_native_supervision_source_supported",
+    "fail": "candidate_native_supervision_source_not_supported"
+  },
+  "authority": {
+    "may_modify_model": false,
+    "may_train": false,
+    "may_select_checkpoint": false,
+    "may_promote": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_v7": false
+  }
+}

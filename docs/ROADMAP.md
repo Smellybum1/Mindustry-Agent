@@ -2529,6 +2529,16 @@ runner, command surface, and focused conflict/authority/threshold tests are now
 implemented locally. The full 456-test Python suite, pinned Java/custom-module
 suite, smoke, deterministic replay, and 664-checkpoint golden are green. Commit
 this implementation boundary before the first governed 40-root run.
+That run now rejects v1. Two fresh JVMs and terminal reset reproduce exactly,
+and non-WAIT coverage is 4,959/4,963 (`99.9194%`), but survival is only 13/40.
+Every episode also rejects one tick-250 fortification schematic with
+`reservation_overlap`; distinct candidate ids/semantic targets do not expose
+overlapping physical footprints. Full/compact result SHA prefixes are
+`57f1c4d2c49075b1...` / `5a9df7fce1c39f14...`. ADR-0092 preserves the
+rejection. ADR-0093 prospectively freezes v2's only change: at most one new
+`BUILD_SCHEMATIC` selection per atomic bundle, with every other planner rule
+and gate inherited exactly. Protocol SHA is `411c40c69ac7419f...`; implementation
+is next and no v7 or restricted access is authorized.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

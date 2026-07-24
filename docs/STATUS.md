@@ -2484,7 +2484,13 @@ repository-evidence mapping used for the M6 audit is:
   conflict/authority/threshold tests are implemented locally. The full
   456-test Python suite, pinned Java/custom-module suite, smoke, deterministic
   replay, and 664-checkpoint golden are green. Commit this boundary before the
-  governed run.
+  governed run. That exact run is now complete and rejects v1: 13/40 wins,
+  exact twin-JVM/reset replay, and 99.9194% non-WAIT coverage, but one
+  tick-250 fortification `reservation_overlap` rejection occurs in every
+  episode. Full/compact SHA prefixes are `57f1c4d2c49075b1...` /
+  `5a9df7fce1c39f14...`. ADR-0092 preserves v1. ADR-0093 precommits v2 with
+  only one added constraint, at most one new BUILD_SCHEMATIC selection per
+  atomic bundle. Protocol SHA is `411c40c69ac7419f...`; it is unimplemented.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
