@@ -1,0 +1,35 @@
+{
+  "schema": "m9_candidate_semantic_target_diagnostic_compact_result_v1",
+  "data_classification": "public_dev_only",
+  "implementation_commit": "e5c5e5d57c0a59d5b121b6564156be656ad83a21",
+  "protocol_sha256": "8003d7ef159cf9940d1898aa7c2bc380dda8d1846e5a26ddd58c6ef0a9827ee9",
+  "full_report_sha256": "84fb4455228c9c6c0d32354a1698d44b238c4bfe32adf4201c2656ac52744f17",
+  "canonical_report_sha256": "25d594aaf8dde0340a1e9d3f79cb31a560fbd9632bcdb5af6cbc9698bffd6e2c",
+  "fresh_jvm_reports_equal": true,
+  "terminal_reset_replay_equal": true,
+  "checkpoint": {
+    "lineage_update": 64,
+    "wins": 13,
+    "losses": 27,
+    "eligible_labels": 3200,
+    "disagreements": 89,
+    "same_family_disagreements": 39,
+    "same_family_exact_feature_row_aliases": 0,
+    "same_family_disagreements_in_wins": 25,
+    "same_family_disagreements_in_losses": 14
+  },
+  "classification": {
+    "active_signals": [
+      "feature_distinguishable_ranking_signal"
+    ],
+    "target_pair_concentration_signal": false,
+    "feature_alias_signal": false,
+    "feature_distinguishable_ranking_signal": true,
+    "top_three_semantic_target_pair_fraction": 0.28205128205128205,
+    "exact_feature_alias_fraction": 0.0
+  },
+  "successor_training_authorized": false,
+  "checkpoint_selection_authorized": false,
+  "promotion_authorized": false,
+  "confirmation_or_held_out_access": false
+}

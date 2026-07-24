@@ -2709,8 +2709,16 @@ aliasing for same-family disagreements under twin-JVM/reset identity. Protocol
 SHA is `8003d7ef159cf994...`; it cannot train, select, repair, promote, or access
 restricted data. The fail-closed source loader, semantic candidate renderer,
 exact feature-row comparison, deterministic aggregation/classification,
-twin-JVM/reset runner, command, and focused tests are implemented locally; all
-501 Python tests pass. Commit before the first diagnostic JVM.
+twin-JVM/reset runner, command, and focused tests are committed; all 501 Python
+tests pass.
+The exact run from `e5c5e5d57c` matches across twin JVMs/reset and reproduces
+89 disagreements, including 39 same-family choices. All 39 candidate-row pairs
+are feature-distinguishable; the alias fraction is `0.0`, while the top three
+semantic target pairs cover only `0.2820513`. ADR-0122 therefore accepts only
+the feature-distinguishable-ranking signal, records full/canonical/compact SHA
+prefixes `84fb4455228c9c6c...` / `25d594aaf8dde034...` /
+`959e55f140fce098...`, keeps update 64 rejected, and permits only a separately
+precommitted learning-pressure successor without feature or planner changes.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

@@ -2639,7 +2639,15 @@ repository-evidence mapping used for the M6 audit is:
   `8003d7ef159cf994...`. The fail-closed source loader, semantic candidate
   renderer, exact feature-row comparison, deterministic aggregation and
   classification, twin-JVM/reset runner, command, and focused tests are
-  implemented locally; all 501 Python tests pass. Commit before execution.
+  committed; all 501 Python tests pass.
+  The exact run from `e5c5e5d57c` matches across twin JVMs/reset and reproduces
+  89 disagreements, including 39 same-family choices. All 39 candidate-row
+  pairs are feature-distinguishable; aliasing is `0.0`, and the top three
+  target pairs cover only `0.2820513`. ADR-0122 accepts only the
+  feature-distinguishable-ranking signal, records full/canonical/compact SHA
+  prefixes `84fb4455228c9c6c...` / `25d594aaf8dde034...` /
+  `959e55f140fce098...`, keeps update 64 rejected, and permits only a
+  separately precommitted learning-pressure successor.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

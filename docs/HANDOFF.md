@@ -1678,7 +1678,14 @@ queue.
    loader, semantic candidate renderer, exact feature-row comparison,
    deterministic aggregation/classification, twin-JVM/reset runner, command,
    and focused tests are implemented locally; all 501 Python tests pass.
-   Commit before the first diagnostic JVM.
+   The exact run from `e5c5e5d57c` matches across twin JVMs/reset and
+   reproduces 89 disagreements, including 39 same-family choices. All 39
+   candidate-row pairs are feature-distinguishable; aliasing is `0.0`, and the
+   top three target pairs cover only `0.2820513`. ADR-0122 accepts only the
+   feature-distinguishable-ranking signal, records full/canonical/compact SHA
+   prefixes `84fb4455228c9c6c...` / `25d594aaf8dde034...` /
+   `959e55f140fce098...`, keeps update 64 rejected, and permits only a
+   separately precommitted learning-pressure successor.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1686,7 +1693,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0121` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0122` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1731,10 +1738,11 @@ line, its public-only diagnostics, and the current requirement for design
 synthesis plus shared-expert candidate projection before any v7 precommit.
 Every candidate remains rejected; no M9 checkpoint is selected and MAPPO
 remains unauthorized.
-ADR-0091 through ADR-0121 govern candidate-native planner construction, accept
+ADR-0091 through ADR-0122 govern candidate-native planner construction, accept
 planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
-implementing and running ADR-0121's public-only semantic-target diagnostic.
+prospectively freezing one learning-pressure successor without changing the
+feature schema or planner.
 
 ## Deviations from the brief in this scaffold
 
