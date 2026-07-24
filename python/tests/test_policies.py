@@ -2,6 +2,7 @@ import unittest
 
 from mindustry_agents.policies import (
     CandidateNativePlanner,
+    CandidateNativePlannerV2,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -92,6 +93,44 @@ class TestScriptedPolicies(unittest.TestCase):
         ]
         self.assertIn(2, selected)
         self.assertEqual(sum(index in {0, 1} for index in selected), 1)
+
+    def test_candidate_native_planner_v2_only_serializes_schematic_selections(self):
+        candidates = [
+            self.planner_candidate(
+                0, "BUILD_SCHEMATIC", target="fortification-a", utility=5.0
+            ),
+            self.planner_candidate(
+                1, "BUILD_SCHEMATIC", target="fortification-b", utility=4.0
+            ),
+            self.planner_candidate(2, "HARVEST_RESOURCE", utility=1.0),
+        ]
+        team = {
+            "tick": 250,
+            "enemy_count": 0,
+            "line_operational": True,
+            "defense_turret_coverage": 0.5,
+        }
+        observations = [
+            observation(candidates=candidates, team=team) for _ in range(2)
+        ]
+        masks = [{"candidate_task": [True] * 3} for _ in range(2)]
+        v1 = CandidateNativePlanner().actions(observations, masks)
+        v2 = CandidateNativePlannerV2().actions(observations, masks)
+        self.assertEqual(
+            sum(
+                action["task_action"].get("candidate_index") in {0, 1}
+                for action in v1
+            ),
+            2,
+        )
+        self.assertEqual(
+            sum(
+                action["task_action"].get("candidate_index") in {0, 1}
+                for action in v2
+            ),
+            1,
+        )
+        self.assertIn(2, [action["task_action"].get("candidate_index") for action in v2])
 
     def test_candidate_native_planner_preserves_continue_and_preempts_for_wave(self):
         planner = CandidateNativePlanner()

@@ -2538,7 +2538,10 @@ overlapping physical footprints. Full/compact result SHA prefixes are
 rejection. ADR-0093 prospectively freezes v2's only change: at most one new
 `BUILD_SCHEMATIC` selection per atomic bundle, with every other planner rule
 and gate inherited exactly. Protocol SHA is `411c40c69ac7419f...`; implementation
-is next and no v7 or restricted access is authorized.
+now adds only that constructor-bound constraint, exact protocol/inheritance
+validation, focused v1/v2 behavior tests, and a separate command surface. All
+458 Python tests pass. Commit this boundary before the v2 run; no v7 or
+restricted access is authorized.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

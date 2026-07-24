@@ -21,12 +21,27 @@ def test_protocol_is_public_only_and_binds_seed_set():
     assert not any(protocol["authority"].values())
 
 
-def test_protocol_rejects_training_authority(tmp_path: Path):
+def test_v2_protocol_binds_single_serialization_coordinate():
+    protocol, seeds = _load_protocol(
+        DEFAULT_PROTOCOL.with_name(
+            "m9-candidate-native-planner-v2-protocol.json"
+        )
+    )
+    assert len(seeds) == 40
+    assert protocol["sole_behavior_change"] == (
+        "at_most_one_build_schematic_selection_per_atomic_bundle"
+    )
+    assert protocol["planner"]["additional_bundle_constraint"][
+        "maximum_simultaneous_selections"
+    ] == 1
+
+
+def test_protocol_rejects_digest_drift(tmp_path: Path):
     document = json.loads(DEFAULT_PROTOCOL.read_text(encoding="utf-8"))
     document["authority"]["may_train"] = True
     path = tmp_path / "protocol.json"
     path.write_text(json.dumps(document), encoding="utf-8")
-    with pytest.raises(ValueError, match="prohibited authority"):
+    with pytest.raises(ValueError, match="digest is not accepted"):
         _load_protocol(path)
 
 

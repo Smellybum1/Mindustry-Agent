@@ -1550,8 +1550,10 @@ queue.
    rejection at compact SHA `5a9df7fce1c39f14...`. ADR-0093 and protocol SHA
    `411c40c69ac7419f...` freeze v2's sole change: permit at most one new
    BUILD_SCHEMATIC selection in an atomic bundle while inheriting every other
-   v1 rule and gate. Implement and commit v2 before rerunning the same public
-   gate. No v7 or restricted access is authorized yet.
+   v1 rule and gate. The implementation, exact protocol/inheritance checks,
+   focused v1/v2 tests, and command surface are local; all 458 Python tests
+   pass. Commit v2 before rerunning the same public gate. No v7 or restricted
+   access is authorized yet.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

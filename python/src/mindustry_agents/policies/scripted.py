@@ -393,9 +393,21 @@ class CandidateNativePlanner:
     REPLAN_WINDOW_TICKS = GreedyUtilityPolicy.REPLAN_WINDOW_TICKS
     MAX_REPLANS_PER_WINDOW = GreedyUtilityPolicy.MAX_REPLANS_PER_WINDOW
 
-    def __init__(self) -> None:
+    def __init__(
+        self, *, maximum_build_schematic_selections: int | None = None
+    ) -> None:
+        if (
+            maximum_build_schematic_selections is not None
+            and maximum_build_schematic_selections < 1
+        ):
+            raise ValueError(
+                "maximum_build_schematic_selections must be positive"
+            )
         self._replan_ticks: dict[int, list[int]] = {}
         self._last_tick = -1
+        self._maximum_build_schematic_selections = (
+            maximum_build_schematic_selections
+        )
 
     def reset(self) -> None:
         self._replan_ticks.clear()
@@ -534,13 +546,23 @@ class CandidateNativePlanner:
             score += 30
         return score
 
-    @staticmethod
-    def _conflicts(candidates: tuple[dict[str, Any] | None, ...]) -> bool:
+    def _conflicts(
+        self, candidates: tuple[dict[str, Any] | None, ...]
+    ) -> bool:
         exclusive_ids: set[str] = set()
         semantic_targets: set[tuple[str, str]] = set()
+        build_schematic_selections = 0
         for candidate in candidates:
             if candidate is None:
                 continue
+            if candidate.get("task_type") == "BUILD_SCHEMATIC":
+                build_schematic_selections += 1
+                if (
+                    self._maximum_build_schematic_selections is not None
+                    and build_schematic_selections
+                    > self._maximum_build_schematic_selections
+                ):
+                    return True
             task_id = str(candidate.get("task_id", ""))
             semantic = (
                 str(candidate.get("task_type", "")),
@@ -625,6 +647,13 @@ class CandidateNativePlanner:
                 else self._simple(agent_id, "WAIT")
             )
         return [action for action in actions if action is not None]
+
+
+class CandidateNativePlannerV2(CandidateNativePlanner):
+    """V1-exact planner with prospective schematic-selection serialization."""
+
+    def __init__(self) -> None:
+        super().__init__(maximum_build_schematic_selections=1)
 
 
 class RoleAssignmentPolicy:

@@ -2490,7 +2490,10 @@ repository-evidence mapping used for the M6 audit is:
   episode. Full/compact SHA prefixes are `57f1c4d2c49075b1...` /
   `5a9df7fce1c39f14...`. ADR-0092 preserves v1. ADR-0093 precommits v2 with
   only one added constraint, at most one new BUILD_SCHEMATIC selection per
-  atomic bundle. Protocol SHA is `411c40c69ac7419f...`; it is unimplemented.
+  atomic bundle. Protocol SHA is `411c40c69ac7419f...`. The implementation
+  adds only that constructor-bound constraint plus exact protocol/inheritance
+  validation, focused v1/v2 tests, and a separate command. All 458 Python
+  tests pass; commit it before the governed run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

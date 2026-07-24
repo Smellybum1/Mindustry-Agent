@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from mindustry_agents.policies import CandidateNativePlanner
+from mindustry_agents.policies import CandidateNativePlanner, CandidateNativePlannerV2
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
 
 
@@ -18,6 +18,14 @@ ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_PROTOCOL = (
     ROOT / "configs/evaluation/m9-candidate-native-planner-v1-protocol.json"
 )
+PROTOCOL_SCHEMAS = {
+    "4c1981c4ced305a2966153b6279acd8745e10bd59db7e365e1a91ba763cccedc": (
+        "m9_candidate_native_planner_protocol_v1"
+    ),
+    "411c40c69ac7419fa0920a2270d5b4537a5b0885af52d0abf12a396f0b8a5246": (
+        "m9_candidate_native_planner_protocol_v2"
+    ),
+}
 
 
 def _sha256(path: Path) -> str:
@@ -32,8 +40,12 @@ def _canonical_sha256(value: Any) -> str:
 
 
 def _load_protocol(path: Path) -> tuple[dict[str, Any], list[int]]:
+    digest = _sha256(path)
+    expected_schema = PROTOCOL_SCHEMAS.get(digest)
+    if expected_schema is None:
+        raise ValueError("candidate-native planner protocol digest is not accepted")
     protocol = json.loads(path.read_text(encoding="utf-8"))
-    if protocol.get("schema") != "m9_candidate_native_planner_protocol_v1":
+    if protocol.get("schema") != expected_schema:
         raise ValueError("unsupported candidate-native planner protocol")
     if protocol.get("data_classification") != "public_dev_only":
         raise ValueError("planner protocol is not public-dev-only")
@@ -49,6 +61,23 @@ def _load_protocol(path: Path) -> tuple[dict[str, Any], list[int]]:
     )
     if any(authority.get(key) is not False for key in prohibited):
         raise ValueError("planner protocol grants prohibited authority")
+    if expected_schema == "m9_candidate_native_planner_protocol_v2":
+        if (
+            protocol.get("parent_protocol_sha256")
+            != next(iter(PROTOCOL_SCHEMAS))
+            or protocol.get("sole_behavior_change")
+            != "at_most_one_build_schematic_selection_per_atomic_bundle"
+            or protocol.get("planner", {}).get("additional_bundle_constraint")
+            != {
+                "task_type": "BUILD_SCHEMATIC",
+                "maximum_simultaneous_selections": 1,
+                "evidence": (
+                    "v1_emitted_one_reservation_overlap_rejection_at_"
+                    "tick_250_on_each_public_root"
+                ),
+            }
+        ):
+            raise ValueError("planner v2 inheritance contract drift")
 
     seed_spec = protocol["seed_set"]
     seed_path = ROOT / seed_spec["path"]
@@ -117,6 +146,7 @@ def _episode(
     seed: int,
     scenario_id: str,
     scenario_version: int,
+    planner_version: int,
 ) -> dict[str, Any]:
     reset = env.reset(
         seed,
@@ -124,7 +154,11 @@ def _episode(
         scenario_version=scenario_version,
         agent_count=3,
     )
-    planner = CandidateNativePlanner()
+    planner = (
+        CandidateNativePlannerV2()
+        if planner_version == 2
+        else CandidateNativePlanner()
+    )
     observations = reset.initial_observations
     masks = reset.action_masks
     board: list[dict[str, Any]] = []
@@ -215,6 +249,7 @@ def _run_fresh(
     seeds: list[int],
     scenario_id: str,
     scenario_version: int,
+    planner_version: int,
 ) -> dict[str, Any]:
     with RlServerProcess(LaunchConfig(port=port, java=java)) as env:
         env.handshake("m9-candidate-native-planner-v1")
@@ -224,6 +259,7 @@ def _run_fresh(
                 seed=seed,
                 scenario_id=scenario_id,
                 scenario_version=scenario_version,
+                planner_version=planner_version,
             )
             for seed in seeds
         ]
@@ -232,6 +268,7 @@ def _run_fresh(
             seed=seeds[0],
             scenario_id=scenario_id,
             scenario_version=scenario_version,
+            planner_version=planner_version,
         )
     replay_equal = reset_replay["trace"] == episodes[0]["trace"]
     return {
@@ -305,18 +342,24 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         protocol, seeds = _load_protocol(args.protocol)
+        planner_version = (
+            2
+            if protocol["schema"] == "m9_candidate_native_planner_protocol_v2"
+            else 1
+        )
         values = {
             "java": args.java,
             "port": args.port,
             "seeds": seeds,
             "scenario_id": str(protocol["scenario_id"]),
             "scenario_version": int(protocol["scenario_version"]),
+            "planner_version": planner_version,
         }
         first = _run_fresh(**values)
         second = _run_fresh(**values)
         summary = _summarize(protocol, first, second)
         report = {
-            "schema": "m9_candidate_native_planner_result_v1",
+            "schema": f"m9_candidate_native_planner_result_v{planner_version}",
             "data_classification": "public_dev_only",
             "protocol_sha256": _sha256(args.protocol),
             "summary": summary,
