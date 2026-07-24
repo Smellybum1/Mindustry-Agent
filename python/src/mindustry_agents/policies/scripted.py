@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import itertools
 from typing import Any, Iterable
 
 
@@ -383,6 +384,247 @@ class GreedyUtilityPolicy:
             if selected is not None and preferred_type is not None:
                 self._pending_preferred[agent_id] = preferred_type
         return {"agent_id": agent_id, "task_action": task_action}
+
+
+class CandidateNativePlanner:
+    """Deterministic team allocator over authoritative candidates and masks."""
+
+    REPLANABLE_BLOCKS = GreedyUtilityPolicy.REPLANABLE_BLOCKS
+    REPLAN_WINDOW_TICKS = GreedyUtilityPolicy.REPLAN_WINDOW_TICKS
+    MAX_REPLANS_PER_WINDOW = GreedyUtilityPolicy.MAX_REPLANS_PER_WINDOW
+
+    def __init__(self) -> None:
+        self._replan_ticks: dict[int, list[int]] = {}
+        self._last_tick = -1
+
+    def reset(self) -> None:
+        self._replan_ticks.clear()
+        self._last_tick = -1
+
+    def observe_action_results(self, results: list[dict[str, Any]]) -> None:
+        del results
+
+    @staticmethod
+    def _simple(agent_id: int, action_type: str, **values: Any) -> dict[str, Any]:
+        return {
+            "agent_id": agent_id,
+            "task_action": {"type": action_type, **values},
+        }
+
+    def _fixed_action(
+        self,
+        agent_id: int,
+        observation: dict[str, Any],
+        action_mask: dict[str, Any],
+        tick: int,
+        enemy_count: int,
+    ) -> dict[str, Any] | None:
+        unit = observation.get("unit", {})
+        if unit.get("dead", False):
+            return self._simple(agent_id, "WAIT")
+
+        skill = observation.get("skill", {})
+        reason = str(skill.get("reason", ""))
+        if (
+            action_mask.get("abandon", False)
+            and skill.get("status") == "BLOCKED"
+            and reason in self.REPLANABLE_BLOCKS
+        ):
+            history = self._replan_ticks.setdefault(agent_id, [])
+            cutoff = tick - self.REPLAN_WINDOW_TICKS
+            history[:] = [recorded for recorded in history if recorded > cutoff]
+            if len(history) < self.MAX_REPLANS_PER_WINDOW:
+                history.append(tick)
+                detail = (
+                    "resources_short_replan"
+                    if reason in {"RESOURCES_SHORT", "CORE_SHORT"}
+                    else f"blocked_replan:{reason.lower()}"
+                )
+                return self._simple(agent_id, "ABANDON", reason=detail)
+
+        if (
+            action_mask.get("abandon", False)
+            and enemy_count > 0
+            and skill.get("type") not in {"", "DEFEND", "SUPPLY"}
+        ):
+            return self._simple(agent_id, "ABANDON", reason="wave_preempt")
+        if action_mask.get("continue_current_task", False):
+            return self._simple(agent_id, "CONTINUE_CURRENT_TASK")
+        return None
+
+    @staticmethod
+    def _candidates(
+        observation: dict[str, Any], action_mask: dict[str, Any]
+    ) -> list[dict[str, Any]]:
+        masks = action_mask.get("candidate_task", [])
+        result = []
+        for position, candidate in enumerate(observation.get("task_candidates", [])):
+            if (
+                not isinstance(candidate, dict)
+                or type(candidate.get("index")) is not int
+                or candidate["index"] != position
+            ):
+                raise ValueError("candidate catalog/index drift")
+            if (
+                position >= len(masks)
+                or not masks[position]
+                or candidate.get("valid") is False
+                or candidate.get("task_type") == "WAIT"
+            ):
+                continue
+            result.append(candidate)
+        return result
+
+    @staticmethod
+    def _phase_score(
+        agent_id: int, candidate: dict[str, Any], team: dict[str, Any]
+    ) -> int:
+        task_type = str(candidate.get("task_type", ""))
+        enemies = int(team.get("enemy_count", 0))
+        ammo = float(team.get("defense_ammo_coverage", 0.0))
+        if enemies > 0:
+            preferred = (
+                {
+                    "DEFEND_REGION": 900,
+                    "REPAIR_REGION": 760,
+                    "SUPPLY_TURRET": 720,
+                    "HARVEST_RESOURCE": 420,
+                }
+                if agent_id < 2
+                else {
+                    "SUPPLY_TURRET": 920 if ammo < 1.0 else 780,
+                    "DEFEND_REGION": 860,
+                    "REPAIR_REGION": 760,
+                    "HARVEST_RESOURCE": 420,
+                }
+            )
+            return preferred.get(task_type, 200)
+
+        line_ready = bool(team.get("line_operational", False))
+        turret_coverage = float(team.get("defense_turret_coverage", 0.0))
+        opening = not line_ready and turret_coverage < 1.0
+        if opening:
+            role_order = (
+                ("BUILD_LINE", "BUILD_SCHEMATIC", "HARVEST_RESOURCE"),
+                ("BUILD_SCHEMATIC", "BUILD_LINE", "HARVEST_RESOURCE"),
+                ("HARVEST_RESOURCE", "BUILD_LINE", "BUILD_SCHEMATIC"),
+            )
+            try:
+                rank = role_order[agent_id].index(task_type)
+            except (IndexError, ValueError):
+                rank = 3
+            return 900 - rank * 120
+
+        time_to_wave = int(team.get("time_to_next_wave", 0))
+        defend_lead = int(team.get("defend_lead_ticks", 0))
+        broken = int(team.get("broken_block_count", 0))
+        priorities = {
+            "REPAIR_REGION": 920 if broken > 0 else 620,
+            "BUILD_LINE": 900 if not line_ready else 500,
+            "BUILD_SCHEMATIC": 880 if turret_coverage < 1.0 else 640,
+            "SUPPLY_TURRET": 860 if ammo < 1.0 else 600,
+            "DEFEND_REGION": 840 if time_to_wave <= defend_lead else 580,
+            "HARVEST_RESOURCE": 720,
+            "DELIVER_RESOURCE": 700,
+        }
+        score = priorities.get(task_type, 400)
+        if task_type == "SUPPLY_TURRET" and agent_id == 2:
+            score += 40
+        if task_type == "DEFEND_REGION" and agent_id < 2:
+            score += 30
+        return score
+
+    @staticmethod
+    def _conflicts(candidates: tuple[dict[str, Any] | None, ...]) -> bool:
+        exclusive_ids: set[str] = set()
+        semantic_targets: set[tuple[str, str]] = set()
+        for candidate in candidates:
+            if candidate is None:
+                continue
+            task_id = str(candidate.get("task_id", ""))
+            semantic = (
+                str(candidate.get("task_type", "")),
+                str(candidate.get("target", "")),
+            )
+            if semantic in semantic_targets:
+                return True
+            semantic_targets.add(semantic)
+            if candidate.get("exclusive", False):
+                if task_id in exclusive_ids:
+                    return True
+                exclusive_ids.add(task_id)
+        return False
+
+    def actions(
+        self,
+        observations: list[dict[str, Any]],
+        action_masks: list[dict[str, Any]],
+        task_board: list[dict[str, Any]] | None = None,
+    ) -> list[dict[str, Any]]:
+        del task_board
+        if len(observations) != len(action_masks):
+            raise ValueError("observation/action-mask seat count mismatch")
+        if not observations:
+            return []
+
+        team = observations[0].get("team", {})
+        tick = int(team.get("tick", 0))
+        if tick < self._last_tick:
+            self.reset()
+        self._last_tick = tick
+        enemy_count = int(team.get("enemy_count", 0))
+
+        actions: list[dict[str, Any] | None] = [None] * len(observations)
+        allocatable: list[int] = []
+        options: list[list[dict[str, Any] | None]] = []
+        for agent_id, (observation, action_mask) in enumerate(
+            zip(observations, action_masks, strict=True)
+        ):
+            fixed = self._fixed_action(
+                agent_id, observation, action_mask, tick, enemy_count
+            )
+            if fixed is not None:
+                actions[agent_id] = fixed
+                continue
+            allocatable.append(agent_id)
+            options.append(self._candidates(observation, action_mask) + [None])
+
+        best: tuple[dict[str, Any] | None, ...] | None = None
+        best_key: tuple[Any, ...] | None = None
+        for allocation in itertools.product(*options):
+            if self._conflicts(allocation):
+                continue
+            selected = [candidate for candidate in allocation if candidate is not None]
+            phase_total = sum(
+                self._phase_score(agent_id, candidate, team)
+                for agent_id, candidate in zip(
+                    allocatable, allocation, strict=True
+                )
+                if candidate is not None
+            )
+            utility_total = sum(float(candidate.get("utility", 0.0)) for candidate in selected)
+            stable_indices = tuple(
+                -int(candidate["index"]) if candidate is not None else -10_000
+                for candidate in allocation
+            )
+            key = (len(selected), phase_total, utility_total, stable_indices)
+            if best_key is None or key > best_key:
+                best = allocation
+                best_key = key
+
+        if best is None:
+            best = tuple(None for _ in allocatable)
+        for agent_id, candidate in zip(allocatable, best, strict=True):
+            actions[agent_id] = (
+                self._simple(
+                    agent_id,
+                    "SELECT_CANDIDATE_TASK",
+                    candidate_index=int(candidate["index"]),
+                )
+                if candidate is not None
+                else self._simple(agent_id, "WAIT")
+            )
+        return [action for action in actions if action is not None]
 
 
 class RoleAssignmentPolicy:

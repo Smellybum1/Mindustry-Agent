@@ -1544,8 +1544,11 @@ queue.
    `1d8eb99978ebf148...`. ADR-0091 and protocol SHA
    `4c1981c4ced305a2...` now prospectively freeze a deterministic atomic team
    allocator over only the ordinary authoritative candidate/mask surface.
-   Implement it and its focused tests, commit that boundary, then run the
-   frozen two-JVM/terminal-reset public gate. Passing requires all actions
+   Its deterministic allocator, fail-closed runner, command surface, and
+   focused tests are implemented locally; the 456-test Python suite, pinned
+   Java/custom-module suite, smoke, determinism, and golden replay pass. Commit
+   that boundary, then run the frozen two-JVM/terminal-reset public gate.
+   Passing requires all actions
    accepted, zero cross-seat exclusive conflicts or nonordinary fallbacks,
    30/40 wins, 80% source-expert win retention, and 95% non-WAIT selection
    coverage. No v7 or restricted access is authorized yet.

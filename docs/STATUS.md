@@ -2479,7 +2479,12 @@ repository-evidence mapping used for the M6 audit is:
   two fresh JVMs and terminal reset, accept every action, reach at least 30/40
   public wins, retain at least 80% of the 36-win source expert, and achieve 95%
   non-WAIT selection coverage. Protocol SHA is `4c1981c4ced305a2...`; no
-  implementation or planner evaluation exists yet.
+  planner evaluation exists yet. The deterministic atomic allocator,
+  fail-closed two-JVM runner, command surface, and focused
+  conflict/authority/threshold tests are implemented locally. The full
+  456-test Python suite, pinned Java/custom-module suite, smoke, deterministic
+  replay, and 664-checkpoint golden are green. Commit this boundary before the
+  governed run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

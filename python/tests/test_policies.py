@@ -1,6 +1,7 @@
 import unittest
 
 from mindustry_agents.policies import (
+    CandidateNativePlanner,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -24,6 +25,134 @@ def observation(x=0.0, candidates=None, skill=None, team=None):
 
 
 class TestScriptedPolicies(unittest.TestCase):
+    @staticmethod
+    def planner_candidate(
+        index,
+        task_type,
+        *,
+        target=None,
+        utility=1.0,
+        exclusive=True,
+    ):
+        return {
+            "index": index,
+            "task_id": f"{task_type}:{target or index}",
+            "task_type": task_type,
+            "target": target or f"target-{index}",
+            "utility": utility,
+            "valid": True,
+            "exclusive": exclusive,
+        }
+
+    def test_candidate_native_planner_allocates_distinct_opening_roles(self):
+        candidates = [
+            self.planner_candidate(0, "HARVEST_RESOURCE", utility=2.0),
+            self.planner_candidate(1, "BUILD_LINE", utility=3.0),
+            self.planner_candidate(2, "BUILD_SCHEMATIC", utility=4.0),
+            self.planner_candidate(3, "WAIT", exclusive=False),
+        ]
+        team = {
+            "tick": 0,
+            "enemy_count": 0,
+            "line_operational": False,
+            "defense_turret_coverage": 0.0,
+        }
+        actions = CandidateNativePlanner().actions(
+            [observation(candidates=candidates, team=team) for _ in range(3)],
+            [{"candidate_task": [True] * 4} for _ in range(3)],
+        )
+        self.assertEqual(
+            [action["task_action"]["candidate_index"] for action in actions],
+            [1, 2, 0],
+        )
+
+    def test_candidate_native_planner_rejects_cross_seat_semantic_duplicates(self):
+        first = self.planner_candidate(
+            0, "SUPPLY_TURRET", target="tile (30, 20)", utility=5.0
+        )
+        duplicate = {
+            **first,
+            "index": 1,
+            "task_id": "different-id",
+            "utility": 4.0,
+        }
+        harvest = self.planner_candidate(2, "HARVEST_RESOURCE", utility=1.0)
+        team = {
+            "tick": 100,
+            "enemy_count": 2,
+            "defense_ammo_coverage": 0.2,
+        }
+        candidates = [first, duplicate, harvest]
+        actions = CandidateNativePlanner().actions(
+            [observation(candidates=candidates, team=team) for _ in range(2)],
+            [{"candidate_task": [True] * 3} for _ in range(2)],
+        )
+        selected = [
+            action["task_action"].get("candidate_index") for action in actions
+        ]
+        self.assertIn(2, selected)
+        self.assertEqual(sum(index in {0, 1} for index in selected), 1)
+
+    def test_candidate_native_planner_preserves_continue_and_preempts_for_wave(self):
+        planner = CandidateNativePlanner()
+        team = {"tick": 100, "enemy_count": 2}
+        actions = planner.actions(
+            [
+                observation(
+                    skill={"type": "DEFEND", "status": "RUNNING"}, team=team
+                ),
+                observation(skill={"type": "BUILD", "status": "RUNNING"}, team=team),
+            ],
+            [
+                {"continue_current_task": True, "abandon": True},
+                {"continue_current_task": True, "abandon": True},
+            ],
+        )
+        self.assertEqual(
+            actions[0]["task_action"], {"type": "CONTINUE_CURRENT_TASK"}
+        )
+        self.assertEqual(
+            actions[1]["task_action"],
+            {"type": "ABANDON", "reason": "wave_preempt"},
+        )
+
+    def test_candidate_native_planner_bounds_blocked_replans_and_resets(self):
+        planner = CandidateNativePlanner()
+        mask = {"continue_current_task": True, "abandon": True}
+        for tick in (10, 20, 30):
+            action = planner.actions(
+                [
+                    observation(
+                        skill={"status": "BLOCKED", "reason": "STUCK"},
+                        team={"tick": tick},
+                    )
+                ],
+                [mask],
+            )[0]
+            self.assertEqual(action["task_action"]["type"], "ABANDON")
+        bounded = planner.actions(
+            [
+                observation(
+                    skill={"status": "BLOCKED", "reason": "STUCK"},
+                    team={"tick": 40},
+                )
+            ],
+            [mask],
+        )[0]
+        self.assertEqual(
+            bounded["task_action"], {"type": "CONTINUE_CURRENT_TASK"}
+        )
+        reset = planner.actions(
+            [
+                observation(
+                    skill={"status": "BLOCKED", "reason": "STUCK"},
+                    team={"tick": 0},
+                )
+            ],
+            [mask],
+        )[0]
+        self.assertEqual(reset["task_action"]["type"], "ABANDON")
+
     def test_greedy_selects_highest_valid_utility_with_stable_tie_break(self):
         candidates = [
             {"index": 0, "task_type": "HARVEST_RESOURCE", "utility": 4.0},

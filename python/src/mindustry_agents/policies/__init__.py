@@ -1,6 +1,7 @@
 """Dependency-free scripted policies over the task-selection action surface."""
 
 from .scripted import (
+    CandidateNativePlanner,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -9,6 +10,7 @@ from .scripted import (
 )
 
 __all__ = [
+    "CandidateNativePlanner",
     "GreedyUtilityPolicy",
     "HelperCoordinator",
     "PureGreedyUtilityPolicy",
