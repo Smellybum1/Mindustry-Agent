@@ -74,6 +74,19 @@ frozen thresholds failed before replay, so direct legacy-expert distillation is
 closed. The recommended new supervision source is now a separately governed
 planner that itself acts through ordinary authoritative candidates and masks.
 
+## Candidate-native source result
+
+ADR-0112 accepts candidate-native planner v11 as a supervision source. Its
+prospectively frozen public gate passes at 32/40 wins, exact twin-JVM/reset
+replay, zero action defects, and 96.5548% non-WAIT coverage. Compact result SHA
+is `81ea8df1d7dcf21e...`; no confirmation or held-out data was accessed.
+
+ADR-0113 now freezes the first learned consumer as a separate behavioral-
+cloning warm start before any resumed PPO. Configuration/public-protocol SHA
+prefixes are `9fc15d1a0dd25645...` / `72ced8386fdbdb8b...`. Passing this stage
+can authorize only a separately precommitted IPPO successor whose sole
+initialization change is the reproduced warm-start checkpoint.
+
 ## Preserved boundaries
 
 External fixed stepping, one environment per JVM, simulation-thread ownership,

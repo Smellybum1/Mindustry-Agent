@@ -1,0 +1,31 @@
+{
+  "schema": "m9_candidate_native_distillation_public_protocol_v1",
+  "candidate_version": "m9-candidate-native-distill-v1",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "split": "dev",
+  "source_baseline": {
+    "policy": "candidate-native-planner-v11-single-defender",
+    "evidence": "configs/evaluation/m9-candidate-native-planner-v11-result.json",
+    "wins": 32,
+    "frozen_before_distillation": true
+  },
+  "construction_continuation": {
+    "minimum_candidate_wins": 30,
+    "maximum_mean_team_idle_fraction_exclusive": 0.25
+  },
+  "replica_policy": {
+    "replica_a_runs_full_budget": true,
+    "replica_b_authorized_only_after_replica_a_construction_passes": true,
+    "exact_full_run_and_selected_checkpoint_identity_required": true
+  },
+  "downstream_authority": {
+    "may_initialize_separately_precommitted_ippo_successor": true,
+    "may_promote": false,
+    "may_authorize_mappo": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_human_session": false
+  }
+}

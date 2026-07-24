@@ -117,6 +117,7 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0110](ADR-0110-reject-m9-candidate-native-planner-v10.md) | Reject M9 candidate-native planner v10 |
 | [0111](ADR-0111-precommit-m9-candidate-native-planner-v11.md) | Freeze M9 candidate-native planner v11 |
 | [0112](ADR-0112-accept-m9-candidate-native-planner-v11.md) | Accept M9 candidate-native planner v11 as a supervision source |
+| [0113](ADR-0113-precommit-m9-candidate-native-distillation-v1.md) | Freeze M9 candidate-native distillation v1 |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.

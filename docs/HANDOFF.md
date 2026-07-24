@@ -1602,6 +1602,10 @@ queue.
    exact across twin JVM/reset, with zero action defects and 96.5548% coverage.
    ADR-0112 accepts it as a candidate-native supervision source at compact SHA
    `81ea8df1d7dcf21e...`; it does not accept a learned policy or complete M9.
+   ADR-0113 freezes the first learned consumer as a separate 2,048-unique-root
+   behavioral-cloning warm start, config/protocol SHA prefixes
+   `9fc15d1a0dd25645...` / `72ced8386fdbdb8b...`. Implement and pass its exact
+   public-only gate before any resumed PPO.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1609,7 +1613,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0112` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0113` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

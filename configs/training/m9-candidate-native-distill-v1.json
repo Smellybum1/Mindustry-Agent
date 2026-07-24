@@ -1,0 +1,80 @@
+{
+  "schema": "m9_candidate_native_distillation_config_v1",
+  "candidate_version": "m9-candidate-native-distill-v1",
+  "source_policy": {
+    "name": "candidate-native-planner-v11-single-defender",
+    "implementation_commit": "07ec5dfa38",
+    "accepted_result": "configs/evaluation/m9-candidate-native-planner-v11-result.json",
+    "accepted_result_sha256": "81ea8df1d7dcf21ed945337dd23b93b804e4d187605282e6d98cffe4077695fa",
+    "authority": "ordinary_external_candidate_task_actions"
+  },
+  "runtime_contract": "atomic_all_seat_shared_recurrent_selector_v1",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "agent_count": 3,
+  "train_seed_set": "configs/evaluation/bootstrap-defense-v1-m9-train-diverse2048-v1.json",
+  "dev_seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "public_evaluation_protocol": "configs/evaluation/m9-candidate-native-distill-v1-public-protocol.json",
+  "confirmation_seed_set": null,
+  "held_out_seed_set": null,
+  "model_init_seed": 9601,
+  "shuffle_seed": 9613,
+  "torch_threads": 1,
+  "training_updates": 32,
+  "episodes_per_update": 64,
+  "learning_rate": 0.0001,
+  "adam_epsilon": 1e-8,
+  "epochs_per_update": 8,
+  "minibatch_size": 256,
+  "max_grad_norm": 0.5,
+  "training_root_schedule": {
+    "schema": "unique_root_per_episode_v1",
+    "root_count": 2048,
+    "reuse_count": 1,
+    "shuffle": "single_deterministic_full_schedule",
+    "shuffle_seed": 9613,
+    "updates": 32,
+    "episodes_per_update": 64
+  },
+  "distillation": {
+    "schema": "candidate_native_one_boundary_nll_v1",
+    "teacher_controls_environment": true,
+    "teacher_action_source": "candidate_native_planner_v11",
+    "transition_filter": "alive_and_no_forced_task_action_and_teacher_action_authoritatively_legal",
+    "forced_controls": "executed_but_excluded_from_actor_loss",
+    "loss": "mean_negative_log_probability_of_teacher_action",
+    "hidden_input": "current_model_private_hidden_at_teacher_boundary_detached",
+    "hidden_state_reset": "episode_reset_or_authoritative_seat_death",
+    "cross_agent_state": false,
+    "critic_loss": false,
+    "ppo_loss": false,
+    "entropy_loss": false,
+    "extra_rng": false
+  },
+  "model_architecture": {
+    "schema": "ippo_shared_recurrent_selector_v1",
+    "agent_count": 3,
+    "candidate_encoder": [37, 64, 64],
+    "current_scalar_encoder": [56, 64, 64],
+    "lagged_context_encoder": [104, 64, 64],
+    "role_embedding": [3, 8],
+    "recurrent_cell": [200, 64],
+    "select_head": [200, 64, 1],
+    "special_head": [136, 64, 2],
+    "critic": [200, 64, 1],
+    "activation": "Tanh",
+    "action_count": 10,
+    "hidden_state": "private_per_seat_zero_on_reset_or_death"
+  },
+  "checkpoint_selection": {
+    "schema": "m9_candidate_native_distill_public_quality_gate_v1",
+    "minimum_wins": 30,
+    "maximum_mean_team_idle_fraction_exclusive": 0.25,
+    "ranking": [
+      "wins_desc",
+      "mean_core_health_desc",
+      "mean_team_idle_fraction_asc",
+      "update_asc"
+    ]
+  }
+}

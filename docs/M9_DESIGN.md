@@ -279,6 +279,13 @@ pins, and dependency lock.
    direct shared-expert distillation. Compact result SHA is
    `1d8eb99978ebf148...`. A separately governed candidate-native planner is
    required before v7; no restricted access occurred.
+   **Candidate-native source accepted 2026-07-24:** ADR-0112 accepts planner
+   v11 at 32/40 public wins, exact twin-JVM/reset replay, zero action defects,
+   and 96.5548% coverage. It is a supervision source only. ADR-0113 freezes a
+   separate 2,048-root candidate-native behavioral-cloning warm start before
+   any resumed PPO. Configuration/public-protocol SHA prefixes are
+   `9fc15d1a0dd25645...` / `72ced8386fdbdb8b...`; implementation and the exact
+   public gate are next.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 

@@ -2622,6 +2622,11 @@ implemented; all 480 Python tests pass. V11 passes at 32/40, exact across twin
 JVM/reset, with zero action defects and 96.5548% coverage. ADR-0112 accepts it
 as a candidate-native supervision source at compact SHA
 `81ea8df1d7dcf21e...`; this does not accept a learned policy or complete M9.
+ADR-0113 prospectively freezes its first learned consumer as a separate
+2,048-unique-root behavioral-cloning warm start, with config/protocol SHA
+prefixes `9fc15d1a0dd25645...` / `72ced8386fdbdb8b...`. It must pass 30/40
+public wins and exact replicas before it can initialize a later precommitted
+IPPO successor; implementation is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
