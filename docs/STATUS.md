@@ -2601,8 +2601,12 @@ repository-evidence mapping used for the M6 audit is:
   state preceded the precommit. The fail-closed loaders,
   student-action/teacher-label collector, exact model+optimizer continuation,
   deterministic optimizer/checkpoint/replica path, preflight, commands, and
-  focused tests are implemented locally; all 495 Python tests pass. Commit
-  before the live preflight or Replica A.
+  focused tests are committed. The complete gate passes at implementation
+  commit `7ea5644444`: all 495 Python tests, pinned Java/custom-module checks,
+  full smoke, cross-process/reset determinism, and the 664-checkpoint golden
+  replay are green. The live student-state episode repeats exactly; preflight
+  result SHA is `ed370f03777c5280...`. Commit this evidence and rerun the
+  exact-commit preflight before Replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

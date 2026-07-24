@@ -2670,8 +2670,12 @@ replica rules remain exact. Config/protocol SHA prefixes are
 state preceded the precommit. The fail-closed source/config/protocol loaders,
 student-action/teacher-label collector, exact model+optimizer continuation,
 deterministic optimizer/checkpoint/replica path, preflight, commands, and
-focused tests are implemented locally; all 495 Python tests pass. Commit this
-boundary before the live preflight or Replica A.
+focused tests are committed. The complete gate passes at implementation commit
+`7ea5644444`: all 495 Python tests, pinned Java/custom-module checks, full
+smoke, cross-process/reset determinism, and the 664-checkpoint golden replay
+are green. The live student-state episode repeats exactly; preflight result SHA
+is `ed370f03777c5280...`. Commit this evidence, rerun the exact-commit
+preflight, then Replica A.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

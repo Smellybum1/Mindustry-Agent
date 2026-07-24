@@ -1640,8 +1640,12 @@ queue.
    `7fadf9ae9130775f...` / `548ba5fe1478c6cdf...`. Its fail-closed loaders,
    student-action/teacher-label collector, exact model+optimizer continuation,
    deterministic optimizer/checkpoint/replica path, preflight, commands, and
-   focused tests are implemented locally; all 495 Python tests pass. Commit
-   this boundary before the live preflight or Replica A.
+   focused tests are committed. The complete gate passes at implementation
+   commit `7ea5644444`: all 495 Python tests, pinned Java/custom-module checks,
+   full smoke, cross-process/reset determinism, and the 664-checkpoint golden
+   replay are green. The live student-state episode repeats exactly; preflight
+   result SHA is `ed370f03777c5280...`. Commit this evidence, rerun the
+   exact-commit preflight, then start Replica A in a clean output directory.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

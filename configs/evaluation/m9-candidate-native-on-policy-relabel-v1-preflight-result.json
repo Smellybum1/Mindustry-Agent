@@ -1,0 +1,37 @@
+{
+  "config_sha256": "7fadf9ae9130775fffebe52b86407dfeafaf47ea5e1383524818a6d0012d72d4",
+  "confirmation_or_held_out_access": false,
+  "diagnostic_result_sha256": "7909e6a2013258d288c5b951748947818f05188b355851271fed5bdfcdfdede9",
+  "implementation_commit": "7ea56444449f75a671b2ccf86c491961aa50fd70",
+  "live_student_state_probe": {
+    "core_health": 0.0,
+    "eligible_labels": 48,
+    "forced_controls": 3,
+    "outcome": "loss",
+    "ran": true,
+    "rejected_student_actions": 1,
+    "seed": 18000100001,
+    "student_teacher_matches": 46,
+    "terminal_reset_replay_equal": true,
+    "tick": 6976,
+    "trace_sha256": "a9c9d8874845aad878288eca33d00489af94e1c04437ade554e50ff5e4e00916"
+  },
+  "optimizer_probe": {
+    "checkpoint_content_sha256": "d969815f97d458dae371ffd831609ba4dda0e4dbb699cd0e01238050b5358677",
+    "metrics": {
+      "batches": 8.0,
+      "labels": 40.0,
+      "presentation_top1_accuracy": 0.125,
+      "presentations": 320.0,
+      "teacher_nll": 12.298055171966553
+    },
+    "model_state_sha256": "93cb540dd88c9fb53522174e1ac2373e800286e9ab3602b25adfffa568367729",
+    "optimizer_state_sha256": "8d60faa19f40d557e1906eb25d0e2466306dfe7b11a74940dd28e56115f675d8",
+    "replicas_equal": true
+  },
+  "passed": true,
+  "protocol_sha256": "548ba5fe1478c6cdfb40fc2c2c390a9af57f2cbd1e14d9fb9f6c620ffac38d31",
+  "schema": "m9_candidate_native_on_policy_relabel_preflight_v1",
+  "source_checkpoint_content_sha256": "14197b4d3583cf599917a98c2b1cbd5925ca7bc7b93be550edd4cade3a3f1fe9",
+  "source_result_sha256": "47ced62d5b7e3c15c980415bc3c05974bfacfd1ccbfd7e2af6c7f474486af590"
+}
