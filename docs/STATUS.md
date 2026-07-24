@@ -2555,7 +2555,10 @@ repository-evidence mapping used for the M6 audit is:
   precommits v11 branching from v9 with the sole active-DEFEND cap reduction
   from two to one, protocol SHA `d670ff4503cdc8e3...`. The exact v9-derived
   constructor, inheritance validation, focused v9/v11 comparison, and command
-  are implemented locally; all 480 Python tests pass. Commit before evaluation.
+  are implemented; all 480 Python tests pass. V11 passes at 32/40, exact across
+  twin JVM/reset, with zero action defects and 96.5548% coverage. ADR-0112
+  accepts it as a candidate-native supervision source at compact SHA
+  `81ea8df1d7dcf21e...`; this does not accept a learned policy or complete M9.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

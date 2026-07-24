@@ -2618,7 +2618,10 @@ candidate DEFEND entry increases exposure. ADR-0110 rejects v10 at compact SHA
 branching from v9 with the sole change of reducing the active DEFEND_REGION cap
 from two to one. Protocol SHA is `d670ff4503cdc8e3...`; the exact v9-derived
 constructor, inheritance validation, focused comparison, and command are
-implemented locally; all 480 Python tests pass. Commit before the gate.
+implemented; all 480 Python tests pass. V11 passes at 32/40, exact across twin
+JVM/reset, with zero action defects and 96.5548% coverage. ADR-0112 accepts it
+as a candidate-native supervision source at compact SHA
+`81ea8df1d7dcf21e...`; this does not accept a learned policy or complete M9.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
