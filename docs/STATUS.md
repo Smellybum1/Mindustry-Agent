@@ -2844,6 +2844,13 @@ repository-evidence mapping used for the M6 audit is:
   and the new group is empty. Commit this implementation before the complete
   exact-current-commit public gate; no candidate update or restricted access
   has occurred.
+  That complete gate passes at exact implementation commit `ad60609006`: 542
+  Python tests, pinned Java/custom-module checks, focused live plan replay,
+  smoke, 79-boundary cross-process/reset determinism, and the 664-checkpoint/
+  16,200-tick golden replay are green. Preflight result SHA prefix is
+  `db68338eec2430ed...`; no candidate optimizer update or restricted access
+  occurred. Commit this evidence and rerun the exact-current-commit gate before
+  Replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

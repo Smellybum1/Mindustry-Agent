@@ -1884,6 +1884,13 @@ queue.
    25 inherited Adam entries remain exact, and the new group is empty. Commit
    this boundary and run the complete exact-current-commit public gate before
    Replica A. No candidate optimizer update or restricted access has occurred.
+   The complete gate passes at exact implementation commit `ad60609006`: all
+   542 Python tests, pinned Java/custom-module checks, focused live plan
+   replay, smoke, 79-boundary cross-process/reset determinism, and the
+   664-checkpoint/16,200-tick golden replay are green. Preflight result SHA
+   prefix is `db68338eec2430ed...`; no candidate update or restricted access
+   occurred. Commit this evidence, rerun the exact gate at that commit, then
+   start Replica A in a clean output directory.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

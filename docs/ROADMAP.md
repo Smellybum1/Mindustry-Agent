@@ -2919,6 +2919,13 @@ four context boundaries; the source model remains unchanged, all 25 inherited
 Adam entries remain exact, and the new group is empty. Commit this
 implementation and pass the complete exact-current-commit public gate before
 Replica A; no candidate update or restricted access has occurred.
+The complete gate passes at exact implementation commit `ad60609006`: 542
+Python tests, pinned Java/custom-module checks, focused live plan replay,
+smoke, 79-boundary cross-process/reset determinism, and the 664-checkpoint/
+16,200-tick golden replay are green. Preflight result SHA prefix is
+`db68338eec2430ed...`; no candidate update or restricted access occurred.
+Commit this evidence, rerun the exact gate at that commit, then start Replica A
+in a clean output directory.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
