@@ -1,21 +1,16 @@
-"""Governed student-state teacher relabeling construction for M9."""
+"""Governed disagreement-weighted student-state continuation for M9."""
 
 from __future__ import annotations
 
 import argparse
-import copy
-import hashlib
 import json
-import subprocess
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 from statistics import fmean
 from typing import Any, Sequence
 
 import torch
 
-from mindustry_agents.policies import CandidateNativePlannerV11
 from mindustry_agents.process.launcher import (
     DEFAULT_PORT,
     LaunchConfig,
@@ -23,7 +18,6 @@ from mindustry_agents.process.launcher import (
     repo_root,
 )
 from mindustry_agents.training.candidate_distill import (
-    CONFIG_SHA256 as SOURCE_CONFIG_SHA256,
     DEV_MAXIMUM,
     DEV_MINIMUM,
     TRAIN_MAXIMUM,
@@ -33,17 +27,19 @@ from mindustry_agents.training.candidate_distill import (
     _evaluate_episode,
     _load_seed_set,
     _write_json,
-    distillation_update,
     load_distillation_config,
+)
+from mindustry_agents.training.candidate_on_policy_relabel import (
+    CONFIG_SHA256 as SOURCE_CHECKPOINT_CONFIG_SHA256,
+    SOURCE_CONFIG_RELATIVE as DISTILL_CONFIG_RELATIVE,
+    _git_commit,
+    _reproducibility_evidence,
+    _selection_key,
+    _student_episode,
 )
 from mindustry_agents.training.ippo import (
     IPPO_MODEL_ARCHITECTURE,
     SharedRecurrentSelector,
-    SharedSeatState,
-    _action_index,
-    canonical_teacher_bundle,
-    commit_all_seat_boundary,
-    decide_all_seats,
     model_state_digest,
 )
 from mindustry_agents.training.ippo_artifacts import (
@@ -57,16 +53,16 @@ from mindustry_agents.training.ippo_ppo import IPPOTransition, sha256_path
 
 
 CONFIG_SHA256 = (
-    "7fadf9ae9130775fffebe52b86407dfeafaf47ea5e1383524818a6d0012d72d4"
+    "c2401782578d2e8a3a3277fa8920d17fcee23f7cda89e92a9e1d09cfb166f459"
 )
 PROTOCOL_SHA256 = (
-    "548ba5fe1478c6cdfb40fc2c2c390a9af57f2cbd1e14d9fb9f6c620ffac38d31"
+    "a42b1cd24a78f67404868835642c4c4a77143865f0e101bea57f6d197b88cab3"
 )
 SOURCE_RESULT_SHA256 = (
-    "47ced62d5b7e3c15c980415bc3c05974bfacfd1ccbfd7e2af6c7f474486af590"
+    "ebea0b741abbf2b7e3d995af1f87d7528ddee08d94089db4f837f40c730e60ee"
 )
 DIAGNOSTIC_RESULT_SHA256 = (
-    "7909e6a2013258d288c5b951748947818f05188b355851271fed5bdfcdfdede9"
+    "959e55f140fce098ac9b51ed69f247408c516bbf63bcc510617ab93af2d6cb88"
 )
 TRAIN_SET_SHA256 = (
     "2e4d5b853ba9c8a6b568b107537756e257d3c19205af71c0445ea5ea730088c4"
@@ -75,60 +71,35 @@ DEV_SET_SHA256 = (
     "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83"
 )
 SOURCE_CHECKPOINT_FILE_SHA256 = (
-    "40bc070d91b1e37dbb58b360325dfde7b94b10aaec61dabcdb5570bf55dc5fed"
+    "cbfde7e932e718f49b6e80f79bfd2b0072fa2bb7fd1f04e4ca0d7da9ee8ed408"
 )
 SOURCE_CHECKPOINT_CONTENT_SHA256 = (
-    "14197b4d3583cf599917a98c2b1cbd5925ca7bc7b93be550edd4cade3a3f1fe9"
+    "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865"
 )
 SOURCE_MODEL_SHA256 = (
-    "c13e3858bd37c89ff5582a3e861c709808f6a3088e444fed8da5130362332c14"
+    "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1"
 )
 SOURCE_OPTIMIZER_SHA256 = (
-    "12e82a785787318df98ba7919f09a300e5372ae196017b3491a56db5dc5468ad"
+    "f3bdf93bf2dfae69842b87ca69f124c1bdda074b05422c02198530a5fdb687bc"
 )
 SOURCE_MANIFEST_SHA256 = (
-    "cd88deac884ee8513857e979d3eeea33e5d4ea925d220cdef455edb1b992c3c0"
+    "f34c50a024f05d6084a8661fb627fa8c3c5cd223dc45bd03273258877f489952"
 )
-SOURCE_MANIFEST_RELATIVE = (
-    "runs/m9-candidate-distill-a/candidate-distill-run.manifest.json"
-)
-SOURCE_CONFIG_RELATIVE = (
-    "configs/training/m9-candidate-native-distill-v1.json"
-)
+HARD_EXAMPLE_WEIGHT = 4.0
+ORDINARY_EXAMPLE_WEIGHT = 1.0
 
 
-@dataclass(frozen=True)
-class RelabelEpisode:
-    seed: int
-    outcome: str
-    tick: int
-    core_health: float
-    transitions: tuple[IPPOTransition, ...]
-    eligible_labels: int
-    forced_controls: int
-    student_teacher_matches: int
-    rejected_student_actions: int
-    hard_example_flags: tuple[bool, ...]
-    trace_sha256: str
-
-
-def _git_commit(root: Path) -> str:
-    return subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], cwd=root, text=True
-    ).strip()
-
-
-def load_on_policy_relabel_config(path: Path) -> dict[str, Any]:
-    """Load ADR-0117's exact continuation construction."""
+def load_hard_example_config(path: Path) -> dict[str, Any]:
+    """Load ADR-0123's immutable weighted continuation."""
 
     if sha256_path(path) != CONFIG_SHA256:
-        raise ValueError("M9 on-policy relabel config digest drifted")
+        raise ValueError("M9 hard-example relabel config digest drifted")
     config = json.loads(path.read_text(encoding="utf-8"))
     if (
         config.get("schema")
-        != "m9_candidate_native_on_policy_relabel_config_v1"
+        != "m9_candidate_native_hard_example_relabel_config_v1"
         or config.get("candidate_version")
-        != "m9-candidate-native-on-policy-relabel-v1"
+        != "m9-candidate-native-hard-example-relabel-v1"
         or config.get("model_architecture") != IPPO_MODEL_ARCHITECTURE
         or config.get("confirmation_seed_set") is not None
         or config.get("held_out_seed_set") is not None
@@ -138,9 +109,9 @@ def load_on_policy_relabel_config(path: Path) -> dict[str, Any]:
         or str(config.get("train_seed_set_sha256")) != TRAIN_SET_SHA256
         or str(config.get("dev_seed_set_sha256")) != DEV_SET_SHA256
     ):
-        raise ValueError("M9 on-policy relabel config contract drifted")
+        raise ValueError("M9 hard-example relabel config contract drifted")
     expected = {
-        "schema": "candidate_native_student_state_relabel_nll_v1",
+        "schema": "candidate_native_student_state_disagreement_weighted_nll_v1",
         "student_controls_environment": True,
         "student_action_mode": "deterministic_argmax",
         "teacher_labels_same_pre_action_student_visited_boundary": True,
@@ -152,50 +123,92 @@ def load_on_policy_relabel_config(path: Path) -> dict[str, Any]:
         "forced_controls": (
             "student_forced_action_executed_but_excluded_from_actor_loss"
         ),
-        "loss": "mean_negative_log_probability_of_teacher_action",
         "dataset": "current_update_student_visited_boundaries_only",
+        "disagreement_reference": (
+            "pre_update_deterministic_student_action_at_collected_boundary"
+        ),
+        "hard_example_condition": (
+            "student_action_index_differs_from_teacher_label"
+        ),
+        "hard_example_weight": HARD_EXAMPLE_WEIGHT,
+        "ordinary_example_weight": ORDINARY_EXAMPLE_WEIGHT,
+        "weight_assignment": (
+            "recorded_during_collection_and_not_recomputed_after_optimizer_steps"
+        ),
+        "loss": (
+            "sum_example_weight_times_teacher_nll_divided_by_"
+            "sum_example_weight_per_minibatch"
+        ),
         "hidden_input": (
             "current_student_private_hidden_at_boundary_detached"
         ),
         "hidden_state_reset": "episode_reset_or_authoritative_seat_death",
+        "target_identifiers_added": False,
+        "feature_schema_change": False,
+        "planner_change": False,
         "cross_agent_state": False,
         "critic_loss": False,
+        "reward_loss": False,
         "ppo_loss": False,
+        "mappo_loss": False,
         "entropy_loss": False,
         "extra_rng": False,
     }
-    if config.get("on_policy_relabeling") != expected:
-        raise ValueError("M9 on-policy relabel learning contract drifted")
+    if config.get("hard_example_relabeling") != expected:
+        raise ValueError("M9 hard-example relabel learning contract drifted")
     return config
 
 
-def _load_protocol(root: Path, config: dict[str, Any]) -> dict[str, Any]:
+def _load_protocol(
+    root: Path, config: dict[str, Any]
+) -> dict[str, Any]:
     path = root / str(config["public_evaluation_protocol"])
     if sha256_path(path) != PROTOCOL_SHA256:
-        raise ValueError("M9 on-policy relabel protocol digest drifted")
+        raise ValueError("M9 hard-example relabel protocol digest drifted")
     protocol = json.loads(path.read_text(encoding="utf-8"))
     authority = protocol.get("downstream_authority", {})
+    source = protocol.get("source_checkpoint", {})
+    replica = protocol.get("replica_policy", {})
     if (
         protocol.get("schema")
-        != "m9_candidate_native_on_policy_relabel_public_protocol_v1"
+        != "m9_candidate_native_hard_example_relabel_public_protocol_v1"
+        or protocol.get("candidate_version") != config["candidate_version"]
         or protocol.get("seed_set") != config["dev_seed_set"]
         or protocol.get("seed_set_sha256") != DEV_SET_SHA256
+        or source.get("content_sha256")
+        != SOURCE_CHECKPOINT_CONTENT_SHA256
+        or source.get("model_state_sha256") != SOURCE_MODEL_SHA256
+        or source.get("optimizer_state_sha256")
+        != SOURCE_OPTIMIZER_SHA256
+        or source.get("selected_or_promoted") is not False
+        or source.get("repaired") is not False
         or protocol.get("source_diagnostic", {}).get("sha256")
         != DIAGNOSTIC_RESULT_SHA256
         or protocol.get("source_diagnostic", {}).get("accepted_signal")
-        != "closed_loop_shift_signal"
+        != "feature_distinguishable_ranking_signal"
+        or replica.get(
+            "replica_b_authorized_only_after_replica_a_construction_passes"
+        )
+        is not True
+        or replica.get(
+            "replica_b_prohibited_after_replica_a_construction_failure"
+        )
+        is not True
         or any(
             authority.get(key) is not False
             for key in (
+                "may_select_or_repair_source_checkpoint",
+                "may_change_planner",
+                "may_add_target_identifiers",
+                "may_use_reward_or_ppo_or_mappo",
                 "may_promote",
-                "may_authorize_mappo",
                 "may_access_confirmation",
                 "may_access_held_out",
                 "may_authorize_human_session",
             )
         )
     ):
-        raise ValueError("M9 on-policy relabel public authority drifted")
+        raise ValueError("M9 hard-example relabel public authority drifted")
     return protocol
 
 
@@ -206,27 +219,31 @@ def _load_source(
     result_path = root / str(source["source_result"])
     diagnostic_path = root / str(source["diagnostic_result"])
     checkpoint_path = root / str(source["path"])
-    manifest_path = root / SOURCE_MANIFEST_RELATIVE
+    manifest_path = root / str(source["source_manifest"])
     if (
         source.get("source_result_sha256") != SOURCE_RESULT_SHA256
         or sha256_path(result_path) != SOURCE_RESULT_SHA256
         or source.get("diagnostic_result_sha256")
         != DIAGNOSTIC_RESULT_SHA256
         or sha256_path(diagnostic_path) != DIAGNOSTIC_RESULT_SHA256
+        or source.get("source_manifest_sha256")
+        != SOURCE_MANIFEST_SHA256
+        or sha256_path(manifest_path) != SOURCE_MANIFEST_SHA256
         or source.get("file_sha256") != SOURCE_CHECKPOINT_FILE_SHA256
         or sha256_path(checkpoint_path) != SOURCE_CHECKPOINT_FILE_SHA256
-        or sha256_path(manifest_path) != SOURCE_MANIFEST_SHA256
         or source.get("content_sha256")
         != SOURCE_CHECKPOINT_CONTENT_SHA256
         or source.get("model_state_sha256") != SOURCE_MODEL_SHA256
         or source.get("optimizer_state_sha256")
         != SOURCE_OPTIMIZER_SHA256
-        or source.get("source_config_sha256") != SOURCE_CONFIG_SHA256
+        or source.get("source_config_sha256")
+        != SOURCE_CHECKPOINT_CONFIG_SHA256
         or source.get("load_model_state") is not True
         or source.get("load_optimizer_state") is not True
         or source.get("selected_or_promoted") is not False
+        or source.get("repaired") is not False
     ):
-        raise ValueError("M9 on-policy relabel source identity drifted")
+        raise ValueError("M9 hard-example relabel source identity drifted")
     result = json.loads(result_path.read_text(encoding="utf-8"))
     diagnostic = json.loads(diagnostic_path.read_text(encoding="utf-8"))
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -236,19 +253,17 @@ def _load_source(
         or result.get("replica_b_authorized") is not False
         or result.get("confirmation_or_held_out_access") is not False
         or diagnostic.get("classification", {}).get(
-            "closed_loop_shift_signal"
+            "feature_distinguishable_ranking_signal"
         )
         is not True
-        or diagnostic.get("classification", {}).get(
-            "successor_training_authorized"
-        )
-        is not False
+        or diagnostic.get("successor_training_authorized") is not False
         or diagnostic.get("confirmation_or_held_out_access") is not False
         or manifest.get("construction_passed") is not False
+        or manifest.get("selected_checkpoint") is not None
         or manifest.get("canonical_run_sha256")
         != result["replica_a"]["canonical_run_sha256"]
     ):
-        raise ValueError("M9 on-policy relabel source evidence is invalid")
+        raise ValueError("M9 hard-example relabel source evidence is invalid")
     return result, diagnostic, checkpoint_path
 
 
@@ -261,7 +276,7 @@ def _source_model_and_optimizer(
     dict[str, Any],
 ]:
     source_config = load_distillation_config(
-        root / SOURCE_CONFIG_RELATIVE
+        root / DISTILL_CONFIG_RELATIVE
     )
     model = SharedRecurrentSelector(int(source_config["model_init_seed"]))
     optimizer = torch.optim.Adam(
@@ -273,184 +288,145 @@ def _source_model_and_optimizer(
         root / str(config["source_checkpoint"]["path"]),
         model,
         optimizer,
-        expected_config_sha256=SOURCE_CONFIG_SHA256,
+        expected_config_sha256=SOURCE_CHECKPOINT_CONFIG_SHA256,
     )
     if (
-        int(payload["update"]) != 32
+        int(payload["update"]) != 64
         or payload["checkpoint_content_sha256"]
         != SOURCE_CHECKPOINT_CONTENT_SHA256
         or payload["model_state_sha256"] != SOURCE_MODEL_SHA256
         or payload["optimizer_state_sha256"] != SOURCE_OPTIMIZER_SHA256
         or model_state_digest(model) != SOURCE_MODEL_SHA256
     ):
-        raise ValueError("M9 on-policy relabel loaded source drifted")
+        raise ValueError("M9 hard-example relabel loaded source drifted")
     return model, optimizer, payload
 
 
-def teacher_labels(
-    decision: Any,
-    teacher: list[dict[str, Any]],
-    observations: list[dict[str, Any]],
-) -> dict[int, int]:
-    """Return only actor-authoritative planner labels at this boundary."""
-
-    canonical = canonical_teacher_bundle(teacher, observations)
-    labels = {}
-    for agent_id in decision.evaluation_order:
-        features = decision.features[agent_id]
-        action = canonical[agent_id]
-        action_type = action.get("task_action", {}).get("type")
-        label = _action_index(
-            action, observations[agent_id].get("task_candidates", [])
-        )
-        if (
-            features.forced_task_action is None
-            and action_type
-            in {
-                "SELECT_CANDIDATE_TASK",
-                "CONTINUE_CURRENT_TASK",
-                "WAIT",
-            }
-            and bool(features.action_mask[label])
-        ):
-            labels[agent_id] = label
-    return labels
-
-
-def _student_episode(
-    env: RlServerProcess,
+def weighted_distillation_update(
     model: SharedRecurrentSelector,
+    optimizer: torch.optim.Optimizer,
+    transitions: Sequence[IPPOTransition],
+    hard_example_flags: Sequence[bool],
     config: dict[str, Any],
-    *,
-    seed: int,
-) -> RelabelEpisode:
-    reset = env.reset(
-        seed,
-        scenario_id=str(config["scenario_id"]),
-        scenario_version=int(config["scenario_version"]),
-        agent_count=3,
-    )
-    planner = CandidateNativePlannerV11()
-    state = SharedSeatState.fresh()
-    observations = reset.initial_observations
-    masks = reset.action_masks
-    metadata = reset.metadata
-    board: list[dict[str, Any]] = []
-    reasons: list[str] = []
-    tick = reset.tick
-    outcome = reset.outcome
-    transitions: list[IPPOTransition] = []
-    forced = 0
-    matches = 0
-    rejected = 0
-    hard_examples: list[bool] = []
-    trace: list[dict[str, Any]] = []
+    generator: torch.Generator,
+) -> dict[str, float]:
+    """Apply ADR-0123's normalized disagreement-weighted teacher NLL."""
 
-    while outcome == "running" and tick < int(metadata["tick_cap"]):
-        teacher = planner.actions(observations, masks, board)
-        decision = decide_all_seats(
-            model,
-            state,
-            observations,
-            masks,
-            metadata,
-            task_board=board,
-            boundary_reasons=reasons,
-            evaluation=True,
-        )
-        labels = teacher_labels(decision, teacher, observations)
-        forced += len(decision.evaluation_order) - len(labels)
-        response = env.step(
-            reset.episode_id,
-            expected_tick=tick,
-            ticks_to_advance=max(1, int(metadata["tick_cap"]) - tick),
-            agent_actions=decision.agent_actions,
-            stop_on_decision_event=True,
-        )
-        rejected += sum(
-            not result.get("accepted", False)
-            for result in response.action_results
-        )
-        commit_all_seat_boundary(
-            state,
-            decision,
-            response.action_results,
-            observations,
-            tick=tick,
-        )
-        advanced = int(
-            response.decision_boundary.get(
-                "advanced_ticks", response.tick - tick
+    if not transitions:
+        raise ValueError("M9 hard-example relabel update has no labels")
+    if len(transitions) != len(hard_example_flags):
+        raise ValueError("M9 hard-example relabel weights are misaligned")
+    learning = config["hard_example_relabeling"]
+    hard_weight = float(learning["hard_example_weight"])
+    ordinary_weight = float(learning["ordinary_example_weight"])
+    if hard_weight != HARD_EXAMPLE_WEIGHT or ordinary_weight != 1.0:
+        raise ValueError("M9 hard-example relabel weights drifted")
+    candidates = torch.stack([item.candidates for item in transitions])
+    scalars = torch.stack([item.scalars for item in transitions])
+    present = torch.stack([item.candidate_present for item in transitions])
+    masks = torch.stack([item.action_mask for item in transitions])
+    hidden = torch.stack([item.hidden_input for item in transitions]).detach()
+    agent_ids = torch.tensor(
+        [item.agent_id for item in transitions], dtype=torch.long
+    )
+    actions = torch.tensor(
+        [item.action for item in transitions], dtype=torch.long
+    )
+    hard = torch.tensor(hard_example_flags, dtype=torch.bool)
+    weights = torch.where(
+        hard,
+        torch.tensor(hard_weight, dtype=torch.float32),
+        torch.tensor(ordinary_weight, dtype=torch.float32),
+    )
+    if not bool(
+        masks[torch.arange(len(transitions)), actions].all().item()
+    ):
+        raise ValueError("M9 hard-example relabel label is outside its mask")
+    batch_size = int(config["minibatch_size"])
+    weighted_losses = 0.0
+    unweighted_losses = 0.0
+    batches = 0
+    correct = 0
+    hard_correct = 0
+    ordinary_correct = 0
+    presentations = 0
+    hard_presentations = 0
+    ordinary_presentations = 0
+    weighted_presentations = 0.0
+    for _ in range(int(config["epochs_per_update"])):
+        order = torch.randperm(len(transitions), generator=generator)
+        for start in range(0, len(transitions), batch_size):
+            index = order[start : start + batch_size]
+            _, logits, _, _ = model(
+                candidates[index],
+                scalars[index],
+                present[index],
+                masks[index],
+                agent_ids[index],
+                hidden[index],
             )
-        )
-        done = response.outcome != "running"
-        for agent_id, label in labels.items():
-            features = decision.features[agent_id]
-            matches_label = decision.action_indices[agent_id] == label
-            matches += matches_label
-            hard_examples.append(not matches_label)
-            transitions.append(
-                IPPOTransition(
-                    agent_id=agent_id,
-                    candidates=torch.tensor(
-                        features.candidates, dtype=torch.float32
-                    ),
-                    scalars=torch.tensor(
-                        features.scalars, dtype=torch.float32
-                    ),
-                    candidate_present=torch.tensor(
-                        features.candidate_present, dtype=torch.bool
-                    ),
-                    action_mask=torch.tensor(
-                        features.action_mask, dtype=torch.bool
-                    ),
-                    hidden_input=decision.hidden_inputs[agent_id],
-                    action=label,
-                    old_log_prob=0.0,
-                    old_value=decision.old_values[agent_id],
-                    team_reward=0.0,
-                    individual_reward=0.0,
-                    advanced_ticks=advanced,
-                    done=done,
-                    policy_loss_mask=True,
-                    recurrent_reset=decision.recurrent_resets[agent_id],
+            log_probabilities = torch.log_softmax(logits, dim=-1)
+            nll = -log_probabilities.gather(
+                1, actions[index, None]
+            ).squeeze(1)
+            batch_weights = weights[index]
+            weight_sum = batch_weights.sum()
+            if float(weight_sum.item()) <= 0.0:
+                raise ValueError(
+                    "M9 hard-example relabel batch has no weight"
                 )
+            loss = (batch_weights * nll).sum() / weight_sum
+            optimizer.zero_grad(set_to_none=True)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(
+                model.parameters(), float(config["max_grad_norm"])
             )
-        trace.append(
-            {
-                "tick": tick,
-                "next_tick": response.tick,
-                "student_actions": decision.agent_actions,
-                "teacher_actions": canonical_teacher_bundle(
-                    teacher, observations
-                ),
-                "action_results": response.action_results,
-                "state_hash": response.state_hash,
-                "outcome": response.outcome,
-            }
-        )
-        observations = response.observations
-        masks = response.action_masks
-        board = response.task_board
-        reasons = list(response.decision_boundary.get("reasons", []))
-        tick = response.tick
-        outcome = response.outcome
-
-    if outcome == "running" or not transitions:
-        raise RuntimeError("M9 on-policy relabel episode was incomplete")
-    return RelabelEpisode(
-        seed=seed,
-        outcome=outcome,
-        tick=tick,
-        core_health=float(observations[0]["team"]["core_health"]),
-        transitions=tuple(transitions),
-        eligible_labels=len(transitions),
-        forced_controls=forced,
-        student_teacher_matches=matches,
-        rejected_student_actions=rejected,
-        hard_example_flags=tuple(hard_examples),
-        trace_sha256=_canonical_sha256(trace),
-    )
+            optimizer.step()
+            predicted = torch.argmax(logits, dim=-1)
+            correct_mask = predicted == actions[index]
+            hard_batch = hard[index]
+            ordinary_batch = ~hard_batch
+            weighted_losses += float(loss.item())
+            unweighted_losses += float(nll.mean().item())
+            batches += 1
+            correct += int(correct_mask.sum().item())
+            hard_correct += int(
+                (correct_mask & hard_batch).sum().item()
+            )
+            ordinary_correct += int(
+                (correct_mask & ordinary_batch).sum().item()
+            )
+            presentations += len(index)
+            hard_presentations += int(hard_batch.sum().item())
+            ordinary_presentations += int(ordinary_batch.sum().item())
+            weighted_presentations += float(weight_sum.item())
+    hard_labels = int(hard.sum().item())
+    ordinary_labels = len(transitions) - hard_labels
+    total_weight = float(weights.sum().item())
+    return {
+        "teacher_nll": weighted_losses / max(1, batches),
+        "weighted_teacher_nll": weighted_losses / max(1, batches),
+        "unweighted_teacher_nll": unweighted_losses / max(1, batches),
+        "batches": float(batches),
+        "labels": float(len(transitions)),
+        "hard_example_labels": float(hard_labels),
+        "ordinary_example_labels": float(ordinary_labels),
+        "total_example_weight": total_weight,
+        "hard_example_weight_fraction": (
+            hard_labels * hard_weight / total_weight
+        ),
+        "presentations": float(presentations),
+        "hard_example_presentations": float(hard_presentations),
+        "ordinary_example_presentations": float(ordinary_presentations),
+        "weighted_presentations": weighted_presentations,
+        "presentation_top1_accuracy": correct / max(1, presentations),
+        "hard_example_presentation_top1_accuracy": (
+            hard_correct / max(1, hard_presentations)
+        ),
+        "ordinary_presentation_top1_accuracy": (
+            ordinary_correct / max(1, ordinary_presentations)
+        ),
+    }
 
 
 def _aggregate(episodes: Sequence[dict[str, Any]]) -> dict[str, Any]:
@@ -466,42 +442,23 @@ def _aggregate(episodes: Sequence[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _selection_key(row: dict[str, Any]) -> tuple[float, ...]:
-    return (
-        float(row["wins"]),
-        float(row["mean_core_health"]),
-        -float(row["mean_team_idle_fraction"]),
-        -float(row["continuation_update"]),
-    )
-
-
 def validate_preflight(
     path: Path, root: Path, config: dict[str, Any]
 ) -> dict[str, Any]:
     result = json.loads(path.read_text(encoding="utf-8"))
     if (
         result.get("schema")
-        != "m9_candidate_native_on_policy_relabel_preflight_v1"
+        != "m9_candidate_native_hard_example_relabel_preflight_v1"
         or result.get("passed") is not True
         or result.get("implementation_commit") != _git_commit(root)
         or result.get("config_sha256") != CONFIG_SHA256
         or result.get("protocol_sha256") != PROTOCOL_SHA256
+        or result.get("source_checkpoint_content_sha256")
+        != SOURCE_CHECKPOINT_CONTENT_SHA256
         or result.get("confirmation_or_held_out_access") is not False
     ):
-        raise ValueError("M9 on-policy relabel preflight is invalid")
+        raise ValueError("M9 hard-example relabel preflight is invalid")
     return result
-
-
-def _reproducibility_evidence(
-    manifest: dict[str, Any],
-) -> dict[str, Any]:
-    evidence = copy.deepcopy(manifest)
-    evidence.pop("preflight_sha256", None)
-    evidence.pop("canonical_run_sha256", None)
-    selected = evidence.get("selected_checkpoint")
-    if selected is not None:
-        selected.pop("path", None)
-    return evidence
 
 
 def train(
@@ -512,10 +469,10 @@ def train(
     java: str,
     port: int,
 ) -> dict[str, Any]:
-    """Run one non-resumable ADR-0117 continuation replica."""
+    """Run one non-resumable ADR-0123 continuation replica."""
 
     root = repo_root()
-    config = load_on_policy_relabel_config(config_path)
+    config = load_hard_example_config(config_path)
     _load_protocol(root, config)
     source_result, diagnostic, _ = _load_source(root, config)
     preflight = validate_preflight(preflight_path, root, config)
@@ -540,9 +497,11 @@ def train(
         sha256_path(train_path) != TRAIN_SET_SHA256
         or sha256_path(dev_path) != DEV_SET_SHA256
     ):
-        raise ValueError("M9 on-policy relabel seed-set digest drifted")
+        raise ValueError("M9 hard-example relabel seed-set digest drifted")
     if output_dir.exists() and any(output_dir.iterdir()):
-        raise ValueError("M9 on-policy relabel output directory is not empty")
+        raise ValueError(
+            "M9 hard-example relabel output directory is not empty"
+        )
     output_dir.mkdir(parents=True, exist_ok=True)
     schedule = diverse_training_seed_schedule(
         train_set["seeds"], shuffle_seed=int(config["shuffle_seed"])
@@ -568,7 +527,7 @@ def train(
             log_name="rl-server",
         )
     ) as env:
-        env.handshake("m9-candidate-native-on-policy-relabel-v1")
+        env.handshake("m9-candidate-native-hard-example-relabel-v1")
         for continuation_update in range(
             1, int(config["continuation_updates"]) + 1
         ):
@@ -586,7 +545,7 @@ def train(
                 )
                 if index % 8 == 0:
                     print(
-                        "M9 RELABEL TRAIN "
+                        "M9 HARD-EXAMPLE TRAIN "
                         f"update={continuation_update}/32 "
                         f"episode={index}/64",
                         flush=True,
@@ -596,13 +555,23 @@ def train(
                 for episode in episodes
                 for transition in episode.transitions
             ]
+            hard_examples = [
+                flag
+                for episode in episodes
+                for flag in episode.hard_example_flags
+            ]
             model.train()
-            metrics = distillation_update(
-                model, optimizer, labels, config, generator
+            metrics = weighted_distillation_update(
+                model,
+                optimizer,
+                labels,
+                hard_examples,
+                config,
+                generator,
             )
             update_row = {
                 "continuation_update": continuation_update,
-                "lineage_update": 32 + continuation_update,
+                "lineage_update": 64 + continuation_update,
                 **metrics,
                 "student_wins": sum(
                     episode.outcome == "win" for episode in episodes
@@ -618,15 +587,17 @@ def train(
                     episode.rejected_student_actions
                     for episode in episodes
                 ),
-                "student_trace_digest": _canonical_sha256(
-                    [episode.trace_sha256 for episode in episodes]
+                "student_trace_digest": (
+                    _canonical_sha256(
+                        [episode.trace_sha256 for episode in episodes]
+                    )
                 ),
             }
             updates.append(update_row)
-            lineage_update = 32 + continuation_update
+            lineage_update = 64 + continuation_update
             checkpoint_path = (
                 output_dir
-                / f"candidate-on-policy-relabel-update-{lineage_update}.pt"
+                / f"candidate-hard-example-relabel-update-{lineage_update}.pt"
             )
             checkpoint = save_ippo_checkpoint(
                 checkpoint_path,
@@ -673,7 +644,7 @@ def train(
                 output_dir / "progress.json",
                 {
                     "schema": (
-                        "m9_candidate_native_on_policy_relabel_progress_v1"
+                        "m9_candidate_native_hard_example_relabel_progress_v1"
                     ),
                     "continuation_update": continuation_update,
                     "train_episodes": continuation_update * 64,
@@ -682,7 +653,7 @@ def train(
                 },
             )
             print(
-                "M9 RELABEL DEV "
+                "M9 HARD-EXAMPLE DEV "
                 f"update={continuation_update}/32 "
                 f"wins={row['wins']}/40 "
                 f"idle={row['mean_team_idle_fraction']:.6f} "
@@ -699,7 +670,7 @@ def train(
         else None
     )
     manifest: dict[str, Any] = {
-        "schema": "m9_candidate_native_on_policy_relabel_run_v1",
+        "schema": "m9_candidate_native_hard_example_relabel_run_v1",
         "implementation_commit": _git_commit(root),
         "config_sha256": CONFIG_SHA256,
         "protocol_sha256": PROTOCOL_SHA256,
@@ -713,6 +684,7 @@ def train(
             "model_state_sha256": SOURCE_MODEL_SHA256,
             "optimizer_state_sha256": SOURCE_OPTIMIZER_SHA256,
             "selected_or_promoted": False,
+            "repaired": False,
         },
         "source_result": source_result,
         "source_diagnostic": diagnostic,
@@ -759,7 +731,7 @@ def train(
                     build_if_missing=False,
                 )
             ) as replay_env:
-                replay_env.handshake("m9-relabel-checkpoint-replay")
+                replay_env.handshake("m9-hard-example-checkpoint-replay")
                 replay_summaries.append(
                     _evaluate_episode(
                         replay_env,
@@ -769,7 +741,9 @@ def train(
                     )
                 )
         if replay_summaries[0] != replay_summaries[1]:
-            raise RuntimeError("M9 relabel checkpoint replay diverged")
+            raise RuntimeError(
+                "M9 hard-example relabel checkpoint replay diverged"
+            )
         manifest["deterministic_checkpoint_verification"] = {
             "fresh_runs": 2,
             "seed": dev_seeds[0],
@@ -780,13 +754,15 @@ def train(
         _reproducibility_evidence(manifest)
     )
     _write_json(
-        output_dir / "candidate-on-policy-relabel-run.manifest.json",
+        output_dir / "candidate-hard-example-relabel-run.manifest.json",
         manifest,
     )
     _write_json(
         output_dir / "progress.json",
         {
-            "schema": "m9_candidate_native_on_policy_relabel_progress_v1",
+            "schema": (
+                "m9_candidate_native_hard_example_relabel_progress_v1"
+            ),
             "continuation_update": 32,
             "train_episodes": 2048,
             "complete": True,
@@ -810,15 +786,17 @@ def compare_replicas(
     ]
     evidence = [_reproducibility_evidence(item) for item in documents]
     if evidence[0] != evidence[1]:
-        raise RuntimeError("M9 on-policy relabel replicas diverged")
+        raise RuntimeError("M9 hard-example relabel replicas diverged")
     for document, canonical in zip(documents, evidence, strict=True):
         if document.get("canonical_run_sha256") != _canonical_sha256(
             canonical
         ):
-            raise ValueError("M9 on-policy relabel run digest is invalid")
+            raise ValueError(
+                "M9 hard-example relabel run digest is invalid"
+            )
     selected = [item.get("selected_checkpoint") for item in documents]
     if (selected[0] is None) != (selected[1] is None):
-        raise RuntimeError("M9 on-policy relabel selection diverged")
+        raise RuntimeError("M9 hard-example relabel selection diverged")
     if selected[0] is not None:
         for manifest, checkpoint in zip(
             (first, second), selected, strict=True
@@ -826,16 +804,20 @@ def compare_replicas(
             path = repo_root() / checkpoint["path"]
             if sha256_path(path) != checkpoint["file_sha256"]:
                 raise ValueError(
-                    f"M9 relabel checkpoint integrity failed: {manifest}"
+                    "M9 hard-example checkpoint integrity failed: "
+                    f"{manifest}"
                 )
         if (
             selected[0]["checkpoint_content_sha256"]
             != selected[1]["checkpoint_content_sha256"]
         ):
-            raise RuntimeError("M9 relabel checkpoint content diverged")
+            raise RuntimeError(
+                "M9 hard-example checkpoint content diverged"
+            )
     result = {
         "schema": (
-            "m9_candidate_native_on_policy_relabel_replica_comparison_v1"
+            "m9_candidate_native_hard_example_relabel_"
+            "replica_comparison_v1"
         ),
         "construction_passed": bool(
             documents[0].get("construction_passed")
@@ -861,7 +843,7 @@ def main(argv: list[str] | None = None) -> int:
         "--config",
         type=Path,
         default=root
-        / "configs/training/m9-candidate-native-on-policy-relabel-v1.json",
+        / "configs/training/m9-candidate-native-hard-example-relabel-v1.json",
     )
     parser.add_argument("--output-dir", type=Path)
     parser.add_argument("--preflight", type=Path)
@@ -877,7 +859,7 @@ def main(argv: list[str] | None = None) -> int:
                 output=args.comparison_output,
             )
             print(
-                "M9 RELABEL REPLICAS OK "
+                "M9 HARD-EXAMPLE REPLICAS OK "
                 f"construction={result['construction_passed']}"
             )
             return 0 if result["construction_passed"] else 2
@@ -891,10 +873,10 @@ def main(argv: list[str] | None = None) -> int:
             port=args.port,
         )
     except Exception as error:
-        print(f"M9 RELABEL FAIL: {error}", file=sys.stderr)
+        print(f"M9 HARD-EXAMPLE FAIL: {error}", file=sys.stderr)
         return 1
     print(
-        "M9 RELABEL COMPLETE "
+        "M9 HARD-EXAMPLE COMPLETE "
         f"construction={manifest['construction_passed']} "
         f"selected={manifest.get('selected_checkpoint', {}).get('update')}"
     )

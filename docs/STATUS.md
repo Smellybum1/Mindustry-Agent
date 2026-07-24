@@ -2656,7 +2656,15 @@ repository-evidence mapping used for the M6 audit is:
   masks, model, optimizer, budget, deterministic control, 30/40 floor, and
   conditional replica rule remain exact. Config/protocol SHA prefixes are
   `c2401782578d2e8a...` / `a42b1cd24a78f674...`. No candidate model state or
-  restricted access preceded the precommit.
+  restricted access preceded the precommit. The fail-closed loaders, aligned
+  collection-time disagreement flags, normalized weighted optimizer and
+  telemetry, checkpoint/manifest/replica path, preflight, commands, and
+  focused tests are implemented locally while the existing relabel command
+  remains compatible. All 509 Python tests pass. A preliminary live
+  public-train probe repeats exactly with 70 labels and two hard examples; the
+  all-ordinary optimizer path is checkpoint-exact with unweighted NLL. Commit
+  this boundary and run the complete exact-current-commit gate before Replica
+  A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

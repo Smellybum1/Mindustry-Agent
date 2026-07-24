@@ -1695,7 +1695,15 @@ queue.
    replica policy remain exact. Config/protocol SHA prefixes are
    `c2401782578d2e8a...` / `a42b1cd24a78f674...`. No candidate model state or
    restricted access preceded the precommit. Implement the fail-closed
-   weighted continuation and complete exact-commit public preflight next.
+   weighted continuation and complete exact-commit public preflight next. The
+   fail-closed loaders, aligned collection-time disagreement flags, normalized
+   weighted optimizer and telemetry, checkpoint/manifest/replica path,
+   preflight, commands, and focused tests are now implemented locally while
+   the existing relabel command remains compatible. All 509 Python tests pass.
+   A preliminary live public-train probe repeats exactly with 70 labels and
+   two hard examples; the all-ordinary optimizer path is checkpoint-exact with
+   unweighted NLL. Commit this boundary and run the complete exact-current-
+   commit gate before Replica A.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

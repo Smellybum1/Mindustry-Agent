@@ -37,6 +37,8 @@ SCRIPTS := scripts
         m9-candidate-distill-agreement-diagnostic \
         m9-candidate-on-policy-relabel-check \
         train-m9-candidate-on-policy-relabel \
+        m9-candidate-hard-example-relabel-check \
+        train-m9-candidate-hard-example-relabel \
         m9-candidate-critical-disagreement-diagnostic \
         m9-candidate-semantic-target-diagnostic \
         m9-baseline train-m9-ippo train-m9-ippo-v2 train-m9-ippo-v3 \
@@ -105,6 +107,8 @@ help: ## List available targets
 	@echo "  m9-candidate-distill-agreement-diagnostic rejected warm-start agreement"
 	@echo "  m9-candidate-on-policy-relabel-check student-state relabel preflight"
 	@echo "  train-m9-candidate-on-policy-relabel governed relabel continuation"
+	@echo "  m9-candidate-hard-example-relabel-check weighted relabel preflight"
+	@echo "  train-m9-candidate-hard-example-relabel governed weighted continuation"
 	@echo "  m9-candidate-critical-disagreement-diagnostic rejected policy errors"
 	@echo "  m9-candidate-semantic-target-diagnostic candidate target errors"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
@@ -219,6 +223,12 @@ m9-candidate-on-policy-relabel-check: ## Validate student-state relabeling
 
 train-m9-candidate-on-policy-relabel: ## Train student-state relabel continuation
 	@bash $(SCRIPTS)/train-m9-candidate-on-policy-relabel.sh
+
+m9-candidate-hard-example-relabel-check: ## Validate weighted relabeling
+	@bash $(SCRIPTS)/m9-candidate-hard-example-relabel-check.sh
+
+train-m9-candidate-hard-example-relabel: ## Train weighted relabel continuation
+	@bash $(SCRIPTS)/train-m9-candidate-hard-example-relabel.sh
 
 m9-candidate-critical-disagreement-diagnostic: ## Localize rejected policy errors
 	@bash $(SCRIPTS)/m9-candidate-critical-disagreement-diagnostic.sh

@@ -2728,7 +2728,14 @@ public roots/schedule, planner, features, masks, model, optimizer, budget,
 deterministic student control, 30/40 floor, and conditional replica policy are
 unchanged. Config/protocol SHA prefixes are `c2401782578d2e8a...` /
 `a42b1cd24a78f674...`. No candidate model state or restricted access preceded
-the precommit.
+the precommit. The fail-closed source/config/protocol loaders, aligned
+collection-time disagreement flags, normalized weighted optimizer, telemetry,
+checkpoint/manifest/replica path, preflight, commands, and focused tests are
+implemented locally without changing the existing relabel command. All 509
+Python tests pass. A preliminary live public-train probe repeats exactly with
+70 labels and two hard examples; the all-ordinary optimizer path is
+checkpoint-exact with unweighted NLL. Commit this boundary, then run the
+complete exact-current-commit gate before Replica A.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
