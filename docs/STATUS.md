@@ -2498,7 +2498,9 @@ repository-evidence mapping used for the M6 audit is:
   build-line reservation from tick 0. Full/compact SHA prefixes are
   `7d1e734bdacae51c...` / `59d9993c9779abf0...`; ADR-0094 rejects v2.
   ADR-0095 precommits v3's sole task-board-aware active-build defer coordinate
-  at protocol SHA `fc8be8ce0bf63015...`; it is unimplemented.
+  at protocol SHA `fc8be8ce0bf63015...`. The filter, exact inheritance checks,
+  focused v1/v2/v3 tests, and command are local; all 460 Python tests pass.
+  Commit before evaluation.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

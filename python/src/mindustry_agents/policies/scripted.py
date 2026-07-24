@@ -394,7 +394,10 @@ class CandidateNativePlanner:
     MAX_REPLANS_PER_WINDOW = GreedyUtilityPolicy.MAX_REPLANS_PER_WINDOW
 
     def __init__(
-        self, *, maximum_build_schematic_selections: int | None = None
+        self,
+        *,
+        maximum_build_schematic_selections: int | None = None,
+        defer_schematics_during_active_build: bool = False,
     ) -> None:
         if (
             maximum_build_schematic_selections is not None
@@ -407,6 +410,9 @@ class CandidateNativePlanner:
         self._last_tick = -1
         self._maximum_build_schematic_selections = (
             maximum_build_schematic_selections
+        )
+        self._defer_schematics_during_active_build = (
+            defer_schematics_during_active_build
         )
 
     def reset(self) -> None:
@@ -583,7 +589,6 @@ class CandidateNativePlanner:
         action_masks: list[dict[str, Any]],
         task_board: list[dict[str, Any]] | None = None,
     ) -> list[dict[str, Any]]:
-        del task_board
         if len(observations) != len(action_masks):
             raise ValueError("observation/action-mask seat count mismatch")
         if not observations:
@@ -595,6 +600,11 @@ class CandidateNativePlanner:
             self.reset()
         self._last_tick = tick
         enemy_count = int(team.get("enemy_count", 0))
+        active_build = self._defer_schematics_during_active_build and any(
+            task.get("task_type") in {"BUILD_LINE", "BUILD_SCHEMATIC"}
+            and task.get("status") in {"CLAIMED", "RUNNING", "BLOCKED"}
+            for task in (task_board or [])
+        )
 
         actions: list[dict[str, Any] | None] = [None] * len(observations)
         allocatable: list[int] = []
@@ -609,7 +619,14 @@ class CandidateNativePlanner:
                 actions[agent_id] = fixed
                 continue
             allocatable.append(agent_id)
-            options.append(self._candidates(observation, action_mask) + [None])
+            candidates = self._candidates(observation, action_mask)
+            if active_build:
+                candidates = [
+                    candidate
+                    for candidate in candidates
+                    if candidate.get("task_type") != "BUILD_SCHEMATIC"
+                ]
+            options.append(candidates + [None])
 
         best: tuple[dict[str, Any] | None, ...] | None = None
         best_key: tuple[Any, ...] | None = None
@@ -654,6 +671,16 @@ class CandidateNativePlannerV2(CandidateNativePlanner):
 
     def __init__(self) -> None:
         super().__init__(maximum_build_schematic_selections=1)
+
+
+class CandidateNativePlannerV3(CandidateNativePlanner):
+    """V2-exact planner that defers schematics behind active build work."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            maximum_build_schematic_selections=1,
+            defer_schematics_during_active_build=True,
+        )
 
 
 class RoleAssignmentPolicy:

@@ -3,6 +3,7 @@ import unittest
 from mindustry_agents.policies import (
     CandidateNativePlanner,
     CandidateNativePlannerV2,
+    CandidateNativePlannerV3,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -131,6 +132,33 @@ class TestScriptedPolicies(unittest.TestCase):
             1,
         )
         self.assertIn(2, [action["task_action"].get("candidate_index") for action in v2])
+
+    def test_candidate_native_planner_v3_defers_schematic_for_active_build(self):
+        candidates = [
+            self.planner_candidate(
+                0, "BUILD_SCHEMATIC", target="fortification", utility=5.0
+            ),
+            self.planner_candidate(1, "HARVEST_RESOURCE", utility=1.0),
+        ]
+        team = {
+            "tick": 250,
+            "enemy_count": 0,
+            "line_operational": True,
+            "defense_turret_coverage": 0.5,
+        }
+        observation_row = observation(candidates=candidates, team=team)
+        mask = {"candidate_task": [True, True]}
+        active_board = [
+            {"task_type": "BUILD_LINE", "status": "RUNNING"}
+        ]
+        v2 = CandidateNativePlannerV2().actions(
+            [observation_row], [mask], active_board
+        )
+        v3 = CandidateNativePlannerV3().actions(
+            [observation_row], [mask], active_board
+        )
+        self.assertEqual(v2[0]["task_action"]["candidate_index"], 0)
+        self.assertEqual(v3[0]["task_action"]["candidate_index"], 1)
 
     def test_candidate_native_planner_preserves_continue_and_preempts_for_wave(self):
         planner = CandidateNativePlanner()

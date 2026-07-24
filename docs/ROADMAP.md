@@ -2548,7 +2548,9 @@ v2. ADR-0095 precommits v3's only change: consult the authoritative task board
 and defer new BUILD_SCHEMATIC candidates while a BUILD_LINE or
 BUILD_SCHEMATIC task is CLAIMED, RUNNING, or BLOCKED. Protocol SHA is
 `fc8be8ce0bf63015...`. Implementation is next; no v7 or restricted access is
-authorized.
+authorized. The task-board filter, exact protocol/inheritance validation,
+focused v1/v2/v3 behavior tests, and separate command surface are now local;
+all 460 Python tests pass. Commit this boundary before evaluation.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

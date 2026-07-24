@@ -3,6 +3,7 @@
 from .scripted import (
     CandidateNativePlanner,
     CandidateNativePlannerV2,
+    CandidateNativePlannerV3,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -13,6 +14,7 @@ from .scripted import (
 __all__ = [
     "CandidateNativePlanner",
     "CandidateNativePlannerV2",
+    "CandidateNativePlannerV3",
     "GreedyUtilityPolicy",
     "HelperCoordinator",
     "PureGreedyUtilityPolicy",

@@ -24,6 +24,7 @@ SCRIPTS := scripts
         m9-success-margin-check m9-v6-pretraining-check \
         m9-expert-projection-diagnostic m9-candidate-native-planner-check \
         m9-candidate-native-planner-v2-check \
+        m9-candidate-native-planner-v3-check \
         m9-baseline train-m9-ippo train-m9-ippo-v2 train-m9-ippo-v3 \
         train-m9-ippo-v4 train-m9-ippo-v5 train-m9-ippo-v6 \
         secondary-claim-wake-check \
@@ -76,6 +77,7 @@ help: ## List available targets
 	@echo "  m9-expert-projection-diagnostic shared-expert candidate projection"
 	@echo "  m9-candidate-native-planner-check governed ordinary-action planner gate"
 	@echo "  m9-candidate-native-planner-v2-check serialized-schematic planner gate"
+	@echo "  m9-candidate-native-planner-v3-check active-build planner gate"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -146,6 +148,9 @@ m9-candidate-native-planner-check: ## Validate candidate-native supervision sour
 
 m9-candidate-native-planner-v2-check: ## Validate build-serialized candidate planner
 	@bash $(SCRIPTS)/m9-candidate-native-planner-v2-check.sh
+
+m9-candidate-native-planner-v3-check: ## Validate active-build-aware candidate planner
+	@bash $(SCRIPTS)/m9-candidate-native-planner-v3-check.sh
 
 m9-reward-check: ## Verify M9 audited per-seat shaping adversaries
 	@bash $(SCRIPTS)/m9-reward-check.sh

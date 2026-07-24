@@ -36,6 +36,18 @@ def test_v2_protocol_binds_single_serialization_coordinate():
     ] == 1
 
 
+def test_v3_protocol_binds_active_board_coordinate():
+    protocol, seeds = _load_protocol(
+        DEFAULT_PROTOCOL.with_name(
+            "m9-candidate-native-planner-v3-protocol.json"
+        )
+    )
+    assert len(seeds) == 40
+    assert protocol["planner"]["additional_active_task_constraint"][
+        "active_statuses"
+    ] == ["CLAIMED", "RUNNING", "BLOCKED"]
+
+
 def test_protocol_rejects_digest_drift(tmp_path: Path):
     document = json.loads(DEFAULT_PROTOCOL.read_text(encoding="utf-8"))
     document["authority"]["may_train"] = True

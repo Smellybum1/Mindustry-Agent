@@ -10,7 +10,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from mindustry_agents.policies import CandidateNativePlanner, CandidateNativePlannerV2
+from mindustry_agents.policies import (
+    CandidateNativePlanner,
+    CandidateNativePlannerV2,
+    CandidateNativePlannerV3,
+)
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
 
 
@@ -24,6 +28,9 @@ PROTOCOL_SCHEMAS = {
     ),
     "411c40c69ac7419fa0920a2270d5b4537a5b0885af52d0abf12a396f0b8a5246": (
         "m9_candidate_native_planner_protocol_v2"
+    ),
+    "fc8be8ce0bf630152a3f9fa1775ea39b47af741ed894249c275743391f9ff0b8": (
+        "m9_candidate_native_planner_protocol_v3"
     ),
 }
 
@@ -78,6 +85,39 @@ def _load_protocol(path: Path) -> tuple[dict[str, Any], list[int]]:
             }
         ):
             raise ValueError("planner v2 inheritance contract drift")
+    if expected_schema == "m9_candidate_native_planner_protocol_v3":
+        if (
+            protocol.get("parent_protocol_sha256")
+            != (
+                "411c40c69ac7419fa0920a2270d5b4537a5b0885af52d0ab"
+                "f12a396f0b8a5246"
+            )
+            or protocol.get("sole_behavior_change")
+            != (
+                "defer_new_build_schematic_while_any_build_line_or_"
+                "schematic_task_is_active"
+            )
+            or protocol.get("planner", {}).get(
+                "additional_active_task_constraint"
+            )
+            != {
+                "new_task_type": "BUILD_SCHEMATIC",
+                "defer_when_task_board_contains_type": [
+                    "BUILD_LINE",
+                    "BUILD_SCHEMATIC",
+                ],
+                "active_statuses": ["CLAIMED", "RUNNING", "BLOCKED"],
+                "fallback": (
+                    "unchanged_nonconflicting_allocator_without_"
+                    "deferred_candidates"
+                ),
+                "evidence": (
+                    "v2_tick_250_selection_overlapped_active_T2_"
+                    "build_line_on_every_public_root"
+                ),
+            }
+        ):
+            raise ValueError("planner v3 inheritance contract drift")
 
     seed_spec = protocol["seed_set"]
     seed_path = ROOT / seed_spec["path"]
@@ -154,11 +194,11 @@ def _episode(
         scenario_version=scenario_version,
         agent_count=3,
     )
-    planner = (
-        CandidateNativePlannerV2()
-        if planner_version == 2
-        else CandidateNativePlanner()
-    )
+    planner = {
+        1: CandidateNativePlanner,
+        2: CandidateNativePlannerV2,
+        3: CandidateNativePlannerV3,
+    }[planner_version]()
     observations = reset.initial_observations
     masks = reset.action_masks
     board: list[dict[str, Any]] = []
@@ -342,11 +382,11 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         protocol, seeds = _load_protocol(args.protocol)
-        planner_version = (
-            2
-            if protocol["schema"] == "m9_candidate_native_planner_protocol_v2"
-            else 1
-        )
+        planner_version = {
+            "m9_candidate_native_planner_protocol_v1": 1,
+            "m9_candidate_native_planner_protocol_v2": 2,
+            "m9_candidate_native_planner_protocol_v3": 3,
+        }[protocol["schema"]]
         values = {
             "java": args.java,
             "port": args.port,

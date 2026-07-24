@@ -1553,9 +1553,10 @@ queue.
    already-RUNNING build line. ADR-0094 rejects v2 at compact SHA
    `59d9993c9779abf0...`. ADR-0095 and protocol SHA
    `fc8be8ce0bf63015...` precommit v3's only change: defer new schematics while
-   the authoritative board has an active build-line or schematic task.
-   Implement and commit v3 before the same public gate. No v7 or restricted
-   access is authorized.
+   the authoritative board has an active build-line or schematic task. The
+   filter, exact inheritance checks, focused tests, and command are local; all
+   460 Python tests pass. Commit v3 before the same public gate. No v7 or
+   restricted access is authorized.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
