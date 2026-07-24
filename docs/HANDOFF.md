@@ -1862,6 +1862,18 @@ queue.
    `fb389c6b5f728a42...` / `9557714141a239b4...`. No model/optimizer or
    restricted data was touched. Freeze one separately prospective macro
    task-family intent architecture before implementation or training.
+   ADR-0133 supplies that freeze as
+   `m9-candidate-native-trajectory-plan-v1`. It inherits the exact rejected
+   update-64 base model/Adam state and adds one zero-output-initialized
+   four-slot/16-family plan head. Slot zero biases ordinary candidate logits at
+   fixed scale `1.0`; four-slot future-distinct-family CE has coefficient
+   `0.25`. Labels stay on deterministic student-state sequences and never
+   cross episode/seat/reset boundaries. Roots, 32-by-64 schedule,
+   16-boundary windows, eight epochs, planner, 30/40 floor, and conditional
+   replica rule remain exact. Config/protocol SHA prefixes are
+   `ae0d29aa7fd8882e...` / `1812f19c8c64cc98...`. Implement and pass the
+   complete exact-current-commit preflight before Replica A; restricted data
+   remains prohibited.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1869,7 +1881,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0132` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0133` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

@@ -2898,6 +2898,17 @@ trajectory-supervision signal. Full/canonical/compact SHA prefixes are
 `9557714141a239b4...`. No model/optimizer or restricted data was touched. One
 separately prospective macro task-family intent architecture is now permitted;
 training remains unauthorized until that packet is frozen.
+ADR-0133 freezes `m9-candidate-native-trajectory-plan-v1` before implementation
+or training. It inherits the exact rejected update-64 model/Adam state and adds
+one zero-output-initialized four-slot/16-family plan head. Slot zero biases
+ordinary candidate logits at fixed scale `1.0`; four-slot current-plus-next-
+distinct-family CE has coefficient `0.25`. Deterministic student-state
+sequences cannot cross episode/seat/reset boundaries. The 2,048 roots,
+32-by-64 schedule, 16-boundary windows, eight epochs, planner, 30/40 floor,
+and conditional replica rule remain exact. Config/protocol SHA prefixes are
+`ae0d29aa7fd8882e...` / `1812f19c8c64cc98...`. Implement and pass the
+complete exact-current-commit public preflight before Replica A; no restricted
+access is authorized.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

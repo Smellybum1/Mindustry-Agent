@@ -2822,6 +2822,17 @@ repository-evidence mapping used for the M6 audit is:
   One separately prospective macro task-family intent architecture is now the
   only authorized model direction; training remains unauthorized until that
   packet is frozen.
+  ADR-0133 now freezes that packet as
+  `m9-candidate-native-trajectory-plan-v1`. The exact rejected update-64 base
+  model and Adam moments are inherited, then one zero-output-initialized
+  four-slot/16-family plan head is added. Slot zero biases ordinary candidate
+  logits by fixed scale `1.0`; the fixed auxiliary coefficient is `0.25`.
+  Student-controlled sequences receive current plus next three distinct
+  planner family labels without crossing episode/seat/reset boundaries. The
+  2,048 roots, 32-by-64 schedule, 16-boundary windows, eight epochs, planner,
+  dev floor, and conditional replica rule remain exact. Config/protocol SHA
+  prefixes are `ae0d29aa7fd8882e...` / `1812f19c8c64cc98...`. No
+  implementation, model update, or restricted access preceded the precommit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
