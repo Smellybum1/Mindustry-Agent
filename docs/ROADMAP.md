@@ -2569,6 +2569,12 @@ using valid supply-candidate existence plus ammo below one. Protocol SHA is
 `f408fcc9c200a74e...`; implementation is next.
 The exact precondition removal, protocol/inheritance checks, focused v1--v5
 tests, and command are local; all 464 Python tests pass. Commit before the gate.
+V5 improves to 12/40 with 99.9560% coverage but still has eight BUILD_LINE
+`reservation_overlap` rejections at ticks 1921--2031 after the completed
+fortification occupies that footprint. ADR-0100 rejects v5 at compact SHA
+`3ac6102e640ee8f7...`. ADR-0101 precommits v6's sole change: suppress
+BUILD_LINE after the authoritative board records `expert_fortification_v1`
+COMPLETED. Protocol SHA is `748032f71739c878...`; implementation is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

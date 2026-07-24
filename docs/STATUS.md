@@ -2512,7 +2512,10 @@ repository-evidence mapping used for the M6 audit is:
   v5's valid-candidate actionability coordinate at protocol SHA
   `f408fcc9c200a74e...`. The exact coordinate, inheritance checks, focused
   v1--v5 tests, and command are local; all 464 Python tests pass. Commit before
-  evaluation.
+  evaluation. V5 improves to 12/40 but has eight later BUILD_LINE reservation
+  rejections after fortification completion. ADR-0100 rejects it at compact
+  SHA `3ac6102e640ee8f7...`. ADR-0101 precommits v6's completed-fortification
+  board filter at protocol SHA `748032f71739c878...`; it is unimplemented.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

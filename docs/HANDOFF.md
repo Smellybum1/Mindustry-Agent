@@ -1530,7 +1530,7 @@ queue.
    rejected. Precommit the recommended v4 entropy-annealing successor before
    any new model work. ADR-0079 now freezes v4's sole change as the inclusive
    linear entropy schedule `0.02 * (32 - update) / 31`; implementation is next.
-5. **Implement and validate candidate-native planner v5 before any v7 model.**
+5. **Implement and validate candidate-native planner v6 before any v7 model.**
    ADR-0088
    rejects v6 after its exact gate and full Replica A: best 2/40 at update 29,
    final 0/40, manifest/full-run digests `d6ecb9f820ec975...` /
@@ -1557,10 +1557,11 @@ queue.
    compact SHA `9af4d952fc690c53...`. V4 is trace-identical because positive
    turret coverage lags valid supply actionability; ADR-0098 rejects it at
    compact SHA `57aa6bdbdbacd84e...`. ADR-0099 and protocol SHA
-   `f408fcc9c200a74e...` precommit v5's sole change: remove that redundant
-   coverage clause and use valid supply-candidate existence plus ammo below
-   one. The exact coordinate, inheritance checks, focused tests, and command
-   are local; all 464 Python tests pass. Commit before the same public gate.
+   V5 improves to 12/40 but eight later BUILD_LINE retries overlap the completed
+   fortification. ADR-0100 rejects it at compact SHA `3ac6102e640ee8f7...`.
+   ADR-0101 and protocol SHA `748032f71739c878...` precommit v6's sole change:
+   suppress line retries after the authoritative board records the expert
+   fortification complete. Implement and commit before the same public gate.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1568,7 +1569,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0099` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0101` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
