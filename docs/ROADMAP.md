@@ -2675,7 +2675,16 @@ focused tests are committed. The complete gate passes at implementation commit
 smoke, cross-process/reset determinism, and the 664-checkpoint golden replay
 are green. The live student-state episode repeats exactly; preflight result SHA
 is `ed370f03777c5280...`. Commit this evidence, rerun the exact-commit
-preflight, then Replica A.
+preflight, then Replica A. That rerun passed at `4fee79ca6a`. Replica A
+completed all 2,048 student-controlled episodes and 32 continuation updates,
+but the final/best checkpoint reached only 13/40 public-dev wins. Mean
+student-state teacher agreement remained `0.95511`; training recorded 1,756
+rejected student actions. ADR-0118 rejects v1, prohibits Replica B and PPO
+initialization, and records manifest/canonical/compact SHA prefixes
+`f34c50a024f05d60...` / `1cf33117526a04c8...` /
+`ebea0b741abbf2b7...`. No restricted data was accessed. Precommit one
+immutable student-controlled disagreement/localization diagnostic before any
+further learned recipe.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

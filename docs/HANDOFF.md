@@ -1646,6 +1646,15 @@ queue.
    replay are green. The live student-state episode repeats exactly; preflight
    result SHA is `ed370f03777c5280...`. Commit this evidence, rerun the
    exact-commit preflight, then start Replica A in a clean output directory.
+   That rerun passed at `4fee79ca6a`. Replica A completed all 2,048 episodes
+   and 32 continuation updates, but the final/best checkpoint reached only
+   13/40 public-dev wins. Mean student-state teacher agreement remained
+   `0.95511`; training recorded 1,756 rejected student actions. ADR-0118
+   rejects v1, prohibits Replica B and PPO initialization, and records
+   manifest/canonical/compact SHA prefixes `f34c50a024f05d60...` /
+   `1cf33117526a04c8...` / `ebea0b741abbf2b7...`. Precommit one immutable
+   student-controlled disagreement/localization diagnostic before further
+   learning.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1653,7 +1662,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0117` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0118` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1701,7 +1710,7 @@ remains unauthorized.
 ADR-0091 through ADR-0114 govern candidate-native planner construction, accept
 planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
-ADR-0117's exact on-policy-relabel implementation and pretraining boundary.
+ADR-0118's immutable student-controlled disagreement/localization diagnostic.
 
 ## Deviations from the brief in this scaffold
 
