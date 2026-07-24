@@ -2561,7 +2561,12 @@ below one, rank SUPPLY_TURRET above HARVEST_RESOURCE. Protocol SHA is
 `ffb5bff61b76161e...`; implementation is next.
 The exact active-build supply score, protocol/inheritance validation, focused
 v1--v4 tests, and separate command are now local; all 462 Python tests pass.
-Commit this boundary before evaluation.
+V4 is canonical-trace identical to v3 at 3/40: its positive turret-coverage
+precondition never activates even though actor-masked supply candidates exist.
+ADR-0098 rejects the no-op; compact SHA is `57aa6bdbdbacd84e...`. ADR-0099
+precommits v5's sole change as removing that redundant coverage clause and
+using valid supply-candidate existence plus ammo below one. Protocol SHA is
+`f408fcc9c200a74e...`; implementation is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

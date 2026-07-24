@@ -2506,7 +2506,11 @@ repository-evidence mapping used for the M6 audit is:
   ADR-0097 precommits the readiness-preserving active-build supply priority at
   protocol SHA `ffb5bff61b76161e...`. The exact score, inheritance checks,
   focused v1--v4 tests, and command are local; all 462 Python tests pass.
-  Commit before evaluation.
+  The exact v4 run is canonical-trace identical to v3 at 3/40 because its
+  positive turret-coverage condition never activates before supply candidates.
+  ADR-0098 rejects v4 at compact SHA `57aa6bdbdbacd84e...`. ADR-0099 precommits
+  v5's valid-candidate actionability coordinate at protocol SHA
+  `f408fcc9c200a74e...`; it is unimplemented.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
