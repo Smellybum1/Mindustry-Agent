@@ -2529,7 +2529,13 @@ repository-evidence mapping used for the M6 audit is:
   ADR-0105 precommits v8's sole safe-interwave DEFEND demobilization coordinate
   at protocol SHA `168317b2e5a34e64...`. The exact fixed-action rule,
   inheritance validation, focused v7/v8 behavior coverage, and separate command
-  are implemented locally; all 471 Python tests pass. Commit before evaluation.
+  are implemented; all 471 Python tests pass. V8 improves to 28/40 with exact
+  twin-JVM/reset replay, zero action rejections/conflicts, and 99.4083%
+  coverage, but misses the frozen bar by two wins. Public inspection shows its
+  supplier selecting a third DEFEND task immediately after refill while two
+  defenders remain active. ADR-0106 rejects v8 at compact SHA
+  `9f23893a896e9ffe...`. ADR-0107 precommits v9's sole active-DEFEND cap of two
+  at protocol SHA `20ba635f3ab468b8...`; implementation is next.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

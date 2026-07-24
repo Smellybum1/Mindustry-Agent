@@ -1530,7 +1530,7 @@ queue.
    rejected. Precommit the recommended v4 entropy-annealing successor before
    any new model work. ADR-0079 now freezes v4's sole change as the inclusive
    linear entropy schedule `0.02 * (32 - update) / 31`; implementation is next.
-5. **Implement and validate candidate-native planner v8 before any M9 model.**
+5. **Implement and validate candidate-native planner v9 before any M9 model.**
    ADR-0088
    rejects v6 after its exact gate and full Replica A: best 2/40 at update 29,
    final 0/40, manifest/full-run digests `d6ecb9f820ec975...` /
@@ -1571,8 +1571,13 @@ queue.
    abandon DEFEND only when there are no enemies and the next wave is outside
    the authoritative defend-lead window. The exact fixed-action rule,
    inheritance validation, focused v7/v8 behavior coverage, and separate
-   command are local; all 471 Python tests pass. Commit, then run the same
-   public gate.
+   command are committed; all 471 Python tests pass. V8 improves to 28/40 with
+   exact twin-JVM/reset replay and zero action defects, but remains two wins
+   short. Public inspection shows its supplier selecting a third DEFEND task
+   immediately after refill while two defenders remain active. ADR-0106 rejects
+   v8 at compact SHA `9f23893a896e9ffe...`. ADR-0107 and protocol SHA
+   `20ba635f3ab468b8...` precommit v9's sole task-board constraint: cap active
+   DEFEND_REGION tasks at two. Implement and commit before the same public gate.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1580,7 +1585,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0105` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0107` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

@@ -2592,8 +2592,13 @@ at compact SHA `d46d86025d0e45ec...`. ADR-0105 precommits v8's sole change:
 abandon DEFEND when there are no enemies and the next wave is outside the
 authoritative defend-lead window. Protocol SHA is `168317b2e5a34e64...`;
 the exact rule, inheritance validation, focused v7/v8 tests, and separate
-command are implemented locally; all 471 Python tests pass. Commit before the
-gate.
+command are committed; all 471 Python tests pass. V8 improves to 28/40 with
+exact twin-JVM/reset replay, zero rejections/conflicts, and 99.4083% coverage,
+but remains two wins short. Public inspection shows its freed supplier selecting
+a third DEFEND task while two remain active. ADR-0106 rejects v8 at compact SHA
+`9f23893a896e9ffe...`. ADR-0107 precommits v9's sole task-board constraint:
+cap active DEFEND_REGION tasks at two. Protocol SHA is
+`20ba635f3ab468b8...`; implementation is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

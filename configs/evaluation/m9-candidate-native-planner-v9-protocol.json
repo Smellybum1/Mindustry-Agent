@@ -1,0 +1,71 @@
+{
+  "schema": "m9_candidate_native_planner_protocol_v9",
+  "data_classification": "public_dev_only",
+  "candidate_version": "candidate-native-planner-v9-active-defend-cap",
+  "parent_candidate_version": "candidate-native-planner-v8-interwave-demobilize",
+  "sole_behavior_change": "cap_active_defend_region_tasks_at_two",
+  "parent_protocol_sha256": "168317b2e5a34e64535059346f4bcecec3125151382c3c98f116be20600a6b1a",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": {
+    "path": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+    "sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+    "episodes": 40
+  },
+  "planner": {
+    "name": "candidate-native-planner-v9-active-defend-cap",
+    "authority": "ordinary_external_candidate_task_actions",
+    "active_defend_constraint": {
+      "board_task_type": "DEFEND_REGION",
+      "board_statuses": [
+        "CLAIMED",
+        "RUNNING",
+        "BLOCKED"
+      ],
+      "maximum_active_tasks": 2,
+      "suppressed_new_task_type": "DEFEND_REGION",
+      "fallback": "unchanged_v8_allocator_without_excess_defend_candidates",
+      "evidence": "v8_public_loss_selected_a_third_defender_immediately_after_the_supplier_completed_while_two_defenders_remained_active"
+    },
+    "inputs": [
+      "authoritative_per-seat_observation",
+      "authoritative_per-seat_action_mask",
+      "structured_task_board",
+      "prior_accepted_action_results",
+      "bounded_reset_local_planner_state"
+    ],
+    "forbidden_inputs": [
+      "mutable_engine_state",
+      "shared_expert_state",
+      "shared_expert_decisions",
+      "future_outcome",
+      "confirmation_membership",
+      "held_out_membership"
+    ]
+  },
+  "replay": {
+    "fresh_jvm_runs": 2,
+    "require_byte_identical_reports": true,
+    "require_terminal_reset_replay": true,
+    "require_all_actions_accepted": true,
+    "require_zero_nonordinary_fallbacks": true,
+    "require_zero_cross_seat_exclusive_conflicts": true
+  },
+  "classification": {
+    "minimum_wins": 30,
+    "minimum_source_expert_win_retention_fraction": 0.8,
+    "source_expert_wins": 36,
+    "minimum_non_wait_selection_coverage": 0.95,
+    "pass": "candidate_native_supervision_source_supported",
+    "fail": "candidate_native_supervision_source_not_supported"
+  },
+  "authority": {
+    "may_modify_model": false,
+    "may_train": false,
+    "may_select_checkpoint": false,
+    "may_promote": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_v7": false
+  }
+}
