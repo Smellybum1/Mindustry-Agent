@@ -2660,7 +2660,14 @@ closed-loop-shift signal, keeps v1 rejected, and records
 full/canonical/compact SHA prefixes `56f3680eb67945ca...` /
 `3f2778201fd92860...` / `7909e6a2013258d2...`. No restricted data was
 accessed. A separately named prospective student-state teacher-relabeling
-construction is the next authorized direction.
+construction is the next authorized direction. ADR-0117 now freezes
+`m9-candidate-native-on-policy-relabel-v1`: rejected update 32 supplies exact
+model/optimizer initialization without selection or promotion; deterministic
+student actions control the same 2,048 public roots while planner v11 labels
+the same pre-action states. All other model, optimizer, budget, dev gate, and
+replica rules remain exact. Config/protocol SHA prefixes are
+`7fadf9ae9130775f...` / `548ba5fe1478c6cdf...`. No implementation or new model
+state exists yet.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

@@ -2592,7 +2592,13 @@ repository-evidence mapping used for the M6 audit is:
   full/canonical/compact SHA prefixes `56f3680eb67945ca...` /
   `3f2778201fd92860...` / `7909e6a2013258d2...`. No restricted data was
   accessed. The next authority is one separately precommitted student-state
-  teacher-relabeling construction.
+  teacher-relabeling construction. ADR-0117 now freezes that construction as
+  `m9-candidate-native-on-policy-relabel-v1`: exact rejected-final model and
+  optimizer initialization, deterministic student control on the same public
+  roots, planner-v11 labels on same pre-action student states, and otherwise
+  unchanged model/optimizer/budget/dev/replica gates. Config/protocol SHA
+  prefixes are `7fadf9ae9130775f...` / `548ba5fe1478c6cdf...`. No
+  implementation or new model state exists yet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

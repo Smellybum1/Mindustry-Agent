@@ -1631,7 +1631,14 @@ queue.
    full/canonical/compact SHA prefixes `56f3680eb67945ca...` /
    `3f2778201fd92860...` / `7909e6a2013258d2...`. Precommit one separately
    named student-state teacher-relabeling construction before further model
-   work.
+   work. ADR-0117 now freezes
+   `m9-candidate-native-on-policy-relabel-v1`: exact rejected-final
+   model/optimizer initialization without selection or promotion,
+   deterministic student control over the same public roots, planner-v11
+   labels on the same pre-action student states, and otherwise unchanged
+   model/optimizer/budget/dev/replica gates. Config/protocol SHA prefixes are
+   `7fadf9ae9130775f...` / `548ba5fe1478c6cdf...`. Implement its fail-closed
+   boundary before any new model state.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1639,7 +1646,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0116` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0117` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1687,7 +1694,7 @@ remains unauthorized.
 ADR-0091 through ADR-0114 govern candidate-native planner construction, accept
 planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
-ADR-0116's separately precommitted student-state teacher-relabeling direction.
+ADR-0117's exact on-policy-relabel implementation and pretraining boundary.
 
 ## Deviations from the brief in this scaffold
 

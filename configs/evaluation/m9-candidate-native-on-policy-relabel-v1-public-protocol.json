@@ -1,0 +1,34 @@
+{
+  "schema": "m9_candidate_native_on_policy_relabel_public_protocol_v1",
+  "candidate_version": "m9-candidate-native-on-policy-relabel-v1",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "seed_set_sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+  "split": "dev",
+  "source_diagnostic": {
+    "result": "configs/evaluation/m9-candidate-distill-v1-agreement-diagnostic-result.json",
+    "sha256": "7909e6a2013258d288c5b951748947818f05188b355851271fed5bdfcdfdede9",
+    "accepted_signal": "closed_loop_shift_signal",
+    "final_teacher_forced_top1_agreement": 0.9619565217391305,
+    "final_teacher_label_nll": 0.15247168498808195,
+    "final_autonomous_public_dev_wins": 9
+  },
+  "construction_continuation": {
+    "minimum_candidate_wins": 30,
+    "maximum_mean_team_idle_fraction_exclusive": 0.25
+  },
+  "replica_policy": {
+    "replica_a_runs_full_budget": true,
+    "replica_b_authorized_only_after_replica_a_construction_passes": true,
+    "exact_full_run_and_selected_checkpoint_identity_required": true
+  },
+  "downstream_authority": {
+    "may_initialize_separately_precommitted_ippo_successor": true,
+    "may_promote": false,
+    "may_authorize_mappo": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_human_session": false
+  }
+}
