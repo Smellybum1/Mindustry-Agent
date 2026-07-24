@@ -403,6 +403,7 @@ class CandidateNativePlanner:
         suppress_line_after_completed_fortification: bool = False,
         suppress_line_during_active_fortification: bool = False,
         demobilize_defend_during_safe_interwave: bool = False,
+        maximum_active_defend_tasks: int | None = None,
     ) -> None:
         if (
             maximum_build_schematic_selections is not None
@@ -411,6 +412,11 @@ class CandidateNativePlanner:
             raise ValueError(
                 "maximum_build_schematic_selections must be positive"
             )
+        if (
+            maximum_active_defend_tasks is not None
+            and maximum_active_defend_tasks < 1
+        ):
+            raise ValueError("maximum_active_defend_tasks must be positive")
         self._replan_ticks: dict[int, list[int]] = {}
         self._last_tick = -1
         self._maximum_build_schematic_selections = (
@@ -434,6 +440,7 @@ class CandidateNativePlanner:
         self._demobilize_defend_during_safe_interwave = (
             demobilize_defend_during_safe_interwave
         )
+        self._maximum_active_defend_tasks = maximum_active_defend_tasks
 
     def reset(self) -> None:
         self._replan_ticks.clear()
@@ -601,14 +608,24 @@ class CandidateNativePlanner:
         return score
 
     def _conflicts(
-        self, candidates: tuple[dict[str, Any] | None, ...]
+        self,
+        candidates: tuple[dict[str, Any] | None, ...],
+        maximum_new_defend_selections: int | None = None,
     ) -> bool:
         exclusive_ids: set[str] = set()
         semantic_targets: set[tuple[str, str]] = set()
         build_schematic_selections = 0
+        defend_selections = 0
         for candidate in candidates:
             if candidate is None:
                 continue
+            if candidate.get("task_type") == "DEFEND_REGION":
+                defend_selections += 1
+                if (
+                    maximum_new_defend_selections is not None
+                    and defend_selections > maximum_new_defend_selections
+                ):
+                    return True
             if candidate.get("task_type") == "BUILD_SCHEMATIC":
                 build_schematic_selections += 1
                 if (
@@ -674,6 +691,19 @@ class CandidateNativePlanner:
                 for task in (task_board or [])
             )
         )
+        active_defend_tasks = sum(
+            task.get("task_type") == "DEFEND_REGION"
+            and task.get("status") in {"CLAIMED", "RUNNING", "BLOCKED"}
+            for task in (task_board or [])
+        )
+        available_defend_slots = (
+            None
+            if self._maximum_active_defend_tasks is None
+            else max(
+                0,
+                self._maximum_active_defend_tasks - active_defend_tasks,
+            )
+        )
 
         actions: list[dict[str, Any] | None] = [None] * len(observations)
         allocatable: list[int] = []
@@ -712,7 +742,7 @@ class CandidateNativePlanner:
         best: tuple[dict[str, Any] | None, ...] | None = None
         best_key: tuple[Any, ...] | None = None
         for allocation in itertools.product(*options):
-            if self._conflicts(allocation):
+            if self._conflicts(allocation, available_defend_slots):
                 continue
             selected = [candidate for candidate in allocation if candidate is not None]
             phase_total = sum(
@@ -826,6 +856,22 @@ class CandidateNativePlannerV8(CandidateNativePlanner):
             suppress_line_after_completed_fortification=True,
             suppress_line_during_active_fortification=True,
             demobilize_defend_during_safe_interwave=True,
+        )
+
+
+class CandidateNativePlannerV9(CandidateNativePlanner):
+    """V8-exact planner capped at two authoritative active defenders."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            maximum_build_schematic_selections=1,
+            defer_schematics_during_active_build=True,
+            prioritize_supply_during_active_build=True,
+            require_positive_turret_coverage_for_active_build_supply=False,
+            suppress_line_after_completed_fortification=True,
+            suppress_line_during_active_fortification=True,
+            demobilize_defend_during_safe_interwave=True,
+            maximum_active_defend_tasks=2,
         )
 
 

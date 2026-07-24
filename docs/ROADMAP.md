@@ -2598,7 +2598,9 @@ but remains two wins short. Public inspection shows its freed supplier selecting
 a third DEFEND task while two remain active. ADR-0106 rejects v8 at compact SHA
 `9f23893a896e9ffe...`. ADR-0107 precommits v9's sole task-board constraint:
 cap active DEFEND_REGION tasks at two. Protocol SHA is
-`20ba635f3ab468b8...`; implementation is next.
+`20ba635f3ab468b8...`; the exact board-aware capacity check, inheritance
+validation, focused v8/v9 tests, and command are implemented locally; all 474
+Python tests pass. Commit before the gate.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

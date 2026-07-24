@@ -1577,7 +1577,9 @@ queue.
    immediately after refill while two defenders remain active. ADR-0106 rejects
    v8 at compact SHA `9f23893a896e9ffe...`. ADR-0107 and protocol SHA
    `20ba635f3ab468b8...` precommit v9's sole task-board constraint: cap active
-   DEFEND_REGION tasks at two. Implement and commit before the same public gate.
+   DEFEND_REGION tasks at two. The exact board-aware capacity check,
+   inheritance validation, focused v8/v9 behavior coverage, and command are
+   local; all 474 Python tests pass. Commit before the same public gate.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

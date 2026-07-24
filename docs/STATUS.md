@@ -2535,7 +2535,9 @@ repository-evidence mapping used for the M6 audit is:
   supplier selecting a third DEFEND task immediately after refill while two
   defenders remain active. ADR-0106 rejects v8 at compact SHA
   `9f23893a896e9ffe...`. ADR-0107 precommits v9's sole active-DEFEND cap of two
-  at protocol SHA `20ba635f3ab468b8...`; implementation is next.
+  at protocol SHA `20ba635f3ab468b8...`. The exact board-aware capacity check,
+  inheritance validation, focused v8/v9 behavior coverage, and command are
+  implemented locally; all 474 Python tests pass. Commit before evaluation.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

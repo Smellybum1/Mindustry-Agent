@@ -9,6 +9,7 @@ from mindustry_agents.policies import (
     CandidateNativePlannerV6,
     CandidateNativePlannerV7,
     CandidateNativePlannerV8,
+    CandidateNativePlannerV9,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -292,6 +293,43 @@ class TestScriptedPolicies(unittest.TestCase):
             self.assertEqual(
                 action["task_action"], {"type": "CONTINUE_CURRENT_TASK"}
             )
+
+    def test_candidate_native_planner_v9_caps_active_defenders_at_two(self):
+        candidates = [
+            self.planner_candidate(0, "DEFEND_REGION", utility=5.0),
+            self.planner_candidate(1, "HARVEST_RESOURCE", utility=1.0),
+        ]
+        row = observation(
+            candidates=candidates,
+            team={
+                "tick": 2687,
+                "enemy_count": 4,
+                "time_to_next_wave": 1835,
+                "defend_lead_ticks": 900,
+            },
+        )
+        mask = {"candidate_task": [True, True]}
+        board = [
+            {"task_type": "DEFEND_REGION", "status": "RUNNING"},
+            {"task_type": "DEFEND_REGION", "status": "CLAIMED"},
+        ]
+        v8 = CandidateNativePlannerV8().actions([row], [mask], board)
+        v9 = CandidateNativePlannerV9().actions([row], [mask], board)
+        self.assertEqual(v8[0]["task_action"]["candidate_index"], 0)
+        self.assertEqual(v9[0]["task_action"]["candidate_index"], 1)
+
+    def test_candidate_native_planner_v9_allows_remaining_defend_slot(self):
+        candidate = self.planner_candidate(0, "DEFEND_REGION", utility=1.0)
+        row = observation(
+            candidates=[candidate],
+            team={"tick": 2686, "enemy_count": 4},
+        )
+        action = CandidateNativePlannerV9().actions(
+            [row],
+            [{"candidate_task": [True]}],
+            [{"task_type": "DEFEND_REGION", "status": "RUNNING"}],
+        )[0]
+        self.assertEqual(action["task_action"]["candidate_index"], 0)
 
     def test_candidate_native_planner_preserves_continue_and_preempts_for_wave(self):
         planner = CandidateNativePlanner()

@@ -111,6 +111,18 @@ def test_v8_protocol_binds_interwave_demobilization_coordinate():
     )
 
 
+def test_v9_protocol_binds_active_defend_cap():
+    protocol, seeds = _load_protocol(
+        DEFAULT_PROTOCOL.with_name(
+            "m9-candidate-native-planner-v9-protocol.json"
+        )
+    )
+    assert len(seeds) == 40
+    assert protocol["planner"]["active_defend_constraint"][
+        "maximum_active_tasks"
+    ] == 2
+
+
 def test_protocol_rejects_digest_drift(tmp_path: Path):
     document = json.loads(DEFAULT_PROTOCOL.read_text(encoding="utf-8"))
     document["authority"]["may_train"] = True

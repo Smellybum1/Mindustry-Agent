@@ -19,6 +19,7 @@ from mindustry_agents.policies import (
     CandidateNativePlannerV6,
     CandidateNativePlannerV7,
     CandidateNativePlannerV8,
+    CandidateNativePlannerV9,
 )
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
 
@@ -51,6 +52,9 @@ PROTOCOL_SCHEMAS = {
     ),
     "168317b2e5a34e64535059346f4bcecec3125151382c3c98f116be20600a6b1a": (
         "m9_candidate_native_planner_protocol_v8"
+    ),
+    "20ba635f3ab468b8750e4d6244bc8db8292c1fa61539391282f1259ac9cb7a2c": (
+        "m9_candidate_native_planner_protocol_v9"
     ),
 }
 
@@ -268,6 +272,32 @@ def _load_protocol(path: Path) -> tuple[dict[str, Any], list[int]]:
             }
         ):
             raise ValueError("planner v8 inheritance contract drift")
+    if expected_schema == "m9_candidate_native_planner_protocol_v9":
+        if (
+            protocol.get("parent_protocol_sha256")
+            != (
+                "168317b2e5a34e64535059346f4bcecec3125151382c3c98f1"
+                "16be20600a6b1a"
+            )
+            or protocol.get("sole_behavior_change")
+            != "cap_active_defend_region_tasks_at_two"
+            or protocol.get("planner", {}).get("active_defend_constraint")
+            != {
+                "board_task_type": "DEFEND_REGION",
+                "board_statuses": ["CLAIMED", "RUNNING", "BLOCKED"],
+                "maximum_active_tasks": 2,
+                "suppressed_new_task_type": "DEFEND_REGION",
+                "fallback": (
+                    "unchanged_v8_allocator_without_excess_defend_candidates"
+                ),
+                "evidence": (
+                    "v8_public_loss_selected_a_third_defender_immediately_"
+                    "after_the_supplier_completed_while_two_defenders_"
+                    "remained_active"
+                ),
+            }
+        ):
+            raise ValueError("planner v9 inheritance contract drift")
 
     seed_spec = protocol["seed_set"]
     seed_path = ROOT / seed_spec["path"]
@@ -353,6 +383,7 @@ def _episode(
         6: CandidateNativePlannerV6,
         7: CandidateNativePlannerV7,
         8: CandidateNativePlannerV8,
+        9: CandidateNativePlannerV9,
     }[planner_version]()
     observations = reset.initial_observations
     masks = reset.action_masks
@@ -546,6 +577,7 @@ def main(argv: list[str] | None = None) -> int:
             "m9_candidate_native_planner_protocol_v6": 6,
             "m9_candidate_native_planner_protocol_v7": 7,
             "m9_candidate_native_planner_protocol_v8": 8,
+            "m9_candidate_native_planner_protocol_v9": 9,
         }[protocol["schema"]]
         values = {
             "java": args.java,
