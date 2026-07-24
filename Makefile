@@ -39,6 +39,8 @@ SCRIPTS := scripts
         train-m9-candidate-on-policy-relabel \
         m9-candidate-hard-example-relabel-check \
         train-m9-candidate-hard-example-relabel \
+        m9-candidate-sequence-relabel-check \
+        train-m9-candidate-sequence-relabel \
         m9-candidate-critical-disagreement-diagnostic \
         m9-candidate-semantic-target-diagnostic \
         m9-planner-correction-causality-check \
@@ -111,6 +113,8 @@ help: ## List available targets
 	@echo "  train-m9-candidate-on-policy-relabel governed relabel continuation"
 	@echo "  m9-candidate-hard-example-relabel-check weighted relabel preflight"
 	@echo "  train-m9-candidate-hard-example-relabel governed weighted continuation"
+	@echo "  m9-candidate-sequence-relabel-check contiguous relabel preflight"
+	@echo "  train-m9-candidate-sequence-relabel governed sequence continuation"
 	@echo "  m9-candidate-critical-disagreement-diagnostic rejected policy errors"
 	@echo "  m9-candidate-semantic-target-diagnostic candidate target errors"
 	@echo "  m9-planner-correction-causality-check validate causal diagnostic"
@@ -233,6 +237,12 @@ m9-candidate-hard-example-relabel-check: ## Validate weighted relabeling
 
 train-m9-candidate-hard-example-relabel: ## Train weighted relabel continuation
 	@bash $(SCRIPTS)/train-m9-candidate-hard-example-relabel.sh
+
+m9-candidate-sequence-relabel-check: ## Validate sequence relabeling
+	@bash $(SCRIPTS)/m9-candidate-sequence-relabel-check.sh
+
+train-m9-candidate-sequence-relabel: ## Train sequence relabel continuation
+	@bash $(SCRIPTS)/train-m9-candidate-sequence-relabel.sh
 
 m9-candidate-critical-disagreement-diagnostic: ## Localize rejected policy errors
 	@bash $(SCRIPTS)/m9-candidate-critical-disagreement-diagnostic.sh

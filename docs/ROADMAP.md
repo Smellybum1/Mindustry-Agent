@@ -2802,6 +2802,15 @@ learning rate, eight epochs, 32-by-64 budget, deterministic student control,
 Config/protocol SHA prefixes are `b7e17a6e74b6d18a...` /
 `b79f6da9c24863d0...`. No candidate model state or restricted access preceded
 the precommit.
+The fail-closed sequence collector/optimizer, rejected update-64 model and
+optimizer loader, checkpoint/manifest runner, conditional replica comparison,
+commands, and focused tests are implemented locally. All 523 Python tests and
+pinned Java/custom-module checks pass. They prove exact length-one equivalence
+with the prior flat optimizer, configured sequence replica identity,
+masked-context gradient influence, padding exclusion telemetry, exact source
+binding, and public-only authority. Commit the implementation and pass the
+complete exact-current-commit live preflight before Replica A; no candidate
+update or restricted access has occurred.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

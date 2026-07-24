@@ -2721,6 +2721,17 @@ repository-evidence mapping used for the M6 audit is:
   remain exact. Config/protocol SHA prefixes are `b7e17a6e74b6d18a...` /
   `b79f6da9c24863d0...`. No implementation, model state, or restricted access
   preceded the precommit.
+  The fail-closed sequence collector/optimizer, exact source-state loader,
+  checkpoint/manifest runner, conditional replica comparison, commands, and
+  focused tests are now implemented locally. The collector preserves the
+  existing deterministic student action trace while adding loss-masked
+  recurrent context. Preflight probes cover exact length-one equivalence with
+  the flat optimizer, configured-sequence replica identity, masked-context
+  gradient influence, padding exclusion telemetry, source-state hashes, and
+  public-only authority; all 523 Python tests and pinned Java/custom-module
+  checks pass locally. The implementation must be committed before the
+  complete exact-current-commit live preflight, and no candidate optimizer
+  update or restricted access has occurred.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

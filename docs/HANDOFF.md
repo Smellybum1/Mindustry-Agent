@@ -1767,6 +1767,15 @@ queue.
    exact. Config/protocol SHA prefixes are `b7e17a6e74b6d18a...` /
    `b79f6da9c24863d0...`. Implement the fail-closed sequence path and complete
    exact-current-commit public preflight next; do not access restricted data.
+   The fail-closed collector/optimizer, exact rejected-state loader,
+   checkpoint/manifest runner, conditional replica comparison, commands, and
+   focused tests are implemented locally. All 523 Python tests and pinned
+   Java/custom-module checks pass, including exact length-one flat-optimizer
+   equivalence, deterministic configured sequence replicas, masked-context
+   gradient influence, padding telemetry, source hashes, and public-only
+   authority. Commit this implementation, then run and commit the complete
+   exact-current-commit live preflight before Replica A. No candidate optimizer
+   update or restricted access has occurred.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
