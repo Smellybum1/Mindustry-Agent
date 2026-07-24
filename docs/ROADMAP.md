@@ -2880,6 +2880,13 @@ terminal reset: the student loses at tick 7,057, planner v11 wins at tick
 is `0.7777778`. The exact source model and optimizer hashes remain unchanged.
 Commit this implementation and pass the complete exact-current-commit public
 gate before running all 40 roots.
+The complete gate passes at exact implementation commit `c4748ff710`: 535
+Python tests, pinned Java/custom-module checks, focused live replay, smoke,
+79-boundary cross-process/reset determinism, and the 664-checkpoint/
+16,200-tick golden replay are green. Preflight result SHA prefix is
+`7b0200389db66148...`; it contains derived public evidence only and records no
+restricted access. Commit this evidence and rerun the exact gate at that commit
+before the full diagnostic.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

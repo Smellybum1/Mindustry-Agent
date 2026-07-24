@@ -2803,6 +2803,13 @@ repository-evidence mapping used for the M6 audit is:
   Source model/optimizer hashes remain exact. Commit this implementation, then
   run the complete exact-current-commit public gate before the 40-root
   diagnostic.
+  That complete gate passes at exact implementation commit `c4748ff710`: 535
+  Python tests, pinned Java/custom-module checks, focused live replay, smoke,
+  79-boundary cross-process/reset determinism, and the 664-checkpoint/
+  16,200-tick golden replay are green. Preflight result SHA prefix is
+  `7b0200389db66148...`; it records derived public evidence only and no
+  restricted access. Commit this evidence and rerun the exact-current-commit
+  gate before the full diagnostic.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

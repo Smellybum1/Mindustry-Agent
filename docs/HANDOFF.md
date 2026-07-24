@@ -1845,6 +1845,13 @@ queue.
    normalized compressed distance is `0.7777778`. Source model/optimizer
    hashes remain unchanged. Commit this boundary and complete the exact-current-
    commit public preflight before the full diagnostic.
+   The complete gate passes at exact implementation commit `c4748ff710`: all
+   535 Python tests, pinned Java/custom-module checks, focused live replay,
+   smoke, 79-boundary cross-process/reset determinism, and the 664-checkpoint/
+   16,200-tick golden replay are green. Preflight result SHA prefix is
+   `7b0200389db66148...`; no target identifiers, raw observations, or restricted
+   data were published or accessed. Commit this evidence, rerun the exact gate
+   at that commit, then run the full 40-root diagnostic.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

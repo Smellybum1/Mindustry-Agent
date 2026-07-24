@@ -1,0 +1,48 @@
+{
+  "schema": "m9_planner_trajectory_divergence_preflight_v1",
+  "implementation_commit": "c4748ff710cfacbe628467951a47a4e8f9b8997b",
+  "protocol_sha256": "bcd572fa49d859d56c780c55a389577835eccf59a9382887bff68ec834778d6a",
+  "passed": true,
+  "checks": {
+    "python_tests": 535,
+    "pinned_java_custom_modules": true,
+    "focused_trajectory_checks": true,
+    "smoke": true,
+    "cross_process_reset_seed_determinism_boundaries": 79,
+    "golden_replay_checkpoints": 664,
+    "golden_replay_ticks": 16200
+  },
+  "live_public_dev_root_seed": 19000000001,
+  "student": {
+    "outcome": "loss",
+    "terminal_tick": 7057,
+    "terminal_state_hash": "b84a18ffb96edeb158b897c90d3e2e740991e3642453862041855bb07f0750ef",
+    "core_health": 0.0,
+    "grid_samples": 117,
+    "trace_sha256": "4d6da61baf06286613a40007527b0792ecb8a96124614e5944b788f849a9a0c2"
+  },
+  "planner": {
+    "outcome": "win",
+    "terminal_tick": 8283,
+    "terminal_state_hash": "829b0135c0822b6b98c295fd1ee86283028fe9c5e51dc304b07339b7abc610e1",
+    "core_health": 1100.0,
+    "grid_samples": 138,
+    "trace_sha256": "1267ee1a3d1760cf4f1d8982b63a86ac26ee328303d4e9994ae3f9b0d628ce04"
+  },
+  "paired": {
+    "common_grid_samples": 117,
+    "mismatched_grid_samples": 81,
+    "occupancy_mismatch_fraction": 0.6923076923076923,
+    "student_compressed_tokens": 10,
+    "planner_compressed_tokens": 18,
+    "compressed_levenshtein_distance": 14,
+    "normalized_compressed_sequence_distance": 0.7777777777777778
+  },
+  "source_model_state_sha256": "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1",
+  "source_optimizer_state_sha256": "f3bdf93bf2dfae69842b87ca69f124c1bdda074b05422c02198530a5fdb687bc",
+  "model_or_optimizer_modified": false,
+  "terminal_reset_replay_equal": true,
+  "target_identifiers_recorded": false,
+  "raw_observations_published": false,
+  "confirmation_or_held_out_access": false
+}
