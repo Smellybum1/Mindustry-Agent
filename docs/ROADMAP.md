@@ -2514,7 +2514,17 @@ gate and rebuilt-runtime replay checks. Two fresh JVM source runs reproduced
 replay. ADR-0090 closes direct shared-expert distillation; compact result SHA
 is `1d8eb99978ebf148...`. The next supervision source must be a prospectively
 defined candidate-native planner that proves its own randomized-family
-survival before any v7 model or trajectory.
+survival before any v7 model or trajectory. ADR-0091 now precommits
+`candidate-native-planner-v1` before implementation or evaluation. It
+coordinates one atomic bundle over ordinary authoritative candidates/masks,
+reserves exclusive task/semantic targets across seats, and uses only structured
+observations, the task board, accepted action results, and bounded reset-local
+state. Protocol SHA is `4c1981c4ced305a2...`. Two fresh JVMs plus terminal-
+reset replay must reproduce exactly, accept every action without a nonordinary
+fallback or cross-seat conflict, reach at least 30/40 public wins, retain at
+least 80% of the frozen 36-win source expert, and label at least 95% of
+unforced boundaries with non-WAIT selections. This gate cannot train,
+authorize v7, or access confirmation/held-out data.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

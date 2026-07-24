@@ -2474,6 +2474,12 @@ repository-evidence mapping used for the M6 audit is:
   expert distillation. Full/compact report SHA prefixes are
   `83a457b702048960...` / `1d8eb99978ebf148...`. A separately governed
   candidate-native planner is next; no v7 or restricted access is authorized.
+  ADR-0091 now freezes that planner before implementation. Its ordinary-action
+  atomic allocator must avoid exclusive cross-seat conflicts, reproduce across
+  two fresh JVMs and terminal reset, accept every action, reach at least 30/40
+  public wins, retain at least 80% of the 36-win source expert, and achieve 95%
+  non-WAIT selection coverage. Protocol SHA is `4c1981c4ced305a2...`; no
+  implementation or planner evaluation exists yet.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
