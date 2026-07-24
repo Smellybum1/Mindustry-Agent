@@ -11,7 +11,7 @@ export PYTHONPATH="$ROOT/python/src${PYTHONPATH:+:$PYTHONPATH}"
   --config \
   "$ROOT/configs/training/m9-candidate-native-trajectory-plan-v1.json" \
   --preflight \
-  "$ROOT/configs/evaluation/m9-candidate-native-trajectory-plan-v1-preflight-result.json" \
+  "${M9_TRAJECTORY_PLAN_PREFLIGHT:-$ROOT/runs/m9-candidate-trajectory-plan-preflight.json}" \
   --output-dir "${M9_OUTPUT_DIR:-$ROOT/runs/m9-candidate-trajectory-plan-a}" \
   --java "${JAVA:-java}" \
   --port "${RL_PORT:-47810}"

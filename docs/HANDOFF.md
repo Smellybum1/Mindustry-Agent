@@ -1891,6 +1891,13 @@ queue.
    prefix is `db68338eec2430ed...`; no candidate update or restricted access
    occurred. Commit this evidence, rerun the exact gate at that commit, then
    start Replica A in a clean output directory.
+   The evidence-commit gate passed, but the final training-authority dry check
+   caught a release-path mismatch before training: the launcher referenced the
+   archival preflight instead of the freshly rerun exact-HEAD artifact, and the
+   live schema name differed. The launcher/schema and a stale-commit rejection
+   test are corrected locally; all 543 Python tests and the focused live check
+   pass. Commit this correction and repeat the complete exact-current-commit
+   gate before Replica A.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

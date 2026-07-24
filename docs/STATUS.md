@@ -2851,6 +2851,13 @@ repository-evidence mapping used for the M6 audit is:
   `db68338eec2430ed...`; no candidate optimizer update or restricted access
   occurred. Commit this evidence and rerun the exact-current-commit gate before
   Replica A.
+  That evidence-commit gate passed, but the final training-authority dry check
+  then caught a fail-closed release-path mismatch before any training: the
+  launcher referenced archival rather than freshly rerun exact-HEAD preflight
+  evidence, and the live schema name differed. The launcher/schema are
+  corrected with a stale-commit rejection test; all 543 Python tests and the
+  focused live check pass. Commit the correction and repeat the complete gate
+  before Replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

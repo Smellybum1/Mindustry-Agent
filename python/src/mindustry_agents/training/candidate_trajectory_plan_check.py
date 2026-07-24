@@ -84,7 +84,7 @@ def run(output: Path, *, java: str, port: int) -> dict[str, Any]:
     reset_equal = first_summary == second_summary
     unchanged = model_state_digest(model) == initial_digest
     result = {
-        "schema": "m9_candidate_native_trajectory_plan_live_preflight_v1",
+        "schema": "m9_candidate_native_trajectory_plan_preflight_v1",
         "implementation_commit": _git_commit(root),
         "config_sha256": CONFIG_SHA256,
         "protocol_sha256": PROTOCOL_SHA256,

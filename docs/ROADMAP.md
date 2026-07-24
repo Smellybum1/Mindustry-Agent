@@ -2926,6 +2926,13 @@ smoke, 79-boundary cross-process/reset determinism, and the 664-checkpoint/
 `db68338eec2430ed...`; no candidate update or restricted access occurred.
 Commit this evidence, rerun the exact gate at that commit, then start Replica A
 in a clean output directory.
+That evidence-commit gate passed, but the final training-authority dry check
+caught a release-path mismatch before training: the launcher referenced
+archival rather than freshly rerun exact-HEAD preflight evidence, and the live
+schema name differed. The launcher/schema and a stale-commit rejection test are
+corrected locally; all 543 Python tests and the focused live check pass. Commit
+the correction and repeat the complete exact-current-commit gate before
+Replica A.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

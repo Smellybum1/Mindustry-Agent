@@ -23,6 +23,7 @@ from mindustry_agents.training.candidate_trajectory_plan import (
 from mindustry_agents.training.candidate_trajectory_plan_train import (
     load_checkpoint,
     save_checkpoint,
+    validate_preflight,
 )
 from mindustry_agents.training.ippo import (
     SharedRecurrentSelector,
@@ -242,3 +243,35 @@ def test_candidate_checkpoint_round_trip_is_exact(tmp_path):
         "checkpoint_content_sha256"
     ]
     assert model_state_digest(restored) == model_state_digest(model)
+
+
+def test_training_authority_requires_exact_head_live_preflight(
+    tmp_path, monkeypatch
+):
+    path = tmp_path / "preflight.json"
+    path.write_text(
+        json.dumps(
+            {
+                "schema": (
+                    "m9_candidate_native_trajectory_plan_preflight_v1"
+                ),
+                "passed": True,
+                "implementation_commit": "exact-head",
+                "config_sha256": CONFIG_SHA256,
+                "protocol_sha256": PROTOCOL_SHA256,
+                "confirmation_or_held_out_access": False,
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        "mindustry_agents.training."
+        "candidate_trajectory_plan_train._git_commit",
+        lambda root: "exact-head",
+    )
+    assert validate_preflight(path, ROOT)["passed"]
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["implementation_commit"] = "stale-head"
+    path.write_text(json.dumps(document), encoding="utf-8")
+    with pytest.raises(ValueError, match="preflight is invalid"):
+        validate_preflight(path, ROOT)
