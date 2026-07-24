@@ -1,0 +1,99 @@
+{
+  "config_sha256": "c2401782578d2e8a3a3277fa8920d17fcee23f7cda89e92a9e1d09cfb166f459",
+  "confirmation_or_held_out_access": false,
+  "diagnostic_result_sha256": "959e55f140fce098ac9b51ed69f247408c516bbf63bcc510617ab93af2d6cb88",
+  "implementation_commit": "78af771f75b9054c2d17da90cfd1bf287118518a",
+  "inherited_contract_probe": {
+    "exact_config_fields": [
+      "teacher_policy",
+      "runtime_contract",
+      "scenario_id",
+      "scenario_version",
+      "agent_count",
+      "train_seed_set",
+      "train_seed_set_sha256",
+      "dev_seed_set",
+      "dev_seed_set_sha256",
+      "confirmation_seed_set",
+      "held_out_seed_set",
+      "shuffle_seed",
+      "torch_threads",
+      "continuation_updates",
+      "episodes_per_update",
+      "learning_rate",
+      "adam_epsilon",
+      "epochs_per_update",
+      "minibatch_size",
+      "max_grad_norm",
+      "model_architecture"
+    ],
+    "exact_schedule_fields": [
+      "root_count",
+      "reuse_count",
+      "shuffle",
+      "shuffle_seed",
+      "updates",
+      "episodes_per_update"
+    ],
+    "exact_selection_fields": [
+      "minimum_wins",
+      "maximum_mean_team_idle_fraction_exclusive",
+      "ranking"
+    ],
+    "only_learning_change": "normalized_disagreement_example_weight",
+    "parent_candidate": "m9-candidate-native-on-policy-relabel-v1",
+    "passed": true
+  },
+  "live_student_state_probe": {
+    "core_health": 0.0,
+    "eligible_labels": 70,
+    "forced_controls": 11,
+    "hard_examples": 2,
+    "ordinary_examples": 68,
+    "outcome": "loss",
+    "ran": true,
+    "rejected_student_actions": 1,
+    "seed": 18000100001,
+    "student_teacher_matches": 68,
+    "terminal_reset_replay_equal": true,
+    "tick": 6997,
+    "total_example_weight": 76.0,
+    "trace_sha256": "bd9dee28521d7ccf154937f7ac42f168508db2e1f0f7150e1a59c2a4557bfdf6"
+  },
+  "ordinary_equivalence_probe": {
+    "all_ordinary_matches_unweighted_update": true,
+    "checkpoint_content_sha256": "ecd76be50176e3eedb282751b278b5e3333c4799174b1b196341c5e2d3b4f874",
+    "model_state_sha256": "5f62e5e478f9b6e8e19f7392e60eeed07d993c0175b3214f19a82eb82a81b81c",
+    "optimizer_state_sha256": "9dd474622aa456af41c2631d95c4c677e5e642a9e04ea899579eae6ee2c44b94",
+    "teacher_nll": 12.395092487335205
+  },
+  "passed": true,
+  "protocol_sha256": "a42b1cd24a78f67404868835642c4c4a77143865f0e101bea57f6d197b88cab3",
+  "schema": "m9_candidate_native_hard_example_relabel_preflight_v1",
+  "source_checkpoint_content_sha256": "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865",
+  "source_result_sha256": "ebea0b741abbf2b7e3d995af1f87d7528ddee08d94089db4f837f40c730e60ee",
+  "weighted_optimizer_probe": {
+    "checkpoint_content_sha256": "a9b7c7d1adcc1550c13912a6b3ee5588d37c8e0f9c928df7b56122ed495389f0",
+    "metrics": {
+      "batches": 8.0,
+      "hard_example_labels": 8.0,
+      "hard_example_presentation_top1_accuracy": 0.015625,
+      "hard_example_presentations": 64.0,
+      "hard_example_weight_fraction": 0.5,
+      "labels": 40.0,
+      "ordinary_example_labels": 32.0,
+      "ordinary_example_presentations": 256.0,
+      "ordinary_presentation_top1_accuracy": 0.19140625,
+      "presentation_top1_accuracy": 0.15625,
+      "presentations": 320.0,
+      "teacher_nll": 13.557739734649658,
+      "total_example_weight": 64.0,
+      "unweighted_teacher_nll": 12.485994219779968,
+      "weighted_presentations": 512.0,
+      "weighted_teacher_nll": 13.557739734649658
+    },
+    "model_state_sha256": "6b75f966c7951019a36e6a17d3d5a792b9fa406276572e5c5c6491f5e28bd251",
+    "optimizer_state_sha256": "a8e7c71ed7c51b0e9bcdbc902f458d1b3dd41a5160dd60a7694637935f9a22e3",
+    "replicas_equal": true
+  }
+}

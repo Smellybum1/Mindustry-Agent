@@ -2662,9 +2662,13 @@ repository-evidence mapping used for the M6 audit is:
   focused tests are implemented locally while the existing relabel command
   remains compatible. All 509 Python tests pass. A preliminary live
   public-train probe repeats exactly with 70 labels and two hard examples; the
-  all-ordinary optimizer path is checkpoint-exact with unweighted NLL. Commit
-  this boundary and run the complete exact-current-commit gate before Replica
-  A.
+  all-ordinary optimizer path is checkpoint-exact with unweighted NLL. The
+  complete public-only gate passes at implementation commit `78af771f75`: 509
+  Python tests, pinned Java/custom-module checks, smoke, cross-process/reset
+  determinism, and the 664-checkpoint golden replay are green. The exact
+  preflight result SHA prefix is `e2d8e565b3dd2a5b...` and records no
+  restricted access. Commit this evidence and rerun the exact-current-commit
+  gate before Replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

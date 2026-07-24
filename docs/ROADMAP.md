@@ -2734,8 +2734,12 @@ checkpoint/manifest/replica path, preflight, commands, and focused tests are
 implemented locally without changing the existing relabel command. All 509
 Python tests pass. A preliminary live public-train probe repeats exactly with
 70 labels and two hard examples; the all-ordinary optimizer path is
-checkpoint-exact with unweighted NLL. Commit this boundary, then run the
-complete exact-current-commit gate before Replica A.
+checkpoint-exact with unweighted NLL. The complete public-only gate passes at
+implementation commit `78af771f75`: 509 Python tests, pinned Java/custom-module
+checks, smoke, cross-process/reset determinism, and the 664-checkpoint golden
+replay are green. The exact preflight result SHA prefix is
+`e2d8e565b3dd2a5b...` and records no restricted access. Commit this evidence,
+then rerun the exact-current-commit gate before Replica A.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

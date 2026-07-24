@@ -1702,8 +1702,13 @@ queue.
    the existing relabel command remains compatible. All 509 Python tests pass.
    A preliminary live public-train probe repeats exactly with 70 labels and
    two hard examples; the all-ordinary optimizer path is checkpoint-exact with
-   unweighted NLL. Commit this boundary and run the complete exact-current-
-   commit gate before Replica A.
+   unweighted NLL. The complete public-only gate passes at implementation
+   commit `78af771f75`: 509 Python tests, pinned Java/custom-module checks,
+   smoke, cross-process/reset determinism, and the 664-checkpoint golden replay
+   are green. The exact preflight result SHA prefix is
+   `e2d8e565b3dd2a5b...` and records no restricted access. Commit this evidence,
+   rerun the exact-current-commit gate, then start Replica A in a clean output
+   directory.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
