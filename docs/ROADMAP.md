@@ -2584,7 +2584,14 @@ v7's sole change as widening that board predicate to
 CLAIMED/RUNNING/BLOCKED/COMPLETED. Protocol SHA is `df0427db128c8543...`;
 implementation is next.
 The lifecycle predicate, exact protocol/inheritance checks, focused v1--v7
-tests, and command are local; all 468 Python tests pass. Commit before the gate.
+tests, and command are committed; all 468 Python tests pass. V7 eliminates all
+action rejections and is exact across twin JVM/reset, but remains 27/40 at
+99.7620% coverage. Public boundary inspection shows losing roots retaining
+exposed DEFEND work through the safe inter-wave interval. ADR-0104 rejects v7
+at compact SHA `d46d86025d0e45ec...`. ADR-0105 precommits v8's sole change:
+abandon DEFEND when there are no enemies and the next wave is outside the
+authoritative defend-lead window. Protocol SHA is `168317b2e5a34e64...`;
+implementation is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

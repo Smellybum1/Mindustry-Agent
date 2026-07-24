@@ -2521,8 +2521,13 @@ repository-evidence mapping used for the M6 audit is:
   fortification is RUNNING. ADR-0102 rejects it at compact SHA
   `930b617186248ea3...`. ADR-0103 precommits v7's active-or-completed
   fortification predicate at protocol SHA `df0427db128c8543...`; it is
-  implemented locally with exact inheritance/focused coverage; all 468 Python
-  tests pass. Commit before evaluation.
+  implemented with exact inheritance/focused coverage; all 468 Python tests
+  pass. V7 removes every action rejection and reproduces across twin JVM/reset,
+  but remains 27/40 at 99.7620% coverage. Public boundary inspection shows
+  losing roots retaining exposed DEFEND tasks through the safe inter-wave
+  interval. ADR-0104 rejects v7 at compact SHA `d46d86025d0e45ec...`.
+  ADR-0105 precommits v8's sole safe-interwave DEFEND demobilization coordinate
+  at protocol SHA `168317b2e5a34e64...`; implementation is next.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

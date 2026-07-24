@@ -1,0 +1,71 @@
+{
+  "schema": "m9_candidate_native_planner_protocol_v8",
+  "data_classification": "public_dev_only",
+  "candidate_version": "candidate-native-planner-v8-interwave-demobilize",
+  "parent_candidate_version": "candidate-native-planner-v7-active-fortification",
+  "sole_behavior_change": "abandon_defend_during_safe_interwave_interval",
+  "parent_protocol_sha256": "df0427db128c8543b3f45c6f9cbd16eea81afe3bc4e3be9be73f6003af902d75",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": {
+    "path": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+    "sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+    "episodes": 40
+  },
+  "planner": {
+    "name": "candidate-native-planner-v8-interwave-demobilize",
+    "authority": "ordinary_external_candidate_task_actions",
+    "interwave_demobilization": {
+      "current_skill_type": "DEFEND",
+      "action_mask": "abandon_true",
+      "preconditions": [
+        "enemy_count_equals_zero",
+        "time_to_next_wave_greater_than_defend_lead_ticks"
+      ],
+      "action": "ABANDON",
+      "reason": "safe_interwave_demobilize",
+      "fallback": "unchanged_v7_fixed_action_and_allocator",
+      "evidence": "v7_public_losses_persisted_defenders_until_next_wave_spawn_and_lost_an_exposed_seat_before_reallocation"
+    },
+    "inputs": [
+      "authoritative_per-seat_observation",
+      "authoritative_per-seat_action_mask",
+      "structured_task_board",
+      "prior_accepted_action_results",
+      "bounded_reset_local_planner_state"
+    ],
+    "forbidden_inputs": [
+      "mutable_engine_state",
+      "shared_expert_state",
+      "shared_expert_decisions",
+      "future_outcome",
+      "confirmation_membership",
+      "held_out_membership"
+    ]
+  },
+  "replay": {
+    "fresh_jvm_runs": 2,
+    "require_byte_identical_reports": true,
+    "require_terminal_reset_replay": true,
+    "require_all_actions_accepted": true,
+    "require_zero_nonordinary_fallbacks": true,
+    "require_zero_cross_seat_exclusive_conflicts": true
+  },
+  "classification": {
+    "minimum_wins": 30,
+    "minimum_source_expert_win_retention_fraction": 0.8,
+    "source_expert_wins": 36,
+    "minimum_non_wait_selection_coverage": 0.95,
+    "pass": "candidate_native_supervision_source_supported",
+    "fail": "candidate_native_supervision_source_not_supported"
+  },
+  "authority": {
+    "may_modify_model": false,
+    "may_train": false,
+    "may_select_checkpoint": false,
+    "may_promote": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_v7": false
+  }
+}

@@ -95,6 +95,21 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0088](ADR-0088-reject-m9-ippo-v6-success-margin.md) | Reject M9 IPPO v6 at public construction |
 | [0089](ADR-0089-precommit-m9-shared-expert-candidate-projection.md) | Freeze the shared-expert candidate-projection diagnostic |
 | [0090](ADR-0090-reject-m9-shared-expert-candidate-projection.md) | Reject direct shared-expert candidate projection |
+| [0091](ADR-0091-precommit-m9-candidate-native-planner-v1.md) | Freeze M9 candidate-native planner v1 |
+| [0092](ADR-0092-reject-m9-candidate-native-planner-v1.md) | Reject M9 candidate-native planner v1 |
+| [0093](ADR-0093-precommit-m9-candidate-native-planner-v2.md) | Freeze M9 candidate-native planner v2 |
+| [0094](ADR-0094-reject-m9-candidate-native-planner-v2.md) | Reject M9 candidate-native planner v2 |
+| [0095](ADR-0095-precommit-m9-candidate-native-planner-v3.md) | Freeze M9 candidate-native planner v3 |
+| [0096](ADR-0096-reject-m9-candidate-native-planner-v3.md) | Reject M9 candidate-native planner v3 |
+| [0097](ADR-0097-precommit-m9-candidate-native-planner-v4.md) | Freeze M9 candidate-native planner v4 |
+| [0098](ADR-0098-reject-m9-candidate-native-planner-v4.md) | Reject M9 candidate-native planner v4 |
+| [0099](ADR-0099-precommit-m9-candidate-native-planner-v5.md) | Freeze M9 candidate-native planner v5 |
+| [0100](ADR-0100-reject-m9-candidate-native-planner-v5.md) | Reject M9 candidate-native planner v5 |
+| [0101](ADR-0101-precommit-m9-candidate-native-planner-v6.md) | Freeze M9 candidate-native planner v6 |
+| [0102](ADR-0102-reject-m9-candidate-native-planner-v6.md) | Reject M9 candidate-native planner v6 |
+| [0103](ADR-0103-precommit-m9-candidate-native-planner-v7.md) | Freeze M9 candidate-native planner v7 |
+| [0104](ADR-0104-reject-m9-candidate-native-planner-v7.md) | Reject M9 candidate-native planner v7 |
+| [0105](ADR-0105-precommit-m9-candidate-native-planner-v8.md) | Freeze M9 candidate-native planner v8 |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.
