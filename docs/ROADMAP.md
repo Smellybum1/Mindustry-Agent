@@ -2689,7 +2689,10 @@ update 64, the same 40 public-dev roots, deterministic student control,
 planner-v11 same-state labels, exact twin-JVM/reset reports, first
 disagreement/task confusion, and rejection/outcome association. Protocol SHA
 is `aed6d1b231cc0992...`; it cannot train, select, repair, promote, or access
-restricted data.
+restricted data. The fail-closed dual-source loader, per-checkpoint
+student-controlled evaluator, exact twin-JVM/reset comparison, deterministic
+classification, command, and focused tests are implemented locally; all 498
+Python tests pass. Commit before the first diagnostic JVM.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

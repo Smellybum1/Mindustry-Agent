@@ -1658,7 +1658,10 @@ queue.
    update 64, all 40 public-dev roots, deterministic student control,
    planner-v11 same-state labels, exact twin-JVM/reset reports, first
    disagreement/task confusion, and rejection/outcome association. Protocol
-   SHA is `aed6d1b231cc0992...`. Implement and run it before any successor.
+   SHA is `aed6d1b231cc0992...`. The fail-closed dual-source loader,
+   per-checkpoint student-controlled evaluator, exact twin-JVM/reset comparison,
+   deterministic classification, command, and focused tests are implemented
+   locally; all 498 Python tests pass. Commit, then run it before any successor.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

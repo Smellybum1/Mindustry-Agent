@@ -2619,7 +2619,11 @@ repository-evidence mapping used for the M6 audit is:
   public-dev roots, deterministic student control, planner-v11 same-state
   labels, exact twin-JVM/reset reports, first disagreement/task confusion, and
   rejection/outcome association. Protocol SHA is `aed6d1b231cc0992...`; it
-  cannot train, select, repair, promote, or access restricted data.
+  cannot train, select, repair, promote, or access restricted data. The
+  fail-closed dual-source loader, per-checkpoint student-controlled evaluator,
+  exact twin-JVM/reset comparison, deterministic classification, command, and
+  focused tests are implemented locally; all 498 Python tests pass. Commit
+  before the first diagnostic JVM.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
