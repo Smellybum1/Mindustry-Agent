@@ -2551,6 +2551,14 @@ BUILD_SCHEMATIC task is CLAIMED, RUNNING, or BLOCKED. Protocol SHA is
 authorized. The task-board filter, exact protocol/inheritance validation,
 focused v1/v2/v3 behavior tests, and separate command surface are now local;
 all 460 Python tests pass. Commit this boundary before evaluation.
+The exact v3 gate accepts every action and reproduces across fresh JVM/reset,
+but survival falls to 3/40 with 99.4711% non-WAIT coverage. At the public
+tick-250 boundary its idle seat chooses harvest while two underfilled-turret
+supply targets are valid. ADR-0096 rejects v3; full/compact SHA prefixes are
+`b94f02d2183aa4db...` / `9af4d952fc690c53...`. ADR-0097 precommits v4's sole
+change: in the active-build defer state with positive turret coverage and ammo
+below one, rank SUPPLY_TURRET above HARVEST_RESOURCE. Protocol SHA is
+`ffb5bff61b76161e...`; implementation is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

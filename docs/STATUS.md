@@ -2500,7 +2500,11 @@ repository-evidence mapping used for the M6 audit is:
   ADR-0095 precommits v3's sole task-board-aware active-build defer coordinate
   at protocol SHA `fc8be8ce0bf63015...`. The filter, exact inheritance checks,
   focused v1/v2/v3 tests, and command are local; all 460 Python tests pass.
-  Commit before evaluation.
+  The exact gate then accepts every action but falls to 3/40 at 99.4711%
+  coverage. Public tick-250 inspection shows harvest displaces two actionable
+  supply targets. ADR-0096 rejects v3 at compact SHA `9af4d952fc690c53...`.
+  ADR-0097 precommits the readiness-preserving active-build supply priority at
+  protocol SHA `ffb5bff61b76161e...`; v4 is unimplemented.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
