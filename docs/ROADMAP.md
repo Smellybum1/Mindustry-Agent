@@ -2811,6 +2811,15 @@ masked-context gradient influence, padding exclusion telemetry, exact source
 binding, and public-only authority. Commit the implementation and pass the
 complete exact-current-commit live preflight before Replica A; no candidate
 update or restricted access has occurred.
+The complete public-only preflight passes at exact implementation commit
+`e0c6ce7929`: all 523 Python tests, pinned Java/custom-module checks, live
+sequence validation, smoke, 79-boundary cross-process/reset/seed determinism,
+and the 664-checkpoint/16,200-tick golden replay are green. The live probe
+preserves the prior student action trace and supervised projection exactly
+across terminal resets while retaining 11 masked recurrent-context boundaries
+around 70 labels. Compact result SHA prefix is `e5ca580dd043b51a...`; source
+states remain unchanged and no restricted data was accessed. Commit this
+evidence and rerun the exact gate at that commit before Replica A.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

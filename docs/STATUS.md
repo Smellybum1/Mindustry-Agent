@@ -2732,6 +2732,16 @@ repository-evidence mapping used for the M6 audit is:
   checks pass locally. The implementation must be committed before the
   complete exact-current-commit live preflight, and no candidate optimizer
   update or restricted access has occurred.
+  The complete public-only preflight now passes at exact implementation commit
+  `e0c6ce7929`: all 523 Python tests, pinned Java/custom-module checks, the live
+  sequence probe, smoke, 79-boundary cross-process/reset/seed determinism, and
+  the 664-checkpoint/16,200-tick golden replay are green. The live probe
+  reproduces the existing student action trace and supervised projection
+  exactly across terminal resets while retaining 11 loss-masked context
+  transitions around 70 unchanged labels. Compact result SHA prefix is
+  `e5ca580dd043b51a...`; source model/optimizer state remains unchanged and no
+  restricted data was accessed. Commit this evidence and rerun the exact gate
+  at the evidence commit before Replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

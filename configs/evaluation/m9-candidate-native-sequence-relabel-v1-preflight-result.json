@@ -1,0 +1,101 @@
+{
+  "config_sha256": "b7e17a6e74b6d18a261d7d4845dcff8d808ffef830641e0c4fb21dbe327233d1",
+  "configured_optimizer_probe": {
+    "checkpoint_content_sha256": "7df8c60511d0144ec68f77d1bdb393f7ebb59e502a072614594416fae455ea75",
+    "metrics": {
+      "all_sequence_windows": 3.0,
+      "batches": 8.0,
+      "dropped_context_transitions": 0.0,
+      "dropped_zero_label_windows": 0.0,
+      "labels": 32.0,
+      "padded_transition_slots": 64.0,
+      "presentation_top1_accuracy": 0.1484375,
+      "presentations": 256.0,
+      "real_transition_presentations": 320.0,
+      "retained_context_transitions": 8.0,
+      "sequence_windows": 3.0,
+      "teacher_nll": 13.02829360961914
+    },
+    "model_state_sha256": "326017234f5f7d08e410bad75baeda0327ee5fbd6beb258be4afd111b2874ff9",
+    "optimizer_state_sha256": "d1265c14f69d58832dc92111cc10537ddae2f58cc7fb6286bb564225b0cbb6a1",
+    "replicas_equal": true
+  },
+  "confirmation_or_held_out_access": false,
+  "context_gradient_probe": {
+    "altered_context_model_state_sha256": "15682443bcd8d72fdd92b6baf5c7721aae11b5ca686676cdbbb13ea63723ec35",
+    "baseline_model_state_sha256": "65dc4ff9b584e3dc361351ae975ccdbd4f6cc9897c736e07a5d026d28ef099bd",
+    "masked_context_changes_supervised_gradient": true
+  },
+  "implementation_commit": "e0c6ce79290af32bf0aca3b177b12706572de317",
+  "inherited_contract_probe": {
+    "exact_config_fields": [
+      "teacher_policy",
+      "runtime_contract",
+      "scenario_id",
+      "scenario_version",
+      "agent_count",
+      "train_seed_set",
+      "train_seed_set_sha256",
+      "dev_seed_set",
+      "dev_seed_set_sha256",
+      "confirmation_seed_set",
+      "held_out_seed_set",
+      "shuffle_seed",
+      "torch_threads",
+      "continuation_updates",
+      "episodes_per_update",
+      "learning_rate",
+      "adam_epsilon",
+      "epochs_per_update",
+      "minibatch_size",
+      "max_grad_norm",
+      "model_architecture"
+    ],
+    "exact_schedule_fields": [
+      "root_count",
+      "reuse_count",
+      "shuffle",
+      "shuffle_seed",
+      "updates",
+      "episodes_per_update"
+    ],
+    "exact_selection_fields": [
+      "minimum_wins",
+      "maximum_mean_team_idle_fraction_exclusive",
+      "ranking"
+    ],
+    "only_learning_change": "contiguous_truncated_bptt_teacher_nll",
+    "parent_candidate": "m9-candidate-native-on-policy-relabel-v1",
+    "passed": true
+  },
+  "length_one_equivalence_probe": {
+    "checkpoint_content_sha256": "1071267d66b0c0c266658b9f197c54f34085ed59536903525eca6295d2cb8c99",
+    "matches_flat_optimizer_exactly": true,
+    "model_state_sha256": "5f62e5e478f9b6e8e19f7392e60eeed07d993c0175b3214f19a82eb82a81b81c",
+    "optimizer_state_sha256": "9dd474622aa456af41c2631d95c4c677e5e642a9e04ea899579eae6ee2c44b94",
+    "teacher_nll": 12.395092487335205
+  },
+  "live_student_state_probe": {
+    "context_transitions": 11,
+    "core_health": 0.0,
+    "eligible_labels": 70,
+    "forced_controls": 11,
+    "outcome": "loss",
+    "ran": true,
+    "rejected_student_actions": 1,
+    "retained_windows": 7,
+    "seed": 18000100001,
+    "student_control_matches_flat_collector": true,
+    "student_teacher_matches": 68,
+    "supervised_projection_matches_flat_collector": true,
+    "terminal_reset_replay_equal": true,
+    "tick": 6997,
+    "trace_sha256": "bd9dee28521d7ccf154937f7ac42f168508db2e1f0f7150e1a59c2a4557bfdf6"
+  },
+  "passed": true,
+  "protocol_sha256": "b79f6da9c24863d0765e127678f45471ca78fe9a215a26fe0fa15105951a261e",
+  "schema": "m9_candidate_native_sequence_relabel_preflight_v1",
+  "source_checkpoint_content_sha256": "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865",
+  "source_diagnostic_sha256": "af4725e0fa034761d3cb69e46cfc2c05014724e8c6533544cfaccad416d2c7df",
+  "source_result_sha256": "ebea0b741abbf2b7e3d995af1f87d7528ddee08d94089db4f837f40c730e60ee"
+}

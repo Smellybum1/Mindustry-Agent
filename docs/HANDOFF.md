@@ -1776,6 +1776,15 @@ queue.
    authority. Commit this implementation, then run and commit the complete
    exact-current-commit live preflight before Replica A. No candidate optimizer
    update or restricted access has occurred.
+   The complete public-only preflight passes at exact implementation commit
+   `e0c6ce7929`: 523 Python tests, pinned Java/custom-module checks, live
+   sequence validation, smoke, 79-boundary cross-process/reset/seed
+   determinism, and the 664-checkpoint/16,200-tick golden replay are green.
+   Terminal-reset repeats preserve the existing student action trace and
+   supervised projection exactly while adding 11 masked context boundaries
+   around 70 labels. Compact result SHA prefix is `e5ca580dd043b51a...`;
+   source states remain unchanged and no restricted data was accessed. Commit
+   this evidence, rerun the exact gate at that commit, then start Replica A.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
