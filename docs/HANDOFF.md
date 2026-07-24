@@ -1530,7 +1530,7 @@ queue.
    rejected. Precommit the recommended v4 entropy-annealing successor before
    any new model work. ADR-0079 now freezes v4's sole change as the inclusive
    linear entropy schedule `0.02 * (32 - update) / 31`; implementation is next.
-5. **Implement and validate candidate-native planner v2 before any v7 model.**
+5. **Implement and validate candidate-native planner v3 before any v7 model.**
    ADR-0088
    rejects v6 after its exact gate and full Replica A: best 2/40 at update 29,
    final 0/40, manifest/full-run digests `d6ecb9f820ec975...` /
@@ -1548,12 +1548,14 @@ queue.
    99.9194% non-WAIT coverage, but one tick-250 fortification
    `reservation_overlap` rejection per episode. ADR-0092 preserves that
    rejection at compact SHA `5a9df7fce1c39f14...`. ADR-0093 and protocol SHA
-   `411c40c69ac7419f...` freeze v2's sole change: permit at most one new
-   BUILD_SCHEMATIC selection in an atomic bundle while inheriting every other
-   v1 rule and gate. The implementation, exact protocol/inheritance checks,
-   focused v1/v2 tests, and command surface are local; all 458 Python tests
-   pass. Commit v2 before rerunning the same public gate. No v7 or restricted
-   access is authorized yet.
+   `411c40c69ac7419f...` freeze v2's sole change. Its exact run remains 13/40
+   with the same rejections because the one new schematic overlaps the
+   already-RUNNING build line. ADR-0094 rejects v2 at compact SHA
+   `59d9993c9779abf0...`. ADR-0095 and protocol SHA
+   `fc8be8ce0bf63015...` precommit v3's only change: defer new schematics while
+   the authoritative board has an active build-line or schematic task.
+   Implement and commit v3 before the same public gate. No v7 or restricted
+   access is authorized.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1561,7 +1563,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0093` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0095` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

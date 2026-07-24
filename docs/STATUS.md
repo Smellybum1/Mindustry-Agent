@@ -2493,7 +2493,12 @@ repository-evidence mapping used for the M6 audit is:
   atomic bundle. Protocol SHA is `411c40c69ac7419f...`. The implementation
   adds only that constructor-bound constraint plus exact protocol/inheritance
   validation, focused v1/v2 tests, and a separate command. All 458 Python
-  tests pass; commit it before the governed run.
+  tests pass. The governed run then reproduces v1 exactly: 13/40 and the same
+  40 tick-250 rejections, because the one new schematic overlaps a RUNNING
+  build-line reservation from tick 0. Full/compact SHA prefixes are
+  `7d1e734bdacae51c...` / `59d9993c9779abf0...`; ADR-0094 rejects v2.
+  ADR-0095 precommits v3's sole task-board-aware active-build defer coordinate
+  at protocol SHA `fc8be8ce0bf63015...`; it is unimplemented.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

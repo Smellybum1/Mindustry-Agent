@@ -2540,8 +2540,15 @@ rejection. ADR-0093 prospectively freezes v2's only change: at most one new
 and gate inherited exactly. Protocol SHA is `411c40c69ac7419f...`; implementation
 now adds only that constructor-bound constraint, exact protocol/inheritance
 validation, focused v1/v2 behavior tests, and a separate command surface. All
-458 Python tests pass. Commit this boundary before the v2 run; no v7 or
-restricted access is authorized.
+458 Python tests pass. The exact v2 run is bit-identical to v1: 13/40 wins and
+the same 40 tick-250 rejections. V2 emits only one new schematic, but it
+overlaps the already RUNNING build-line task from tick 0. Full/compact SHA
+prefixes are `7d1e734bdacae51cb...` / `59d9993c9779abf0...`; ADR-0094 rejects
+v2. ADR-0095 precommits v3's only change: consult the authoritative task board
+and defer new BUILD_SCHEMATIC candidates while a BUILD_LINE or
+BUILD_SCHEMATIC task is CLAIMED, RUNNING, or BLOCKED. Protocol SHA is
+`fc8be8ce0bf63015...`. Implementation is next; no v7 or restricted access is
+authorized.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
