@@ -1,0 +1,89 @@
+{
+  "schema": "m9_candidate_native_joint_bundle_public_protocol_v1",
+  "candidate": "m9-candidate-native-joint-bundle-v1",
+  "data_classification": "public_train_and_dev_only",
+  "config_path": "configs/training/m9-candidate-native-joint-bundle-v1.json",
+  "config_sha256": "c8138e9d26b8addcd821068ff93b02ecdec03b1053cc8ecf7be2f40b6b3ce0b4",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "train_seed_set": "configs/evaluation/bootstrap-defense-v1-m9-train-diverse2048-v1.json",
+  "train_seed_set_sha256": "2e4d5b853ba9c8a6b568b107537756e257d3c19205af71c0445ea5ea730088c4",
+  "dev_seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "dev_seed_set_sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+  "public_evidence": {
+    "trajectory_divergence_result_sha256": "9557714141a239b4e1f092a6f4009157876ae52a52d02e6435359f6dab3204bd",
+    "planner_correction_result_sha256": "af4725e0fa034761d3cb69e46cfc2c05014724e8c6533544cfaccad416d2c7df",
+    "rejected_plan_result_sha256": "cf2a1fb00d732ebde6661c2679f759c7beadf3677799586b7437799c85a412e3"
+  },
+  "source_checkpoint": {
+    "path": "runs/m9-candidate-on-policy-relabel-a/candidate-on-policy-relabel-update-64.pt",
+    "file_sha256": "cbfde7e932e718f49b6e80f79bfd2b0072fa2bb7fd1f04e4ca0d7da9ee8ed408",
+    "content_sha256": "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865",
+    "model_state_sha256": "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1",
+    "optimizer_state_sha256": "f3bdf93bf2dfae69842b87ca69f124c1bdda074b05422c02198530a5fdb687bc",
+    "construction_passed": false,
+    "selected_or_promoted": false,
+    "repaired": false
+  },
+  "training": {
+    "unique_public_roots": 2048,
+    "updates": 32,
+    "episodes_per_update": 64,
+    "epochs_per_update": 8,
+    "actor_label_budget_per_minibatch": 256,
+    "student_control": "deterministic_joint_argmax",
+    "teacher": "candidate-native-planner-v11-single-defender",
+    "optimizer": "exact_source_adam_for_inherited_parameters_plus_one_same_hyperparameter_empty_state_group_for_new_pairwise_head",
+    "only_changes": [
+      "same_boundary_cross_seat_action_descriptors",
+      "zero_output_initialized_pairwise_compatibility_head",
+      "normalized_legal_joint_bundle_nll"
+    ]
+  },
+  "evaluation": {
+    "ordered_roots": 40,
+    "action_mode": "deterministic_joint_argmax",
+    "after_every_update": true,
+    "minimum_construction_wins": 30,
+    "maximum_mean_team_idle_fraction_exclusive": 0.25,
+    "ranking": [
+      "wins_desc",
+      "mean_core_health_desc",
+      "mean_team_idle_fraction_asc",
+      "continuation_update_asc"
+    ]
+  },
+  "preflight": {
+    "source_and_public_evidence_hashes_exact": true,
+    "zero_pairwise_head_preserves_every_source_bundle_exactly": true,
+    "joint_loss_at_zero_pairwise_head_equals_mean_inherited_per_seat_nll": true,
+    "legal_cartesian_enumeration_and_tie_order_exact": true,
+    "forced_controls_excluded_from_bundle_variables_and_loss": true,
+    "same_boundary_cross_seat_only": true,
+    "inherited_model_parameters_exact": true,
+    "inherited_optimizer_state_exact": true,
+    "new_optimizer_group_empty_and_deterministic": true,
+    "configured_optimizer_replicas_exact": true,
+    "live_student_collection_repeats_after_terminal_reset": true,
+    "complete_exact_current_commit_gate": true
+  },
+  "replicas": {
+    "replica_a": "required_after_preflight",
+    "replica_b": "authorized_only_if_replica_a_reaches_construction_and_idle_gates",
+    "exact_checkpoint_and_manifest_identity_required": true,
+    "failure_before_gate_prohibits_replica_b": true
+  },
+  "downstream_authority": {
+    "may_select_source_checkpoint": false,
+    "may_repair_source_checkpoint": false,
+    "may_add_target_identifiers": false,
+    "may_change_planner_candidates_features_or_masks": false,
+    "may_sweep_pairwise_width_scale_loss_or_minibatch_budget": false,
+    "may_use_reward_critic_ppo_or_mappo": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_human_session": false,
+    "replica_a_may_train_after_exact_preflight": true,
+    "replica_b_requires_replica_a_construction_pass": true
+  }
+}

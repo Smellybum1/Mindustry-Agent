@@ -300,3 +300,16 @@ External fixed stepping, one environment per JVM, simulation-thread state
 ownership, structured-authoritative communication, deterministic replay,
 framework-neutral environment code, and pinned engine/dependency identities
 remain exact.
+
+## D8. Prospective joint-bundle candidate
+
+ADR-0135 prospectively supersedes D1's independent per-seat action scoring for
+`m9-candidate-native-joint-bundle-v1` only. The candidate retains one shared
+parameter set and private per-seat recurrent states, but scores compatibility
+over the legal Cartesian product of current seat actions from the same
+immutable pre-step boundary. Selection is simultaneous: no seat observes
+another seat's newly chosen action. A zero-output pairwise head makes the
+initial joint argmax exactly equal to the rejected update-64 independent
+bundle. Public student-state joint-bundle NLL is the only supervision change;
+all fixed-step, thread, process, structured-authority, determinism, source,
+budget, gate, replica, and sealed-data rules remain exact.

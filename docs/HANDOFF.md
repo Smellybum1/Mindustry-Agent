@@ -1908,8 +1908,19 @@ queue.
    Replica B. Manifest/canonical/compact-result SHA prefixes are
    `9486145007d33895...` / `d4f2653464606f34...` /
    `cf2a1fb00d732ebd...`. No checkpoint was selected, repaired, or promoted;
-   no restricted data was accessed. Stop model work pending a separately
-   prospective architecture or supervision-class decision.
+   no restricted data was accessed.
+   The owner has now authorized the next prospective architecture. ADR-0135
+   freezes `m9-candidate-native-joint-bundle-v1` before implementation or
+   training. It inherits the exact rejected update-64 model/Adam state and
+   adds one zero-output `404->64->1` compatibility head over pairs of existing
+   same-boundary seat-action descriptors. Legal Cartesian-bundle argmax is
+   source-exact at initialization; training changes only to normalized
+   planner joint-bundle NLL on deterministic student states. No target IDs,
+   planner/features/masks, private hidden state, roots, 32-by-64 budget,
+   30/40 floor, or conditional replica rule changes. Config/protocol SHA
+   prefixes are `c8138e9d26b8addc...` / `f3a9b9eecfaeae08...`. Implement and
+   pass the complete exact-current-commit public preflight before Replica A;
+   restricted data remains prohibited.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1917,7 +1928,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0134` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0135` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

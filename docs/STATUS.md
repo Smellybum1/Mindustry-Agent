@@ -2870,6 +2870,18 @@ repository-evidence mapping used for the M6 audit is:
   `cf2a1fb00d732ebd...`. No checkpoint was selected, repaired, or promoted and
   no restricted data was accessed. Another learned candidate requires a
   separately prospective architecture or supervision-class decision.
+  The owner has supplied that direction. ADR-0135 freezes
+  `m9-candidate-native-joint-bundle-v1` before implementation or training.
+  The accepted actor scores current seat actions independently, while planner
+  v11 evaluates their atomic Cartesian bundle. The candidate inherits the
+  exact rejected update-64 model/Adam state and adds only a zero-output
+  `404->64->1` pairwise compatibility head over existing same-boundary action
+  descriptors. Initial joint argmax is source-exact. Deterministic
+  student-state supervision becomes normalized legal joint-bundle NLL; roots,
+  planner, features, masks, private hidden state, 32-by-64 budget, 30/40 floor,
+  and conditional replica rule remain exact. Config/protocol SHA prefixes are
+  `c8138e9d26b8addc...` / `f3a9b9eecfaeae08...`. No implementation, optimizer
+  update, or restricted access preceded the precommit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

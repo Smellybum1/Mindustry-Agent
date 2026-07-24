@@ -2944,6 +2944,19 @@ result SHA prefixes are `9486145007d33895...` / `d4f2653464606f34...` /
 `cf2a1fb00d732ebd...`. No checkpoint was selected, repaired, or promoted, and
 no restricted data was accessed. Another learned candidate requires a
 separately prospective architecture or supervision-class decision.
+The owner has supplied that direction. ADR-0135 freezes
+`m9-candidate-native-joint-bundle-v1` before implementation or training. The
+existing learned actor factorizes current actions by seat while planner v11
+scores the atomic Cartesian bundle. The candidate inherits the exact rejected
+update-64 model/Adam state and adds only a zero-output `404->64->1` pairwise
+compatibility head over existing same-boundary action descriptors. Initial
+joint argmax is exactly the source independent bundle. Supervision becomes
+normalized legal joint-bundle NLL on deterministic student states. Planner,
+candidates, features, masks, private hidden state, 2,048 roots, 32-by-64
+budget, 30/40 floor, and conditional replica rule remain exact.
+Config/protocol SHA prefixes are `c8138e9d26b8addc...` /
+`f3a9b9eecfaeae08...`. Implement and pass the complete exact-current-commit
+public preflight before Replica A; no restricted access is authorized.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
