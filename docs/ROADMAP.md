@@ -2611,9 +2611,12 @@ the exact wave-history rule, reset behavior, exemptions, inheritance
 validation, and command are implemented locally; all 478 Python tests pass.
 An initial invocation exposed a rule-order conformance bug: an exempt DEFEND
 task fell through to safe-interwave demobilization on the same wave increment.
-The 22/40 diagnostic is invalid for classification. Correct the explicit
-exemption and real-timer regression are local; all 478 Python tests pass.
-Commit, then rerun the unchanged gate.
+That diagnostic is invalid for classification. After the committed correction,
+the unchanged valid gate regresses to 19/40 at 95.1780% coverage; earlier
+candidate DEFEND entry increases exposure. ADR-0110 rejects v10 at compact SHA
+`1b18e4330716df98...` and retains v9 as strongest. ADR-0111 precommits v11,
+branching from v9 with the sole change of reducing the active DEFEND_REGION cap
+from two to one. Protocol SHA is `d670ff4503cdc8e3...`; implementation is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

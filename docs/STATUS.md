@@ -2548,9 +2548,12 @@ repository-evidence mapping used for the M6 audit is:
   validation, and command are implemented locally; all 478 Python tests pass.
   An initial public invocation exposed a rule-order conformance bug: an exempt
   DEFEND task fell through to safe-interwave demobilization on the same wave
-  increment. That 22/40 diagnostic is invalid for classification. The explicit
-  exemption and its real-timer regression are corrected locally; all 478 Python
-  tests pass. Commit before rerunning the unchanged protocol.
+  increment. That diagnostic is invalid for classification. After the committed
+  correction, the unchanged valid gate regresses to 19/40 at 95.1780% coverage;
+  earlier candidate DEFEND entry increases exposure. ADR-0110 rejects v10 at
+  compact SHA `1b18e4330716df98...` and retains v9 as strongest. ADR-0111
+  precommits v11 branching from v9 with the sole active-DEFEND cap reduction
+  from two to one, protocol SHA `d670ff4503cdc8e3...`; implementation is next.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

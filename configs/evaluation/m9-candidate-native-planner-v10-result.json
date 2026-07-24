@@ -1,0 +1,18 @@
+{
+  "schema": "m9_candidate_native_planner_compact_result_v10",
+  "data_classification": "public_dev_only",
+  "implementation_commit": "61f30da03e",
+  "protocol_sha256": "e10833fd3d862239ad8244399f104d8095f2ea68c8539a69dd7ee3537a804463",
+  "full_report_sha256": "24b1faa6aeb2cef197507b91b255e5ff473f031f498d5d907063c5a0c56de5a6",
+  "episodes": 40,
+  "wins": 19,
+  "losses": 21,
+  "fresh_jvm_reports_equal": true,
+  "terminal_reset_replay_equal": true,
+  "non_wait_selection_coverage": 0.9517798013245033,
+  "rejected_actions": 0,
+  "cross_seat_exclusive_conflicts": 0,
+  "classification": "candidate_native_supervision_source_not_supported",
+  "passed": false,
+  "confirmation_or_held_out_access": false
+}

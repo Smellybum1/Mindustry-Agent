@@ -114,6 +114,8 @@ relitigate them in code review; supersede with a new ADR if circumstances change
 | [0107](ADR-0107-precommit-m9-candidate-native-planner-v9.md) | Freeze M9 candidate-native planner v9 |
 | [0108](ADR-0108-reject-m9-candidate-native-planner-v9.md) | Reject M9 candidate-native planner v9 |
 | [0109](ADR-0109-precommit-m9-candidate-native-planner-v10.md) | Freeze M9 candidate-native planner v10 |
+| [0110](ADR-0110-reject-m9-candidate-native-planner-v10.md) | Reject M9 candidate-native planner v10 |
+| [0111](ADR-0111-precommit-m9-candidate-native-planner-v11.md) | Freeze M9 candidate-native planner v11 |
 
 Each ADR follows: Context / Decision / Alternatives / Consequences / Reversal
 conditions.
