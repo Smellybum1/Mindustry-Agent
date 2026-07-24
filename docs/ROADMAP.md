@@ -2968,6 +2968,13 @@ empty new group, zero-factorization, deterministic synthetic replicas, and
 checkpoint replay pass. Commit this implementation and pass the complete
 exact-current-commit public gate before Replica A; no public candidate
 optimizer update or restricted access has occurred.
+The complete gate passes at exact implementation commit `017df4b0f0`: all 551
+Python tests, pinned Java/custom-module checks, focused live joint replay,
+smoke, 79-boundary cross-process/reset determinism, and the
+664-checkpoint/16,200-tick golden replay are green. Versioned preflight SHA
+prefix is `97082b5cc269f566...`; no public candidate optimizer update or
+restricted access occurred. Commit this evidence and rerun the complete
+exact-HEAD authority check before Replica A.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

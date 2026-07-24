@@ -2895,6 +2895,13 @@ repository-evidence mapping used for the M6 audit is:
   exact. Commit this implementation before the complete exact-current-commit
   public gate; no public candidate optimizer update or restricted access has
   occurred.
+  The complete public gate passes at exact implementation commit
+  `017df4b0f0`: all 551 Python tests, pinned Java/custom-module checks, focused
+  live joint replay, smoke, 79-boundary cross-process/reset determinism, and
+  the 664-checkpoint/16,200-tick golden replay are green. Versioned preflight
+  SHA prefix is `97082b5cc269f566...`; no public candidate optimizer update or
+  restricted access occurred. Commit this evidence and rerun the complete
+  exact-HEAD authority check before Replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

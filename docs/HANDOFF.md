@@ -1933,6 +1933,14 @@ queue.
    is exact. Commit this boundary and run the complete exact-current-commit
    public gate before Replica A. No public candidate optimizer update or
    restricted access has occurred.
+   The complete gate passes at exact implementation commit `017df4b0f0`: 551
+   Python tests, pinned Java/custom-module checks, focused live joint replay,
+   smoke, 79-boundary cross-process/reset determinism, and the
+   664-checkpoint/16,200-tick golden replay are green. Versioned preflight SHA
+   prefix is `97082b5cc269f566...`; no public candidate optimizer update or
+   restricted access occurred. Commit this evidence, rerun the complete
+   exact-HEAD authority check, then start Replica A in a clean output
+   directory.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
