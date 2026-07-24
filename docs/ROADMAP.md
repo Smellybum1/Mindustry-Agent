@@ -2849,6 +2849,16 @@ is checkpoint-exact with flat NLL and configured schedule replicas match. All
 529 Python tests and pinned Java/custom-module checks pass. Commit this
 implementation and pass the complete exact-current-commit public gate before
 Replica A; no candidate collection or restricted access has occurred.
+The exact gate passed at `36dbabdd47`, then Replica A completed all 16,384
+public collection episodes and 256 micro updates with a valid 32-checkpoint
+lineage. Macro 21 was best at 15/40 wins, core `271.425`, idle `0.0943284`;
+final macro 32 reached 8/40, core `150.25`, idle `0.0905110`. ADR-0130 rejects
+the candidate and prohibits Replica B. Manifest/canonical/compact-result SHA
+prefixes are `412efca56ce1c4a7...` / `690b4a3b6cd8af97...` /
+`8c0f857db09681ce...`. No checkpoint is selected, repaired, or promotable and
+no restricted data was accessed. Pure pointwise candidate-native imitation is
+exhausted; another model requires an explicit prospective architecture or
+supervision-class decision.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

@@ -1813,6 +1813,16 @@ queue.
    replicas match. All 529 Python tests and pinned Java/custom-module checks
    pass. Commit the implementation, then run the complete exact-current-commit
    public gate before Replica A.
+   The exact gate passed at `36dbabdd47`. Replica A completed all 16,384
+   collection episodes and 256 micro updates with a valid 32-checkpoint
+   lineage. Macro 21 was best at only 15/40 wins, core `271.425`, idle
+   `0.0943284`; final macro 32 reached 8/40, core `150.25`, idle `0.0905110`.
+   ADR-0130 rejects the candidate and prohibits Replica B.
+   Manifest/canonical/compact SHA prefixes are `412efca56ce1c4a7...` /
+   `690b4a3b6cd8af97...` / `8c0f857db09681ce...`. No checkpoint was selected,
+   repaired, or promoted; no restricted data was accessed. Pure pointwise
+   candidate-native imitation is exhausted. Stop model work pending an
+   explicit prospective architecture or supervision-class decision.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1820,7 +1830,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0129` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0130` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

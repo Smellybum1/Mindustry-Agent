@@ -2771,6 +2771,17 @@ repository-evidence mapping used for the M6 audit is:
   exactly. All 529 Python tests and pinned Java/custom-module checks pass.
   Commit this implementation before the exact-current-commit live/full gate;
   no candidate collection or restricted access has occurred.
+  The exact gate passed at `36dbabdd47`, then Replica A completed all 16,384
+  public collection episodes and 256 fresh micro updates. Its 32-checkpoint
+  lineage validates exactly, but no checkpoint constructed: macro 21 was best
+  at 15/40, core `271.425`, idle `0.0943284`; macro 32 finished at 8/40, core
+  `150.25`, idle `0.0905110`. ADR-0130 rejects micro-DAgger and prohibits
+  Replica B. Manifest/canonical/compact-result SHA prefixes are
+  `412efca56ce1c4a7...` / `690b4a3b6cd8af97...` /
+  `8c0f857db09681ce...`. No checkpoint was selected or repaired and no
+  restricted data was accessed. Pure pointwise candidate-native imitation is
+  exhausted; further model work requires an explicit prospective architecture
+  or supervision-class decision.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
