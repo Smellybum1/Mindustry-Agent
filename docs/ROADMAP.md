@@ -2667,7 +2667,11 @@ student actions control the same 2,048 public roots while planner v11 labels
 the same pre-action states. All other model, optimizer, budget, dev gate, and
 replica rules remain exact. Config/protocol SHA prefixes are
 `7fadf9ae9130775f...` / `548ba5fe1478c6cdf...`. No implementation or new model
-state exists yet.
+state preceded the precommit. The fail-closed source/config/protocol loaders,
+student-action/teacher-label collector, exact model+optimizer continuation,
+deterministic optimizer/checkpoint/replica path, preflight, commands, and
+focused tests are implemented locally; all 495 Python tests pass. Commit this
+boundary before the live preflight or Replica A.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

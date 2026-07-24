@@ -35,6 +35,8 @@ SCRIPTS := scripts
         m9-candidate-native-planner-v11-check \
         m9-candidate-distill-check train-m9-candidate-distill \
         m9-candidate-distill-agreement-diagnostic \
+        m9-candidate-on-policy-relabel-check \
+        train-m9-candidate-on-policy-relabel \
         m9-baseline train-m9-ippo train-m9-ippo-v2 train-m9-ippo-v3 \
         train-m9-ippo-v4 train-m9-ippo-v5 train-m9-ippo-v6 \
         secondary-claim-wake-check \
@@ -99,6 +101,8 @@ help: ## List available targets
 	@echo "  m9-candidate-distill-check candidate-native distillation preflight"
 	@echo "  train-m9-candidate-distill governed candidate-native warm start"
 	@echo "  m9-candidate-distill-agreement-diagnostic rejected warm-start agreement"
+	@echo "  m9-candidate-on-policy-relabel-check student-state relabel preflight"
+	@echo "  train-m9-candidate-on-policy-relabel governed relabel continuation"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -205,6 +209,12 @@ train-m9-candidate-distill: ## Train candidate-native warm-start replica
 
 m9-candidate-distill-agreement-diagnostic: ## Diagnose rejected warm-start agreement
 	@bash $(SCRIPTS)/m9-candidate-distill-agreement-diagnostic.sh
+
+m9-candidate-on-policy-relabel-check: ## Validate student-state relabeling
+	@bash $(SCRIPTS)/m9-candidate-on-policy-relabel-check.sh
+
+train-m9-candidate-on-policy-relabel: ## Train student-state relabel continuation
+	@bash $(SCRIPTS)/train-m9-candidate-on-policy-relabel.sh
 
 m9-reward-check: ## Verify M9 audited per-seat shaping adversaries
 	@bash $(SCRIPTS)/m9-reward-check.sh

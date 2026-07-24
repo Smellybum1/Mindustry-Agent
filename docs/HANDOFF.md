@@ -1637,8 +1637,11 @@ queue.
    deterministic student control over the same public roots, planner-v11
    labels on the same pre-action student states, and otherwise unchanged
    model/optimizer/budget/dev/replica gates. Config/protocol SHA prefixes are
-   `7fadf9ae9130775f...` / `548ba5fe1478c6cdf...`. Implement its fail-closed
-   boundary before any new model state.
+   `7fadf9ae9130775f...` / `548ba5fe1478c6cdf...`. Its fail-closed loaders,
+   student-action/teacher-label collector, exact model+optimizer continuation,
+   deterministic optimizer/checkpoint/replica path, preflight, commands, and
+   focused tests are implemented locally; all 495 Python tests pass. Commit
+   this boundary before the live preflight or Replica A.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

@@ -2597,8 +2597,12 @@ repository-evidence mapping used for the M6 audit is:
   optimizer initialization, deterministic student control on the same public
   roots, planner-v11 labels on same pre-action student states, and otherwise
   unchanged model/optimizer/budget/dev/replica gates. Config/protocol SHA
-  prefixes are `7fadf9ae9130775f...` / `548ba5fe1478c6cdf...`. No
-  implementation or new model state exists yet.
+  prefixes are `7fadf9ae9130775f...` / `548ba5fe1478c6cdf...`. No new model
+  state preceded the precommit. The fail-closed loaders,
+  student-action/teacher-label collector, exact model+optimizer continuation,
+  deterministic optimizer/checkpoint/replica path, preflight, commands, and
+  focused tests are implemented locally; all 495 Python tests pass. Commit
+  before the live preflight or Replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
