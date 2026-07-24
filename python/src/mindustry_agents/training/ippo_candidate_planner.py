@@ -16,6 +16,7 @@ from mindustry_agents.policies import (
     CandidateNativePlannerV3,
     CandidateNativePlannerV4,
     CandidateNativePlannerV5,
+    CandidateNativePlannerV6,
 )
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
 
@@ -39,6 +40,9 @@ PROTOCOL_SCHEMAS = {
     ),
     "f408fcc9c200a74e4e6150f9f2e69ff466ee18ca36fcf9bcdf96fdfa3a35965d": (
         "m9_candidate_native_planner_protocol_v5"
+    ),
+    "748032f71739c878b0634042999148433fee0758c0a011f01ff9f984b01210ea": (
+        "m9_candidate_native_planner_protocol_v6"
     ),
 }
 
@@ -184,6 +188,33 @@ def _load_protocol(path: Path) -> tuple[dict[str, Any], list[int]]:
             }
         ):
             raise ValueError("planner v5 inheritance contract drift")
+    if expected_schema == "m9_candidate_native_planner_protocol_v6":
+        if (
+            protocol.get("parent_protocol_sha256")
+            != (
+                "f408fcc9c200a74e4e6150f9f2e69ff466ee18ca36fcf9bc"
+                "df96fdfa3a35965d"
+            )
+            or protocol.get("sole_behavior_change")
+            != "suppress_build_line_after_completed_expert_fortification"
+            or protocol.get("planner", {}).get(
+                "completed_fortification_constraint"
+            )
+            != {
+                "board_task_type": "BUILD_SCHEMATIC",
+                "board_target": "region expert_fortification_v1",
+                "board_status": "COMPLETED",
+                "suppressed_new_task_type": "BUILD_LINE",
+                "fallback": (
+                    "unchanged_v5_allocator_without_suppressed_candidate"
+                ),
+                "evidence": (
+                    "v5_eight_build_line_retries_overlapped_completed_"
+                    "fortification"
+                ),
+            }
+        ):
+            raise ValueError("planner v6 inheritance contract drift")
 
     seed_spec = protocol["seed_set"]
     seed_path = ROOT / seed_spec["path"]
@@ -266,6 +297,7 @@ def _episode(
         3: CandidateNativePlannerV3,
         4: CandidateNativePlannerV4,
         5: CandidateNativePlannerV5,
+        6: CandidateNativePlannerV6,
     }[planner_version]()
     observations = reset.initial_observations
     masks = reset.action_masks
@@ -456,6 +488,7 @@ def main(argv: list[str] | None = None) -> int:
             "m9_candidate_native_planner_protocol_v3": 3,
             "m9_candidate_native_planner_protocol_v4": 4,
             "m9_candidate_native_planner_protocol_v5": 5,
+            "m9_candidate_native_planner_protocol_v6": 6,
         }[protocol["schema"]]
         values = {
             "java": args.java,

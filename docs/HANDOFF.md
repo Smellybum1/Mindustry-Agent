@@ -1561,7 +1561,9 @@ queue.
    fortification. ADR-0100 rejects it at compact SHA `3ac6102e640ee8f7...`.
    ADR-0101 and protocol SHA `748032f71739c878...` precommit v6's sole change:
    suppress line retries after the authoritative board records the expert
-   fortification complete. Implement and commit before the same public gate.
+   fortification complete. The exact filter, inheritance checks, focused tests,
+   and command are local; all 466 Python tests pass. Commit before the same
+   public gate.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

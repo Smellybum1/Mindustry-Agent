@@ -400,6 +400,7 @@ class CandidateNativePlanner:
         defer_schematics_during_active_build: bool = False,
         prioritize_supply_during_active_build: bool = False,
         require_positive_turret_coverage_for_active_build_supply: bool = True,
+        suppress_line_after_completed_fortification: bool = False,
     ) -> None:
         if (
             maximum_build_schematic_selections is not None
@@ -421,6 +422,9 @@ class CandidateNativePlanner:
         )
         self._require_positive_turret_coverage_for_active_build_supply = (
             require_positive_turret_coverage_for_active_build_supply
+        )
+        self._suppress_line_after_completed_fortification = (
+            suppress_line_after_completed_fortification
         )
 
     def reset(self) -> None:
@@ -627,6 +631,15 @@ class CandidateNativePlanner:
             and task.get("status") in {"CLAIMED", "RUNNING", "BLOCKED"}
             for task in (task_board or [])
         )
+        fortification_complete = (
+            self._suppress_line_after_completed_fortification
+            and any(
+                task.get("task_type") == "BUILD_SCHEMATIC"
+                and task.get("target") == "region expert_fortification_v1"
+                and task.get("status") == "COMPLETED"
+                for task in (task_board or [])
+            )
+        )
 
         actions: list[dict[str, Any] | None] = [None] * len(observations)
         allocatable: list[int] = []
@@ -647,6 +660,12 @@ class CandidateNativePlanner:
                     candidate
                     for candidate in candidates
                     if candidate.get("task_type") != "BUILD_SCHEMATIC"
+                ]
+            if fortification_complete:
+                candidates = [
+                    candidate
+                    for candidate in candidates
+                    if candidate.get("task_type") != "BUILD_LINE"
                 ]
             options.append(candidates + [None])
 
@@ -725,6 +744,19 @@ class CandidateNativePlannerV5(CandidateNativePlanner):
             defer_schematics_during_active_build=True,
             prioritize_supply_during_active_build=True,
             require_positive_turret_coverage_for_active_build_supply=False,
+        )
+
+
+class CandidateNativePlannerV6(CandidateNativePlanner):
+    """V5-exact planner that suppresses impossible post-fortification lines."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            maximum_build_schematic_selections=1,
+            defer_schematics_during_active_build=True,
+            prioritize_supply_during_active_build=True,
+            require_positive_turret_coverage_for_active_build_supply=False,
+            suppress_line_after_completed_fortification=True,
         )
 
 

@@ -72,6 +72,18 @@ def test_v5_protocol_binds_candidate_actionability_coordinate():
     ]["active_build_fallback_priority"]["preconditions"]
 
 
+def test_v6_protocol_binds_completed_fortification_coordinate():
+    protocol, seeds = _load_protocol(
+        DEFAULT_PROTOCOL.with_name(
+            "m9-candidate-native-planner-v6-protocol.json"
+        )
+    )
+    assert len(seeds) == 40
+    assert protocol["planner"]["completed_fortification_constraint"][
+        "suppressed_new_task_type"
+    ] == "BUILD_LINE"
+
+
 def test_protocol_rejects_digest_drift(tmp_path: Path):
     document = json.loads(DEFAULT_PROTOCOL.read_text(encoding="utf-8"))
     document["authority"]["may_train"] = True
