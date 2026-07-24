@@ -1835,6 +1835,16 @@ queue.
    evaluator and complete exact-current-commit public preflight next. Do not
    train, change either policy, publish targets/raw observations, or access
    confirmation or held-out data.
+   The fail-closed source loader, independent student/planner runners,
+   accepted-task-family grid, paired common-prefix metrics, deterministic
+   classifier, compact live preflight, commands, and six focused tests are now
+   implemented locally. All 535 Python tests and pinned Java/custom-module
+   checks pass with a repository-local pytest temp root. On the first public
+   root, terminal reset replay is exact: the student loses at tick 7,057,
+   planner v11 wins at tick 8,283, occupancy mismatch is `0.6923077`, and
+   normalized compressed distance is `0.7777778`. Source model/optimizer
+   hashes remain unchanged. Commit this boundary and complete the exact-current-
+   commit public preflight before the full diagnostic.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

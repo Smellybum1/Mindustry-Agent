@@ -47,6 +47,8 @@ SCRIPTS := scripts
         m9-candidate-semantic-target-diagnostic \
         m9-planner-correction-causality-check \
         m9-planner-correction-causality-diagnostic \
+        m9-planner-trajectory-divergence-check \
+        m9-planner-trajectory-divergence-diagnostic \
         m9-baseline train-m9-ippo train-m9-ippo-v2 train-m9-ippo-v3 \
         train-m9-ippo-v4 train-m9-ippo-v5 train-m9-ippo-v6 \
         secondary-claim-wake-check \
@@ -123,6 +125,8 @@ help: ## List available targets
 	@echo "  m9-candidate-semantic-target-diagnostic candidate target errors"
 	@echo "  m9-planner-correction-causality-check validate causal diagnostic"
 	@echo "  m9-planner-correction-causality-diagnostic run causal diagnostic"
+	@echo "  m9-planner-trajectory-divergence-check validate trajectory diagnostic"
+	@echo "  m9-planner-trajectory-divergence-diagnostic run trajectory diagnostic"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -265,6 +269,12 @@ m9-planner-correction-causality-check: ## Validate causal diagnostic
 
 m9-planner-correction-causality-diagnostic: ## Run causal diagnostic
 	@bash $(SCRIPTS)/m9-planner-correction-causality-diagnostic.sh
+
+m9-planner-trajectory-divergence-check: ## Validate trajectory diagnostic
+	@bash $(SCRIPTS)/m9-planner-trajectory-divergence-check.sh
+
+m9-planner-trajectory-divergence-diagnostic: ## Run trajectory diagnostic
+	@bash $(SCRIPTS)/m9-planner-trajectory-divergence-diagnostic.sh
 
 m9-reward-check: ## Verify M9 audited per-seat shaping adversaries
 	@bash $(SCRIPTS)/m9-reward-check.sh

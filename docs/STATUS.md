@@ -2792,6 +2792,17 @@ repository-evidence mapping used for the M6 audit is:
   `0.5` are required for a trajectory-supervision signal. Protocol SHA prefix
   is `bcd572fa49d859d5...`. The diagnostic cannot train or alter a model,
   publish targets or raw observations, or access restricted data.
+  Its fail-closed source loader, independent deterministic student/planner
+  runners, accepted-task-family grid, common-prefix comparison, normalized
+  compressed edit distance, classification, compact live preflight, commands,
+  and six focused tests are implemented locally. All 535 Python tests and the
+  pinned Java/custom-module checks pass with a repository-local pytest temp
+  root. The first public root repeats exactly after terminal reset: the
+  student loses at tick 7,057, planner v11 wins at tick 8,283, occupancy
+  mismatch is `0.6923077`, and normalized compressed distance is `0.7777778`.
+  Source model/optimizer hashes remain exact. Commit this implementation, then
+  run the complete exact-current-commit public gate before the 40-root
+  diagnostic.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

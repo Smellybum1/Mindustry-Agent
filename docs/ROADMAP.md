@@ -2870,6 +2870,16 @@ planner-only wins and median paired-root values at least `0.5` for both
 measures. Protocol SHA prefix is `bcd572fa49d859d5...`. Implement the
 fail-closed evaluator and exact-current-commit public preflight next; no model
 work or restricted access is authorized.
+The fail-closed source loader, independent deterministic policy runners,
+accepted-task-family grid, common-prefix trajectory metrics, classification,
+compact live preflight, commands, and six focused tests are implemented
+locally. All 535 Python tests and pinned Java/custom-module checks pass with a
+repository-local pytest temp root. The first public root repeats exactly after
+terminal reset: the student loses at tick 7,057, planner v11 wins at tick
+8,283, occupancy mismatch is `0.6923077`, and normalized compressed distance
+is `0.7777778`. The exact source model and optimizer hashes remain unchanged.
+Commit this implementation and pass the complete exact-current-commit public
+gate before running all 40 roots.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
