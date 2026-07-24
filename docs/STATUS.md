@@ -2615,6 +2615,11 @@ repository-evidence mapping used for the M6 audit is:
   `f34c50a024f05d60...` / `1cf33117526a04c8...` /
   `ebea0b741abbf2b7...`. No restricted data was accessed. The next authority is
   one immutable student-controlled disagreement/localization diagnostic.
+  ADR-0119 freezes it over rejected update 32/update 64, all 40 existing
+  public-dev roots, deterministic student control, planner-v11 same-state
+  labels, exact twin-JVM/reset reports, first disagreement/task confusion, and
+  rejection/outcome association. Protocol SHA is `aed6d1b231cc0992...`; it
+  cannot train, select, repair, promote, or access restricted data.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

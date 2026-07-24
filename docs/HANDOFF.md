@@ -1654,7 +1654,11 @@ queue.
    manifest/canonical/compact SHA prefixes `f34c50a024f05d60...` /
    `1cf33117526a04c8...` / `ebea0b741abbf2b7...`. Precommit one immutable
    student-controlled disagreement/localization diagnostic before further
-   learning.
+   learning. ADR-0119 now freezes that diagnostic over rejected update 32 and
+   update 64, all 40 public-dev roots, deterministic student control,
+   planner-v11 same-state labels, exact twin-JVM/reset reports, first
+   disagreement/task confusion, and rejection/outcome association. Protocol
+   SHA is `aed6d1b231cc0992...`. Implement and run it before any successor.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1662,7 +1666,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0118` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0119` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1710,7 +1714,7 @@ remains unauthorized.
 ADR-0091 through ADR-0114 govern candidate-native planner construction, accept
 planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
-ADR-0118's immutable student-controlled disagreement/localization diagnostic.
+ADR-0119's immutable student-controlled critical-disagreement diagnostic.
 
 ## Deviations from the brief in this scaffold
 

@@ -1,0 +1,76 @@
+{
+  "schema": "m9_candidate_on_policy_critical_disagreement_protocol_v1",
+  "data_classification": "public_dev_only",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "seed_set_sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+  "split": "dev",
+  "teacher_policy": "candidate-native-planner-v11-single-defender",
+  "checkpoints": [
+    {
+      "candidate": "m9-candidate-native-distill-v1",
+      "role": "teacher_controlled_final",
+      "lineage_update": 32,
+      "path": "runs/m9-candidate-distill-a/candidate-distill-update-32.pt",
+      "config_sha256": "9fc15d1a0dd256452873fe7953374bb251ad1fbf172add0eb399d2c3541457e0",
+      "file_sha256": "40bc070d91b1e37dbb58b360325dfde7b94b10aaec61dabcdb5570bf55dc5fed",
+      "content_sha256": "14197b4d3583cf599917a98c2b1cbd5925ca7bc7b93be550edd4cade3a3f1fe9",
+      "model_state_sha256": "c13e3858bd37c89ff5582a3e861c709808f6a3088e444fed8da5130362332c14",
+      "autonomous_public_dev_wins": 9,
+      "source_result": "configs/evaluation/m9-candidate-native-distill-v1-result.json",
+      "source_result_sha256": "47ced62d5b7e3c15c980415bc3c05974bfacfd1ccbfd7e2af6c7f474486af590"
+    },
+    {
+      "candidate": "m9-candidate-native-on-policy-relabel-v1",
+      "role": "student_state_relabel_final",
+      "lineage_update": 64,
+      "path": "runs/m9-candidate-on-policy-relabel-a/candidate-on-policy-relabel-update-64.pt",
+      "config_sha256": "7fadf9ae9130775fffebe52b86407dfeafaf47ea5e1383524818a6d0012d72d4",
+      "file_sha256": "cbfde7e932e718f49b6e80f79bfd2b0072fa2bb7fd1f04e4ca0d7da9ee8ed408",
+      "content_sha256": "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865",
+      "model_state_sha256": "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1",
+      "autonomous_public_dev_wins": 13,
+      "source_result": "configs/evaluation/m9-candidate-native-on-policy-relabel-v1-result.json",
+      "source_result_sha256": "ebea0b741abbf2b7e3d995af1f87d7528ddee08d94089db4f837f40c730e60ee"
+    }
+  ],
+  "execution": {
+    "fresh_jvm_runs_per_checkpoint": 2,
+    "student_controls_environment": true,
+    "student_action_mode": "deterministic_argmax",
+    "teacher_labels_same_pre_action_student_visited_boundary": true,
+    "teacher_action_execution": false,
+    "eligible_boundary": "alive_and_no_forced_task_action_and_teacher_action_authoritatively_legal",
+    "forced_controls": "executed_student_action_but_excluded_from_disagreement",
+    "terminal_reset_replay": true,
+    "exact_report_identity_required": true,
+    "measurements": [
+      "eligible_labels_and_top1_disagreements",
+      "first_disagreement_tick_and_task_pair_per_episode",
+      "teacher_task_to_student_task_confusion_by_outcome",
+      "teacher_action_to_student_action_confusion_by_outcome",
+      "rejected_student_actions_by_task_and_outcome",
+      "episodes_with_rejection_by_outcome"
+    ]
+  },
+  "classification": {
+    "top_task_pairs": 3,
+    "minimum_top_task_pair_disagreement_fraction_for_concentration": 0.5,
+    "minimum_dominant_first_pair_loss_fraction_for_concentration": 0.5,
+    "minimum_loss_minus_win_rejection_episode_fraction": 0.25,
+    "concentrated_critical_error_signal": "either_task_pair_concentration_threshold_met_on_update_64",
+    "rejection_association_signal": "loss_minus_win_rejection_episode_fraction_threshold_met_on_update_64",
+    "diffuse_residual_signal": "neither_concentrated_critical_error_nor_rejection_association_signal"
+  },
+  "authority": {
+    "may_select_or_repair_checkpoint": false,
+    "may_train_or_modify_model": false,
+    "may_precommit_successor_after_result": true,
+    "may_promote": false,
+    "may_authorize_mappo": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_human_session": false
+  }
+}

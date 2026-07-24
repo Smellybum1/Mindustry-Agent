@@ -2684,7 +2684,12 @@ initialization, and records manifest/canonical/compact SHA prefixes
 `f34c50a024f05d60...` / `1cf33117526a04c8...` /
 `ebea0b741abbf2b7...`. No restricted data was accessed. Precommit one
 immutable student-controlled disagreement/localization diagnostic before any
-further learned recipe.
+further learned recipe. ADR-0119 now freezes it over rejected update 32 and
+update 64, the same 40 public-dev roots, deterministic student control,
+planner-v11 same-state labels, exact twin-JVM/reset reports, first
+disagreement/task confusion, and rejection/outcome association. Protocol SHA
+is `aed6d1b231cc0992...`; it cannot train, select, repair, promote, or access
+restricted data.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
