@@ -60,6 +60,18 @@ def test_v4_protocol_binds_active_build_supply_coordinate():
     ] == ["SUPPLY_TURRET", "HARVEST_RESOURCE"]
 
 
+def test_v5_protocol_binds_candidate_actionability_coordinate():
+    protocol, seeds = _load_protocol(
+        DEFAULT_PROTOCOL.with_name(
+            "m9-candidate-native-planner-v5-protocol.json"
+        )
+    )
+    assert len(seeds) == 40
+    assert "valid_actor_masked_supply_turret_candidate_exists" in protocol[
+        "planner"
+    ]["active_build_fallback_priority"]["preconditions"]
+
+
 def test_protocol_rejects_digest_drift(tmp_path: Path):
     document = json.loads(DEFAULT_PROTOCOL.read_text(encoding="utf-8"))
     document["authority"]["may_train"] = True

@@ -5,6 +5,7 @@ from mindustry_agents.policies import (
     CandidateNativePlannerV2,
     CandidateNativePlannerV3,
     CandidateNativePlannerV4,
+    CandidateNativePlannerV5,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -180,6 +181,26 @@ class TestScriptedPolicies(unittest.TestCase):
         v4 = CandidateNativePlannerV4().actions([row], [mask], board)
         self.assertEqual(v3[0]["task_action"]["candidate_index"], 0)
         self.assertEqual(v4[0]["task_action"]["candidate_index"], 1)
+
+    def test_candidate_native_planner_v5_uses_valid_supply_before_coverage(self):
+        candidates = [
+            self.planner_candidate(0, "HARVEST_RESOURCE", utility=4.0),
+            self.planner_candidate(1, "SUPPLY_TURRET", utility=3.0),
+        ]
+        team = {
+            "tick": 250,
+            "enemy_count": 0,
+            "line_operational": False,
+            "defense_turret_coverage": 0.0,
+            "defense_ammo_coverage": 0.0,
+        }
+        board = [{"task_type": "BUILD_LINE", "status": "RUNNING"}]
+        row = observation(candidates=candidates, team=team)
+        mask = {"candidate_task": [True, True]}
+        v4 = CandidateNativePlannerV4().actions([row], [mask], board)
+        v5 = CandidateNativePlannerV5().actions([row], [mask], board)
+        self.assertEqual(v4[0]["task_action"]["candidate_index"], 0)
+        self.assertEqual(v5[0]["task_action"]["candidate_index"], 1)
 
     def test_candidate_native_planner_preserves_continue_and_preempts_for_wave(self):
         planner = CandidateNativePlanner()

@@ -399,6 +399,7 @@ class CandidateNativePlanner:
         maximum_build_schematic_selections: int | None = None,
         defer_schematics_during_active_build: bool = False,
         prioritize_supply_during_active_build: bool = False,
+        require_positive_turret_coverage_for_active_build_supply: bool = True,
     ) -> None:
         if (
             maximum_build_schematic_selections is not None
@@ -417,6 +418,9 @@ class CandidateNativePlanner:
         )
         self._prioritize_supply_during_active_build = (
             prioritize_supply_during_active_build
+        )
+        self._require_positive_turret_coverage_for_active_build_supply = (
+            require_positive_turret_coverage_for_active_build_supply
         )
 
     def reset(self) -> None:
@@ -511,7 +515,10 @@ class CandidateNativePlanner:
             self._prioritize_supply_during_active_build
             and active_build
             and task_type == "SUPPLY_TURRET"
-            and float(team.get("defense_turret_coverage", 0.0)) > 0.0
+            and (
+                not self._require_positive_turret_coverage_for_active_build_supply
+                or float(team.get("defense_turret_coverage", 0.0)) > 0.0
+            )
             and ammo < 1.0
         ):
             return 980
@@ -706,6 +713,18 @@ class CandidateNativePlannerV4(CandidateNativePlanner):
             maximum_build_schematic_selections=1,
             defer_schematics_during_active_build=True,
             prioritize_supply_during_active_build=True,
+        )
+
+
+class CandidateNativePlannerV5(CandidateNativePlanner):
+    """V4-exact planner using candidate validity as supply actionability."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            maximum_build_schematic_selections=1,
+            defer_schematics_during_active_build=True,
+            prioritize_supply_during_active_build=True,
+            require_positive_turret_coverage_for_active_build_supply=False,
         )
 
 

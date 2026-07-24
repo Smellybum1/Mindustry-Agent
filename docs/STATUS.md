@@ -2510,7 +2510,9 @@ repository-evidence mapping used for the M6 audit is:
   positive turret-coverage condition never activates before supply candidates.
   ADR-0098 rejects v4 at compact SHA `57aa6bdbdbacd84e...`. ADR-0099 precommits
   v5's valid-candidate actionability coordinate at protocol SHA
-  `f408fcc9c200a74e...`; it is unimplemented.
+  `f408fcc9c200a74e...`. The exact coordinate, inheritance checks, focused
+  v1--v5 tests, and command are local; all 464 Python tests pass. Commit before
+  evaluation.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

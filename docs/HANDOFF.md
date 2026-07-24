@@ -1559,7 +1559,8 @@ queue.
    compact SHA `57aa6bdbdbacd84e...`. ADR-0099 and protocol SHA
    `f408fcc9c200a74e...` precommit v5's sole change: remove that redundant
    coverage clause and use valid supply-candidate existence plus ammo below
-   one. Implement and commit before the same public gate.
+   one. The exact coordinate, inheritance checks, focused tests, and command
+   are local; all 464 Python tests pass. Commit before the same public gate.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
