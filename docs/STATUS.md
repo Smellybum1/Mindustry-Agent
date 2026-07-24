@@ -2882,6 +2882,19 @@ repository-evidence mapping used for the M6 audit is:
   and conditional replica rule remain exact. Config/protocol SHA prefixes are
   `c8138e9d26b8addc...` / `f3a9b9eecfaeae08...`. No implementation, optimizer
   update, or restricted access preceded the precommit.
+  The fail-closed config/protocol/evidence loaders, zero-preserving joint
+  model, legal Cartesian scorer, deterministic student collector, normalized
+  bundle optimizer, candidate checkpoint/manifest runner, conditional replica
+  comparison, live preflight, commands, telemetry, and eight focused tests are
+  implemented locally. All 551 Python tests pass. The public-train probe
+  repeats exactly after terminal reset with 33 atomic boundaries, 70 legal
+  planner labels, 11 excluded controls, and trace prefix `51c415bca421...`;
+  the source model stays unchanged. All 25 inherited Adam entries remain
+  exact, the new group is empty, zero pairwise logits are bit-exact with the
+  source bundle, configured synthetic replicas match, and checkpoint replay is
+  exact. Commit this implementation before the complete exact-current-commit
+  public gate; no public candidate optimizer update or restricted access has
+  occurred.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

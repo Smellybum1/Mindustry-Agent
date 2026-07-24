@@ -1921,6 +1921,18 @@ queue.
    prefixes are `c8138e9d26b8addc...` / `f3a9b9eecfaeae08...`. Implement and
    pass the complete exact-current-commit public preflight before Replica A;
    restricted data remains prohibited.
+   The fail-closed loaders, zero-preserving joint model, legal Cartesian
+   scorer, deterministic student collector, normalized bundle optimizer,
+   checkpoint/manifest runner, conditional replica comparison, live
+   preflight, commands, telemetry, and eight focused tests are implemented
+   locally. All 551 Python tests pass. A public-train terminal-reset probe
+   repeats exactly with 33 atomic boundaries, 70 legal labels, 11 excluded
+   controls, and trace prefix `51c415bca421...`; the model is unchanged. All
+   25 inherited Adam entries remain exact, the new group is empty,
+   factorization and configured synthetic replicas pass, and checkpoint replay
+   is exact. Commit this boundary and run the complete exact-current-commit
+   public gate before Replica A. No public candidate optimizer update or
+   restricted access has occurred.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

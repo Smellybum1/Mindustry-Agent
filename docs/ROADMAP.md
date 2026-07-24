@@ -2957,6 +2957,17 @@ budget, 30/40 floor, and conditional replica rule remain exact.
 Config/protocol SHA prefixes are `c8138e9d26b8addc...` /
 `f3a9b9eecfaeae08...`. Implement and pass the complete exact-current-commit
 public preflight before Replica A; no restricted access is authorized.
+The fail-closed loaders, zero-preserving joint model, legal Cartesian scorer,
+deterministic student collector, normalized bundle optimizer, candidate
+checkpoint/manifest runner, conditional replica comparison, live preflight,
+commands, telemetry, and eight focused tests are implemented locally. All 551
+Python tests pass. The public-train probe repeats exactly after terminal reset
+with 33 atomic boundaries, 70 legal planner labels, 11 excluded controls, and
+trace prefix `51c415bca421...`; the model is unchanged. Exact inherited Adam,
+empty new group, zero-factorization, deterministic synthetic replicas, and
+checkpoint replay pass. Commit this implementation and pass the complete
+exact-current-commit public gate before Replica A; no public candidate
+optimizer update or restricted access has occurred.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

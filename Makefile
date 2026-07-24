@@ -45,6 +45,8 @@ SCRIPTS := scripts
         train-m9-candidate-micro-dagger \
         m9-candidate-trajectory-plan-check \
         train-m9-candidate-trajectory-plan \
+        m9-candidate-joint-bundle-check \
+        train-m9-candidate-joint-bundle \
         m9-candidate-critical-disagreement-diagnostic \
         m9-candidate-semantic-target-diagnostic \
         m9-planner-correction-causality-check \
@@ -125,6 +127,8 @@ help: ## List available targets
 	@echo "  train-m9-candidate-micro-dagger governed micro-DAgger construction"
 	@echo "  m9-candidate-trajectory-plan-check macro-family plan preflight"
 	@echo "  train-m9-candidate-trajectory-plan governed plan construction"
+	@echo "  m9-candidate-joint-bundle-check joint compatibility preflight"
+	@echo "  train-m9-candidate-joint-bundle governed bundle construction"
 	@echo "  m9-candidate-critical-disagreement-diagnostic rejected policy errors"
 	@echo "  m9-candidate-semantic-target-diagnostic candidate target errors"
 	@echo "  m9-planner-correction-causality-check validate causal diagnostic"
@@ -267,6 +271,12 @@ m9-candidate-trajectory-plan-check: ## Validate trajectory-plan candidate
 
 train-m9-candidate-trajectory-plan: ## Train trajectory-plan construction
 	@bash $(SCRIPTS)/train-m9-candidate-trajectory-plan.sh
+
+m9-candidate-joint-bundle-check: ## Validate joint-bundle candidate
+	@bash $(SCRIPTS)/m9-candidate-joint-bundle-check.sh
+
+train-m9-candidate-joint-bundle: ## Train joint-bundle construction
+	@bash $(SCRIPTS)/train-m9-candidate-joint-bundle.sh
 
 m9-candidate-critical-disagreement-diagnostic: ## Localize rejected policy errors
 	@bash $(SCRIPTS)/m9-candidate-critical-disagreement-diagnostic.sh
