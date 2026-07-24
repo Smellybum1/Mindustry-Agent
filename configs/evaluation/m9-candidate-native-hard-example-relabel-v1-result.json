@@ -1,0 +1,73 @@
+{
+  "schema": "m9_candidate_native_hard_example_relabel_construction_result_v1",
+  "candidate_version": "m9-candidate-native-hard-example-relabel-v1",
+  "data_classification": "public_train_and_dev_only",
+  "implementation_commit": "9f5ea54f3cf4cd6a62b18e743ff0539b704eb660",
+  "pretraining_gate": {
+    "passed": true,
+    "implementation_commit": "9f5ea54f3cf4cd6a62b18e743ff0539b704eb660",
+    "sha256": "455f65111f38892472c23eed2e93ae5bc9e32c052920fa5371095c0325f558f5"
+  },
+  "config_sha256": "c2401782578d2e8a3a3277fa8920d17fcee23f7cda89e92a9e1d09cfb166f459",
+  "protocol_sha256": "a42b1cd24a78f67404868835642c4c4a77143865f0e101bea57f6d197b88cab3",
+  "source_result_sha256": "ebea0b741abbf2b7e3d995af1f87d7528ddee08d94089db4f837f40c730e60ee",
+  "diagnostic_result_sha256": "959e55f140fce098ac9b51ed69f247408c516bbf63bcc510617ab93af2d6cb88",
+  "source_checkpoint": {
+    "checkpoint_content_sha256": "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865",
+    "model_state_sha256": "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1",
+    "optimizer_state_sha256": "f3bdf93bf2dfae69842b87ca69f124c1bdda074b05422c02198530a5fdb687bc",
+    "selected_or_promoted": false,
+    "repaired": false
+  },
+  "replica_a": {
+    "manifest_sha256": "e1690a0033bb42d36629b55ea0a4f0a73667e482904220e2c8778e5e0b993c0d",
+    "canonical_run_sha256": "100cbe8f2cbec11eced5444c4cd05ff0fc4967bdcb4cb723a51646b63689196f",
+    "training": {
+      "episodes": 2048,
+      "continuation_updates": 32,
+      "student_wins": 571,
+      "actor_labels": 156612,
+      "hard_example_labels": 7499,
+      "ordinary_example_labels": 149113,
+      "hard_example_label_fraction": 0.047882665440707,
+      "total_example_weight": 179109.0,
+      "hard_example_weight_fraction": 0.167473437962358,
+      "forced_controls_excluded": 54500,
+      "rejected_student_actions": 2379,
+      "aggregate_pre_update_student_teacher_top1_agreement": 0.952117334559293,
+      "mean_weighted_teacher_nll": 0.240697368783845,
+      "mean_unweighted_teacher_nll": 0.132521032907135,
+      "mean_presentation_top1_accuracy": 0.968319848807464
+    },
+    "best_public_dev": {
+      "continuation_update": 30,
+      "lineage_update": 94,
+      "wins": 17,
+      "episodes": 40,
+      "mean_core_health": 261.625,
+      "mean_team_idle_fraction": 0.10352087132164962,
+      "model_state_sha256": "b896ec34b4f483cd36469816fcb6498542213958c98702682b00fd6424c76040",
+      "optimizer_state_sha256": "407368f115138161cd8c2a311df93f1932b378344b3dcb31e93afbeb5c6bbf94",
+      "checkpoint_content_sha256": "59a14112c7f89ee95fd45d75d11a624bba6eba8426a9627669882bc134450303",
+      "checkpoint_file_sha256": "e5984d8b8dd954565765c9ff5c2167c3bda698ec5ab97c346b22b21a2177f15f"
+    },
+    "final_public_dev": {
+      "continuation_update": 32,
+      "lineage_update": 96,
+      "wins": 13,
+      "episodes": 40,
+      "mean_core_health": 234.425,
+      "mean_team_idle_fraction": 0.09467220625271962,
+      "model_state_sha256": "372081889dee84e89ae14cd6b792d08683e78590f75873482db72da4db0522b5",
+      "optimizer_state_sha256": "ca0e234b376faf906e5459c83bdd94f1d70fb565cc266682824d69d672716b97",
+      "checkpoint_content_sha256": "1541f3723cafcefacf472b971e58e2f0b38957f834667bd6ecf1f10b6a6f9422",
+      "checkpoint_file_sha256": "cb46db4d6d7bbb4626f4fdcbed161fb9b1af4f021b2f57c8c5c91a38b71d9509"
+    },
+    "construction_passed": false,
+    "selected_checkpoint": null
+  },
+  "replica_b_authorized": false,
+  "replica_b_ran": false,
+  "decision": "reject_before_replica_b",
+  "confirmation_or_held_out_access": false
+}

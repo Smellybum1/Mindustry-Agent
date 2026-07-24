@@ -1708,7 +1708,16 @@ queue.
    are green. The exact preflight result SHA prefix is
    `e2d8e565b3dd2a5b...` and records no restricted access. Commit this evidence,
    rerun the exact-current-commit gate, then start Replica A in a clean output
-   directory.
+   directory. That rerun passed at `9f5ea54f3c`. Replica A completed all 2,048
+   public episodes and 32 updates, but no checkpoint met construction. Update
+   30 was best at 17/40 wins, core `261.625`, and idle `0.10352087`; final
+   update 32 reached 13/40. Training weighted 7,499 disagreements among
+   156,612 labels and won 571/2,048 episodes. ADR-0124 rejects the candidate,
+   prohibits Replica B and PPO initialization, and records manifest/canonical/
+   compact SHA prefixes `e1690a0033bb42d3...` / `100cbe8f2cbec11e...` /
+   `6cc01d04a7a58c70...`. No restricted data was accessed. A further mechanism
+   requires a separate prospective decision before implementation or model
+   work.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1716,7 +1725,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0123` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0124` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1761,11 +1770,11 @@ line, its public-only diagnostics, and the current requirement for design
 synthesis plus shared-expert candidate projection before any v7 precommit.
 Every candidate remains rejected; no M9 checkpoint is selected and MAPPO
 remains unauthorized.
-ADR-0091 through ADR-0123 govern candidate-native planner construction, accept
+ADR-0091 through ADR-0124 govern candidate-native planner construction, accept
 planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
-implementing the frozen hard-example relabel successor without changing the
-feature schema or planner, then passing its complete exact-commit public gate.
+a separately named prospective public-only decision; no further learned model,
+Replica B, PPO/MAPPO, or restricted-data access is currently authorized.
 
 ## Deviations from the brief in this scaffold
 

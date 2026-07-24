@@ -2739,7 +2739,16 @@ implementation commit `78af771f75`: 509 Python tests, pinned Java/custom-module
 checks, smoke, cross-process/reset determinism, and the 664-checkpoint golden
 replay are green. The exact preflight result SHA prefix is
 `e2d8e565b3dd2a5b...` and records no restricted access. Commit this evidence,
-then rerun the exact-current-commit gate before Replica A.
+then rerun the exact-current-commit gate before Replica A. That rerun passed
+at `9f5ea54f3c`. Replica A completed all 2,048 public episodes and 32 updates,
+but no checkpoint met construction. Update 30 was best at 17/40 wins, core
+`261.625`, and idle `0.10352087`; final update 32 reached 13/40. Training
+weighted 7,499 disagreements among 156,612 labels and won 571/2,048 episodes.
+ADR-0124 rejects the candidate, prohibits Replica B and PPO initialization,
+and records manifest/canonical/compact SHA prefixes
+`e1690a0033bb42d3...` / `100cbe8f2cbec11e...` /
+`6cc01d04a7a58c70...`. No restricted data was accessed. A further mechanism
+requires a separate prospective decision before implementation or model work.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
