@@ -11,6 +11,7 @@ from mindustry_agents.policies import (
     CandidateNativePlannerV8,
     CandidateNativePlannerV9,
     CandidateNativePlannerV10,
+    CandidateNativePlannerV11,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -423,6 +424,22 @@ class TestScriptedPolicies(unittest.TestCase):
         self.assertEqual(
             action["task_action"], {"type": "CONTINUE_CURRENT_TASK"}
         )
+
+    def test_candidate_native_planner_v11_caps_active_defenders_at_one(self):
+        candidates = [
+            self.planner_candidate(0, "DEFEND_REGION", utility=5.0),
+            self.planner_candidate(1, "HARVEST_RESOURCE", utility=1.0),
+        ]
+        row = observation(
+            candidates=candidates,
+            team={"tick": 2783, "enemy_count": 4},
+        )
+        mask = {"candidate_task": [True, True]}
+        board = [{"task_type": "DEFEND_REGION", "status": "RUNNING"}]
+        v9 = CandidateNativePlannerV9().actions([row], [mask], board)
+        v11 = CandidateNativePlannerV11().actions([row], [mask], board)
+        self.assertEqual(v9[0]["task_action"]["candidate_index"], 0)
+        self.assertEqual(v11[0]["task_action"]["candidate_index"], 1)
 
     def test_candidate_native_planner_preserves_continue_and_preempts_for_wave(self):
         planner = CandidateNativePlanner()

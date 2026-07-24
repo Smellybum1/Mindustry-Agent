@@ -1596,7 +1596,9 @@ queue.
    ADR-0110 rejects v10 at compact SHA `1b18e4330716df98...` and retains v9 as
    strongest. ADR-0111 and protocol SHA `d670ff4503cdc8e3...` precommit v11,
    branching from v9 with the sole active-DEFEND cap reduction from two to one.
-   Implement and commit before the same public gate.
+   The exact v9-derived constructor, inheritance validation, focused comparison,
+   and command are local; all 480 Python tests pass. Commit before the same
+   public gate.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

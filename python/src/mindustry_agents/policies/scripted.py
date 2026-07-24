@@ -915,6 +915,22 @@ class CandidateNativePlannerV10(CandidateNativePlanner):
         )
 
 
+class CandidateNativePlannerV11(CandidateNativePlanner):
+    """V9-exact planner capped at one authoritative active defender."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            maximum_build_schematic_selections=1,
+            defer_schematics_during_active_build=True,
+            prioritize_supply_during_active_build=True,
+            require_positive_turret_coverage_for_active_build_supply=False,
+            suppress_line_after_completed_fortification=True,
+            suppress_line_during_active_fortification=True,
+            demobilize_defend_during_safe_interwave=True,
+            maximum_active_defend_tasks=1,
+        )
+
+
 class RoleAssignmentPolicy:
     """Fixed index roles with deterministic utility fallback inside each role."""
 

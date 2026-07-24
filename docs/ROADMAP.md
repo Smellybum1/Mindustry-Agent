@@ -2616,7 +2616,9 @@ the unchanged valid gate regresses to 19/40 at 95.1780% coverage; earlier
 candidate DEFEND entry increases exposure. ADR-0110 rejects v10 at compact SHA
 `1b18e4330716df98...` and retains v9 as strongest. ADR-0111 precommits v11,
 branching from v9 with the sole change of reducing the active DEFEND_REGION cap
-from two to one. Protocol SHA is `d670ff4503cdc8e3...`; implementation is next.
+from two to one. Protocol SHA is `d670ff4503cdc8e3...`; the exact v9-derived
+constructor, inheritance validation, focused comparison, and command are
+implemented locally; all 480 Python tests pass. Commit before the gate.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

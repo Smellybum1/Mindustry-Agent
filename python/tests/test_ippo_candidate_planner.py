@@ -135,6 +135,18 @@ def test_v10_protocol_binds_wave_spawn_preemption():
     )
 
 
+def test_v11_protocol_binds_single_active_defender():
+    protocol, seeds = _load_protocol(
+        DEFAULT_PROTOCOL.with_name(
+            "m9-candidate-native-planner-v11-protocol.json"
+        )
+    )
+    assert len(seeds) == 40
+    assert protocol["planner"]["active_defend_constraint"][
+        "maximum_active_tasks"
+    ] == 1
+
+
 def test_protocol_rejects_digest_drift(tmp_path: Path):
     document = json.loads(DEFAULT_PROTOCOL.read_text(encoding="utf-8"))
     document["authority"]["may_train"] = True

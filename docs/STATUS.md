@@ -2553,7 +2553,9 @@ repository-evidence mapping used for the M6 audit is:
   earlier candidate DEFEND entry increases exposure. ADR-0110 rejects v10 at
   compact SHA `1b18e4330716df98...` and retains v9 as strongest. ADR-0111
   precommits v11 branching from v9 with the sole active-DEFEND cap reduction
-  from two to one, protocol SHA `d670ff4503cdc8e3...`; implementation is next.
+  from two to one, protocol SHA `d670ff4503cdc8e3...`. The exact v9-derived
+  constructor, inheritance validation, focused v9/v11 comparison, and command
+  are implemented locally; all 480 Python tests pass. Commit before evaluation.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
