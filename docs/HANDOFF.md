@@ -1953,6 +1953,31 @@ queue.
    `ca3d905c7679bb44...`. No checkpoint was selected, repaired, or promoted;
    no restricted data was accessed. Stop autonomous model work pending a
    separately prospective architecture or supervision-class decision.
+   The owner supplied that next prospective direction after a public-only Pro
+   consultation. Its downloaded Markdown was verified at SHA-256
+   `ebdada91825ad27e...` and treated as untrusted advice. ADR-0137 independently
+   froze `m9-candidate-native-continuation-regret-v1`: fixed ninth-boundary
+   source-anchored hash sampling, read-only planner-v11 fractional-rank
+   continuation targets at 1/4/8/16, a new global GRU/bundle-cost model, fresh
+   AdamW on new parameters only, the exact 2,048-root schedule, final-only
+   30/40 and idle-below-0.25 construction, and conditional exact Replica B.
+   The freeze and implementation were separately pushed at `aeb19f07c2` and
+   `1c060bca4a`. The complete exact-implementation-commit gate passed: the
+   complete Python suite, pinned Java/custom modules, repeated live branch
+   collection, smoke, 79-boundary cross-process/reset/seed determinism, and
+   664-checkpoint/16,200-tick golden replay were green.
+   Replica A completed 2,048 roots, 16,145 branch rows, 8,192 optimizer steps,
+   and the final-only 40-root public dev. Independent validation matched all
+   32 checkpoint identities/parents and canonical digest
+   `a5c2d10763e12c00...`. Final performance was 1/40 wins, core `23.9`, idle
+   `0.2954330`, and 34 rejected actions. The telemetry found 11,874
+   planner-inadmissible rows, only 1,334 four-boundary continuations, and zero
+   eight- or sixteen-boundary continuations. ADR-0138 rejects the candidate
+   and prohibits Replica B. Manifest/compact-result SHA prefixes are
+   `7df392ddbadb0eae...` / `86de7be96808fcc1...`. No checkpoint was selected,
+   repaired, or promoted; no restricted data was accessed. Stop at this gate
+   pending a separately prospective owner-authorized architecture or
+   supervision-class decision.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1960,7 +1985,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0136` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0138` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -2010,9 +2035,9 @@ planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
 a separately named prospective public-only decision; no further learned model,
 Replica B, PPO/MAPPO, or restricted-data access is currently authorized.
-ADR-0125 through ADR-0136 govern the later candidate-native correction,
-sequence, trajectory-plan, and joint-bundle continuations. Every learned
-candidate is rejected before Replica B; no learned checkpoint is selected.
+ADR-0125 through ADR-0138 govern the later candidate-native correction,
+sequence, trajectory-plan, joint-bundle, and continuation-regret candidates.
+Every learned candidate is rejected before Replica B; no learned checkpoint is selected.
 Further learned-model work requires a new prospective architecture or
 supervision-class decision.
 

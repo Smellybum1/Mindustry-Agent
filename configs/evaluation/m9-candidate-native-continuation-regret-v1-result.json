@@ -1,0 +1,83 @@
+{
+  "schema": "m9_candidate_native_continuation_regret_construction_result_v1",
+  "candidate_version": "m9-candidate-native-continuation-regret-v1",
+  "data_classification": "public_train_and_dev_only",
+  "implementation_commit": "1c060bca4a56849ce8c8a7e8cb7b4df6bb94c105",
+  "pretraining_gate": {
+    "passed": true,
+    "implementation_commit": "1c060bca4a56849ce8c8a7e8cb7b4df6bb94c105",
+    "sha256": "e29629b709461b1a306bce264f97a016a9fdc197525ea3fe51bd47ec4a178bc7",
+    "complete_python_suite": true,
+    "pinned_java_and_custom_modules": true,
+    "focused_live_counterfactual_replay": true,
+    "smoke": true,
+    "cross_process_reset_seed_determinism_boundaries": 79,
+    "golden_replay_checkpoints": 664,
+    "golden_replay_ticks": 16200
+  },
+  "config_sha256": "947b09c84528005d752c976ce220bff51070f9764b243a27b2a387c0f6b9add1",
+  "protocol_sha256": "7cb2881bd2ca388e8babef5127ece4ea872464bae61838c023476e13f5110ac7",
+  "external_consultation_sha256": "ebdada91825ad27e2132248c4a4bb7722f0434efb7eb85038229f7acfd21d201",
+  "source_checkpoint": {
+    "checkpoint_content_sha256": "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865",
+    "model_state_sha256": "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1",
+    "optimizer_state_sha256": "f3bdf93bf2dfae69842b87ca69f124c1bdda074b05422c02198530a5fdb687bc",
+    "optimizer_loaded": false,
+    "selected_or_promoted": false,
+    "repaired": false
+  },
+  "replica_a": {
+    "manifest_sha256": "7df392ddbadb0eaeab2698b86f89245d40c78b550b5f8e0ce1ccbaa3905ae560",
+    "canonical_run_sha256": "a5c2d10763e12c009836b962b22b54ac28cee3f87d0291c478cc41878bb0880b",
+    "lineage_validation": {
+      "checkpoint_count": 32,
+      "first_group": 1,
+      "last_group": 32,
+      "all_checkpoint_parents_and_payload_identities_valid": true,
+      "canonical_manifest_recomputed_exactly": true,
+      "first_checkpoint_content_sha256": "49aa6d3ce0af7df3f636ea0664d84b007d8587078aba7fe076c2afa5d6c452ea",
+      "last_checkpoint_content_sha256": "0a9f7c7a916b7b2e89e7b7d46d957998bd3a0d34466d7a59bc4e157e087701d2",
+      "first_checkpoint_file_sha256": "182453558ff405455f8a152dd815a203af0f9559260149a66e300c4af6150da1",
+      "last_checkpoint_file_sha256": "785957d63d92240cd21ee82f7869ad2eaa82c5fadf7ff467ef8ec04239ffd645"
+    },
+    "training": {
+      "unique_roots": 2048,
+      "optimizer_groups": 32,
+      "optimizer_steps": 8192,
+      "branch_rows": 16145,
+      "planner_inadmissible_rows": 11874,
+      "planner_inadmissible_fraction": 0.7351502013007123,
+      "achieved_horizon_counts": {
+        "1": 16145,
+        "4": 1334,
+        "8": 0,
+        "16": 0
+      },
+      "mean_group_loss": 0.02787042338391643,
+      "final_group_loss": 0.018533105416281614,
+      "final_group_source_bundle_exact_rate": 0.203125
+    },
+    "final_public_dev": {
+      "wins": 1,
+      "episodes": 40,
+      "mean_core_health": 23.9,
+      "mean_team_idle_fraction": 0.29543300825424657,
+      "rejected_learned_actions": 34,
+      "planner_bundle_exact_rate": 0.472499461474963,
+      "mean_planner_rank_cost": 0.49266290334254964,
+      "state_hash_trace_sha256": "25be5e4e6c6e2dd9bf04834c3ce519dc6ea1e2814a4ddaeb05cb0f7054b5325e",
+      "model_state_sha256": "772f2681590fe4d09132110057ed398a9cfcf65eccba12ee9c2a23e5f63d5500",
+      "optimizer_state_sha256": "a863fce45ba9eb90c5b7b564d9f9f8f9ed667992ae3b38186bf343431437babd",
+      "checkpoint_content_sha256": "0a9f7c7a916b7b2e89e7b7d46d957998bd3a0d34466d7a59bc4e157e087701d2",
+      "checkpoint_file_sha256": "785957d63d92240cd21ee82f7869ad2eaa82c5fadf7ff467ef8ec04239ffd645"
+    },
+    "construction_passed": false,
+    "idle_gate_passed": false,
+    "rejection_gate_passed": false,
+    "selected_checkpoint": null
+  },
+  "replica_b_authorized": false,
+  "replica_b_ran": false,
+  "decision": "reject_before_replica_b",
+  "confirmation_or_held_out_access": false
+}

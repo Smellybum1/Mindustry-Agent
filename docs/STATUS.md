@@ -2914,6 +2914,32 @@ repository-evidence mapping used for the M6 audit is:
   `ca3d905c7679bb44...`. No checkpoint was selected, repaired, or promoted,
   and no restricted data was accessed. Another learned candidate requires a
   separately prospective architecture or supervision-class decision.
+  The owner supplied that decision after an untrusted Pro consultation.
+  ADR-0137 froze `m9-candidate-native-continuation-regret-v1`: a frozen exact
+  update-64 actor, one fixed ninth public decision boundary, source-anchored
+  SHA-256 bundle sampling, read-only planner-v11 fractional-rank targets over
+  horizons 1/4/8/16, a new `669->128` global GRU and
+  `1549->256->128->4` residual cost head, fresh AdamW, the exact 2,048-root
+  schedule, final-only 30/40 and idle-below-0.25 gate, and conditional exact
+  Replica B. Disagreement/outcome targeting, planner-top injection, target
+  IDs, reward/PPO/MAPPO, planner changes, source-optimizer loading, checkpoint
+  selection/repair, and restricted access remained prohibited.
+  The freeze and implementation were separately pushed at `aeb19f07c2` and
+  `1c060bca4a`. The complete exact-implementation-commit public gate passed:
+  the complete Python suite, Java/custom modules, repeated live
+  counterfactual collection, smoke, 79-boundary cross-process/reset/seed
+  determinism, and the 664-checkpoint/16,200-tick golden replay were green.
+  Replica A completed all 2,048 roots and 8,192 optimizer steps. Independent
+  validation matched every group-1-through-32 payload and parent and
+  recomputed canonical digest `a5c2d10763e12c...`. It failed decisively at
+  1/40 wins, core `23.9`, idle `0.2954330`, and 34 rejected learned actions.
+  Of 16,145 branch rows, 11,874 were planner-inadmissible; only 1,334 reached
+  four ranked boundaries and none reached eight or sixteen. ADR-0138 rejects
+  the candidate and prohibits Replica B. Manifest/canonical/compact-result
+  SHA prefixes are `7df392ddbadb0eae...` / `a5c2d10763e12c00...` /
+  `86de7be96808fcc1...`. No checkpoint was selected, repaired, or promoted,
+  and no restricted data was accessed. Stop autonomous model work pending a
+  separately prospective owner-authorized architecture or supervision class.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

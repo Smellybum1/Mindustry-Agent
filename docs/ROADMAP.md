@@ -2944,6 +2944,32 @@ result SHA prefixes are `9486145007d33895...` / `d4f2653464606f34...` /
 `cf2a1fb00d732ebd...`. No checkpoint was selected, repaired, or promoted, and
 no restricted data was accessed. Another learned candidate requires a
 separately prospective architecture or supervision-class decision.
+The owner supplied that direction after a public-only Pro consultation.
+ADR-0137 froze `m9-candidate-native-continuation-regret-v1` before
+implementation or optimizer update. The exact frozen update-64 actor supplies
+descriptors and deterministic roll-in at fixed decision boundary 8; eight
+source-anchored SHA-256 bundles receive read-only planner-v11 mean fractional-
+rank targets over available 1/4/8/16 prefixes. A new global GRU and bundle-cost
+head use fresh AdamW on new parameters only. Planner inference, disagreement
+or outcome selection, explicit planner-top actions, target IDs, reward,
+PPO/MAPPO, source optimizer state, checkpoint selection/repair, and restricted
+access are prohibited. The exact 2,048-root schedule, final-only 30/40 floor,
+idle-below-0.25 gate, and conditional identical Replica B are frozen.
+Freeze/implementation commits are `aeb19f07c2` / `1c060bca4a`.
+The complete exact-implementation-commit public gate passed: the complete
+Python suite, Java/custom modules, repeated live counterfactual replay, smoke,
+79-boundary cross-process/reset/seed determinism, and the 664-checkpoint/
+16,200-tick golden replay were green. Replica A completed all 2,048 roots and
+8,192 optimizer steps. Independent validation matched all 32 checkpoint
+payloads/parents and canonical digest `a5c2d10763e12c00...`. The final
+candidate reached only 1/40 wins, core `23.9`, idle `0.2954330`, and 34
+rejected learned actions. Of 16,145 rows, 11,874 were planner-inadmissible;
+only 1,334 reached four ranked boundaries and none reached eight or sixteen.
+ADR-0138 rejects the candidate and prohibits Replica B.
+Manifest/compact-result SHA prefixes are `7df392ddbadb0eae...` /
+`86de7be96808fcc1...`. No checkpoint was selected, repaired, or promoted and
+no restricted data was accessed. Further learned work requires a new
+prospective owner-authorized architecture or supervision-class decision.
 The owner has supplied that direction. ADR-0135 freezes
 `m9-candidate-native-joint-bundle-v1` before implementation or training. The
 existing learned actor factorizes current actions by seat while planner v11
