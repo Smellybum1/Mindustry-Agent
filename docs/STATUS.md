@@ -2693,7 +2693,14 @@ repository-evidence mapping used for the M6 audit is:
   Python tests pass using a fresh repo-local temp root. A one-root live probe
   repeats baseline exactly after reset and exercises one/six atomic
   corrections in the two intervention modes; it is integration evidence only.
-  The exact-current-commit public preflight and full diagnostic have not run.
+  The complete public-only preflight passes at exact implementation commit
+  `1988b79fc5`: 515 Python tests, pinned Java/custom-module checks, focused
+  causal checks, smoke, 79-boundary cross-process/reset/seed determinism, and
+  the 664-checkpoint/16,200-tick golden replay are green. Both immutable models
+  remain unchanged and all six one-root mode probes reproduce exactly after
+  terminal reset. Preflight result SHA prefix is `028688bd4a4e29d0...`; no
+  restricted data was accessed. Commit this evidence and rerun the exact gate
+  before the full diagnostic.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

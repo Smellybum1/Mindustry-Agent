@@ -1736,7 +1736,14 @@ queue.
    one-root live probe repeats baseline exactly after reset and exercises the
    two intervention modes; it is not classification evidence. Commit and push
    this implementation, then run and commit the complete exact-current-commit
-   public preflight before the full diagnostic.
+   public preflight before the full diagnostic. The preflight now passes at
+   exact implementation commit `1988b79fc5`: 515 Python tests, pinned
+   Java/custom-module checks, focused causal checks, smoke, 79-boundary
+   cross-process/reset/seed determinism, and the 664-checkpoint/16,200-tick
+   golden replay are green. Both models remain unchanged and all six one-root
+   mode probes reproduce exactly after reset. Preflight result SHA prefix is
+   `028688bd4a4e29d0...`; no restricted data was accessed. Commit this evidence,
+   rerun the exact-current-commit gate, then run the full diagnostic.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

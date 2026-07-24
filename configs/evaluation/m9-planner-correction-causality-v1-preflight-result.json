@@ -1,0 +1,95 @@
+{
+  "schema": "m9_planner_correction_causality_preflight_v1",
+  "implementation_commit": "1988b79fc5c39f53879d521e4e28341b5e54a477",
+  "protocol_sha256": "aee96892e4ceb131da7743afabc2d41fbb08be41e53b9b79c22158af3530cad6",
+  "passed": true,
+  "checks": {
+    "python_tests": 515,
+    "pinned_java_custom_modules": true,
+    "focused_causal_checks": true,
+    "smoke": true,
+    "cross_process_reset_seed_determinism_boundaries": 79,
+    "golden_replay_checkpoints": 664,
+    "golden_replay_ticks": 16200
+  },
+  "live_public_dev_root_seed": 19000000001,
+  "live_checkpoint_probes": [
+    {
+      "lineage_update": 64,
+      "model_state_sha256": "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1",
+      "model_unchanged": true,
+      "terminal_reset_replay_equal": true,
+      "modes": {
+        "baseline": {
+          "outcome": "loss",
+          "terminal_tick": 7057,
+          "terminal_state_hash": "b84a18ffb96edeb158b897c90d3e2e740991e3642453862041855bb07f0750ef",
+          "core_health": 0.0,
+          "eligible_labels": 60,
+          "disagreements": 3,
+          "correction_boundary_count": 0,
+          "trace_sha256": "02d90cdfe27c0c8512ab96d2279e803f1203f3a107fb377350239acaaf4284f2"
+        },
+        "correct_first": {
+          "outcome": "loss",
+          "terminal_tick": 7090,
+          "terminal_state_hash": "5c6f3c82859bc494f4577e91f143ef64561a983efb2bc8e14fe0d1efd8703d6c",
+          "core_health": 0.0,
+          "eligible_labels": 55,
+          "disagreements": 2,
+          "correction_boundary_count": 1,
+          "trace_sha256": "10d9c0733b6971376c65177798303ac6c5f3a50374d093da6c68984b83d2c207"
+        },
+        "correct_all": {
+          "outcome": "win",
+          "terminal_tick": 8110,
+          "terminal_state_hash": "fa1e8608bb556743ff24f942a8b14b9d49119a8dba39f56bd1350572adb08019",
+          "core_health": 362.0,
+          "eligible_labels": 87,
+          "disagreements": 6,
+          "correction_boundary_count": 6,
+          "trace_sha256": "b2bb5c9d8ded599d1eec4af99853f17a2423aaa4b6ad7ca9c0591b4fc9577fad"
+        }
+      }
+    },
+    {
+      "lineage_update": 96,
+      "model_state_sha256": "372081889dee84e89ae14cd6b792d08683e78590f75873482db72da4db0522b5",
+      "model_unchanged": true,
+      "terminal_reset_replay_equal": true,
+      "modes": {
+        "baseline": {
+          "outcome": "loss",
+          "terminal_tick": 6698,
+          "terminal_state_hash": "f9d69bf19b4a07c95219a9995617183a7aedf8bd25869a57f25d8180b7eec11c",
+          "core_health": 0.0,
+          "eligible_labels": 61,
+          "disagreements": 2,
+          "correction_boundary_count": 0,
+          "trace_sha256": "789703c401831755780feba6322ac8e4213d7650e14ebde6e8aa78f70a1fed29"
+        },
+        "correct_first": {
+          "outcome": "loss",
+          "terminal_tick": 7062,
+          "terminal_state_hash": "f1df65e54697a14b2fc4d0ea2d5b4f94c86f2c17b83a073520522755c7259264",
+          "core_health": 0.0,
+          "eligible_labels": 62,
+          "disagreements": 7,
+          "correction_boundary_count": 1,
+          "trace_sha256": "e9565bc3ff1be067cd1e13ee2459b737a277e94bfd1885c7050eb7d04cf152a1"
+        },
+        "correct_all": {
+          "outcome": "win",
+          "terminal_tick": 8110,
+          "terminal_state_hash": "fa1e8608bb556743ff24f942a8b14b9d49119a8dba39f56bd1350572adb08019",
+          "core_health": 362.0,
+          "eligible_labels": 87,
+          "disagreements": 5,
+          "correction_boundary_count": 4,
+          "trace_sha256": "24902e7d80d82dfdeb5c9f2f51e9f0aa561c8e02383cc9bb5def3fed7d85ac2b"
+        }
+      }
+    }
+  ],
+  "confirmation_or_held_out_access": false
+}

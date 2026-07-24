@@ -2768,8 +2768,14 @@ focused tests are implemented locally. All 515 Python tests pass with a fresh
 repo-local temp root. A one-root live integration probe repeats baseline
 exactly after terminal reset; its `correct_first` and `correct_all` modes
 execute one and six atomic corrections respectively. This probe is not
-classification evidence. Commit the implementation, then run the complete
-exact-current-commit public preflight before the diagnostic.
+classification evidence. The complete public-only preflight passes at exact
+implementation commit `1988b79fc5`: 515 Python tests, pinned Java/custom-module
+checks, focused causal checks, smoke, 79-boundary cross-process/reset/seed
+determinism, and the 664-checkpoint/16,200-tick golden replay are green. Both
+checkpoint models remain unchanged and all six one-root mode probes reproduce
+exactly after terminal reset. Preflight result SHA prefix is
+`028688bd4a4e29d0...`; it records no restricted access. Commit this evidence,
+rerun the exact-current-commit gate, then run the full diagnostic.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
