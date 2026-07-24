@@ -2635,7 +2635,17 @@ exact-commit gate and Replica A.
 The complete gate passes at implementation commit `9583796ee1`: pinned Java
 checks, smoke, cross-process determinism, and the 664-checkpoint golden replay
 are green. Preflight result SHA is `d18cf46b03449f25...`. Rerun the preflight
-at the evidence commit before Replica A.
+at the evidence commit before Replica A. That exact rerun passed at
+`6ba880da66`. Replica A completed all 2,048 episodes and 32 updates, but no
+checkpoint met construction: update 3 was best at 18/40 public-dev wins,
+core `398.025`, and idle `0.09953691`; update 32 finished at 9/40. Despite
+within-update top-1 presentation accuracy rising from `0.8184` to `0.9594`,
+autonomous survival did not consolidate. ADR-0114 rejects the candidate,
+prohibits Replica B and downstream PPO initialization, and records manifest /
+canonical / compact digests `cd88deac884ee851...` /
+`c3a283d3a8b70300...` / `47ced62d5b7e3c15...`. No restricted data was
+accessed. A prospectively frozen immutable-checkpoint public agreement
+diagnostic is required before another learned recipe.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

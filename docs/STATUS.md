@@ -2570,8 +2570,15 @@ repository-evidence mapping used for the M6 audit is:
   Python tests pass; a live JVM teacher episode repeats after terminal reset.
   The complete gate passes at implementation commit `9583796ee1`: pinned Java
   checks, smoke, cross-process determinism, and the 664-checkpoint golden replay
-  are green. Preflight result SHA is `d18cf46b03449f25...`. Rerun the preflight
-  at the evidence commit before Replica A.
+  are green. Preflight result SHA is `d18cf46b03449f25...`. The exact
+  evidence-commit preflight then passed and Replica A completed all 2,048
+  public episodes and 32 updates. Update 3 was best at only 18/40 public-dev
+  wins; update 32 finished 9/40. ADR-0114 rejects the construction, prohibits
+  Replica B and downstream PPO initialization, and records manifest/canonical
+  / compact digests `cd88deac884ee851...` / `c3a283d3a8b70300...` /
+  `47ced62d5b7e3c15...`. No restricted data was accessed. The next authorized
+  work is a prospectively frozen public-only teacher-forced agreement
+  diagnostic over immutable update-3 and update-32 checkpoints.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -1,0 +1,60 @@
+{
+  "schema": "m9_candidate_native_distillation_construction_result_v1",
+  "candidate_version": "m9-candidate-native-distill-v1",
+  "data_classification": "public_train_and_dev_only",
+  "implementation_commit": "6ba880da66e6b80c2c901062b7d20c509c3d9dc5",
+  "pretraining_gate": {
+    "passed": true,
+    "implementation_commit": "6ba880da66e6b80c2c901062b7d20c509c3d9dc5",
+    "sha256": "b6e12ba1b6d0715cb6db1a92bda90a106937a5ad561a05143ca8e15739db2139"
+  },
+  "config_sha256": "9fc15d1a0dd256452873fe7953374bb251ad1fbf172add0eb399d2c3541457e0",
+  "protocol_sha256": "72ced8386fdbdb8b076f95b2d2ec416235b339703b932e878b033f738942618a",
+  "source_result_sha256": "81ea8df1d7dcf21ed945337dd23b93b804e4d187605282e6d98cffe4077695fa",
+  "replica_a": {
+    "manifest_sha256": "cd88deac884ee8513857e979d3eeea33e5d4ea925d220cdef455edb1b992c3c0",
+    "canonical_run_sha256": "c3a283d3a8b703004a93800f02ee28040c3132086a81e566980008cf2cd8974e",
+    "training": {
+      "episodes": 2048,
+      "updates": 32,
+      "teacher_wins": 1221,
+      "teacher_losses": 827,
+      "actor_labels": 183264,
+      "forced_controls_excluded": 15258,
+      "optimizer_presentations": 1466112,
+      "optimizer_batches": 5856,
+      "first_update_teacher_nll": 0.6271266397088766,
+      "final_update_teacher_nll": 0.1565120005980134,
+      "first_update_presentation_top1_accuracy": 0.8184123137677257,
+      "final_update_presentation_top1_accuracy": 0.9594071003784466
+    },
+    "best_public_dev": {
+      "update": 3,
+      "wins": 18,
+      "episodes": 40,
+      "mean_core_health": 398.025,
+      "mean_team_idle_fraction": 0.0995369138358255,
+      "model_state_sha256": "d23d2b4add58bae8af756e5476ba93398bbf036927268dab3d63dfccf61d0cde",
+      "optimizer_state_sha256": "740c1127eb736daf0c3774df5ef7dd9577fe16b36ebda5d420a5fa1131931069",
+      "checkpoint_content_sha256": "bbe4bc54ba7116454c23cbff85b5f8c3f1b54aec0eab5ee984a46e1e378285f5",
+      "checkpoint_file_sha256": "a4ad79985ad17c0140dcff2b9353d143723d5b57ee79adc2f615fce4adc92591"
+    },
+    "final_public_dev": {
+      "update": 32,
+      "wins": 9,
+      "episodes": 40,
+      "mean_core_health": 173.25,
+      "mean_team_idle_fraction": 0.08659604100933715,
+      "model_state_sha256": "c13e3858bd37c89ff5582a3e861c709808f6a3088e444fed8da5130362332c14",
+      "optimizer_state_sha256": "12e82a785787318df98ba7919f09a300e5372ae196017b3491a56db5dc5468ad",
+      "checkpoint_content_sha256": "14197b4d3583cf599917a98c2b1cbd5925ca7bc7b93be550edd4cade3a3f1fe9",
+      "checkpoint_file_sha256": "40bc070d91b1e37dbb58b360325dfde7b94b10aaec61dabcdb5570bf55dc5fed"
+    },
+    "construction_passed": false,
+    "selected_checkpoint": null
+  },
+  "replica_b_authorized": false,
+  "replica_b_ran": false,
+  "decision": "reject_before_replica_b",
+  "confirmation_or_held_out_access": false
+}

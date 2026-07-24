@@ -1611,8 +1611,14 @@ queue.
    after terminal reset. The complete gate passes at implementation commit
    `9583796ee1`: pinned Java checks, smoke, cross-process determinism, and the
    664-checkpoint golden replay are green. Preflight result SHA is
-   `d18cf46b03449f25...`. Rerun the preflight at the evidence commit, then
-   Replica A before any resumed PPO.
+   `d18cf46b03449f25...`. The exact evidence-commit preflight passed and Replica
+   A completed all 2,048 public episodes and 32 updates. It failed construction:
+   update 3 was best at 18/40 public-dev wins and update 32 finished 9/40.
+   ADR-0114 rejects v1, prohibits Replica B and downstream PPO initialization,
+   and records manifest/canonical/compact digests `cd88deac884ee851...` /
+   `c3a283d3a8b70300...` / `47ced62d5b7e3c15...`. No restricted data was
+   accessed. Precommit and implement one immutable-checkpoint public agreement
+   diagnostic before any successor learned recipe.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1620,7 +1626,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0113` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0114` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1665,6 +1671,10 @@ line, its public-only diagnostics, and the current requirement for design
 synthesis plus shared-expert candidate projection before any v7 precommit.
 Every candidate remains rejected; no M9 checkpoint is selected and MAPPO
 remains unauthorized.
+ADR-0091 through ADR-0114 govern candidate-native planner construction, accept
+planner v11 only as a supervision source, and reject its first within-update
+behavioral-cloning consumer before Replica B. The next authority is limited to
+an immutable-checkpoint public agreement diagnostic.
 
 ## Deviations from the brief in this scaffold
 
