@@ -2692,7 +2692,17 @@ is `aed6d1b231cc0992...`; it cannot train, select, repair, promote, or access
 restricted data. The fail-closed dual-source loader, per-checkpoint
 student-controlled evaluator, exact twin-JVM/reset comparison, deterministic
 classification, command, and focused tests are implemented locally; all 498
-Python tests pass. Commit before the first diagnostic JVM.
+Python tests pass. The exact diagnostic completed from `dff2c31f68`: twin JVMs
+and terminal reset match. Update 64 has 89 disagreements over 3,200 eligible
+labels; the top three task pairs cover `0.6741573`, accepting the frozen
+concentrated-critical-error signal. The dominant
+`SUPPLY_TURRET->SUPPLY_TURRET` pair accounts for 39 disagreements, localizing
+the next question to candidate identity/target within a task family. Rejections
+are not loss-associated (`0.1111` of losses versus `0.2308` of wins).
+ADR-0120 records full/canonical/compact SHA prefixes
+`aa01d177ab312aff...` / `5127aea85c2332f...` / `464ab91a13c4ca37...`,
+keeps both checkpoints rejected, and requires one prospectively frozen
+public-only semantic-target diagnostic before successor model work.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

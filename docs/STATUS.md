@@ -2622,8 +2622,17 @@ repository-evidence mapping used for the M6 audit is:
   cannot train, select, repair, promote, or access restricted data. The
   fail-closed dual-source loader, per-checkpoint student-controlled evaluator,
   exact twin-JVM/reset comparison, deterministic classification, command, and
-  focused tests are implemented locally; all 498 Python tests pass. Commit
-  before the first diagnostic JVM.
+  focused tests are implemented; all 498 Python tests pass. The exact run from
+  `dff2c31f68` matches across twin JVMs/reset. Update 64 has 89 disagreements
+  over 3,200 eligible labels; the top three task pairs cover `0.6741573`,
+  accepting the concentrated-critical-error signal. The dominant
+  `SUPPLY_TURRET->SUPPLY_TURRET` pair has 39 disagreements, pointing to
+  candidate identity/target selection within a task family. Rejections are
+  more frequent among wins than losses and are not accepted as causal.
+  ADR-0120 records full/canonical/compact SHA prefixes
+  `aa01d177ab312aff...` / `5127aea85c2332f...` / `464ab91a13c4ca37...`,
+  keeps both checkpoints rejected, and authorizes only a prospectively frozen
+  public semantic-target diagnostic before further learning.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

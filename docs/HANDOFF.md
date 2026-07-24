@@ -1661,7 +1661,17 @@ queue.
    SHA is `aed6d1b231cc0992...`. The fail-closed dual-source loader,
    per-checkpoint student-controlled evaluator, exact twin-JVM/reset comparison,
    deterministic classification, command, and focused tests are implemented
-   locally; all 498 Python tests pass. Commit, then run it before any successor.
+   and all 498 Python tests pass. The exact run from `dff2c31f68` matches
+   across twin JVMs/reset. Update 64 has 89 disagreements over 3,200 eligible
+   labels; its top three task pairs cover `0.6741573`, accepting the
+   concentrated-critical-error signal. The dominant
+   `SUPPLY_TURRET->SUPPLY_TURRET` pair has 39 disagreements, which points to
+   candidate identity/target selection within a task family. Rejections are
+   not loss-associated. ADR-0120 records full/canonical/compact SHA prefixes
+   `aa01d177ab312aff...` / `5127aea85c2332f...` /
+   `464ab91a13c4ca37...`, keeps both checkpoints rejected, and permits only a
+   prospectively frozen public semantic-target diagnostic before further
+   learning.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1669,7 +1679,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0119` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0120` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1714,10 +1724,10 @@ line, its public-only diagnostics, and the current requirement for design
 synthesis plus shared-expert candidate projection before any v7 precommit.
 Every candidate remains rejected; no M9 checkpoint is selected and MAPPO
 remains unauthorized.
-ADR-0091 through ADR-0114 govern candidate-native planner construction, accept
+ADR-0091 through ADR-0120 govern candidate-native planner construction, accept
 planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
-ADR-0119's immutable student-controlled critical-disagreement diagnostic.
+prospectively freezing and running one public-only semantic-target diagnostic.
 
 ## Deviations from the brief in this scaffold
 

@@ -1,0 +1,47 @@
+{
+  "schema": "m9_candidate_on_policy_critical_disagreement_compact_result_v1",
+  "data_classification": "public_dev_only",
+  "implementation_commit": "dff2c31f6846c8c307f5e1ccd4a2c878e871d48b",
+  "protocol_sha256": "aed6d1b231cc0992a31febb9927497879af2d6b813abaa457e499b8afb5535e0",
+  "full_report_sha256": "aa01d177ab312aff2a35b12263286ecd02a7e69ef2b18dd3469e7ae0e7bac044",
+  "canonical_report_sha256": "5127aea85c2332f9bf96f08d8f710acf12bd59c5c29f0a4d97039958b617d030",
+  "fresh_jvm_reports_equal": true,
+  "terminal_reset_replay_equal": true,
+  "checkpoints": [
+    {
+      "lineage_update": 32,
+      "wins": 9,
+      "losses": 31,
+      "eligible_labels": 3209,
+      "top1_disagreements": 94,
+      "top1_agreement": 0.9707073854783421,
+      "rejected_student_actions": 13
+    },
+    {
+      "lineage_update": 64,
+      "wins": 13,
+      "losses": 27,
+      "eligible_labels": 3200,
+      "top1_disagreements": 89,
+      "top1_agreement": 0.9721875,
+      "rejected_student_actions": 20
+    }
+  ],
+  "classification": {
+    "active_signals": [
+      "concentrated_critical_error_signal"
+    ],
+    "concentrated_critical_error_signal": true,
+    "rejection_association_signal": false,
+    "diffuse_residual_signal": false,
+    "top_three_task_pair_disagreement_fraction": 0.6741573033707865,
+    "dominant_first_pair_loss_fraction": 0.2222222222222222,
+    "loss_rejection_episode_fraction": 0.1111111111111111,
+    "win_rejection_episode_fraction": 0.23076923076923078,
+    "loss_minus_win_rejection_episode_fraction": -0.11965811965811968
+  },
+  "successor_training_authorized": false,
+  "checkpoint_selection_authorized": false,
+  "promotion_authorized": false,
+  "confirmation_or_held_out_access": false
+}
