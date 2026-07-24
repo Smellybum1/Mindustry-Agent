@@ -1874,6 +1874,16 @@ queue.
    `ae0d29aa7fd8882e...` / `1812f19c8c64cc98...`. Implement and pass the
    complete exact-current-commit preflight before Replica A; restricted data
    remains prohibited.
+   The fail-closed loaders, logit-preserving plan model, exact inherited/new
+   Adam groups, program builder, student-state collector, combined sequence
+   optimizer, candidate checkpoint/manifest runner, conditional replica
+   comparison, live preflight, commands, and seven focused tests are
+   implemented locally. All 542 Python tests and pinned Java/custom-module
+   checks pass. A public-train probe repeats exactly after terminal reset with
+   87 supervised and four context boundaries; the source model is unchanged,
+   25 inherited Adam entries remain exact, and the new group is empty. Commit
+   this boundary and run the complete exact-current-commit public gate before
+   Replica A. No candidate optimizer update or restricted access has occurred.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

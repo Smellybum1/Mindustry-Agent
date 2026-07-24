@@ -2833,6 +2833,17 @@ repository-evidence mapping used for the M6 audit is:
   dev floor, and conditional replica rule remain exact. Config/protocol SHA
   prefixes are `ae0d29aa7fd8882e...` / `1812f19c8c64cc98...`. No
   implementation, model update, or restricted access preceded the precommit.
+  The fail-closed config/protocol/source loaders, logit-preserving plan model,
+  inherited/new Adam groups, future-distinct program builder, student-state
+  collector, combined sequence optimizer, candidate checkpoint/manifest
+  runner, conditional replica comparison, live preflight, commands, and seven
+  focused tests are implemented locally. All 542 Python tests and pinned
+  Java/custom-module checks pass. The live public-train probe repeats exactly
+  after terminal reset with 87 plan-labeled and four context boundaries; the
+  source model stays unchanged, all 25 inherited Adam state entries remain,
+  and the new group is empty. Commit this implementation before the complete
+  exact-current-commit public gate; no candidate update or restricted access
+  has occurred.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

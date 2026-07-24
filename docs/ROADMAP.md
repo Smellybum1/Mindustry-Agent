@@ -2909,6 +2909,16 @@ and conditional replica rule remain exact. Config/protocol SHA prefixes are
 `ae0d29aa7fd8882e...` / `1812f19c8c64cc98...`. Implement and pass the
 complete exact-current-commit public preflight before Replica A; no restricted
 access is authorized.
+The fail-closed loaders, logit-preserving plan model, inherited/new Adam
+groups, future-distinct program builder, student-state collector, combined
+sequence optimizer, candidate checkpoint/manifest runner, conditional replica
+comparison, live preflight, commands, and seven focused tests are implemented
+locally. All 542 Python tests and pinned Java/custom-module checks pass. A
+public-train probe repeats exactly after terminal reset with 87 supervised and
+four context boundaries; the source model remains unchanged, all 25 inherited
+Adam entries remain exact, and the new group is empty. Commit this
+implementation and pass the complete exact-current-commit public gate before
+Replica A; no candidate update or restricted access has occurred.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
