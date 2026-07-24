@@ -2712,6 +2712,15 @@ repository-evidence mapping used for the M6 audit is:
   `af4725e0fa034761...`. No model, optimizer, confirmation, or held-out data was
   touched. A separately precommitted contiguous truncated-BPTT question is the
   recommended next design, but no implementation or training is authorized.
+  ADR-0127 now prospectively freezes that isolated construction as
+  `m9-candidate-native-sequence-relabel-v1`. It loads the exact rejected
+  update-64 model and Adam state, retains every alive student boundary as
+  ordered recurrent context in non-overlapping 16-boundary per-seat windows,
+  and applies unchanged unweighted planner-label NLL only to the same eligible
+  labels. All schedule/model/optimizer/budget/dev/selection/replica coordinates
+  remain exact. Config/protocol SHA prefixes are `b7e17a6e74b6d18a...` /
+  `b79f6da9c24863d0...`. No implementation, model state, or restricted access
+  preceded the precommit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

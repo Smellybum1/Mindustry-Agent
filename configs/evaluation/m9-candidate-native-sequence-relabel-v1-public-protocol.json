@@ -1,0 +1,69 @@
+{
+  "schema": "m9_candidate_native_sequence_relabel_public_protocol_v1",
+  "candidate_version": "m9-candidate-native-sequence-relabel-v1",
+  "data_classification": "public_train_and_dev_only",
+  "config_sha256": "b7e17a6e74b6d18a261d7d4845dcff8d808ffef830641e0c4fb21dbe327233d1",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "seed_set_sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+  "split": "dev",
+  "source_checkpoint": {
+    "candidate": "m9-candidate-native-on-policy-relabel-v1",
+    "lineage_update": 64,
+    "content_sha256": "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865",
+    "model_state_sha256": "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1",
+    "optimizer_state_sha256": "f3bdf93bf2dfae69842b87ca69f124c1bdda074b05422c02198530a5fdb687bc",
+    "construction_passed": false,
+    "selected_or_promoted": false,
+    "repaired": false
+  },
+  "source_diagnostic": {
+    "result": "configs/evaluation/m9-planner-correction-causality-v1-result.json",
+    "sha256": "af4725e0fa034761d3cb69e46cfc2c05014724e8c6533544cfaccad416d2c7df",
+    "accepted_signal": "low_correction_signal",
+    "correct_all_wins": [
+      9,
+      9
+    ]
+  },
+  "isolated_learning_change": {
+    "name": "contiguous_truncated_bptt_teacher_nll",
+    "sequence_length": 16,
+    "sequences_per_minibatch": 16,
+    "supervised_labels_unchanged": true,
+    "planner_unchanged": true,
+    "student_control_unchanged": true,
+    "all_other_training_and_evaluation_coordinates_inherited_exactly": true
+  },
+  "construction_continuation": {
+    "minimum_candidate_wins": 30,
+    "maximum_mean_team_idle_fraction_exclusive": 0.25
+  },
+  "replica_policy": {
+    "replica_a_runs_full_budget": true,
+    "replica_b_authorized_only_after_replica_a_construction_passes": true,
+    "replica_b_prohibited_after_replica_a_construction_failure": true,
+    "exact_full_run_and_selected_checkpoint_identity_required": true
+  },
+  "preflight_policy": {
+    "implementation_and_focused_tests_committed_before_preflight": true,
+    "complete_public_only_gate_required": true,
+    "gate_must_match_exact_current_commit": true,
+    "gate_must_bind_config_protocol_source_checkpoint_optimizer_and_public_seed_hashes": true,
+    "length_one_equivalence_to_flat_teacher_nll_required": true,
+    "deterministic_sequence_optimizer_replicas_required": true,
+    "live_terminal_reset_replay_required": true
+  },
+  "downstream_authority": {
+    "may_initialize_separately_precommitted_ippo_successor_after_exact_passing_replicas": true,
+    "may_select_or_repair_source_checkpoint": false,
+    "may_change_planner_features_masks_or_candidates": false,
+    "may_add_ema_or_replay_or_change_learning_rate": false,
+    "may_use_reward_or_ppo_or_mappo": false,
+    "may_promote": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_human_session": false
+  }
+}

@@ -2789,6 +2789,19 @@ canonical/compact SHA prefixes `799a845b98ddc708...` /
 data was touched. The next recommended question is one separately precommitted
 sequence-coherence successor that isolates contiguous truncated BPTT; this
 result does not authorize implementation or training.
+ADR-0127 now freezes `m9-candidate-native-sequence-relabel-v1` before
+implementation or model work. It initializes the exact rejected update-64
+model and Adam state and changes only optimizer presentation: every alive
+student boundary supplies ordered recurrent context in non-overlapping
+16-boundary per-seat windows, while unchanged planner-label NLL remains active
+only on actor-authoritative labels. Stored window-start hidden state is
+detached; gradients flow only through real preceding context in the same
+window. The public 2,048-root schedule, planner, model, optimizer values,
+learning rate, eight epochs, 32-by-64 budget, deterministic student control,
+30/40 floor, idle threshold, and conditional replica rule remain exact.
+Config/protocol SHA prefixes are `b7e17a6e74b6d18a...` /
+`b79f6da9c24863d0...`. No candidate model state or restricted access preceded
+the precommit.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

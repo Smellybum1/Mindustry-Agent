@@ -1756,6 +1756,17 @@ queue.
    was touched. The recommended next design question is one separately
    precommitted contiguous truncated-BPTT successor; do not implement or train
    it without that prospective packet.
+   ADR-0127 now supplies that packet for
+   `m9-candidate-native-sequence-relabel-v1`. It initializes the exact rejected
+   update-64 model and Adam state and changes only optimizer presentation:
+   alive student boundaries are ordered into non-overlapping 16-boundary
+   per-seat windows, stored window-start hidden state is detached, and
+   unchanged unweighted planner-label NLL applies only to the same eligible
+   labels. The 2,048 roots, 32-by-64 budget, planner, model, optimizer values,
+   learning rate, eight epochs, dev gate, and conditional replica policy remain
+   exact. Config/protocol SHA prefixes are `b7e17a6e74b6d18a...` /
+   `b79f6da9c24863d0...`. Implement the fail-closed sequence path and complete
+   exact-current-commit public preflight next; do not access restricted data.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1763,7 +1774,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0126` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0127` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
