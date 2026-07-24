@@ -1621,7 +1621,11 @@ queue.
    diagnostic before any successor learned recipe. ADR-0115 now freezes that
    exact diagnostic over update 3/update 32 and all 40 existing public-dev
    roots, with twin-JVM/reset identity and protocol SHA
-   `f779cd313fcd46da...`. Implement and run it before choosing any successor.
+   `f779cd313fcd46da...`. Its fail-closed loader, teacher-controlled
+   dual-checkpoint evaluator, exact report/reset comparison, structured
+   confusion output, command, and focused tests are implemented locally; all
+   489 Python tests pass. Commit this boundary, then run it before choosing any
+   successor.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

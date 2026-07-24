@@ -2582,7 +2582,10 @@ repository-evidence mapping used for the M6 audit is:
   freezes its exact twin-JVM/reset execution, all 40 existing public-dev roots,
   teacher-label NLL/top-1 and task/action confusion, with protocol SHA
   `f779cd313fcd46da...`. It cannot select, repair, train, promote, or access
-  restricted data.
+  restricted data. The fail-closed loader, teacher-controlled dual-checkpoint
+  evaluator, exact report comparison/reset replay, structured confusion output,
+  command surface, and focused tests are implemented locally; all 489 Python
+  tests pass. Commit before the first diagnostic JVM.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

@@ -2650,7 +2650,10 @@ that diagnostic over update 3 and update 32, all 40 existing public-dev roots,
 candidate-native planner v11 teacher control, exact twin JVM/reset reports,
 teacher-label NLL/top-1 agreement, and task/action confusion. Protocol SHA is
 `f779cd313fcd46da...`. It cannot select, repair, train, promote, or access
-restricted data.
+restricted data. The fail-closed loader, dual-checkpoint teacher-controlled
+evaluator, exact twin-JVM/reset comparison, structured confusion report,
+command surface, and focused tests are implemented locally; all 489 Python
+tests pass. Commit this boundary before the first diagnostic JVM.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
