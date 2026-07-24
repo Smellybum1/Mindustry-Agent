@@ -2856,8 +2856,20 @@ repository-evidence mapping used for the M6 audit is:
   launcher referenced archival rather than freshly rerun exact-HEAD preflight
   evidence, and the live schema name differed. The launcher/schema are
   corrected with a stale-commit rejection test; all 543 Python tests and the
-  focused live check pass. Commit the correction and repeat the complete gate
-  before Replica A.
+  focused live check pass. The complete exact-current-commit gate then passed
+  at `97a558270b`: 543 Python tests, pinned Java/custom-module checks, focused
+  live plan replay, smoke, 79-boundary cross-process/reset determinism, and the
+  664-checkpoint/16,200-tick golden replay were green.
+  Replica A completed all 2,048 public roots and 32 optimizer updates. Its
+  32-checkpoint update-65-through-96 lineage and canonical manifest validate
+  exactly, but no checkpoint reached 30/40. Continuation update 3 was best at
+  12/40 wins, core `239.325`, idle `0.0890581`; update 32 finished at 9/40,
+  core `192.6`, idle `0.0885152`. ADR-0134 rejects the trajectory-plan
+  candidate and prohibits Replica B. Manifest/canonical/compact-result SHA
+  prefixes are `9486145007d33895...` / `d4f2653464606f34...` /
+  `cf2a1fb00d732ebd...`. No checkpoint was selected, repaired, or promoted and
+  no restricted data was accessed. Another learned candidate requires a
+  separately prospective architecture or supervision-class decision.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

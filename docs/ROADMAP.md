@@ -2930,9 +2930,20 @@ That evidence-commit gate passed, but the final training-authority dry check
 caught a release-path mismatch before training: the launcher referenced
 archival rather than freshly rerun exact-HEAD preflight evidence, and the live
 schema name differed. The launcher/schema and a stale-commit rejection test are
-corrected locally; all 543 Python tests and the focused live check pass. Commit
-the correction and repeat the complete exact-current-commit gate before
-Replica A.
+corrected; all 543 Python tests and the focused live check pass. The complete
+exact-current-commit gate then passed at `97a558270b`, including pinned
+Java/custom-module checks, smoke, 79-boundary cross-process/reset determinism,
+and the 664-checkpoint/16,200-tick golden replay.
+Replica A completed all 2,048 public roots and 32 optimizer updates. Its full
+update-65-through-96 checkpoint lineage and canonical manifest validate
+exactly, but no checkpoint reached the 30/40 construction floor. Continuation
+update 3 was best at 12/40 wins, core `239.325`, idle `0.0890581`; final update
+32 reached 9/40, core `192.6`, idle `0.0885152`. ADR-0134 rejects the
+trajectory-plan candidate and prohibits Replica B. Manifest/canonical/compact-
+result SHA prefixes are `9486145007d33895...` / `d4f2653464606f34...` /
+`cf2a1fb00d732ebd...`. No checkpoint was selected, repaired, or promoted, and
+no restricted data was accessed. Another learned candidate requires a
+separately prospective architecture or supervision-class decision.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

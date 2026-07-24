@@ -1896,8 +1896,20 @@ queue.
    archival preflight instead of the freshly rerun exact-HEAD artifact, and the
    live schema name differed. The launcher/schema and a stale-commit rejection
    test are corrected locally; all 543 Python tests and the focused live check
-   pass. Commit this correction and repeat the complete exact-current-commit
-   gate before Replica A.
+   pass. The complete exact-current-commit gate passed at `97a558270b`: all 543
+   Python tests, pinned Java/custom-module checks, focused live plan replay,
+   smoke, 79-boundary cross-process/reset determinism, and the
+   664-checkpoint/16,200-tick golden replay were green.
+   Replica A then completed all 2,048 public roots and 32 updates. All 32
+   update-65-through-96 checkpoint identities and parent links validate, but
+   no checkpoint reached construction. Continuation update 3 was best at
+   12/40 wins, core `239.325`, idle `0.0890581`; final update 32 reached 9/40,
+   core `192.6`, idle `0.0885152`. ADR-0134 rejects the candidate and prohibits
+   Replica B. Manifest/canonical/compact-result SHA prefixes are
+   `9486145007d33895...` / `d4f2653464606f34...` /
+   `cf2a1fb00d732ebd...`. No checkpoint was selected, repaired, or promoted;
+   no restricted data was accessed. Stop model work pending a separately
+   prospective architecture or supervision-class decision.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1905,7 +1917,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0133` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0134` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
