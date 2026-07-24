@@ -313,3 +313,10 @@ initial joint argmax exactly equal to the rejected update-64 independent
 bundle. Public student-state joint-bundle NLL is the only supervision change;
 all fixed-step, thread, process, structured-authority, determinism, source,
 budget, gate, replica, and sealed-data rules remain exact.
+
+Replica A completed the exact 2,048-root, 32-update public budget after the
+complete exact-HEAD gate passed at `c05366454d`. The full update-65-through-96
+lineage and canonical manifest validate exactly. Continuation update 9 was best
+at only 13/40 public wins and update 32 ended at 8/40; idle remained below the
+frozen ceiling. ADR-0136 rejects the candidate and prohibits Replica B. No
+checkpoint was selected or repaired, and no restricted data was accessed.

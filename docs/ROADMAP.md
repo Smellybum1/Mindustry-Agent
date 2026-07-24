@@ -2975,6 +2975,17 @@ smoke, 79-boundary cross-process/reset determinism, and the
 prefix is `97082b5cc269f566...`; no public candidate optimizer update or
 restricted access occurred. Commit this evidence and rerun the complete
 exact-HEAD authority check before Replica A.
+The final exact-HEAD gate passed at evidence commit `c05366454d`. Replica A
+completed all 2,048 public roots and 32 optimizer updates. Its complete
+update-65-through-96 lineage and canonical manifest validate exactly, but no
+checkpoint reached the 30/40 construction floor. Continuation update 9 was
+best at 13/40 wins, core `193.7`, idle `0.0891664`; update 32 ended at 8/40,
+core `152.05`, idle `0.0916070`. ADR-0136 rejects the joint-bundle candidate
+and prohibits Replica B. Manifest/canonical/compact-result SHA prefixes are
+`8ca4065a1e47d8a...` / `61f0be9f41f58d18...` /
+`ca3d905c7679bb44...`. No checkpoint was selected, repaired, or promoted, and
+no restricted data was accessed. Another learned candidate requires a
+separately prospective architecture or supervision-class decision.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

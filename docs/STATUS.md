@@ -2902,6 +2902,18 @@ repository-evidence mapping used for the M6 audit is:
   SHA prefix is `97082b5cc269f566...`; no public candidate optimizer update or
   restricted access occurred. Commit this evidence and rerun the complete
   exact-HEAD authority check before Replica A.
+  The final exact-HEAD gate passed at evidence commit `c05366454d`. Replica A
+  then completed all 2,048 public roots and 32 optimizer updates. Independent
+  validation loaded the full update-65-through-96 checkpoint chain and matched
+  every parent, state digest, selection row, and the recomputed canonical
+  manifest. No checkpoint reached 30/40: continuation update 9 was best at
+  13/40 wins, core `193.7`, idle `0.0891664`; update 32 ended at 8/40, core
+  `152.05`, idle `0.0916070`. ADR-0136 rejects the joint-bundle candidate and
+  prohibits Replica B. Manifest/canonical/compact-result SHA prefixes are
+  `8ca4065a1e47d8a...` / `61f0be9f41f58d18...` /
+  `ca3d905c7679bb44...`. No checkpoint was selected, repaired, or promoted,
+  and no restricted data was accessed. Another learned candidate requires a
+  separately prospective architecture or supervision-class decision.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

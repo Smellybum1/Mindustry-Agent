@@ -1941,6 +1941,18 @@ queue.
    restricted access occurred. Commit this evidence, rerun the complete
    exact-HEAD authority check, then start Replica A in a clean output
    directory.
+   The exact-HEAD authority gate passed at evidence commit `c05366454d`.
+   Replica A completed the frozen 2,048 public roots and 32 optimizer updates.
+   All 32 update-65-through-96 checkpoints, parent links, model/optimizer
+   states, selection rows, and the canonical manifest validate exactly.
+   Continuation update 9 was best at only 13/40 wins, core `193.7`, idle
+   `0.0891664`; update 32 ended at 8/40, core `152.05`, idle `0.0916070`.
+   ADR-0136 rejects the candidate and prohibits Replica B.
+   Manifest/canonical/compact-result SHA prefixes are
+   `8ca4065a1e47d8a...` / `61f0be9f41f58d18...` /
+   `ca3d905c7679bb44...`. No checkpoint was selected, repaired, or promoted;
+   no restricted data was accessed. Stop autonomous model work pending a
+   separately prospective architecture or supervision-class decision.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1948,7 +1960,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0135` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0136` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1998,6 +2010,11 @@ planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
 a separately named prospective public-only decision; no further learned model,
 Replica B, PPO/MAPPO, or restricted-data access is currently authorized.
+ADR-0125 through ADR-0136 govern the later candidate-native correction,
+sequence, trajectory-plan, and joint-bundle continuations. Every learned
+candidate is rejected before Replica B; no learned checkpoint is selected.
+Further learned-model work requires a new prospective architecture or
+supervision-class decision.
 
 ## Deviations from the brief in this scaffold
 
