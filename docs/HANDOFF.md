@@ -1569,7 +1569,9 @@ queue.
    interval. ADR-0104 rejects v7 at compact SHA `d46d86025d0e45ec...`.
    ADR-0105 and protocol SHA `168317b2e5a34e64...` precommit v8's sole change:
    abandon DEFEND only when there are no enemies and the next wave is outside
-   the authoritative defend-lead window. Implement, commit, and run the same
+   the authoritative defend-lead window. The exact fixed-action rule,
+   inheritance validation, focused v7/v8 behavior coverage, and separate
+   command are local; all 471 Python tests pass. Commit, then run the same
    public gate.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.

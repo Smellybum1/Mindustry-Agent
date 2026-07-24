@@ -8,6 +8,7 @@ from mindustry_agents.policies import (
     CandidateNativePlannerV5,
     CandidateNativePlannerV6,
     CandidateNativePlannerV7,
+    CandidateNativePlannerV8,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -253,6 +254,44 @@ class TestScriptedPolicies(unittest.TestCase):
         v7 = CandidateNativePlannerV7().actions([row], [mask], board)
         self.assertEqual(v6[0]["task_action"]["candidate_index"], 0)
         self.assertEqual(v7[0]["task_action"]["candidate_index"], 1)
+
+    def test_candidate_native_planner_v8_demobilizes_safe_interwave_defender(self):
+        row = observation(
+            skill={"type": "DEFEND", "status": "RUNNING"},
+            team={
+                "tick": 2684,
+                "enemy_count": 0,
+                "time_to_next_wave": 1838,
+                "defend_lead_ticks": 900,
+            },
+        )
+        mask = {"continue_current_task": True, "abandon": True}
+        v7 = CandidateNativePlannerV7().actions([row], [mask])
+        v8 = CandidateNativePlannerV8().actions([row], [mask])
+        self.assertEqual(
+            v7[0]["task_action"], {"type": "CONTINUE_CURRENT_TASK"}
+        )
+        self.assertEqual(
+            v8[0]["task_action"],
+            {"type": "ABANDON", "reason": "safe_interwave_demobilize"},
+        )
+
+    def test_candidate_native_planner_v8_preserves_defense_inside_lead_window(self):
+        mask = {"continue_current_task": True, "abandon": True}
+        for enemy_count, time_to_wave in ((0, 899), (4, 1700)):
+            row = observation(
+                skill={"type": "DEFEND", "status": "RUNNING"},
+                team={
+                    "tick": 2782,
+                    "enemy_count": enemy_count,
+                    "time_to_next_wave": time_to_wave,
+                    "defend_lead_ticks": 900,
+                },
+            )
+            action = CandidateNativePlannerV8().actions([row], [mask])[0]
+            self.assertEqual(
+                action["task_action"], {"type": "CONTINUE_CURRENT_TASK"}
+            )
 
     def test_candidate_native_planner_preserves_continue_and_preempts_for_wave(self):
         planner = CandidateNativePlanner()

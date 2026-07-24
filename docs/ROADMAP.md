@@ -2591,7 +2591,9 @@ exposed DEFEND work through the safe inter-wave interval. ADR-0104 rejects v7
 at compact SHA `d46d86025d0e45ec...`. ADR-0105 precommits v8's sole change:
 abandon DEFEND when there are no enemies and the next wave is outside the
 authoritative defend-lead window. Protocol SHA is `168317b2e5a34e64...`;
-implementation is next.
+the exact rule, inheritance validation, focused v7/v8 tests, and separate
+command are implemented locally; all 471 Python tests pass. Commit before the
+gate.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

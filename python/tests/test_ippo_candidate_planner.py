@@ -99,6 +99,18 @@ def test_v7_protocol_binds_active_fortification_coordinate():
     ]
 
 
+def test_v8_protocol_binds_interwave_demobilization_coordinate():
+    protocol, seeds = _load_protocol(
+        DEFAULT_PROTOCOL.with_name(
+            "m9-candidate-native-planner-v8-protocol.json"
+        )
+    )
+    assert len(seeds) == 40
+    assert protocol["planner"]["interwave_demobilization"]["reason"] == (
+        "safe_interwave_demobilize"
+    )
+
+
 def test_protocol_rejects_digest_drift(tmp_path: Path):
     document = json.loads(DEFAULT_PROTOCOL.read_text(encoding="utf-8"))
     document["authority"]["may_train"] = True

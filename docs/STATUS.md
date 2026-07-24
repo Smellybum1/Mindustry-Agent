@@ -2527,7 +2527,9 @@ repository-evidence mapping used for the M6 audit is:
   losing roots retaining exposed DEFEND tasks through the safe inter-wave
   interval. ADR-0104 rejects v7 at compact SHA `d46d86025d0e45ec...`.
   ADR-0105 precommits v8's sole safe-interwave DEFEND demobilization coordinate
-  at protocol SHA `168317b2e5a34e64...`; implementation is next.
+  at protocol SHA `168317b2e5a34e64...`. The exact fixed-action rule,
+  inheritance validation, focused v7/v8 behavior coverage, and separate command
+  are implemented locally; all 471 Python tests pass. Commit before evaluation.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

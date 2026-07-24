@@ -402,6 +402,7 @@ class CandidateNativePlanner:
         require_positive_turret_coverage_for_active_build_supply: bool = True,
         suppress_line_after_completed_fortification: bool = False,
         suppress_line_during_active_fortification: bool = False,
+        demobilize_defend_during_safe_interwave: bool = False,
     ) -> None:
         if (
             maximum_build_schematic_selections is not None
@@ -430,6 +431,9 @@ class CandidateNativePlanner:
         self._suppress_line_during_active_fortification = (
             suppress_line_during_active_fortification
         )
+        self._demobilize_defend_during_safe_interwave = (
+            demobilize_defend_during_safe_interwave
+        )
 
     def reset(self) -> None:
         self._replan_ticks.clear()
@@ -452,6 +456,8 @@ class CandidateNativePlanner:
         action_mask: dict[str, Any],
         tick: int,
         enemy_count: int,
+        time_to_wave: int,
+        defend_lead: int,
     ) -> dict[str, Any] | None:
         unit = observation.get("unit", {})
         if unit.get("dead", False):
@@ -482,6 +488,18 @@ class CandidateNativePlanner:
             and skill.get("type") not in {"", "DEFEND", "SUPPLY"}
         ):
             return self._simple(agent_id, "ABANDON", reason="wave_preempt")
+        if (
+            self._demobilize_defend_during_safe_interwave
+            and action_mask.get("abandon", False)
+            and enemy_count == 0
+            and time_to_wave > defend_lead
+            and skill.get("type") == "DEFEND"
+        ):
+            return self._simple(
+                agent_id,
+                "ABANDON",
+                reason="safe_interwave_demobilize",
+            )
         if action_mask.get("continue_current_task", False):
             return self._simple(agent_id, "CONTINUE_CURRENT_TASK")
         return None
@@ -630,6 +648,8 @@ class CandidateNativePlanner:
             self.reset()
         self._last_tick = tick
         enemy_count = int(team.get("enemy_count", 0))
+        time_to_wave = int(team.get("time_to_next_wave", 0))
+        defend_lead = int(team.get("defend_lead_ticks", 0))
         active_build = self._defer_schematics_during_active_build and any(
             task.get("task_type") in {"BUILD_LINE", "BUILD_SCHEMATIC"}
             and task.get("status") in {"CLAIMED", "RUNNING", "BLOCKED"}
@@ -662,7 +682,13 @@ class CandidateNativePlanner:
             zip(observations, action_masks, strict=True)
         ):
             fixed = self._fixed_action(
-                agent_id, observation, action_mask, tick, enemy_count
+                agent_id,
+                observation,
+                action_mask,
+                tick,
+                enemy_count,
+                time_to_wave,
+                defend_lead,
             )
             if fixed is not None:
                 actions[agent_id] = fixed
@@ -785,6 +811,21 @@ class CandidateNativePlannerV7(CandidateNativePlanner):
             require_positive_turret_coverage_for_active_build_supply=False,
             suppress_line_after_completed_fortification=True,
             suppress_line_during_active_fortification=True,
+        )
+
+
+class CandidateNativePlannerV8(CandidateNativePlanner):
+    """V7-exact planner that demobilizes defenders during safe inter-waves."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            maximum_build_schematic_selections=1,
+            defer_schematics_during_active_build=True,
+            prioritize_supply_during_active_build=True,
+            require_positive_turret_coverage_for_active_build_supply=False,
+            suppress_line_after_completed_fortification=True,
+            suppress_line_during_active_fortification=True,
+            demobilize_defend_during_safe_interwave=True,
         )
 
 
