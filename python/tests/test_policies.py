@@ -10,6 +10,7 @@ from mindustry_agents.policies import (
     CandidateNativePlannerV7,
     CandidateNativePlannerV8,
     CandidateNativePlannerV9,
+    CandidateNativePlannerV10,
     GreedyUtilityPolicy,
     HelperCoordinator,
     PureGreedyUtilityPolicy,
@@ -330,6 +331,86 @@ class TestScriptedPolicies(unittest.TestCase):
             [{"task_type": "DEFEND_REGION", "status": "RUNNING"}],
         )[0]
         self.assertEqual(action["task_action"]["candidate_index"], 0)
+
+    def test_candidate_native_planner_v10_preempts_on_wave_increment(self):
+        planner = CandidateNativePlannerV10()
+        mask = {"continue_current_task": True, "abandon": True}
+        first = planner.actions(
+            [
+                observation(
+                    skill={"type": "MINE", "status": "RUNNING"},
+                    team={"tick": 3359, "wave": 2, "enemy_count": 0},
+                )
+            ],
+            [mask],
+        )[0]
+        advanced = planner.actions(
+            [
+                observation(
+                    skill={"type": "MINE", "status": "RUNNING"},
+                    team={"tick": 4522, "wave": 3, "enemy_count": 0},
+                )
+            ],
+            [mask],
+        )[0]
+        self.assertEqual(
+            first["task_action"], {"type": "CONTINUE_CURRENT_TASK"}
+        )
+        self.assertEqual(
+            advanced["task_action"],
+            {"type": "ABANDON", "reason": "wave_spawn_preempt"},
+        )
+
+    def test_candidate_native_planner_v10_preserves_wave_increment_exemptions(self):
+        for skill_type in ("DEFEND", "SUPPLY"):
+            planner = CandidateNativePlannerV10()
+            mask = {"continue_current_task": True, "abandon": True}
+            planner.actions(
+                [
+                    observation(
+                        skill={"type": skill_type, "status": "RUNNING"},
+                        team={"tick": 100, "wave": 2, "enemy_count": 0},
+                    )
+                ],
+                [mask],
+            )
+            action = planner.actions(
+                [
+                    observation(
+                        skill={"type": skill_type, "status": "RUNNING"},
+                        team={"tick": 200, "wave": 3, "enemy_count": 0},
+                    )
+                ],
+                [mask],
+            )[0]
+            self.assertEqual(
+                action["task_action"], {"type": "CONTINUE_CURRENT_TASK"}
+            )
+
+    def test_candidate_native_planner_v10_reset_clears_wave_history(self):
+        planner = CandidateNativePlannerV10()
+        mask = {"continue_current_task": True, "abandon": True}
+        planner.actions(
+            [
+                observation(
+                    skill={"type": "MINE", "status": "RUNNING"},
+                    team={"tick": 4522, "wave": 3, "enemy_count": 0},
+                )
+            ],
+            [mask],
+        )
+        action = planner.actions(
+            [
+                observation(
+                    skill={"type": "MINE", "status": "RUNNING"},
+                    team={"tick": 0, "wave": 1, "enemy_count": 0},
+                )
+            ],
+            [mask],
+        )[0]
+        self.assertEqual(
+            action["task_action"], {"type": "CONTINUE_CURRENT_TASK"}
+        )
 
     def test_candidate_native_planner_preserves_continue_and_preempts_for_wave(self):
         planner = CandidateNativePlanner()

@@ -404,6 +404,7 @@ class CandidateNativePlanner:
         suppress_line_during_active_fortification: bool = False,
         demobilize_defend_during_safe_interwave: bool = False,
         maximum_active_defend_tasks: int | None = None,
+        preempt_noncombat_on_wave_increment: bool = False,
     ) -> None:
         if (
             maximum_build_schematic_selections is not None
@@ -419,6 +420,7 @@ class CandidateNativePlanner:
             raise ValueError("maximum_active_defend_tasks must be positive")
         self._replan_ticks: dict[int, list[int]] = {}
         self._last_tick = -1
+        self._last_wave: int | None = None
         self._maximum_build_schematic_selections = (
             maximum_build_schematic_selections
         )
@@ -441,10 +443,14 @@ class CandidateNativePlanner:
             demobilize_defend_during_safe_interwave
         )
         self._maximum_active_defend_tasks = maximum_active_defend_tasks
+        self._preempt_noncombat_on_wave_increment = (
+            preempt_noncombat_on_wave_increment
+        )
 
     def reset(self) -> None:
         self._replan_ticks.clear()
         self._last_tick = -1
+        self._last_wave = None
 
     def observe_action_results(self, results: list[dict[str, Any]]) -> None:
         del results
@@ -465,6 +471,7 @@ class CandidateNativePlanner:
         enemy_count: int,
         time_to_wave: int,
         defend_lead: int,
+        wave_advanced: bool,
     ) -> dict[str, Any] | None:
         unit = observation.get("unit", {})
         if unit.get("dead", False):
@@ -495,6 +502,17 @@ class CandidateNativePlanner:
             and skill.get("type") not in {"", "DEFEND", "SUPPLY"}
         ):
             return self._simple(agent_id, "ABANDON", reason="wave_preempt")
+        if (
+            self._preempt_noncombat_on_wave_increment
+            and action_mask.get("abandon", False)
+            and wave_advanced
+            and skill.get("type") not in {"", "DEFEND", "SUPPLY"}
+        ):
+            return self._simple(
+                agent_id,
+                "ABANDON",
+                reason="wave_spawn_preempt",
+            )
         if (
             self._demobilize_defend_during_safe_interwave
             and action_mask.get("abandon", False)
@@ -664,6 +682,9 @@ class CandidateNativePlanner:
         if tick < self._last_tick:
             self.reset()
         self._last_tick = tick
+        wave = int(team.get("wave", 0))
+        wave_advanced = self._last_wave is not None and wave > self._last_wave
+        self._last_wave = wave
         enemy_count = int(team.get("enemy_count", 0))
         time_to_wave = int(team.get("time_to_next_wave", 0))
         defend_lead = int(team.get("defend_lead_ticks", 0))
@@ -719,6 +740,7 @@ class CandidateNativePlanner:
                 enemy_count,
                 time_to_wave,
                 defend_lead,
+                wave_advanced,
             )
             if fixed is not None:
                 actions[agent_id] = fixed
@@ -872,6 +894,23 @@ class CandidateNativePlannerV9(CandidateNativePlanner):
             suppress_line_during_active_fortification=True,
             demobilize_defend_during_safe_interwave=True,
             maximum_active_defend_tasks=2,
+        )
+
+
+class CandidateNativePlannerV10(CandidateNativePlanner):
+    """V9-exact planner preempting noncombat work at wave spawn."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            maximum_build_schematic_selections=1,
+            defer_schematics_during_active_build=True,
+            prioritize_supply_during_active_build=True,
+            require_positive_turret_coverage_for_active_build_supply=False,
+            suppress_line_after_completed_fortification=True,
+            suppress_line_during_active_fortification=True,
+            demobilize_defend_during_safe_interwave=True,
+            maximum_active_defend_tasks=2,
+            preempt_noncombat_on_wave_increment=True,
         )
 
 

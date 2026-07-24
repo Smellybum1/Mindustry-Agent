@@ -20,6 +20,7 @@ from mindustry_agents.policies import (
     CandidateNativePlannerV7,
     CandidateNativePlannerV8,
     CandidateNativePlannerV9,
+    CandidateNativePlannerV10,
 )
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
 
@@ -55,6 +56,9 @@ PROTOCOL_SCHEMAS = {
     ),
     "20ba635f3ab468b8750e4d6244bc8db8292c1fa61539391282f1259ac9cb7a2c": (
         "m9_candidate_native_planner_protocol_v9"
+    ),
+    "e10833fd3d862239ad8244399f104d8095f2ea68c8539a69dd7ee3537a804463": (
+        "m9_candidate_native_planner_protocol_v10"
     ),
 }
 
@@ -298,6 +302,33 @@ def _load_protocol(path: Path) -> tuple[dict[str, Any], list[int]]:
             }
         ):
             raise ValueError("planner v9 inheritance contract drift")
+    if expected_schema == "m9_candidate_native_planner_protocol_v10":
+        if (
+            protocol.get("parent_protocol_sha256")
+            != (
+                "20ba635f3ab468b8750e4d6244bc8db8292c1fa61539391282"
+                "f1259ac9cb7a2c"
+            )
+            or protocol.get("sole_behavior_change")
+            != "preempt_noncombat_work_on_observed_wave_increment"
+            or protocol.get("planner", {}).get("wave_spawn_preemption")
+            != {
+                "current_skill_types_exempt": ["", "DEFEND", "SUPPLY"],
+                "action_mask": "abandon_true",
+                "precondition": (
+                    "authoritative_team_wave_greater_than_last_observed_wave"
+                ),
+                "action": "ABANDON",
+                "reason": "wave_spawn_preempt",
+                "state_scope": "bounded_reset_local_last_observed_wave",
+                "fallback": "unchanged_v9_fixed_action_and_allocator",
+                "evidence": (
+                    "v9_public_loss_continued_mining_at_wave_increment_tick_"
+                    "4522_until_enemy_contact_killed_a_seat_at_tick_4604"
+                ),
+            }
+        ):
+            raise ValueError("planner v10 inheritance contract drift")
 
     seed_spec = protocol["seed_set"]
     seed_path = ROOT / seed_spec["path"]
@@ -384,6 +415,7 @@ def _episode(
         7: CandidateNativePlannerV7,
         8: CandidateNativePlannerV8,
         9: CandidateNativePlannerV9,
+        10: CandidateNativePlannerV10,
     }[planner_version]()
     observations = reset.initial_observations
     masks = reset.action_masks
@@ -578,6 +610,7 @@ def main(argv: list[str] | None = None) -> int:
             "m9_candidate_native_planner_protocol_v7": 7,
             "m9_candidate_native_planner_protocol_v8": 8,
             "m9_candidate_native_planner_protocol_v9": 9,
+            "m9_candidate_native_planner_protocol_v10": 10,
         }[protocol["schema"]]
         values = {
             "java": args.java,

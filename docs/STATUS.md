@@ -2544,7 +2544,9 @@ repository-evidence mapping used for the M6 audit is:
   DEFEND before enemies become visible. ADR-0108 rejects v9 at compact SHA
   `ae096f65349ea873...`. ADR-0109 precommits v10's sole reset-local
   wave-increment preemption coordinate at protocol SHA `e10833fd3d862239...`;
-  implementation is next.
+  the exact wave-history rule, reset behavior, exemptions, inheritance
+  validation, and command are implemented locally; all 478 Python tests pass.
+  Commit before evaluation.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

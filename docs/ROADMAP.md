@@ -2607,7 +2607,9 @@ increment where the strong expert starts DEFEND before enemies become visible.
 ADR-0108 rejects v9 at compact SHA `ae096f65349ea873...`. ADR-0109 precommits
 v10's sole change: preempt noncombat work on an observed wave increment using
 reset-local prior-wave state. Protocol SHA is `e10833fd3d862239...`;
-implementation is next.
+the exact wave-history rule, reset behavior, exemptions, inheritance
+validation, and command are implemented locally; all 478 Python tests pass.
+Commit before the gate.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

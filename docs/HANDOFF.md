@@ -1586,7 +1586,9 @@ queue.
    become visible. ADR-0108 rejects v9 at compact SHA
    `ae096f65349ea873...`. ADR-0109 and protocol SHA `e10833fd3d862239...`
    precommit v10's sole reset-local wave-increment preemption coordinate.
-   Implement and commit before the same public gate.
+   The exact wave-history rule, reset behavior, exemptions, inheritance
+   validation, and command are local; all 478 Python tests pass. Commit before
+   the same public gate.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
