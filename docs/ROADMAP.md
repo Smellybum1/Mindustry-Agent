@@ -2707,7 +2707,10 @@ now freezes that diagnostic over rejected update 64 and the same 40 public-dev
 roots. It records exact task-id/target pairs and exact 37-value feature-row
 aliasing for same-family disagreements under twin-JVM/reset identity. Protocol
 SHA is `8003d7ef159cf994...`; it cannot train, select, repair, promote, or access
-restricted data. Implement and commit it before the first diagnostic JVM.
+restricted data. The fail-closed source loader, semantic candidate renderer,
+exact feature-row comparison, deterministic aggregation/classification,
+twin-JVM/reset runner, command, and focused tests are implemented locally; all
+501 Python tests pass. Commit before the first diagnostic JVM.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

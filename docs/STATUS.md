@@ -2636,7 +2636,10 @@ repository-evidence mapping used for the M6 audit is:
   that diagnostic over rejected update 64 and the same 40 public-dev roots. It
   records exact task-id/target pairs and exact 37-value feature-row aliasing for
   same-family disagreements under twin-JVM/reset identity. Protocol SHA is
-  `8003d7ef159cf994...`; implementation must be committed before its first JVM.
+  `8003d7ef159cf994...`. The fail-closed source loader, semantic candidate
+  renderer, exact feature-row comparison, deterministic aggregation and
+  classification, twin-JVM/reset runner, command, and focused tests are
+  implemented locally; all 501 Python tests pass. Commit before execution.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
