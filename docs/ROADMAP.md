@@ -2749,6 +2749,18 @@ and records manifest/canonical/compact SHA prefixes
 `e1690a0033bb42d3...` / `100cbe8f2cbec11e...` /
 `6cc01d04a7a58c70...`. No restricted data was accessed. A further mechanism
 requires a separate prospective decision before implementation or model work.
+ADR-0125 now freezes the public-only
+`m9-planner-correction-causality-v1` diagnostic before implementation. It
+binds the exact rejected update-64 and update-96 finals and the same 40
+public-dev roots. Each checkpoint runs deterministic student baseline,
+one atomic complete-bundle planner correction at the first eligible
+disagreement, and atomic complete-bundle correction at every eligible
+disagreement. Twin fresh-JVM/reset identity and exact frozen 13/40 win-count
+and mean-core-health baseline reproduction are mandatory. Both corrected cells
+at least 28/40 classify a strong signal; both at most 21/40 classify a low
+signal; other valid results are mixed. Protocol SHA prefix is
+`7958615b3992974a...`. This is diagnostic only and cannot train, select, repair,
+promote, or access restricted data.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

@@ -1,0 +1,140 @@
+{
+  "schema": "m9_planner_correction_causality_protocol_v1",
+  "diagnostic": "m9-planner-correction-causality-v1",
+  "data_classification": "public_dev_only",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "seed_set_sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+  "split": "dev",
+  "teacher_policy": "candidate-native-planner-v11-single-defender",
+  "checkpoints": [
+    {
+      "candidate": "m9-candidate-native-on-policy-relabel-v1",
+      "role": "student_state_relabel_final",
+      "lineage_update": 64,
+      "path": "runs/m9-candidate-on-policy-relabel-a/candidate-on-policy-relabel-update-64.pt",
+      "config_sha256": "7fadf9ae9130775fffebe52b86407dfeafaf47ea5e1383524818a6d0012d72d4",
+      "file_sha256": "cbfde7e932e718f49b6e80f79bfd2b0072fa2bb7fd1f04e4ca0d7da9ee8ed408",
+      "content_sha256": "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865",
+      "model_state_sha256": "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1",
+      "autonomous_public_dev_wins": 13,
+      "autonomous_public_dev_mean_core_health": 242.975,
+      "source_result": "configs/evaluation/m9-candidate-native-on-policy-relabel-v1-result.json",
+      "source_result_sha256": "ebea0b741abbf2b7e3d995af1f87d7528ddee08d94089db4f837f40c730e60ee",
+      "source_manifest": "runs/m9-candidate-on-policy-relabel-a/candidate-on-policy-relabel-run.manifest.json",
+      "source_manifest_sha256": "f34c50a024f05d6084a8661fb627fa8c3c5cd223dc45bd03273258877f489952",
+      "source_canonical_run_sha256": "1cf33117526a04c8053bc66ce786945964a88e1d32a1de3227bd2af042524c81",
+      "construction_passed": false,
+      "selected_or_promoted": false,
+      "repaired": false
+    },
+    {
+      "candidate": "m9-candidate-native-hard-example-relabel-v1",
+      "role": "hard_example_relabel_final",
+      "lineage_update": 96,
+      "path": "runs/m9-candidate-hard-example-relabel-a/candidate-hard-example-relabel-update-96.pt",
+      "config_sha256": "c2401782578d2e8a3a3277fa8920d17fcee23f7cda89e92a9e1d09cfb166f459",
+      "file_sha256": "cb46db4d6d7bbb4626f4fdcbed161fb9b1af4f021b2f57c8c5c91a38b71d9509",
+      "content_sha256": "1541f3723cafcefacf472b971e58e2f0b38957f834667bd6ecf1f10b6a6f9422",
+      "model_state_sha256": "372081889dee84e89ae14cd6b792d08683e78590f75873482db72da4db0522b5",
+      "autonomous_public_dev_wins": 13,
+      "autonomous_public_dev_mean_core_health": 234.425,
+      "source_result": "configs/evaluation/m9-candidate-native-hard-example-relabel-v1-result.json",
+      "source_result_sha256": "6cc01d04a7a58c7074ac6bb0f07972f282d80cc4bf532d948c41e5f7ea1a8414",
+      "source_manifest": "runs/m9-candidate-hard-example-relabel-a/candidate-hard-example-relabel-run.manifest.json",
+      "source_manifest_sha256": "e1690a0033bb42d36629b55ea0a4f0a73667e482904220e2c8778e5e0b993c0d",
+      "source_canonical_run_sha256": "100cbe8f2cbec11eced5444c4cd05ff0fc4967bdcb4cb723a51646b63689196f",
+      "construction_passed": false,
+      "selected_or_promoted": false,
+      "repaired": false
+    }
+  ],
+  "execution": {
+    "fresh_jvm_reports": 2,
+    "terminal_reset_replay": true,
+    "exact_report_identity_required": true,
+    "student_action_mode": "deterministic_argmax",
+    "teacher_labels_same_pre_action_visited_boundary": true,
+    "eligible_label": "alive_and_no_forced_task_action_and_teacher_action_authoritatively_legal",
+    "forced_controls": "execute_student_forced_action_and_exclude_from_disagreement_and_correction",
+    "student_recurrent_state": "advance_from_student_inference_and_committed_post_step_state_in_every_mode",
+    "modes": [
+      {
+        "name": "baseline",
+        "correction_rule": "never",
+        "action_authority": "deterministic_student"
+      },
+      {
+        "name": "correct_first",
+        "correction_rule": "once_at_the_first_atomic_boundary_with_any_eligible_student_planner_disagreement",
+        "action_authority": "planner_complete_canonical_bundle_for_all_actor_authoritative_non_forced_seats_at_trigger_boundary_otherwise_student"
+      },
+      {
+        "name": "correct_all",
+        "correction_rule": "at_every_atomic_boundary_with_any_eligible_student_planner_disagreement",
+        "action_authority": "planner_complete_canonical_bundle_for_all_actor_authoritative_non_forced_seats_at_each_trigger_boundary_otherwise_student"
+      }
+    ],
+    "paired_roots": true,
+    "mode_order": [
+      "baseline",
+      "correct_first",
+      "correct_all"
+    ],
+    "pre_terminal_window_ticks": 600
+  },
+  "measurements": {
+    "root_level": [
+      "paired_terminal_outcome_and_core_health",
+      "episode_ticks_and_live_ticks",
+      "eligible_boundaries_and_eligible_labels",
+      "disagreements_and_disagreement_boundaries",
+      "eligible_labels_and_disagreements_per_1000_live_ticks",
+      "first_disagreement_tick_and_fraction_of_episode_remaining",
+      "disagreements_in_last_600_ticks_before_terminal",
+      "task_family_switches_and_same_family_retargets_per_1000_live_ticks",
+      "mean_and_max_commitment_duration_ticks",
+      "correction_boundary_count"
+    ],
+    "disagreement_level": [
+      "student_top1_minus_top2_legal_logit_margin",
+      "planner_action_minus_student_action_legal_logit_margin",
+      "student_and_planner_task_type_task_id_and_target",
+      "state_hash"
+    ],
+    "correction_level": [
+      "tick_and_pre_action_state_hash",
+      "student_complete_bundle",
+      "planner_complete_actor_authoritative_bundle",
+      "executed_complete_bundle",
+      "post_action_state_hash"
+    ],
+    "aggregate": [
+      "mode_wins_and_mean_core_health",
+      "paired_win_loss_transition_table_against_baseline",
+      "exact_mcnemar_binomial_p_value_for_discordant_root_outcomes",
+      "telemetry_totals_and_rate_denominators"
+    ]
+  },
+  "classification": {
+    "baseline_reproduction_required": "each_checkpoint_baseline_exactly_matches_its_frozen_13_of_40_wins_and_mean_core_health_and_both_fresh_reports_match_root_by_root",
+    "strong_correction_signal": "baseline_reproduction_required_and_both_correct_all_cells_reach_at_least_28_of_40_wins",
+    "low_correction_signal": "baseline_reproduction_required_and_both_correct_all_cells_reach_at_most_21_of_40_wins",
+    "mixed_correction_signal": "baseline_reproduction_required_and_neither_strong_nor_low_correction_signal",
+    "invalid": "any_source_hash_mismatch_or_any_exact_report_reset_mismatch_or_baseline_reproduction_failure",
+    "correct_first_role": "descriptive_front_loaded_versus_diffuse_localization_only"
+  },
+  "authority": {
+    "may_select_or_repair_checkpoint": false,
+    "may_train_or_modify_model_or_optimizer": false,
+    "may_change_planner_features_masks_or_candidates": false,
+    "may_sweep_correction_strength_or_first_k": false,
+    "may_use_reward_or_ppo_or_mappo": false,
+    "may_precommit_successor_after_valid_result": true,
+    "may_promote": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_human_session": false
+  }
+}

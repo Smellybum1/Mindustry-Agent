@@ -1717,7 +1717,18 @@ queue.
    compact SHA prefixes `e1690a0033bb42d3...` / `100cbe8f2cbec11e...` /
    `6cc01d04a7a58c70...`. No restricted data was accessed. A further mechanism
    requires a separate prospective decision before implementation or model
-   work.
+   work. ADR-0125 now freezes `m9-planner-correction-causality-v1` as a
+   public-only diagnostic over the exact rejected update-64 and update-96
+   finals. Run deterministic student baseline, one atomic complete-bundle
+   planner correction at the first eligible disagreement, and atomic
+   complete-bundle correction at every eligible disagreement on the same 40
+   roots. Exact frozen 13/40 win-count and mean-core-health baseline
+   reproduction and twin-JVM/reset identity are mandatory. Both corrected
+   cells at least 28/40 classify a strong signal; both at most 21/40 classify a
+   low signal; other valid results are mixed. Protocol SHA prefix is
+   `7958615b3992974a...`. Implement its fail-closed runner and
+   exact-current-commit public preflight next; do not train, select, repair,
+   promote, or access restricted data.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1725,7 +1736,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0124` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0125` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

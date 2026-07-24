@@ -2676,7 +2676,16 @@ repository-evidence mapping used for the M6 audit is:
   rejects the candidate, prohibits Replica B and PPO initialization, and
   records manifest/canonical/compact SHA prefixes `e1690a0033bb42d3...` /
   `100cbe8f2cbec11e...` / `6cc01d04a7a58c70...`. No restricted data was
-  accessed. A further mechanism requires a separate prospective decision.
+  accessed. ADR-0125 now freezes one reduced public-only causal diagnostic
+  before implementation. It binds the exact rejected update-64 and update-96
+  finals, all 40 public-dev roots, deterministic student baseline, one
+  complete-bundle planner correction at the first eligible disagreement, and
+  complete-bundle correction at every eligible disagreement. Twin-JVM/reset
+  identity and exact frozen 13/40 win-count and mean-core-health baseline
+  reproduction are mandatory. Both corrected cells at least 28/40 classify a
+  strong signal; both at most 21/40 classify a low signal; other valid results
+  are mixed. Protocol SHA prefix is `7958615b3992974a...`. It cannot train,
+  select, repair, promote, or access restricted data.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
