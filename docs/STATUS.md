@@ -2685,7 +2685,15 @@ repository-evidence mapping used for the M6 audit is:
   reproduction are mandatory. Both corrected cells at least 28/40 classify a
   strong signal; both at most 21/40 classify a low signal; other valid results
   are mixed. Protocol SHA prefix is `aee96892e4ceb131...`. It cannot train,
-  select, repair, promote, or access restricted data.
+  select, repair, promote, or access restricted data. The fail-closed
+  dual-source loader, deterministic baseline/first/all correction runner,
+  atomic actor-authoritative bundle substitution, executed-action history,
+  logit/semantic/exposure telemetry, paired statistic, twin-JVM/reset
+  comparison, commands, and focused tests are implemented locally. All 515
+  Python tests pass using a fresh repo-local temp root. A one-root live probe
+  repeats baseline exactly after reset and exercises one/six atomic
+  corrections in the two intervention modes; it is integration evidence only.
+  The exact-current-commit public preflight and full diagnostic have not run.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

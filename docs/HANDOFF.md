@@ -1728,7 +1728,15 @@ queue.
    low signal; other valid results are mixed. Protocol SHA prefix is
    `aee96892e4ceb131...`. Implement its fail-closed runner and
    exact-current-commit public preflight next; do not train, select, repair,
-   promote, or access restricted data.
+   promote, or access restricted data. The fail-closed dual-source loader,
+   three-mode runner, atomic actor-authoritative correction bundle,
+   executed-action history, governed telemetry, paired statistic,
+   twin-JVM/reset comparison, commands, and focused tests are implemented
+   locally. All 515 Python tests pass with a fresh repo-local temp root. A
+   one-root live probe repeats baseline exactly after reset and exercises the
+   two intervention modes; it is not classification evidence. Commit and push
+   this implementation, then run and commit the complete exact-current-commit
+   public preflight before the full diagnostic.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

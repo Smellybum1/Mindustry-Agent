@@ -41,6 +41,8 @@ SCRIPTS := scripts
         train-m9-candidate-hard-example-relabel \
         m9-candidate-critical-disagreement-diagnostic \
         m9-candidate-semantic-target-diagnostic \
+        m9-planner-correction-causality-check \
+        m9-planner-correction-causality-diagnostic \
         m9-baseline train-m9-ippo train-m9-ippo-v2 train-m9-ippo-v3 \
         train-m9-ippo-v4 train-m9-ippo-v5 train-m9-ippo-v6 \
         secondary-claim-wake-check \
@@ -111,6 +113,8 @@ help: ## List available targets
 	@echo "  train-m9-candidate-hard-example-relabel governed weighted continuation"
 	@echo "  m9-candidate-critical-disagreement-diagnostic rejected policy errors"
 	@echo "  m9-candidate-semantic-target-diagnostic candidate target errors"
+	@echo "  m9-planner-correction-causality-check validate causal diagnostic"
+	@echo "  m9-planner-correction-causality-diagnostic run causal diagnostic"
 	@echo "  secondary-claim-wake-check fixed-seat claim-loss boundary (M8.5/V35)"
 	@echo "  owned-schematic-staging-check one-tick live-owner staging boundary"
 	@echo "  coordination-parity shared policy decision parity (M7.2)"
@@ -235,6 +239,12 @@ m9-candidate-critical-disagreement-diagnostic: ## Localize rejected policy error
 
 m9-candidate-semantic-target-diagnostic: ## Resolve same-family target errors
 	@bash $(SCRIPTS)/m9-candidate-semantic-target-diagnostic.sh
+
+m9-planner-correction-causality-check: ## Validate causal diagnostic
+	@bash $(SCRIPTS)/m9-planner-correction-causality-check.sh
+
+m9-planner-correction-causality-diagnostic: ## Run causal diagnostic
+	@bash $(SCRIPTS)/m9-planner-correction-causality-diagnostic.sh
 
 m9-reward-check: ## Verify M9 audited per-seat shaping adversaries
 	@bash $(SCRIPTS)/m9-reward-check.sh

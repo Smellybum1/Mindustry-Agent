@@ -2760,7 +2760,16 @@ and mean-core-health baseline reproduction are mandatory. Both corrected cells
 at least 28/40 classify a strong signal; both at most 21/40 classify a low
 signal; other valid results are mixed. Protocol SHA prefix is
 `aee96892e4ceb131...`. This is diagnostic only and cannot train, select, repair,
-promote, or access restricted data.
+promote, or access restricted data. The fail-closed dual-source loader,
+deterministic three-mode runner, complete actor-authoritative correction
+bundle, executed-action history commit, logit/semantic/exposure telemetry,
+paired exact-binomial statistic, twin-JVM/reset comparison, command, and
+focused tests are implemented locally. All 515 Python tests pass with a fresh
+repo-local temp root. A one-root live integration probe repeats baseline
+exactly after terminal reset; its `correct_first` and `correct_all` modes
+execute one and six atomic corrections respectively. This probe is not
+classification evidence. Commit the implementation, then run the complete
+exact-current-commit public preflight before the diagnostic.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
