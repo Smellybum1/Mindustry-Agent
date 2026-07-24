@@ -2719,6 +2719,16 @@ the feature-distinguishable-ranking signal, records full/canonical/compact SHA
 prefixes `84fb4455228c9c6c...` / `25d594aaf8dde034...` /
 `959e55f140fce098...`, keeps update 64 rejected, and permits only a separately
 precommitted learning-pressure successor without feature or planner changes.
+ADR-0123 now freezes `m9-candidate-native-hard-example-relabel-v1` before
+implementation or training. It initializes the exact rejected update-64 model
+and optimizer and changes only teacher-NLL pressure: pre-update deterministic
+student/planner disagreements receive fixed weight `4.0`, ordinary examples
+weight `1.0`, and each minibatch is normalized by total example weight. The
+public roots/schedule, planner, features, masks, model, optimizer, budget,
+deterministic student control, 30/40 floor, and conditional replica policy are
+unchanged. Config/protocol SHA prefixes are `c2401782578d2e8a...` /
+`a42b1cd24a78f674...`. No candidate model state or restricted access preceded
+the precommit.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

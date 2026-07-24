@@ -1685,7 +1685,17 @@ queue.
    feature-distinguishable-ranking signal, records full/canonical/compact SHA
    prefixes `84fb4455228c9c6c...` / `25d594aaf8dde034...` /
    `959e55f140fce098...`, keeps update 64 rejected, and permits only a
-   separately precommitted learning-pressure successor.
+   separately precommitted learning-pressure successor. ADR-0123 now freezes
+   `m9-candidate-native-hard-example-relabel-v1` before implementation or
+   training. It initializes the exact rejected update-64 model and optimizer
+   and changes only normalized teacher-NLL pressure: pre-update deterministic
+   student/planner disagreements receive weight `4.0`; ordinary examples
+   retain `1.0`. The public schedule, planner, features, masks, model,
+   optimizer, budget, deterministic control, 30/40 floor, and conditional
+   replica policy remain exact. Config/protocol SHA prefixes are
+   `c2401782578d2e8a...` / `a42b1cd24a78f674...`. No candidate model state or
+   restricted access preceded the precommit. Implement the fail-closed
+   weighted continuation and complete exact-commit public preflight next.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1693,7 +1703,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0122` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0123` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1738,11 +1748,11 @@ line, its public-only diagnostics, and the current requirement for design
 synthesis plus shared-expert candidate projection before any v7 precommit.
 Every candidate remains rejected; no M9 checkpoint is selected and MAPPO
 remains unauthorized.
-ADR-0091 through ADR-0122 govern candidate-native planner construction, accept
+ADR-0091 through ADR-0123 govern candidate-native planner construction, accept
 planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
-prospectively freezing one learning-pressure successor without changing the
-feature schema or planner.
+implementing the frozen hard-example relabel successor without changing the
+feature schema or planner, then passing its complete exact-commit public gate.
 
 ## Deviations from the brief in this scaffold
 

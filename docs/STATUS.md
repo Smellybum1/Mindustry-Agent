@@ -2647,7 +2647,16 @@ repository-evidence mapping used for the M6 audit is:
   feature-distinguishable-ranking signal, records full/canonical/compact SHA
   prefixes `84fb4455228c9c6c...` / `25d594aaf8dde034...` /
   `959e55f140fce098...`, keeps update 64 rejected, and permits only a
-  separately precommitted learning-pressure successor.
+  separately precommitted learning-pressure successor. ADR-0123 now freezes
+  `m9-candidate-native-hard-example-relabel-v1` before implementation or
+  training. It initializes the exact rejected update-64 model and optimizer,
+  weights pre-update deterministic student/planner disagreements at `4.0`,
+  weights ordinary examples at `1.0`, and normalizes each teacher-NLL
+  minibatch by total example weight. The public schedule, planner, features,
+  masks, model, optimizer, budget, deterministic control, 30/40 floor, and
+  conditional replica rule remain exact. Config/protocol SHA prefixes are
+  `c2401782578d2e8a...` / `a42b1cd24a78f674...`. No candidate model state or
+  restricted access preceded the precommit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
