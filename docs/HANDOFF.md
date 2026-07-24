@@ -1726,7 +1726,7 @@ queue.
    reproduction and twin-JVM/reset identity are mandatory. Both corrected
    cells at least 28/40 classify a strong signal; both at most 21/40 classify a
    low signal; other valid results are mixed. Protocol SHA prefix is
-   `7958615b3992974a...`. Implement its fail-closed runner and
+   `aee96892e4ceb131...`. Implement its fail-closed runner and
    exact-current-commit public preflight next; do not train, select, repair,
    promote, or access restricted data.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final

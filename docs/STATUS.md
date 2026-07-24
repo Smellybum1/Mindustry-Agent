@@ -2684,7 +2684,7 @@ repository-evidence mapping used for the M6 audit is:
   identity and exact frozen 13/40 win-count and mean-core-health baseline
   reproduction are mandatory. Both corrected cells at least 28/40 classify a
   strong signal; both at most 21/40 classify a low signal; other valid results
-  are mixed. Protocol SHA prefix is `7958615b3992974a...`. It cannot train,
+  are mixed. Protocol SHA prefix is `aee96892e4ceb131...`. It cannot train,
   select, repair, promote, or access restricted data.
 
 ## What is stubbed (compiles/imports, no real behaviour)

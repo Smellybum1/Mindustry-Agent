@@ -58,7 +58,7 @@
     "teacher_labels_same_pre_action_visited_boundary": true,
     "eligible_label": "alive_and_no_forced_task_action_and_teacher_action_authoritatively_legal",
     "forced_controls": "execute_student_forced_action_and_exclude_from_disagreement_and_correction",
-    "student_recurrent_state": "advance_from_student_inference_and_committed_post_step_state_in_every_mode",
+    "student_recurrent_state": "gru_hidden_from_student_inference_and_selection_history_from_the_accepted_executed_bundle_in_every_mode",
     "modes": [
       {
         "name": "baseline",
@@ -82,7 +82,23 @@
       "correct_first",
       "correct_all"
     ],
-    "pre_terminal_window_ticks": 600
+    "pre_terminal_window_ticks": 600,
+    "measurement_definitions": {
+      "live_ticks": "terminal_tick_minus_reset_tick",
+      "eligible_boundary": "a_boundary_with_at_least_one_eligible_label",
+      "disagreement_boundary": "an_eligible_boundary_with_at_least_one_student_planner_action_index_disagreement",
+      "rate_per_1000_live_ticks": "1000_times_count_divided_by_live_ticks",
+      "first_disagreement_fraction_remaining": "terminal_tick_minus_first_disagreement_tick_divided_by_live_ticks",
+      "pre_terminal_disagreement": "disagreement_tick_greater_than_or_equal_to_terminal_tick_minus_600",
+      "semantic_identity": "task_type_task_id_and_target_for_accepted_actor_authoritative_select_or_wait_actions_continue_preserves_prior_identity",
+      "task_family_switch": "accepted_semantic_identity_changes_and_task_type_differs_from_prior_identity_for_that_seat",
+      "same_family_retarget": "accepted_semantic_identity_changes_and_task_type_matches_but_task_id_or_target_differs_from_prior_identity_for_that_seat",
+      "commitment_duration": "ticks_from_first_accepted_semantic_identity_or_prior_identity_change_until_next_identity_change_or_terminal",
+      "logit_scope": "finite_authoritatively_legal_masked_logits_at_the_same_pre_action_boundary",
+      "student_top1_margin": "largest_legal_logit_minus_second_largest_legal_logit",
+      "planner_student_margin": "planner_label_legal_logit_minus_student_argmax_legal_logit",
+      "paired_statistic": "two_sided_exact_binomial_mcnemar_over_baseline_correct_all_discordant_root_outcomes"
+    }
   },
   "measurements": {
     "root_level": [

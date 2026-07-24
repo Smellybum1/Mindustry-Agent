@@ -2759,7 +2759,7 @@ disagreement. Twin fresh-JVM/reset identity and exact frozen 13/40 win-count
 and mean-core-health baseline reproduction are mandatory. Both corrected cells
 at least 28/40 classify a strong signal; both at most 21/40 classify a low
 signal; other valid results are mixed. Protocol SHA prefix is
-`7958615b3992974a...`. This is diagnostic only and cannot train, select, repair,
+`aee96892e4ceb131...`. This is diagnostic only and cannot train, select, repair,
 promote, or access restricted data.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team

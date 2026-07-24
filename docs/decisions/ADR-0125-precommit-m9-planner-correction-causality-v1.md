@@ -35,16 +35,19 @@ public-dev roots in three fixed modes:
 
 A correction is atomic across actor-authoritative, non-forced seats. It is not
 a per-seat hybrid and does not replace server-forced controls. In every mode,
-the student's recurrent state advances from its own inference and the committed
-post-step state, including when the planner bundle executes. The intervention
-therefore measures the closed-loop effect of this online planner-correction
-rule; it does not claim to replay the baseline disagreement sequence after
-trajectories diverge.
+the student's GRU hidden state advances from its own inference, while accepted
+selection history records the bundle that actually executed. This rule also
+applies when the planner bundle executes. The intervention therefore measures
+the closed-loop effect of this online planner-correction rule; it does not
+claim to replay the baseline disagreement sequence after trajectories diverge.
 
 The protocol records paired root outcomes and exposure-normalized disagreement,
-switching, retargeting, and commitment measures. It also records the fixed last
-600 ticks before terminal, legal-logit margins, and every substituted atomic
-bundle with pre/post state hashes. `correct_first` is descriptive only.
+switching, retargeting, and commitment measures. Semantic commitments begin or
+change only on accepted actor-authoritative `SELECT`/`WAIT` actions;
+`CONTINUE` preserves the prior identity. Durations end at the next identity
+change or terminal. It also records the fixed last 600 ticks before terminal,
+legal-logit margins, and every substituted atomic bundle with pre/post state
+hashes. `correct_first` is descriptive only.
 
 The diagnostic is valid only if each checkpoint baseline reproduces its frozen
 13/40 win count and mean core health exactly, twin fresh-JVM reports match
@@ -67,7 +70,7 @@ not replace the frozen classification.
 The full protocol is
 `configs/evaluation/m9-planner-correction-causality-v1-protocol.json`; its
 SHA-256 is
-`7958615b3992974a86014c0c69b7f5c1738b5c22e201378a3f937cf0286d1765`.
+`aee96892e4ceb131da7743afabc2d41fbb08be41e53b9b79c22158af3530cad6`.
 
 ## Constraints
 
