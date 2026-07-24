@@ -2820,6 +2820,17 @@ across terminal resets while retaining 11 masked recurrent-context boundaries
 around 70 labels. Compact result SHA prefix is `e5ca580dd043b51a...`; source
 states remain unchanged and no restricted data was accessed. Commit this
 evidence and rerun the exact gate at that commit before Replica A.
+The evidence-commit gate passed at `cfffa026da`. Replica A completed all 2,048
+public roots and 32 updates with a valid 32-checkpoint lineage, but no
+checkpoint reached construction. Update 18 was best at 12/40 wins, core
+`208.95`, idle `0.0887584`; final update 32 reached 10/40, core `196.475`, idle
+`0.0886240`. Both underperform the rejected 13/40 source. ADR-0128 rejects
+sequence relabel v1 and prohibits Replica B. Manifest/canonical/compact-result
+SHA prefixes are `367cca23d30ea6c...` / `d8830beec8cc3e2d...` /
+`156e12d2fb8b8e46...`. No checkpoint is selected, repaired, or promotable, and
+no restricted data was accessed. Another learned or diagnostic mechanism
+requires a separately named prospective public decision or explicit owner
+direction.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

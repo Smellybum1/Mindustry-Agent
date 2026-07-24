@@ -2742,6 +2742,17 @@ repository-evidence mapping used for the M6 audit is:
   `e5ca580dd043b51a...`; source model/optimizer state remains unchanged and no
   restricted data was accessed. Commit this evidence and rerun the exact gate
   at the evidence commit before Replica A.
+  The evidence-commit gate passed at `cfffa026da`. Replica A then completed all
+  2,048 public roots and 32 updates with an intact 32-checkpoint parent/model/
+  optimizer lineage. No checkpoint reached 30/40: update 18 was best at 12/40,
+  core `208.95`, idle `0.0887584`; update 32 finished at 10/40, core `196.475`,
+  idle `0.0886240`. Both underperform the rejected 13/40 source. ADR-0128
+  rejects sequence relabel v1 and prohibits Replica B. Manifest/canonical/
+  compact-result SHA prefixes are `367cca23d30ea6c...` /
+  `d8830beec8cc3e2d...` / `156e12d2fb8b8e46...`. No checkpoint is selected,
+  repaired, or promotable, and no restricted data was accessed. Further model
+  work now requires a separately prospective public plan or explicit owner
+  direction.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

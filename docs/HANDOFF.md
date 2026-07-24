@@ -1785,6 +1785,17 @@ queue.
    around 70 labels. Compact result SHA prefix is `e5ca580dd043b51a...`;
    source states remain unchanged and no restricted data was accessed. Commit
    this evidence, rerun the exact gate at that commit, then start Replica A.
+   The evidence-commit gate passed at `cfffa026da`. Replica A completed all
+   2,048 roots and 32 updates with all 32 checkpoint parent/model/optimizer
+   identities valid. Update 18 was best at only 12/40 wins, core `208.95`, idle
+   `0.0887584`; final update 32 reached 10/40, core `196.475`, idle `0.0886240`.
+   Both trail the rejected 13/40 source. ADR-0128 rejects the candidate and
+   prohibits Replica B. Manifest/canonical/compact SHA prefixes are
+   `367cca23d30ea6c...` / `d8830beec8cc3e2d...` /
+   `156e12d2fb8b8e46...`. No checkpoint is selected, repaired, or promotable,
+   and no restricted data was accessed. Stop autonomous model work here;
+   another candidate requires a separately prospective public plan or explicit
+   owner direction.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1792,7 +1803,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0127` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0128` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
