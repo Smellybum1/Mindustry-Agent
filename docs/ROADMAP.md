@@ -2831,6 +2831,17 @@ SHA prefixes are `367cca23d30ea6c...` / `d8830beec8cc3e2d...` /
 no restricted data was accessed. Another learned or diagnostic mechanism
 requires a separately named prospective public decision or explicit owner
 direction.
+The owner has now explicitly authorized a new public-only plan. ADR-0129
+prospectively freezes `m9-candidate-native-micro-dagger-v1` before
+implementation or model work. It starts from the exact rejected
+teacher-forced update-32 model/Adam state and isolates maximal intra-update
+label freshness: each fixed 64-root macro group is recollected under the
+current model before each of eight one-epoch micro updates, then that fresh
+dataset is discarded. The unique 2,048 roots, planner, labels, model,
+optimizer values/state, dev gate, and conditional replica policy remain
+exact. Total public collection is 16,384 episodes. Config/protocol SHA
+prefixes are `127c7290b6c3c943...` / `50a754dde6f3effd...`. No implementation,
+model update, or restricted access preceded the precommit.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

@@ -1796,6 +1796,16 @@ queue.
    and no restricted data was accessed. Stop autonomous model work here;
    another candidate requires a separately prospective public plan or explicit
    owner direction.
+   The owner has now supplied that direction. ADR-0129 prospectively freezes
+   `m9-candidate-native-micro-dagger-v1`: initialize the exact rejected
+   teacher-forced update-32 model and Adam state, then change only collection/
+   optimizer interleaving. Each fixed 64-root macro group is recollected under
+   the current model before each of eight one-epoch micro updates; fresh data
+   is discarded after that epoch. The unique 2,048 roots, planner, label
+   filter, model, optimizer values/state, dev gate, and conditional replica
+   policy remain exact. Config/protocol SHA prefixes are
+   `127c7290b6c3c943...` / `50a754dde6f3effd...`. Implement and pass the exact
+   public preflight before Replica A; restricted data remains prohibited.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1803,7 +1813,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0128` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0129` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

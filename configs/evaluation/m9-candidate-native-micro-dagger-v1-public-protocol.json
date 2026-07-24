@@ -1,0 +1,63 @@
+{
+  "schema": "m9_candidate_native_micro_dagger_public_protocol_v1",
+  "candidate_version": "m9-candidate-native-micro-dagger-v1",
+  "data_classification": "public_train_and_dev_only",
+  "config_sha256": "127c7290b6c3c9435933542968f309ec5b62db3463fd4c2e3500d608cc863374",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "seed_set_sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+  "split": "dev",
+  "source_checkpoint": {
+    "candidate": "m9-candidate-native-distill-v1",
+    "lineage_update": 32,
+    "content_sha256": "14197b4d3583cf599917a98c2b1cbd5925ca7bc7b93be550edd4cade3a3f1fe9",
+    "model_state_sha256": "c13e3858bd37c89ff5582a3e861c709808f6a3088e444fed8da5130362332c14",
+    "optimizer_state_sha256": "12e82a785787318df98ba7919f09a300e5372ae196017b3491a56db5dc5468ad",
+    "construction_passed": false,
+    "selected_or_promoted": false,
+    "repaired": false
+  },
+  "isolated_schedule_change": {
+    "name": "maximal_intra_update_dagger_freshness",
+    "macro_updates": 32,
+    "unique_roots_per_macro_update": 64,
+    "micro_updates_per_macro_update": 8,
+    "episodes_per_micro_update": 64,
+    "optimizer_epochs_per_micro_update": 1,
+    "total_unique_train_roots": 2048,
+    "total_collection_episodes": 16384,
+    "root_recollection": "same_64_macro_roots_recollected_under_current_model_before_each_micro_update",
+    "micro_dataset_lifetime": "one_optimizer_epoch_then_discard",
+    "all_other_training_and_evaluation_coordinates_inherited_exactly": true
+  },
+  "construction_continuation": {
+    "minimum_candidate_wins": 30,
+    "maximum_mean_team_idle_fraction_exclusive": 0.25
+  },
+  "preflight_requirements": {
+    "exact_source_model_and_optimizer_loaded": true,
+    "single_micro_update_matches_existing_flat_nll_exactly": true,
+    "configured_eight_micro_schedule_replicas_match": true,
+    "post_update_collection_uses_current_model": true,
+    "terminal_reset_replay_matches": true,
+    "complete_exact_commit_public_gate_passes": true
+  },
+  "replica_policy": {
+    "replica_a_runs_full_budget": true,
+    "replica_b_authorized_only_after_replica_a_construction_passes": true,
+    "replica_b_prohibited_after_replica_a_construction_failure": true,
+    "exact_full_run_and_selected_checkpoint_identity_required": true
+  },
+  "downstream_authority": {
+    "may_select_or_repair_source_checkpoint": false,
+    "may_change_planner_features_masks_or_candidates": false,
+    "may_add_example_weighting_margin_sequence_ema_or_replay": false,
+    "may_change_learning_rate_or_optimizer_values": false,
+    "may_use_reward_or_ppo_or_mappo": false,
+    "may_promote": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_human_session": false
+  }
+}

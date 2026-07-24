@@ -2753,6 +2753,17 @@ repository-evidence mapping used for the M6 audit is:
   repaired, or promotable, and no restricted data was accessed. Further model
   work now requires a separately prospective public plan or explicit owner
   direction.
+  The owner has now explicitly authorized that next public plan. ADR-0129
+  prospectively freezes `m9-candidate-native-micro-dagger-v1` before
+  implementation or model work. It starts from the exact rejected
+  teacher-forced update-32 model/Adam state and changes only intra-update label
+  freshness: each 64-root macro update is recollected under the current model
+  before each of eight one-epoch micro updates. The unique 2,048 roots,
+  planner, labels, model, optimizer values/state, dev gate, and conditional
+  replica policy remain exact. Total public collection is explicitly 16,384
+  episodes. Config/protocol SHA prefixes are `127c7290b6c3c943...` /
+  `50a754dde6f3effd...`. No implementation, model state, or restricted access
+  preceded the precommit.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
