@@ -2842,6 +2842,13 @@ optimizer values/state, dev gate, and conditional replica policy remain
 exact. Total public collection is 16,384 episodes. Config/protocol SHA
 prefixes are `127c7290b6c3c943...` / `50a754dde6f3effd...`. No implementation,
 model update, or restricted access preceded the precommit.
+The fail-closed loader, eight-micro optimizer schedule, construction runner,
+checkpoint/manifest and replica comparison, live freshness preflight,
+commands, and six focused tests are implemented locally. A single micro update
+is checkpoint-exact with flat NLL and configured schedule replicas match. All
+529 Python tests and pinned Java/custom-module checks pass. Commit this
+implementation and pass the complete exact-current-commit public gate before
+Replica A; no candidate collection or restricted access has occurred.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

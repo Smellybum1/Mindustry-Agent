@@ -2764,6 +2764,13 @@ repository-evidence mapping used for the M6 audit is:
   episodes. Config/protocol SHA prefixes are `127c7290b6c3c943...` /
   `50a754dde6f3effd...`. No implementation, model state, or restricted access
   preceded the precommit.
+  The fail-closed loader, eight-micro schedule, runner, checkpoint/manifest
+  path, replica comparison, live freshness preflight, commands, and six
+  focused tests are implemented locally. A single micro update is
+  checkpoint-exact with the prior flat NLL; configured schedule replicas match
+  exactly. All 529 Python tests and pinned Java/custom-module checks pass.
+  Commit this implementation before the exact-current-commit live/full gate;
+  no candidate collection or restricted access has occurred.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

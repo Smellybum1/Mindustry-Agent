@@ -41,6 +41,8 @@ SCRIPTS := scripts
         train-m9-candidate-hard-example-relabel \
         m9-candidate-sequence-relabel-check \
         train-m9-candidate-sequence-relabel \
+        m9-candidate-micro-dagger-check \
+        train-m9-candidate-micro-dagger \
         m9-candidate-critical-disagreement-diagnostic \
         m9-candidate-semantic-target-diagnostic \
         m9-planner-correction-causality-check \
@@ -115,6 +117,8 @@ help: ## List available targets
 	@echo "  train-m9-candidate-hard-example-relabel governed weighted continuation"
 	@echo "  m9-candidate-sequence-relabel-check contiguous relabel preflight"
 	@echo "  train-m9-candidate-sequence-relabel governed sequence continuation"
+	@echo "  m9-candidate-micro-dagger-check fresh-label schedule preflight"
+	@echo "  train-m9-candidate-micro-dagger governed micro-DAgger construction"
 	@echo "  m9-candidate-critical-disagreement-diagnostic rejected policy errors"
 	@echo "  m9-candidate-semantic-target-diagnostic candidate target errors"
 	@echo "  m9-planner-correction-causality-check validate causal diagnostic"
@@ -243,6 +247,12 @@ m9-candidate-sequence-relabel-check: ## Validate sequence relabeling
 
 train-m9-candidate-sequence-relabel: ## Train sequence relabel continuation
 	@bash $(SCRIPTS)/train-m9-candidate-sequence-relabel.sh
+
+m9-candidate-micro-dagger-check: ## Validate micro-DAgger
+	@bash $(SCRIPTS)/m9-candidate-micro-dagger-check.sh
+
+train-m9-candidate-micro-dagger: ## Train micro-DAgger construction
+	@bash $(SCRIPTS)/train-m9-candidate-micro-dagger.sh
 
 m9-candidate-critical-disagreement-diagnostic: ## Localize rejected policy errors
 	@bash $(SCRIPTS)/m9-candidate-critical-disagreement-diagnostic.sh

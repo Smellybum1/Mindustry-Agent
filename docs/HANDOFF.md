@@ -1806,6 +1806,13 @@ queue.
    policy remain exact. Config/protocol SHA prefixes are
    `127c7290b6c3c943...` / `50a754dde6f3effd...`. Implement and pass the exact
    public preflight before Replica A; restricted data remains prohibited.
+   The fail-closed source loader, eight-micro optimizer schedule, construction
+   runner, checkpoint/manifest and replica comparison, live freshness
+   preflight, commands, and focused tests are implemented locally. A single
+   micro update is checkpoint-exact with flat NLL and configured schedule
+   replicas match. All 529 Python tests and pinned Java/custom-module checks
+   pass. Commit the implementation, then run the complete exact-current-commit
+   public gate before Replica A.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
