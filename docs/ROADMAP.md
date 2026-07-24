@@ -2887,6 +2887,17 @@ Python tests, pinned Java/custom-module checks, focused live replay, smoke,
 `7b0200389db66148...`; it contains derived public evidence only and records no
 restricted access. Commit this evidence and rerun the exact gate at that commit
 before the full diagnostic.
+The evidence-commit gate passed at `26f96ed4b6`, then the full diagnostic
+matched exactly across fresh JVMs/reset. The student reproduced 13/40 wins and
+core `242.975`; planner v11 reproduced 32/40 and core `436.075`. Paired
+outcomes are 13 both-win, zero student-only, 19 planner-only, and eight
+both-loss roots. Median primary-root occupancy mismatch is `0.5982906` and
+normalized compressed distance is `0.6428571`. ADR-0132 accepts the frozen
+trajectory-supervision signal. Full/canonical/compact SHA prefixes are
+`f54a4d3369b1c8c...` / `fb389c6b5f728a42...` /
+`9557714141a239b4...`. No model/optimizer or restricted data was touched. One
+separately prospective macro task-family intent architecture is now permitted;
+training remains unauthorized until that packet is frozen.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

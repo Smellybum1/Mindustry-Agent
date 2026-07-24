@@ -1852,6 +1852,16 @@ queue.
    `7b0200389db66148...`; no target identifiers, raw observations, or restricted
    data were published or accessed. Commit this evidence, rerun the exact gate
    at that commit, then run the full 40-root diagnostic.
+   The evidence-commit gate passed at `26f96ed4b6`. The full diagnostic matched
+   exactly across fresh JVMs/reset and reproduced the student at 13/40, core
+   `242.975`, and planner at 32/40, core `436.075`. Paired outcomes are 13
+   both-win, zero student-only, 19 planner-only, and eight both-loss. Median
+   primary-root occupancy mismatch is `0.5982906`; normalized compressed
+   distance is `0.6428571`. ADR-0132 accepts the trajectory-supervision signal.
+   Full/canonical/compact SHA prefixes are `f54a4d3369b1c8c...` /
+   `fb389c6b5f728a42...` / `9557714141a239b4...`. No model/optimizer or
+   restricted data was touched. Freeze one separately prospective macro
+   task-family intent architecture before implementation or training.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1859,7 +1869,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0131` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0132` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

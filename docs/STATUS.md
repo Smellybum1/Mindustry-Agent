@@ -2810,6 +2810,18 @@ repository-evidence mapping used for the M6 audit is:
   `7b0200389db66148...`; it records derived public evidence only and no
   restricted access. Commit this evidence and rerun the exact-current-commit
   gate before the full diagnostic.
+  The evidence-commit gate passed at `26f96ed4b6`. The full diagnostic then
+  matched exactly across fresh JVMs/reset and reproduced the student at 13/40,
+  core `242.975`, and planner v11 at 32/40, core `436.075`. All 13 student wins
+  were also planner wins; there were 19 planner-only wins and eight both-loss
+  roots. On the 19 primary roots, median occupancy mismatch is `0.5982906` and
+  median normalized compressed distance is `0.6428571`. ADR-0132 accepts the
+  frozen trajectory-supervision signal. Full/canonical/compact SHA prefixes
+  are `f54a4d3369b1c8c...` / `fb389c6b5f728a42...` /
+  `9557714141a239b4...`. No model/optimizer or restricted data was touched.
+  One separately prospective macro task-family intent architecture is now the
+  only authorized model direction; training remains unauthorized until that
+  packet is frozen.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

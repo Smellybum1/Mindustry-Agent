@@ -1,0 +1,36 @@
+{
+  "schema": "m9_planner_trajectory_divergence_compact_result_v1",
+  "implementation_commit": "26f96ed4b6df2d3ca80ef525982b074364ebf097",
+  "protocol_sha256": "bcd572fa49d859d56c780c55a389577835eccf59a9382887bff68ec834778d6a",
+  "preflight_result_sha256": "7b0200389db66148d0de3eb7e6b0b946634252857770a8e652a20485ebaea034",
+  "full_report_sha256": "f54a4d3369b1c8c619810b3d76e342c53cc3307138b4d102416396a202628f0e",
+  "canonical_report_sha256": "fb389c6b5f728a4258a48f25df7f64cb575c3e5723c85ab1f62d0d2857d3bc4e",
+  "student": {
+    "wins": 13,
+    "losses": 27,
+    "mean_core_health": 242.975
+  },
+  "planner": {
+    "wins": 32,
+    "losses": 8,
+    "mean_core_health": 436.075
+  },
+  "paired_outcomes": {
+    "both_win": 13,
+    "student_only_win": 0,
+    "planner_only_win": 19,
+    "both_loss": 8
+  },
+  "primary_planner_only_roots": {
+    "count": 19,
+    "median_occupancy_mismatch": 0.5982905982905983,
+    "median_normalized_compressed_sequence_distance": 0.6428571428571429
+  },
+  "classification": "trajectory_supervision_signal",
+  "fresh_jvm_reports_equal": true,
+  "terminal_reset_replay_equal": true,
+  "model_or_optimizer_modified": false,
+  "target_identifiers_recorded": false,
+  "raw_observations_published": false,
+  "confirmation_or_held_out_access": false
+}
