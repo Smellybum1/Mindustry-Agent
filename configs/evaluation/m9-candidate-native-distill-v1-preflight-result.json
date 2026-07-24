@@ -1,0 +1,40 @@
+{
+  "schema": "m9_candidate_native_distill_preflight_v1",
+  "implementation_commit": "9583796ee1",
+  "config_sha256": "9fc15d1a0dd256452873fe7953374bb251ad1fbf172add0eb399d2c3541457e0",
+  "protocol_sha256": "72ced8386fdbdb8b076f95b2d2ec416235b339703b932e878b033f738942618a",
+  "source_result_sha256": "81ea8df1d7dcf21ed945337dd23b93b804e4d187605282e6d98cffe4077695fa",
+  "optimizer_probe": {
+    "replicas_equal": true,
+    "model_state_sha256": "d739984c81c69bf13112095efefacce57b5989179624fbeb94940c09c93c84d4",
+    "optimizer_state_sha256": "32e66a6fd0e2b4f2c2a5eee14b32d25bf1b8364176a36aae5f6bae694c3f40d4",
+    "checkpoint_content_sha256": "5e64e166377b67f2630fba15666e97b9487b144c4c5b8751c0eb6f09fd925c22",
+    "metrics": {
+      "batches": 8.0,
+      "labels": 40.0,
+      "presentation_top1_accuracy": 0.121875,
+      "presentations": 320.0,
+      "teacher_nll": 2.2826999127864838
+    }
+  },
+  "live_teacher_probe": {
+    "ran": true,
+    "seed": 18000100001,
+    "outcome": "loss",
+    "tick": 6991,
+    "core_health": 0.0,
+    "eligible_labels": 65,
+    "forced_controls": 5,
+    "trace_sha256": "e0d5dbe9c1e217f85096ca19366d11fbb0fdf2ddeec4b28710cef982fe8325cf",
+    "terminal_reset_replay_equal": true
+  },
+  "complete_gate": {
+    "python_tests": 486,
+    "java_custom_module_gate": true,
+    "smoke": true,
+    "cross_process_determinism": true,
+    "golden_replay_checkpoints": 664
+  },
+  "confirmation_or_held_out_access": false,
+  "passed": true
+}

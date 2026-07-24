@@ -1608,7 +1608,10 @@ queue.
    teacher collector, forced-control exclusion, deterministic NLL optimizer,
    checkpoint/replay/replica path, exact-commit preflight, commands, and tests
    are local. All 486 Python tests pass and a live teacher episode repeats
-   after terminal reset. Commit, run the complete exact-commit gate, then
+   after terminal reset. The complete gate passes at implementation commit
+   `9583796ee1`: pinned Java checks, smoke, cross-process determinism, and the
+   664-checkpoint golden replay are green. Preflight result SHA is
+   `d18cf46b03449f25...`. Rerun the preflight at the evidence commit, then
    Replica A before any resumed PPO.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.

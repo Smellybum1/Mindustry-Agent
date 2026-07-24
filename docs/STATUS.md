@@ -2568,7 +2568,10 @@ repository-evidence mapping used for the M6 audit is:
   optimizer, checkpoint selection/replay, replica comparison, exact-commit
   preflight, commands, and focused tests are implemented locally. All 486
   Python tests pass; a live JVM teacher episode repeats after terminal reset.
-  Commit before the complete exact-commit gate and Replica A.
+  The complete gate passes at implementation commit `9583796ee1`: pinned Java
+  checks, smoke, cross-process determinism, and the 664-checkpoint golden replay
+  are green. Preflight result SHA is `d18cf46b03449f25...`. Rerun the preflight
+  at the evidence commit before Replica A.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

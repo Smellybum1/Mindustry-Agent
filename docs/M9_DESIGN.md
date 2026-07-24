@@ -286,8 +286,11 @@ pins, and dependency lock.
    any resumed PPO. Configuration/public-protocol SHA prefixes are
    `9fc15d1a0dd25645...` / `72ced8386fdbdb8b...`. Its deterministic teacher
    collector/optimizer/checkpoint/replica path and exact-commit preflight are
-   implemented locally; all 486 Python tests and a live terminal-reset teacher
-   probe pass. Commit before the complete exact-commit gate and Replica A.
+   implemented. At implementation commit `9583796ee1`, all 486 Python tests,
+   the live terminal-reset teacher probe, pinned Java checks, smoke,
+   cross-process determinism, and the 664-checkpoint golden replay pass.
+   Preflight result SHA is `d18cf46b03449f25...`; rerun it at the evidence
+   commit before Replica A.
 5. Later M9 stages add partner-population cells, board ablation, centralized
    critic, dropout/recovery curriculum, and finally fresh sealed evaluation.
 
