@@ -2859,6 +2859,17 @@ prefixes are `412efca56ce1c4a7...` / `690b4a3b6cd8af97...` /
 no restricted data was accessed. Pure pointwise candidate-native imitation is
 exhausted; another model requires an explicit prospective architecture or
 supervision-class decision.
+The owner has now authorized that prospective decision. ADR-0131 freezes the
+public-only `m9-planner-trajectory-divergence-v1` diagnostic before
+implementation or execution. It independently runs the exact rejected 13/40
+update-64 student and unchanged 32/40 planner v11 on the same 40 public roots,
+samples accepted joint task-family occupancy on a reset-relative 60-tick grid,
+and compares common-prefix occupancy mismatch plus normalized compressed
+sequence distance. A trajectory-supervision signal requires at least 15
+planner-only wins and median paired-root values at least `0.5` for both
+measures. Protocol SHA prefix is `bcd572fa49d859d5...`. Implement the
+fail-closed evaluator and exact-current-commit public preflight next; no model
+work or restricted access is authorized.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

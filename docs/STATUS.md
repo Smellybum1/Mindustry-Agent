@@ -2782,6 +2782,16 @@ repository-evidence mapping used for the M6 audit is:
   restricted data was accessed. Pure pointwise candidate-native imitation is
   exhausted; further model work requires an explicit prospective architecture
   or supervision-class decision.
+  The owner has explicitly supplied that direction. ADR-0131 prospectively
+  freezes `m9-planner-trajectory-divergence-v1` as a public-only diagnostic
+  before implementation or execution. It pairs the exact rejected 13/40
+  update-64 student with the unchanged 32/40 planner v11 over the same 40
+  public roots, sampling accepted three-seat task-family occupancy every 60
+  ticks through the common terminal prefix. At least 15 planner-only wins plus
+  median occupancy mismatch and compressed-sequence distance both at least
+  `0.5` are required for a trajectory-supervision signal. Protocol SHA prefix
+  is `bcd572fa49d859d5...`. The diagnostic cannot train or alter a model,
+  publish targets or raw observations, or access restricted data.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

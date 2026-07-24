@@ -1823,6 +1823,18 @@ queue.
    repaired, or promoted; no restricted data was accessed. Pure pointwise
    candidate-native imitation is exhausted. Stop model work pending an
    explicit prospective architecture or supervision-class decision.
+   The owner has now authorized that prospective decision. ADR-0131 freezes
+   `m9-planner-trajectory-divergence-v1` before implementation or execution.
+   Compare the exact rejected 13/40 update-64 student and unchanged 32/40
+   planner v11 independently on the same 40 public roots. Sample accepted
+   three-seat task-family occupancy on a reset-relative 60-tick grid through
+   the common terminal prefix, then measure occupancy mismatch and normalized
+   compressed-sequence edit distance. A strong signal requires at least 15
+   planner-only wins and median values at least `0.5` for both measures.
+   Protocol SHA prefix is `bcd572fa49d859d5...`. Implement a fail-closed
+   evaluator and complete exact-current-commit public preflight next. Do not
+   train, change either policy, publish targets/raw observations, or access
+   confirmation or held-out data.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1830,7 +1842,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0130` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0131` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

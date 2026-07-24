@@ -1,0 +1,104 @@
+{
+  "schema": "m9_planner_trajectory_divergence_protocol_v1",
+  "diagnostic": "m9-planner-trajectory-divergence-v1",
+  "data_classification": "public_dev_only",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "seed_set_sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+  "split": "dev",
+  "source_checkpoint": {
+    "candidate": "m9-candidate-native-on-policy-relabel-v1",
+    "role": "student_state_relabel_final",
+    "lineage_update": 64,
+    "path": "runs/m9-candidate-on-policy-relabel-a/candidate-on-policy-relabel-update-64.pt",
+    "config_path": "configs/training/m9-candidate-native-on-policy-relabel-v1.json",
+    "config_sha256": "7fadf9ae9130775fffebe52b86407dfeafaf47ea5e1383524818a6d0012d72d4",
+    "file_sha256": "cbfde7e932e718f49b6e80f79bfd2b0072fa2bb7fd1f04e4ca0d7da9ee8ed408",
+    "content_sha256": "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865",
+    "model_state_sha256": "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1",
+    "optimizer_state_sha256": "f3bdf93bf2dfae69842b87ca69f124c1bdda074b05422c02198530a5fdb687bc",
+    "expected_public_dev_wins": 13,
+    "expected_mean_core_health": 242.975,
+    "source_result": "configs/evaluation/m9-candidate-native-on-policy-relabel-v1-result.json",
+    "source_result_sha256": "ebea0b741abbf2b7e3d995af1f87d7528ddee08d94089db4f837f40c730e60ee",
+    "source_manifest": "runs/m9-candidate-on-policy-relabel-a/candidate-on-policy-relabel-run.manifest.json",
+    "source_manifest_sha256": "f34c50a024f05d6084a8661fb627fa8c3c5cd223dc45bd03273258877f489952",
+    "source_canonical_run_sha256": "1cf33117526a04c8053bc66ce786945964a88e1d32a1de3227bd2af042524c81",
+    "construction_passed": false,
+    "selected_or_promoted": false,
+    "repaired": false
+  },
+  "planner_policy": {
+    "candidate": "candidate-native-planner-v11-single-defender",
+    "expected_public_dev_wins": 32,
+    "action_authority": "complete_canonical_bundle"
+  },
+  "bound_causal_result": {
+    "path": "configs/evaluation/m9-planner-correction-causality-v1-result.json",
+    "sha256": "af4725e0fa034761d3cb69e46cfc2c05014724e8c6533544cfaccad416d2c7df",
+    "classification": "low_correction_signal",
+    "correct_all_wins": [9, 9]
+  },
+  "trajectory_measurement": {
+    "sample_period_ticks": 60,
+    "sample_grid": "reset_tick_plus_positive_integer_multiples_of_60",
+    "horizon": "common_prefix_through_minimum_terminal_tick",
+    "grid_endpoint": "include_a_grid_tick_when_it_is_less_than_or_equal_to_the_minimum_terminal_tick",
+    "per_seat_token": "accepted_active_task_family_or_wait",
+    "initial_per_seat_token": "WAIT",
+    "accepted_interval_semantics": "an_accepted_select_or_wait_at_boundary_tick_t_defines_the_token_for_grid_ticks_g_where_t_is_less_than_g_and_g_is_less_than_or_equal_to_the_next_boundary_tick",
+    "continue_abandon_forced_or_rejected_semantics": "preserve_the_prior_token",
+    "joint_token": "ordered_three_seat_task_family_tuple",
+    "occupancy_mismatch": "fraction_of_common_grid_ticks_with_unequal_joint_token",
+    "consecutive_compression": "replace_each_maximal_run_of_equal_joint_tokens_with_one_token",
+    "compressed_sequence_distance": "unit_cost_levenshtein_divided_by_maximum_compressed_sequence_length",
+    "empty_compressed_sequence_distance": 0.0,
+    "median": "arithmetic_mean_of_the_two_middle_sorted_values_for_even_cardinality",
+    "paired_primary_roots": "planner_win_and_student_loss",
+    "target_identifiers_recorded": false,
+    "raw_observations_published": false
+  },
+  "validity_requirements": {
+    "student_baseline_wins_exact": 13,
+    "student_baseline_mean_core_health_exact": 242.975,
+    "planner_wins_exact": 32,
+    "fresh_jvm_reports_equal": true,
+    "terminal_reset_replay_equal": true,
+    "source_hashes_exact": true
+  },
+  "classification": {
+    "precedence": [
+      "invalid",
+      "trajectory_supervision_signal",
+      "low_trajectory_signal",
+      "mixed_trajectory_signal"
+    ],
+    "trajectory_supervision_signal": {
+      "minimum_planner_only_wins": 15,
+      "minimum_median_paired_root_occupancy_mismatch": 0.5,
+      "minimum_median_paired_root_compressed_sequence_distance": 0.5
+    },
+    "low_trajectory_signal": {
+      "maximum_planner_only_wins": 9,
+      "maximum_median_paired_root_occupancy_mismatch": 0.25
+    },
+    "low_rule": "planner_only_wins_at_most_maximum_or_median_paired_root_occupancy_mismatch_at_most_maximum",
+    "otherwise": "mixed_trajectory_signal",
+    "invalid": "any_source_hash_mismatch_or_baseline_reproduction_failure_or_fresh_jvm_report_mismatch_or_terminal_reset_replay_mismatch_or_grid_length_mismatch"
+  },
+  "replica_policy": {
+    "fresh_jvm_reports": 2,
+    "exact_root_and_aggregate_identity_required": true
+  },
+  "downstream_authority": {
+    "may_train": false,
+    "may_select_repair_or_promote_checkpoint": false,
+    "may_change_planner_features_masks_or_candidates": false,
+    "may_use_reward_ppo_or_mappo": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_human_session": false,
+    "trajectory_supervision_signal_may_authorize_only_new_prospective_adr": true
+  }
+}
