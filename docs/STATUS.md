@@ -2537,7 +2537,14 @@ repository-evidence mapping used for the M6 audit is:
   `9f23893a896e9ffe...`. ADR-0107 precommits v9's sole active-DEFEND cap of two
   at protocol SHA `20ba635f3ab468b8...`. The exact board-aware capacity check,
   inheritance validation, focused v8/v9 behavior coverage, and command are
-  implemented locally; all 474 Python tests pass. Commit before evaluation.
+  implemented; all 474 Python tests pass. V9 improves to 29/40 with exact
+  twin-JVM/reset replay, zero action defects, and 99.3769% coverage, but remains
+  one win below the frozen 30-win floor. Public parity inspection shows v9
+  continuing mining when `team.wave` advances, whereas the strong expert starts
+  DEFEND before enemies become visible. ADR-0108 rejects v9 at compact SHA
+  `ae096f65349ea873...`. ADR-0109 precommits v10's sole reset-local
+  wave-increment preemption coordinate at protocol SHA `e10833fd3d862239...`;
+  implementation is next.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

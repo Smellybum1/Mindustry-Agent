@@ -2600,7 +2600,14 @@ a third DEFEND task while two remain active. ADR-0106 rejects v8 at compact SHA
 cap active DEFEND_REGION tasks at two. Protocol SHA is
 `20ba635f3ab468b8...`; the exact board-aware capacity check, inheritance
 validation, focused v8/v9 tests, and command are implemented locally; all 474
-Python tests pass. Commit before the gate.
+Python tests pass. V9 improves to 29/40 with exact twin-JVM/reset replay and
+zero action defects, but remains one win below the 30-win floor. Public parity
+inspection shows v9 continuing mining at an authoritative `team.wave`
+increment where the strong expert starts DEFEND before enemies become visible.
+ADR-0108 rejects v9 at compact SHA `ae096f65349ea873...`. ADR-0109 precommits
+v10's sole change: preempt noncombat work on an observed wave increment using
+reset-local prior-wave state. Protocol SHA is `e10833fd3d862239...`;
+implementation is next.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).
