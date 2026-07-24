@@ -2701,6 +2701,17 @@ repository-evidence mapping used for the M6 audit is:
   terminal reset. Preflight result SHA prefix is `028688bd4a4e29d0...`; no
   restricted data was accessed. Commit this evidence and rerun the exact gate
   before the full diagnostic.
+  The evidence-commit gate passed at `2183a33e30`. The full diagnostic then
+  matched across fresh JVMs/reset and reproduced both 13/40 baselines exactly.
+  Update 64 reached 10/40 `correct_first` and 9/40 `correct_all`; update 96
+  reached 13/40 and 9/40. Both all-correction cells had mean core health
+  `134.325`; their paired harmed/rescued counts were 5/1 and 6/2. ADR-0126
+  accepts the frozen low correction signal, rejects planner takeover and
+  further disagreement-targeted repair, and records full/canonical/compact SHA
+  prefixes `799a845b98ddc708...` / `ee99794e2ea46ad8...` /
+  `af4725e0fa034761...`. No model, optimizer, confirmation, or held-out data was
+  touched. A separately precommitted contiguous truncated-BPTT question is the
+  recommended next design, but no implementation or training is authorized.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

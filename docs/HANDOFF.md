@@ -1744,6 +1744,18 @@ queue.
    mode probes reproduce exactly after reset. Preflight result SHA prefix is
    `028688bd4a4e29d0...`; no restricted data was accessed. Commit this evidence,
    rerun the exact-current-commit gate, then run the full diagnostic.
+   The evidence-commit gate passed at `2183a33e30`. The full diagnostic then
+   matched across fresh JVMs/reset and reproduced both 13/40 baselines exactly.
+   Update 64 reached 10/40 `correct_first` and 9/40 `correct_all`; update 96
+   reached 13/40 and 9/40. Both all-correction cells had mean core health
+   `134.325`, with paired harmed/rescued counts of 5/1 and 6/2. ADR-0126 accepts
+   the frozen low correction signal, rejects online correction and further
+   disagreement-targeted repair, and records full/canonical/compact SHA
+   prefixes `799a845b98ddc708...` / `ee99794e2ea46ad8...` /
+   `af4725e0fa034761...`. No model, optimizer, confirmation, or held-out data
+   was touched. The recommended next design question is one separately
+   precommitted contiguous truncated-BPTT successor; do not implement or train
+   it without that prospective packet.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1751,7 +1763,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0125` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0126` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;

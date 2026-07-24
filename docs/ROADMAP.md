@@ -2776,6 +2776,19 @@ checkpoint models remain unchanged and all six one-root mode probes reproduce
 exactly after terminal reset. Preflight result SHA prefix is
 `028688bd4a4e29d0...`; it records no restricted access. Commit this evidence,
 rerun the exact-current-commit gate, then run the full diagnostic.
+The evidence-commit gate passed at `2183a33e30`, then the full diagnostic
+completed with exact twin-JVM/reset identity and frozen baseline reproduction.
+Update 64 reached 10/40 under `correct_first` and 9/40 under `correct_all`;
+update 96 reached 13/40 and 9/40 respectively. Both all-correction cells had
+mean core health `134.325`. They harmed/rescued 5/1 and 6/2 paired baseline
+roots, with descriptive exact p-values `0.21875` and `0.2890625`. ADR-0126
+accepts the prospectively frozen low correction signal, rejects online planner
+correction and further disagreement-targeted repair, and records full/
+canonical/compact SHA prefixes `799a845b98ddc708...` /
+`ee99794e2ea46ad8...` / `af4725e0fa034761...`. No model/optimizer or restricted
+data was touched. The next recommended question is one separately precommitted
+sequence-coherence successor that isolates contiguous truncated BPTT; this
+result does not authorize implementation or training.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

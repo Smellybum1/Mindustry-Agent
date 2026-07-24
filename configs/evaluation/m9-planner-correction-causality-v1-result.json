@@ -1,0 +1,99 @@
+{
+  "schema": "m9_planner_correction_causality_compact_result_v1",
+  "diagnostic": "m9-planner-correction-causality-v1",
+  "data_classification": "public_dev_only",
+  "implementation_commit": "2183a33e301baf7c7508eeede9c45cc60f690c88",
+  "protocol_sha256": "aee96892e4ceb131da7743afabc2d41fbb08be41e53b9b79c22158af3530cad6",
+  "preflight_result_sha256": "028688bd4a4e29d017c1833d6198a9769be368c841cbc950d00e8b663b9c68ae",
+  "full_report": "runs/m9-planner-correction-causality-v1.json",
+  "full_report_sha256": "799a845b98ddc7082eb920df53aa7af9b533f7f187a7c5e7803b2d5986ef3d48",
+  "canonical_report_sha256": "ee99794e2ea46ad891c2931538111d42f21523db3ddf32a0cfea3423de90c518",
+  "checkpoints": [
+    {
+      "lineage_update": 64,
+      "baseline": {
+        "wins": 13,
+        "mean_core_health": 242.975,
+        "eligible_labels": 3200,
+        "disagreements": 89,
+        "disagreements_per_1000_live_ticks": 0.31447096443651396
+      },
+      "correct_first": {
+        "wins": 10,
+        "mean_core_health": 215.375,
+        "eligible_labels": 3201,
+        "disagreements": 72,
+        "disagreements_per_1000_live_ticks": 0.25599180826213563,
+        "correction_boundaries": 26
+      },
+      "correct_all": {
+        "wins": 9,
+        "mean_core_health": 134.325,
+        "eligible_labels": 3226,
+        "disagreements": 72,
+        "disagreements_per_1000_live_ticks": 0.26040913168021756,
+        "correction_boundaries": 72
+      },
+      "baseline_to_correct_all_paired_outcomes": {
+        "both_win": 8,
+        "baseline_only_win": 5,
+        "correct_all_only_win": 1,
+        "both_loss": 26,
+        "exact_mcnemar_binomial_p_value": 0.21875
+      }
+    },
+    {
+      "lineage_update": 96,
+      "baseline": {
+        "wins": 13,
+        "mean_core_health": 234.425,
+        "eligible_labels": 3161,
+        "disagreements": 105,
+        "disagreements_per_1000_live_ticks": 0.36967925923317957
+      },
+      "correct_first": {
+        "wins": 13,
+        "mean_core_health": 224.75,
+        "eligible_labels": 3176,
+        "disagreements": 112,
+        "disagreements_per_1000_live_ticks": 0.39326118863194265,
+        "correction_boundaries": 31
+      },
+      "correct_all": {
+        "wins": 9,
+        "mean_core_health": 134.325,
+        "eligible_labels": 3226,
+        "disagreements": 111,
+        "disagreements_per_1000_live_ticks": 0.4014640780070021,
+        "correction_boundaries": 110
+      },
+      "baseline_to_correct_all_paired_outcomes": {
+        "both_win": 7,
+        "baseline_only_win": 6,
+        "correct_all_only_win": 2,
+        "both_loss": 25,
+        "exact_mcnemar_binomial_p_value": 0.2890625
+      }
+    }
+  ],
+  "classification": {
+    "valid": true,
+    "baseline_reproduced": true,
+    "correct_all_wins": [
+      9,
+      9
+    ],
+    "strong_correction_signal": false,
+    "low_correction_signal": true,
+    "mixed_correction_signal": false,
+    "signal": "low_correction_signal",
+    "correct_first_is_descriptive_only": true
+  },
+  "fresh_jvm_reports_equal": true,
+  "terminal_reset_replay_equal": true,
+  "model_or_optimizer_modified": false,
+  "successor_training_authorized": false,
+  "checkpoint_selection_authorized": false,
+  "promotion_authorized": false,
+  "confirmation_or_held_out_access": false
+}
