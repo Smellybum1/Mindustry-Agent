@@ -1557,8 +1557,9 @@ queue.
    compact SHA `9af4d952fc690c53...`. ADR-0097 and protocol SHA
    `ffb5bff61b76161e...` precommit v4's sole change: under active-build defer,
    positive turret coverage, and ammo below one, rank supply above harvest.
-   Implement and commit before the same public gate. No v7 or restricted access
-   is authorized.
+   The exact score, inheritance checks, focused tests, and command are local;
+   all 462 Python tests pass. Commit before the same public gate. No v7 or
+   restricted access is authorized.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint

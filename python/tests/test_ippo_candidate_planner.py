@@ -48,6 +48,18 @@ def test_v3_protocol_binds_active_board_coordinate():
     ] == ["CLAIMED", "RUNNING", "BLOCKED"]
 
 
+def test_v4_protocol_binds_active_build_supply_coordinate():
+    protocol, seeds = _load_protocol(
+        DEFAULT_PROTOCOL.with_name(
+            "m9-candidate-native-planner-v4-protocol.json"
+        )
+    )
+    assert len(seeds) == 40
+    assert protocol["planner"]["active_build_fallback_priority"][
+        "task_order"
+    ] == ["SUPPLY_TURRET", "HARVEST_RESOURCE"]
+
+
 def test_protocol_rejects_digest_drift(tmp_path: Path):
     document = json.loads(DEFAULT_PROTOCOL.read_text(encoding="utf-8"))
     document["authority"]["may_train"] = True

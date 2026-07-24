@@ -398,6 +398,7 @@ class CandidateNativePlanner:
         *,
         maximum_build_schematic_selections: int | None = None,
         defer_schematics_during_active_build: bool = False,
+        prioritize_supply_during_active_build: bool = False,
     ) -> None:
         if (
             maximum_build_schematic_selections is not None
@@ -413,6 +414,9 @@ class CandidateNativePlanner:
         )
         self._defer_schematics_during_active_build = (
             defer_schematics_during_active_build
+        )
+        self._prioritize_supply_during_active_build = (
+            prioritize_supply_during_active_build
         )
 
     def reset(self) -> None:
@@ -493,13 +497,24 @@ class CandidateNativePlanner:
             result.append(candidate)
         return result
 
-    @staticmethod
     def _phase_score(
-        agent_id: int, candidate: dict[str, Any], team: dict[str, Any]
+        self,
+        agent_id: int,
+        candidate: dict[str, Any],
+        team: dict[str, Any],
+        active_build: bool,
     ) -> int:
         task_type = str(candidate.get("task_type", ""))
         enemies = int(team.get("enemy_count", 0))
         ammo = float(team.get("defense_ammo_coverage", 0.0))
+        if (
+            self._prioritize_supply_during_active_build
+            and active_build
+            and task_type == "SUPPLY_TURRET"
+            and float(team.get("defense_turret_coverage", 0.0)) > 0.0
+            and ammo < 1.0
+        ):
+            return 980
         if enemies > 0:
             preferred = (
                 {
@@ -635,7 +650,7 @@ class CandidateNativePlanner:
                 continue
             selected = [candidate for candidate in allocation if candidate is not None]
             phase_total = sum(
-                self._phase_score(agent_id, candidate, team)
+                self._phase_score(agent_id, candidate, team, active_build)
                 for agent_id, candidate in zip(
                     allocatable, allocation, strict=True
                 )
@@ -680,6 +695,17 @@ class CandidateNativePlannerV3(CandidateNativePlanner):
         super().__init__(
             maximum_build_schematic_selections=1,
             defer_schematics_during_active_build=True,
+        )
+
+
+class CandidateNativePlannerV4(CandidateNativePlanner):
+    """V3-exact planner with readiness-preserving active-build fallback."""
+
+    def __init__(self) -> None:
+        super().__init__(
+            maximum_build_schematic_selections=1,
+            defer_schematics_during_active_build=True,
+            prioritize_supply_during_active_build=True,
         )
 
 

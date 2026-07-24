@@ -2559,6 +2559,9 @@ supply targets are valid. ADR-0096 rejects v3; full/compact SHA prefixes are
 change: in the active-build defer state with positive turret coverage and ammo
 below one, rank SUPPLY_TURRET above HARVEST_RESOURCE. Protocol SHA is
 `ffb5bff61b76161e...`; implementation is next.
+The exact active-build supply score, protocol/inheritance validation, focused
+v1--v4 tests, and separate command are now local; all 462 Python tests pass.
+Commit this boundary before evaluation.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

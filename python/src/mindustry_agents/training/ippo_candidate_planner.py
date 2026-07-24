@@ -14,6 +14,7 @@ from mindustry_agents.policies import (
     CandidateNativePlanner,
     CandidateNativePlannerV2,
     CandidateNativePlannerV3,
+    CandidateNativePlannerV4,
 )
 from mindustry_agents.process.launcher import DEFAULT_PORT, LaunchConfig, RlServerProcess
 
@@ -31,6 +32,9 @@ PROTOCOL_SCHEMAS = {
     ),
     "fc8be8ce0bf630152a3f9fa1775ea39b47af741ed894249c275743391f9ff0b8": (
         "m9_candidate_native_planner_protocol_v3"
+    ),
+    "ffb5bff61b76161e5c7bef3fd520306049ee04a398ba23835af575cd8a7cf1a7": (
+        "m9_candidate_native_planner_protocol_v4"
     ),
 }
 
@@ -118,6 +122,35 @@ def _load_protocol(path: Path) -> tuple[dict[str, Any], list[int]]:
             }
         ):
             raise ValueError("planner v3 inheritance contract drift")
+    if expected_schema == "m9_candidate_native_planner_protocol_v4":
+        if (
+            protocol.get("parent_protocol_sha256")
+            != (
+                "fc8be8ce0bf630152a3f9fa1775ea39b47af741ed894249c"
+                "275743391f9ff0b8"
+            )
+            or protocol.get("sole_behavior_change")
+            != (
+                "prioritize_actionable_supply_over_harvest_during_"
+                "active_build_defer"
+            )
+            or protocol.get("planner", {}).get(
+                "active_build_fallback_priority"
+            )
+            != {
+                "preconditions": [
+                    "active_build_defer_true",
+                    "defense_turret_coverage_greater_than_zero",
+                    "defense_ammo_coverage_less_than_one",
+                ],
+                "task_order": ["SUPPLY_TURRET", "HARVEST_RESOURCE"],
+                "evidence": (
+                    "v3_replaced_rejected_tick_250_fortification_with_"
+                    "harvest_while_two_actionable_supply_targets_existed"
+                ),
+            }
+        ):
+            raise ValueError("planner v4 inheritance contract drift")
 
     seed_spec = protocol["seed_set"]
     seed_path = ROOT / seed_spec["path"]
@@ -198,6 +231,7 @@ def _episode(
         1: CandidateNativePlanner,
         2: CandidateNativePlannerV2,
         3: CandidateNativePlannerV3,
+        4: CandidateNativePlannerV4,
     }[planner_version]()
     observations = reset.initial_observations
     masks = reset.action_masks
@@ -386,6 +420,7 @@ def main(argv: list[str] | None = None) -> int:
             "m9_candidate_native_planner_protocol_v1": 1,
             "m9_candidate_native_planner_protocol_v2": 2,
             "m9_candidate_native_planner_protocol_v3": 3,
+            "m9_candidate_native_planner_protocol_v4": 4,
         }[protocol["schema"]]
         values = {
             "java": args.java,

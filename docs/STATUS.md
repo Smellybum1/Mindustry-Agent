@@ -2504,7 +2504,9 @@ repository-evidence mapping used for the M6 audit is:
   coverage. Public tick-250 inspection shows harvest displaces two actionable
   supply targets. ADR-0096 rejects v3 at compact SHA `9af4d952fc690c53...`.
   ADR-0097 precommits the readiness-preserving active-build supply priority at
-  protocol SHA `ffb5bff61b76161e...`; v4 is unimplemented.
+  protocol SHA `ffb5bff61b76161e...`. The exact score, inheritance checks,
+  focused v1--v4 tests, and command are local; all 462 Python tests pass.
+  Commit before evaluation.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
