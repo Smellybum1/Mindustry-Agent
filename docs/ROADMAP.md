@@ -2652,8 +2652,15 @@ teacher-label NLL/top-1 agreement, and task/action confusion. Protocol SHA is
 `f779cd313fcd46da...`. It cannot select, repair, train, promote, or access
 restricted data. The fail-closed loader, dual-checkpoint teacher-controlled
 evaluator, exact twin-JVM/reset comparison, structured confusion report,
-command surface, and focused tests are implemented locally; all 489 Python
-tests pass. Commit this boundary before the first diagnostic JVM.
+command surface, and focused tests are committed; all 489 Python tests pass.
+Two fresh JVMs/reset replay match exactly. Update 3 reaches `0.83223`
+teacher-forced top-1 at NLL `0.44896`; update 32 reaches `0.96196` at NLL
+`0.15247` yet wins only 9/40 autonomously. ADR-0116 accepts only the frozen
+closed-loop-shift signal, keeps v1 rejected, and records
+full/canonical/compact SHA prefixes `56f3680eb67945ca...` /
+`3f2778201fd92860...` / `7909e6a2013258d2...`. No restricted data was
+accessed. A separately named prospective student-state teacher-relabeling
+construction is the next authorized direction.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

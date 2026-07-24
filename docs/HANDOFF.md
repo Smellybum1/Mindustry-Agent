@@ -1623,9 +1623,15 @@ queue.
    roots, with twin-JVM/reset identity and protocol SHA
    `f779cd313fcd46da...`. Its fail-closed loader, teacher-controlled
    dual-checkpoint evaluator, exact report/reset comparison, structured
-   confusion output, command, and focused tests are implemented locally; all
-   489 Python tests pass. Commit this boundary, then run it before choosing any
-   successor.
+   confusion output, command, and focused tests are committed; all 489 Python
+   tests pass. Two fresh JVMs/reset replay match exactly. Update 3 reaches
+   `0.83223` teacher-forced top-1 at NLL `0.44896`; update 32 reaches `0.96196`
+   at NLL `0.15247` but wins only 9/40 autonomously. ADR-0116 accepts the
+   closed-loop-shift signal, keeps v1 rejected, and records
+   full/canonical/compact SHA prefixes `56f3680eb67945ca...` /
+   `3f2778201fd92860...` / `7909e6a2013258d2...`. Precommit one separately
+   named student-state teacher-relabeling construction before further model
+   work.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1633,7 +1639,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0115` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0116` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1681,7 +1687,7 @@ remains unauthorized.
 ADR-0091 through ADR-0114 govern candidate-native planner construction, accept
 planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
-the ADR-0115 immutable-checkpoint public agreement diagnostic.
+ADR-0116's separately precommitted student-state teacher-relabeling direction.
 
 ## Deviations from the brief in this scaffold
 

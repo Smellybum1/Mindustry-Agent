@@ -1,0 +1,50 @@
+{
+  "schema": "m9_candidate_native_distillation_agreement_compact_result_v1",
+  "implementation_commit": "e1b449b5e2674cd22bc40860eea3e222b482b1d1",
+  "protocol_sha256": "f779cd313fcd46da5335787b931f746f3d42881a722213392e302dc2e2e895d6",
+  "source_result_sha256": "47ced62d5b7e3c15c980415bc3c05974bfacfd1ccbfd7e2af6c7f474486af590",
+  "data_classification": "public_dev_only",
+  "full_report_sha256": "56f3680eb67945ca8120a465a9ce04e4eb65e187c628d460dd7c1b9d32f43ac3",
+  "canonical_report_sha256": "3f2778201fd928605739819d1458c6075bcd3cfc4aac466b2bb26b0fe47dca05",
+  "teacher": {
+    "episodes": 40,
+    "wins": 32,
+    "losses": 8,
+    "eligible_labels": 4232,
+    "forced_controls_excluded": 437
+  },
+  "checkpoints": [
+    {
+      "update": 3,
+      "role": "best_autonomous_public_dev",
+      "autonomous_public_dev_wins": 18,
+      "teacher_forced_top1_matches": 3522,
+      "teacher_forced_top1_agreement": 0.8322306238185255,
+      "teacher_label_nll": 0.4489596918068312,
+      "teacher_forced_fit_retained": false
+    },
+    {
+      "update": 32,
+      "role": "final",
+      "autonomous_public_dev_wins": 9,
+      "teacher_forced_top1_matches": 4071,
+      "teacher_forced_top1_agreement": 0.9619565217391305,
+      "teacher_label_nll": 0.15247168498808195,
+      "teacher_forced_fit_retained": true
+    }
+  ],
+  "classification": {
+    "active_signals": [
+      "closed_loop_shift_signal"
+    ],
+    "closed_loop_shift_signal": true,
+    "forgetting_signal": false,
+    "generalization_gap_signal": false,
+    "successor_training_authorized": false,
+    "checkpoint_selection_authorized": false,
+    "promotion_authorized": false
+  },
+  "fresh_jvm_reports_equal": true,
+  "terminal_reset_replay_equal": true,
+  "confirmation_or_held_out_access": false
+}
