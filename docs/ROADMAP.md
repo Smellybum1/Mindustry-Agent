@@ -2645,7 +2645,12 @@ prohibits Replica B and downstream PPO initialization, and records manifest /
 canonical / compact digests `cd88deac884ee851...` /
 `c3a283d3a8b70300...` / `47ced62d5b7e3c15...`. No restricted data was
 accessed. A prospectively frozen immutable-checkpoint public agreement
-diagnostic is required before another learned recipe.
+diagnostic is required before another learned recipe. ADR-0115 now freezes
+that diagnostic over update 3 and update 32, all 40 existing public-dev roots,
+candidate-native planner v11 teacher control, exact twin JVM/reset reports,
+teacher-label NLL/top-1 agreement, and task/action confusion. Protocol SHA is
+`f779cd313fcd46da...`. It cannot select, repair, train, promote, or access
+restricted data.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

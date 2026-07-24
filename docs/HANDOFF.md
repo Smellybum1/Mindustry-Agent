@@ -1618,7 +1618,10 @@ queue.
    and records manifest/canonical/compact digests `cd88deac884ee851...` /
    `c3a283d3a8b70300...` / `47ced62d5b7e3c15...`. No restricted data was
    accessed. Precommit and implement one immutable-checkpoint public agreement
-   diagnostic before any successor learned recipe.
+   diagnostic before any successor learned recipe. ADR-0115 now freezes that
+   exact diagnostic over update 3/update 32 and all 40 existing public-dev
+   roots, with twin-JVM/reset identity and protocol SHA
+   `f779cd313fcd46da...`. Implement and run it before choosing any successor.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1626,7 +1629,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0114` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0115` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1674,7 +1677,7 @@ remains unauthorized.
 ADR-0091 through ADR-0114 govern candidate-native planner construction, accept
 planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
-an immutable-checkpoint public agreement diagnostic.
+the ADR-0115 immutable-checkpoint public agreement diagnostic.
 
 ## Deviations from the brief in this scaffold
 

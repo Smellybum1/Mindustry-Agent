@@ -1,0 +1,66 @@
+{
+  "schema": "m9_candidate_native_distillation_agreement_diagnostic_protocol_v1",
+  "candidate_version": "m9-candidate-native-distill-v1",
+  "source_result": "configs/evaluation/m9-candidate-native-distill-v1-result.json",
+  "source_result_sha256": "47ced62d5b7e3c15c980415bc3c05974bfacfd1ccbfd7e2af6c7f474486af590",
+  "data_classification": "public_dev_only",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "split": "dev",
+  "teacher_policy": "candidate-native-planner-v11-single-defender",
+  "checkpoints": [
+    {
+      "role": "best_autonomous_public_dev",
+      "update": 3,
+      "path": "runs/m9-candidate-distill-a/candidate-distill-update-3.pt",
+      "file_sha256": "a4ad79985ad17c0140dcff2b9353d143723d5b57ee79adc2f615fce4adc92591",
+      "content_sha256": "bbe4bc54ba7116454c23cbff85b5f8c3f1b54aec0eab5ee984a46e1e378285f5",
+      "autonomous_public_dev_wins": 18
+    },
+    {
+      "role": "final",
+      "update": 32,
+      "path": "runs/m9-candidate-distill-a/candidate-distill-update-32.pt",
+      "file_sha256": "40bc070d91b1e37dbb58b360325dfde7b94b10aaec61dabcdb5570bf55dc5fed",
+      "content_sha256": "14197b4d3583cf599917a98c2b1cbd5925ca7bc7b93be550edd4cade3a3f1fe9",
+      "autonomous_public_dev_wins": 9
+    }
+  ],
+  "execution": {
+    "fresh_jvm_runs": 2,
+    "teacher_controls_environment": true,
+    "student_hidden_state": "private_per_seat_zero_on_reset_or_death",
+    "eligible_boundary": "alive_and_no_forced_task_action_and_teacher_action_authoritatively_legal",
+    "forced_controls": "executed_but_excluded_from_agreement",
+    "student_action_mode": "deterministic_argmax",
+    "measurements": [
+      "eligible_labels",
+      "teacher_label_nll",
+      "top1_agreement",
+      "teacher_task_to_student_task_confusion",
+      "teacher_action_to_student_action_confusion"
+    ],
+    "terminal_reset_replay": true,
+    "exact_report_identity_required": true
+  },
+  "classification": {
+    "teacher_forced_fit_retained": {
+      "minimum_top1_agreement": 0.9,
+      "maximum_teacher_label_nll": 0.35
+    },
+    "closed_loop_shift_signal": "teacher_forced_fit_retained_and_autonomous_public_dev_wins_below_30",
+    "forgetting_signal": "final_top1_agreement_at_least_0.05_below_best_checkpoint",
+    "generalization_gap_signal": "neither_checkpoint_retains_teacher_forced_fit"
+  },
+  "authority": {
+    "may_select_or_repair_checkpoint": false,
+    "may_train_or_modify_model": false,
+    "may_precommit_successor_after_result": true,
+    "may_promote": false,
+    "may_authorize_mappo": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_human_session": false
+  }
+}

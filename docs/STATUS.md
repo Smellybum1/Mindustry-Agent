@@ -2578,7 +2578,11 @@ repository-evidence mapping used for the M6 audit is:
   / compact digests `cd88deac884ee851...` / `c3a283d3a8b70300...` /
   `47ced62d5b7e3c15...`. No restricted data was accessed. The next authorized
   work is a prospectively frozen public-only teacher-forced agreement
-  diagnostic over immutable update-3 and update-32 checkpoints.
+  diagnostic over immutable update-3 and update-32 checkpoints. ADR-0115
+  freezes its exact twin-JVM/reset execution, all 40 existing public-dev roots,
+  teacher-label NLL/top-1 and task/action confusion, with protocol SHA
+  `f779cd313fcd46da...`. It cannot select, repair, train, promote, or access
+  restricted data.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 
