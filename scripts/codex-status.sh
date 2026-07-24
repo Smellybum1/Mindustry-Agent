@@ -22,12 +22,21 @@ repo_git log -5 --oneline
 printf '\nprotected local files (inspect, never stage during takeover):\n'
 for path in \
     AGENTS.md \
-    annotations/src/main/resources/classids.properties
+    annotations/src/main/resources/classids.properties \
+    core/src/mindustry/ai/BlockIndexer.java \
+    core/src/mindustry/entities/Units.java
 do
     if [[ -n "$(repo_git status --short -- "$path")" ]]; then
         printf '  modified: %s\n' "$path"
     fi
 done
 
-printf '\nnext roadmap item:\n'
-sed -n '/^### 8\.5 /,/^## Milestone 9:/p' docs/ROADMAP.md | sed '$d'
+printf '\nlatest dated handoff:\n'
+find docs/codex-handoffs -maxdepth 1 -type f -name '*.md' -print |
+    sort |
+    tail -1
+
+printf '\nopen M9 exit criteria:\n'
+sed -n '/^## Milestone 9:/,/^## Milestone 10:/p' docs/ROADMAP.md |
+    sed -n '/^Exit criteria:/,$p' |
+    sed '$d'
