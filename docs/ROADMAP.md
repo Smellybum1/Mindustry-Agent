@@ -2702,7 +2702,12 @@ are not loss-associated (`0.1111` of losses versus `0.2308` of wins).
 ADR-0120 records full/canonical/compact SHA prefixes
 `aa01d177ab312aff...` / `5127aea85c2332f...` / `464ab91a13c4ca37...`,
 keeps both checkpoints rejected, and requires one prospectively frozen
-public-only semantic-target diagnostic before successor model work.
+public-only semantic-target diagnostic before successor model work. ADR-0121
+now freezes that diagnostic over rejected update 64 and the same 40 public-dev
+roots. It records exact task-id/target pairs and exact 37-value feature-row
+aliasing for same-family disagreements under twin-JVM/reset identity. Protocol
+SHA is `8003d7ef159cf994...`; it cannot train, select, repair, promote, or access
+restricted data. Implement and commit it before the first diagnostic JVM.
 
 - 9.1 Parameter-shared IPPO (per-agent role embedding + hidden state); team
   reward with small individual shaping (audited per component, as 8.1).

@@ -2632,7 +2632,11 @@ repository-evidence mapping used for the M6 audit is:
   ADR-0120 records full/canonical/compact SHA prefixes
   `aa01d177ab312aff...` / `5127aea85c2332f...` / `464ab91a13c4ca37...`,
   keeps both checkpoints rejected, and authorizes only a prospectively frozen
-  public semantic-target diagnostic before further learning.
+  public semantic-target diagnostic before further learning. ADR-0121 freezes
+  that diagnostic over rejected update 64 and the same 40 public-dev roots. It
+  records exact task-id/target pairs and exact 37-value feature-row aliasing for
+  same-family disagreements under twin-JVM/reset identity. Protocol SHA is
+  `8003d7ef159cf994...`; implementation must be committed before its first JVM.
 
 ## What is stubbed (compiles/imports, no real behaviour)
 

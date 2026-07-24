@@ -1671,7 +1671,11 @@ queue.
    `aa01d177ab312aff...` / `5127aea85c2332f...` /
    `464ab91a13c4ca37...`, keeps both checkpoints rejected, and permits only a
    prospectively frozen public semantic-target diagnostic before further
-   learning.
+   learning. ADR-0121 freezes it over rejected update 64 and the same 40
+   public-dev roots. It records exact task-id/target pairs and exact 37-value
+   feature-row aliasing for same-family disagreements under twin-JVM/reset
+   identity. Protocol SHA is `8003d7ef159cf994...`; implement and commit it
+   before the first diagnostic JVM.
 6. **Keep held-out-v6 retired and held-out-v7 sealed.** M9 confirmation/final
    governance must be fresh and requires a later precommit.
 7. **Do not start the learned human-session block.** No M9 learned checkpoint
@@ -1679,7 +1683,7 @@ queue.
 
 ## Decisions
 
-See `docs/decisions/ADR-0001..0120` (do not relitigate). ADR-0042 records V31's
+See `docs/decisions/ADR-0001..0121` (do not relitigate). ADR-0042 records V31's
 reproducible rejection; ADR-0043 precommits and records the verified V32
 actionability/staging runtime and its reusable rejection; ADR-0044 precommits
 and records V33's targeted secondary-seat staging rejection before model work;
@@ -1724,10 +1728,10 @@ line, its public-only diagnostics, and the current requirement for design
 synthesis plus shared-expert candidate projection before any v7 precommit.
 Every candidate remains rejected; no M9 checkpoint is selected and MAPPO
 remains unauthorized.
-ADR-0091 through ADR-0120 govern candidate-native planner construction, accept
+ADR-0091 through ADR-0121 govern candidate-native planner construction, accept
 planner v11 only as a supervision source, and reject its first within-update
 behavioral-cloning consumer before Replica B. The next authority is limited to
-prospectively freezing and running one public-only semantic-target diagnostic.
+implementing and running ADR-0121's public-only semantic-target diagnostic.
 
 ## Deviations from the brief in this scaffold
 

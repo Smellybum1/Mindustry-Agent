@@ -1,0 +1,66 @@
+{
+  "schema": "m9_candidate_semantic_target_diagnostic_protocol_v1",
+  "data_classification": "public_dev_only",
+  "scenario_id": "bootstrap-defense-v1",
+  "scenario_version": 2,
+  "seed_set": "configs/evaluation/bootstrap-defense-v1-m9-dev-v1.json",
+  "seed_set_sha256": "5d834a1ea8db828e05f2e7343a88cea1ba49721bd1570d1f435ca73778fb6b83",
+  "split": "dev",
+  "teacher_policy": "candidate-native-planner-v11-single-defender",
+  "source_diagnostic_result": "configs/evaluation/m9-candidate-on-policy-critical-disagreement-result.json",
+  "source_diagnostic_result_sha256": "464ab91a13c4ca370b0b4fb5f016e45b96c23a3a56ff3ebdac38342adde7b4a1",
+  "checkpoint": {
+    "candidate": "m9-candidate-native-on-policy-relabel-v1",
+    "role": "student_state_relabel_final",
+    "lineage_update": 64,
+    "path": "runs/m9-candidate-on-policy-relabel-a/candidate-on-policy-relabel-update-64.pt",
+    "config_sha256": "7fadf9ae9130775fffebe52b86407dfeafaf47ea5e1383524818a6d0012d72d4",
+    "file_sha256": "cbfde7e932e718f49b6e80f79bfd2b0072fa2bb7fd1f04e4ca0d7da9ee8ed408",
+    "content_sha256": "55005ab5a0591b2688e32a4819678088f0f8701de920dbf788202539c046b865",
+    "model_state_sha256": "7838b9392b32d7dc5867dd53ffed78a77f9094f3492cf0b2ac4406ec551ae0d1",
+    "autonomous_public_dev_wins": 13
+  },
+  "execution": {
+    "fresh_jvm_runs": 2,
+    "student_controls_environment": true,
+    "student_action_mode": "deterministic_argmax",
+    "teacher_labels_same_pre_action_student_visited_boundary": true,
+    "teacher_action_execution": false,
+    "eligible_boundary": "alive_and_no_forced_task_action_and_teacher_action_authoritatively_legal",
+    "scope": "all_disagreements_with_same_task_family_subset",
+    "semantic_candidate_identity_fields": [
+      "task_type",
+      "task_id",
+      "target"
+    ],
+    "feature_comparison": "exact_37_float_selector_candidate_row",
+    "terminal_reset_replay": true,
+    "exact_report_identity_required": true,
+    "measurements": [
+      "semantic_target_pair_confusion_by_outcome",
+      "task_id_pair_confusion_by_outcome",
+      "same_family_disagreements_by_agent_and_outcome",
+      "same_family_exact_feature_row_aliases_by_outcome",
+      "same_family_feature_delta_fields_by_outcome",
+      "first_same_family_disagreement_on_losses"
+    ]
+  },
+  "classification": {
+    "top_semantic_target_pairs": 3,
+    "minimum_top_target_pair_fraction_for_concentration": 0.5,
+    "minimum_exact_feature_alias_fraction": 0.5,
+    "target_pair_concentration_signal": "top_three_semantic_target_pairs_cover_threshold_of_same_family_disagreements",
+    "feature_alias_signal": "exact_37_float_rows_cover_threshold_of_same_family_disagreements",
+    "feature_distinguishable_ranking_signal": "same_family_disagreements_exist_and_feature_alias_signal_is_false"
+  },
+  "authority": {
+    "may_select_or_repair_checkpoint": false,
+    "may_train_or_modify_model": false,
+    "may_precommit_successor_after_result": true,
+    "may_promote": false,
+    "may_authorize_mappo": false,
+    "may_access_confirmation": false,
+    "may_access_held_out": false,
+    "may_authorize_human_session": false
+  }
+}
